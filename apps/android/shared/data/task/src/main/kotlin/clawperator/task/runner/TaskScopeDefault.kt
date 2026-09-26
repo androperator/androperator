@@ -262,7 +262,9 @@ class TaskScopeDefault(
                 Log.d("$TAG UI Hierarchy [commandId=$commandId]:\n$hierarchyDump")
                 val hierarchyLoggedNs = if (snapshotTimingEnabled) SystemClock.elapsedRealtimeNanos() else 0L
                 val nodeCount = countNodesInHierarchyDump(hierarchyDump)
+                val nodeCountReadyNs = if (snapshotTimingEnabled) SystemClock.elapsedRealtimeNanos() else 0L
                 val maxDepth = maxDepthInHierarchyDump(hierarchyDump)
+                val maxDepthReadyNs = if (snapshotTimingEnabled) SystemClock.elapsedRealtimeNanos() else 0L
                 val actualFormat = UiSnapshotActualFormat.HierarchyXml
                 val windowMetadata = uiTreeInspector.getCurrentWindowMetadata()
                 if (snapshotTimingEnabled) {
@@ -272,6 +274,9 @@ class TaskScopeDefault(
                         "[SnapshotTiming] commandId=$commandId hierarchyBytes=${hierarchyDump.encodeToByteArray().size} " +
                             "hierarchyBuildUs=${(hierarchyReadyNs - snapshotStartNs) / 1_000} " +
                             "logCallUs=${(hierarchyLoggedNs - hierarchyReadyNs) / 1_000} " +
+                            "nodeCountUs=${(nodeCountReadyNs - hierarchyLoggedNs) / 1_000} " +
+                            "maxDepthUs=${(maxDepthReadyNs - nodeCountReadyNs) / 1_000} " +
+                            "windowMetadataUs=${(metadataReadyNs - maxDepthReadyNs) / 1_000} " +
                             "metadataAndStatsUs=${(metadataReadyNs - hierarchyLoggedNs) / 1_000} " +
                             "operatorSnapshotUs=${(metadataReadyNs - snapshotStartNs) / 1_000}",
                     )

@@ -8,15 +8,19 @@ export class EvidenceBudgetRunner implements ProcessRunner {
   private readonly children = new Set<ReturnType<ProcessRunner["spawn"]>>();
   private readonly timer: NodeJS.Timeout;
   constructor(private readonly delegate: ProcessRunner, private readonly deadline: number) {
-    this.timer = setTimeout(() => {
-      this.deadlineController.abort({ code: "COMMAND_TIMEOUT", message: "Evidence capture budget exhausted" });
-      this.close();
-    }, this.remaining());
+    this.timer = setTimeout(() => this.expire(), this.remaining());
+  }
+  private expire(): void {
+    this.deadlineController.abort({ code: "COMMAND_TIMEOUT", message: "Evidence capture budget exhausted", details: { deadlineOwner: "evidence_capture" } });
+    this.close();
   }
   remaining(): number { return Math.max(0, Math.floor(this.deadline - performance.now())); }
   private check(): number {
     const remaining = this.remaining();
-    if (remaining <= 0) throw { code: "COMMAND_TIMEOUT", message: "Evidence capture budget exhausted" };
+    if (remaining <= 0) {
+      this.expire();
+      throw this.signal.reason;
+    }
     return remaining;
   }
   async run(command: string, args: string[], options?: { timeoutMs?: number; cwd?: string; input?: string }): Promise<ProcessResult> {

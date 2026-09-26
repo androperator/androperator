@@ -16,7 +16,11 @@ like, and what parts of the snapshot contract an agent can rely on.
 
 ## What `snapshot` Returns
 
-`snapshot` is the canonical read-only UI observation action. The Android runtime writes the hierarchy dump to logcat, then the Node layer extracts the XML and attaches it to the successful step result as `data.text`.
+`snapshot` is the canonical read-only UI observation action. The Android runtime
+returns the XML as `data.text` in the canonical result envelope. Large envelopes
+travel over logcat in paced chunks with command/task identity, ordered indices,
+byte length and SHA-256 verification. Node validates the complete XML before
+returning raw or compact output.
 
 The built-in `clawperator snapshot` command constructs a one-step execution with these exact defaults:
 
@@ -128,28 +132,32 @@ size for short or sparse nodes; choose a node limit appropriate to the task.
 
 The current flow is:
 
-1. Node accepts the canonical `snapshot` action. For current Android compatibility, Node dispatches the equivalent Android snapshot action to the Operator.
-2. Android writes the hierarchy dump into logcat lines that begin with the exact marker `[TaskScope] UI Hierarchy [commandId=<command_id>]:`.
-3. Node streams logcat with `adb logcat -v time -T 1` around dispatch and keeps the correlated snapshot lines for the current command.
-4. `extractSnapshotRecordsFromLogs()` reconstructs one or more XML documents from the log stream and preserves the parsed `commandId` when the tagged marker is present.
-5. `extractSnapshotsForCommand()` selects snapshots for the current execution by requiring `commandId == envelope.commandId`.
-6. `attachSnapshotsToStepResults()` walks backward through successful `snapshot` steps and attaches the extracted XML as `stepResults[i].data.text`.
-7. `markExtractionFailedSnapshotSteps()` converts any still-successful snapshot step with missing `data.text` into a failed step.
-8. `addSettleWarnings()` may attach `data.warn` if the snapshot action immediately follows `click` or `scroll_and_click`.
+1. Node dispatches the canonical `snapshot` action using its Android-compatible action name.
+2. Android captures XML and places it in that action's `data.text` in the canonical result envelope.
+3. The Operator publishes the envelope over logcat. Large envelopes use the existing paced result chunks, carrying command/task identity, ordered indices, total bytes and SHA-256.
+4. Node reconstructs and verifies the complete envelope before exposing any snapshot from it. Missing tail chunks remain incomplete and time out; missing middle chunks, inconsistent metadata and checksum failures return `RESULT_ENVELOPE_MALFORMED`.
+5. Node validates each successful snapshot's XML. Missing or invalid XML fails that step with `SNAPSHOT_EXTRACTION_FAILED` even when transport integrity passed.
+6. Compact presentation, optional artifact writing and settle warnings use the validated snapshot.
 
-Debugging details that matter when extraction goes wrong:
+A closing XML tag alone does not prove complete delivery. A transport failure
+retains command correlation and dispatch evidence, and does not return partial
+XML as a selector source. Pacing reduces publication pressure; it is not a
+guarantee that logcat cannot lose records. Compact limits do not reduce source
+capture or transfer cost.
 
-- `runExecution()` starts the live logcat reader before dispatch when snapshot extraction is needed.
-- The reader uses command-id markers and result-envelope correlation instead of clearing logcat.
-- `snapshotHelper.ts` only extracts blocks whose opening marker includes the execution `commandId`
+Node retains legacy extraction for Operators that publish XML separately using
+`[TaskScope] UI Hierarchy [commandId=<command_id>]:`. That compatibility path
+matches the command and attaches captures to successful snapshot steps in
+reverse occurrence order. It never replaces an explicitly supplied `data.text`,
+including an empty string; empty sources must fail validation. Legacy text does
+not acquire the new chunk integrity guarantees. Use a matching updated Operator
+and CLI to obtain the repaired capture path.
 
-Important boundaries:
-
-- Raw mode treats the hierarchy as opaque text. Opt-in compact mode parses a presentation copy after capture.
-- When multiple snapshots exist in one execution, Node attaches the most recent extracted snapshot to the most recent successful `snapshot` step, walking backward through both lists.
-- If no successful `snapshot` steps exist, extraction output is ignored.
-- Node only reads logcat for snapshot extraction when the result envelope already contains at least one snapshot step.
-- for direct snapshot executions like `clawperator snapshot`, the step `id` matches the action `id` (`"snap"`)
+Multiple current snapshots stay attached to their own action IDs inside the
+verified envelope. For direct `clawperator snapshot`, the step ID remains
+`"snap"`. CLI arguments, compact output, raw XML and the public result envelope
+shape are unchanged. No socket, file-transfer service or new device connection
+is required.
 
 ## Envelope Placement
 
@@ -496,7 +504,7 @@ Typical recovery:
 
 1. Run `clawperator version --check-compat`.
 2. Run `clawperator doctor`.
-3. Re-run the snapshot with `--verbose` if you need to inspect log correlation and the `[TaskScope] UI Hierarchy [commandId=<command_id>]:` marker.
+3. Use `--verbose` for a bounded read-only observation when you need result-transport correlation and chunk diagnostics. The `[TaskScope] UI Hierarchy [commandId=<command_id>]:` marker applies only to legacy extraction.
 
 Verification pattern - confirm extraction failure handling:
 
@@ -607,11 +615,11 @@ The affected step has `success: false`, `data.error: "SNAPSHOT_EXTRACTION_FAILED
 and no `data.text`. `data.extractionReason` is one of `missing_payload`,
 `malformed_xml`, `invalid_root`, `doctype_forbidden`, `payload_limit`, or
 `depth_limit`. The envelope becomes failed and the CLI exits 1. Command IDs and
-invalid occurrence positions are retained, preventing an earlier capture from
-being attached to a later snapshot step. A missing entire marker still has no
-independent step identifier; attachment uses the existing positional ordering.
+invalid occurrence positions are retained. Current captures carry their XML in
+the identified action step. In legacy extraction only, a missing entire marker
+has no independent step identifier; attachment uses positional ordering.
 
-When file logging is enabled, `snapshot.extraction.failed` retains the command,
+For legacy log extraction, when file logging is enabled, `snapshot.extraction.failed` retains the command,
 task, zero-based occurrence, reason, safe extraction facts, and at most 1024 UTF-8
 source bytes locally (without splitting a Unicode code point).
 The failed step includes `data.diagnosticLogPath` only after a successful log

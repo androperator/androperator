@@ -104,7 +104,7 @@ for (const dispatched of [false, true]) {
     assert.ok(!result.ok && "error" in result);
     assert.equal(result.code, "RESULT_TRANSPORT_CANCELLED");
     assert.equal(result.diagnostics?.dispatchAttempted, dispatched);
-    assert.equal(f.kills(), 1);
+    assert.equal(f.kills(), dispatched ? 1 : 0);
   });
 }
 
@@ -361,4 +361,51 @@ it("timeline logger failure cannot replace a result", async () => {
   });
   assert.ok(!result.ok && "error" in result);
   assert.equal(result.code, "RESULT_TRANSPORT_EXITED");
+});
+
+
+for (const terminalFirst of [true, false]) {
+  it(`preserves the first settlement when a capture deadline races a terminal (terminalFirst=${terminalFirst})`, async () => {
+    const f = fake();
+    const controller = new AbortController();
+    const result = await waitForResultEnvelope(f.runtime, { ...options, cancelSignal: controller.signal }, async begin => {
+      begin();
+      const complete = () => f.stdout.write(terminal + "\n");
+      const expire = () => controller.abort({ code: "COMMAND_TIMEOUT", message: "Evidence capture budget exhausted", details: { deadlineOwner: "evidence_capture" } });
+      if (terminalFirst) { complete(); expire(); } else { expire(); complete(); }
+      return { success: true };
+    });
+    assert.equal(result.ok, terminalFirst);
+    if (!result.ok && "error" in result) {
+      assert.equal(result.code, "COMMAND_TIMEOUT");
+      assert.equal(result.diagnostics?.deadlineOwner, "evidence_capture");
+      assert.equal(result.diagnostics?.dispatchAttempted, true);
+    }
+  });
+}
+
+it("does not spawn or dispatch after an already expired capture deadline", async () => {
+  const f = fake();
+  f.runtime.runner.spawn = () => { throw new Error("must not spawn"); };
+  const controller = new AbortController();
+  controller.abort({ code: "COMMAND_TIMEOUT", message: "Evidence capture budget exhausted", details: { deadlineOwner: "evidence_capture" } });
+  const result = await waitForResultEnvelope(f.runtime, { ...options, cancelSignal: controller.signal }, async () => { throw new Error("must not dispatch"); });
+  assert.ok(!result.ok && "error" in result);
+  assert.equal(result.code, "COMMAND_TIMEOUT");
+  assert.equal(result.diagnostics?.dispatchAttempted, false);
+});
+
+
+it("retains the deadline cause when the budget expires synchronously inside spawn", async () => {
+  const f = fake();
+  const controller = new AbortController();
+  f.runtime.runner.spawn = () => {
+    controller.abort({ code: "COMMAND_TIMEOUT", message: "Evidence capture budget exhausted", details: { deadlineOwner: "evidence_capture" } });
+    throw controller.signal.reason;
+  };
+  const result = await waitForResultEnvelope(f.runtime, { ...options, cancelSignal: controller.signal }, async () => { throw new Error("must not dispatch"); });
+  assert.ok(!result.ok && "error" in result);
+  assert.equal(result.code, "COMMAND_TIMEOUT");
+  assert.equal(result.diagnostics?.deadlineOwner, "evidence_capture");
+  assert.equal(result.diagnostics?.dispatchAttempted, false);
 });

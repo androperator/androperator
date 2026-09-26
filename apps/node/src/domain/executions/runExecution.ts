@@ -37,6 +37,7 @@ export interface RunExecutionOptions {
   ensureInteractiveAutomationReadyFn?: typeof ensureInteractiveAutomationReady;
   probeInteractiveStateFn?: typeof probeInteractiveState;
   timeoutMs?: number;
+  signal?: AbortSignal;
   warn?: (message: string) => void;
   logger?: Logger;
 }
@@ -168,7 +169,7 @@ export function attachSnapshotsToStepResults(stepResults: ResultEnvelope["stepRe
   for (let stepIndex = snapshotSteps.length - 1; stepIndex >= 0 && snapshotIndex >= 0; stepIndex -= 1) {
     const snapshotText = snapshots[snapshotIndex];
     const targetStep = snapshotSteps[stepIndex];
-    if (snapshotText && targetStep) {
+    if (snapshotText && targetStep && targetStep.data.text === undefined) {
       targetStep.data = { ...targetStep.data, text: snapshotText };
     }
     snapshotIndex -= 1;
@@ -439,6 +440,12 @@ export async function runCloseAppPreflight(
   return { ok: true, successfulCloseActionIds };
 }
 
+function executionCancellationError(signal?: AbortSignal): { code: string; message: string; [k: string]: unknown } | undefined {
+  if (!signal?.aborted) return undefined;
+  if (isClawperatorError(signal.reason) && signal.reason.code === ERROR_CODES.COMMAND_TIMEOUT) return { ...signal.reason };
+  return { code: ERROR_CODES.RESULT_TRANSPORT_CANCELLED, message: "Execution canceled before dispatch" };
+}
+
 function isCloseAppOnlyExecution(execution: Execution): boolean {
   return execution.actions.length > 0
     && execution.actions.every(action => action.type === "close_app" && !!action.params?.applicationId);
@@ -530,6 +537,9 @@ async function performExecution(
     execution = { ...execution, timeoutMs: options.timeoutMs };
   }
 
+  const cancellation = executionCancellationError(options.signal);
+  if (cancellation !== undefined) return { execution, result: { ok: false, error: cancellation } };
+
   const androidExecution = buildAndroidExecutionPayload(execution);
   const payload = JSON.stringify(androidExecution);
   try {
@@ -553,7 +563,9 @@ async function performExecution(
           timeoutMs: options.resultEnvelopeTimeoutMs ?? (execution.timeoutMs + 5000),
           broadcastDelayMs: options.logcatBroadcastDelayMs,
           lastCorrelatedLines: 30,
-          cancelSignal: earlyResultAbortController?.signal,
+          cancelSignal: options.signal !== undefined
+            ? AbortSignal.any([earlyResultAbortController!.signal, options.signal])
+            : earlyResultAbortController?.signal,
         },
         deferredBroadcast.wait
       )
@@ -586,6 +598,12 @@ async function performExecution(
   } catch (e) {
     cancelEarlyResultWaiter();
     return { execution, result: { ok: false, error: e as { code: string; message: string; [k: string]: unknown } } };
+  }
+
+  const preflightCancellation = executionCancellationError(options.signal);
+  if (preflightCancellation !== undefined) {
+    cancelEarlyResultWaiter();
+    return { execution, result: { ok: false, error: preflightCancellation, deviceId } };
   }
 
   if (apkCheck.status === "fail") {
@@ -660,6 +678,8 @@ async function performExecution(
       // Keep confirmed effects even if a later force-stop throws.
       evidence.earlierEffects = [...successfulCloseActionIds].map(actionId => ({ actionId, effect: "force_stop" }));
     }
+    const closeCancellation = executionCancellationError(options.signal);
+    if (closeCancellation !== undefined) throw closeCancellation;
     if (!closeAppPreflight.ok) {
       cancelEarlyResultWaiter();
       invalidateReadinessCacheForErrorCode(deviceId, config.operatorPackage, closeAppPreflight.error.code);
@@ -700,6 +720,8 @@ async function performExecution(
         const { phase: _phase, dispatchState: _dispatchState, ...probeEvidence } = interactiveState.probeEvidence ?? {};
         Object.assign(evidence, probeEvidence);
       }
+      const readinessCancellation = executionCancellationError(options.signal);
+      if (readinessCancellation !== undefined) throw readinessCancellation;
       if (!interactiveState.ok) {
         cancelEarlyResultWaiter();
         const publicError = interactiveState.error.code === ERROR_CODES.DEVICE_NOT_INTERACTIVE
@@ -755,6 +777,7 @@ async function performExecution(
             timeoutMs: options.resultEnvelopeTimeoutMs ?? (execution.timeoutMs + 5000), // buffer for envelope write
             broadcastDelayMs: options.logcatBroadcastDelayMs,
             lastCorrelatedLines: 30,
+            cancelSignal: options.signal,
           },
           runBroadcast
         );
@@ -790,7 +813,7 @@ async function performExecution(
         const snapshotSteps = result.envelope.stepResults.filter(step => isSnapshotActionType(step.actionType) && step.success);
         for (let offset = 1; offset <= Math.min(records.length, snapshotSteps.length); offset++) {
           const record = records[records.length - offset];
-          if (record.validationError !== undefined) {
+          if (record.validationError !== undefined && snapshotSteps[snapshotSteps.length - offset].data.text === undefined) {
             snapshotSteps[snapshotSteps.length - offset].data.extractionReason = record.validationError;
             snapshotSteps[snapshotSteps.length - offset].data.extractionDiagnostics = record.extractionDiagnostics;
           }

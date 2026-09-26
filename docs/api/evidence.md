@@ -34,8 +34,14 @@ and does not require an application accessibility root or an available Operator.
 Hierarchy capture still requires the selected Operator and preserves its actual
 success or failure. Its readiness check is read-only: a sleeping or locked device
 returns a hierarchy failure without wake or Home input. Expiring the device-work
-budget records screenshot cancellation as `COMMAND_TIMEOUT` and retains any
-partial image bytes. Screenshot bytes must decode as a valid PNG with matching,
+budget records screenshot or hierarchy cancellation as `COMMAND_TIMEOUT` and
+retains completed artifacts and any partial image bytes. A hierarchy canceled
+by this budget retains `details.deadlineOwner: "evidence_capture"`, the execution
+phase, dispatch state, earlier effects and available result-reader diagnostics
+in `captures.json`. This distinguishes an owned deadline from an unexplained
+`RESULT_TRANSPORT_EXITED`. A terminal result accepted before deadline cancellation
+is preserved. Host cleanup does not prove that Android execution stopped, and
+capture never replays a dispatched action. Screenshot bytes must decode as a valid PNG with matching,
 positive dimensions. Capture is limited to 64 MiB and decoding to 32 million
 pixels. Empty, corrupt, or incomplete PNGs cannot mark an image complete.
 

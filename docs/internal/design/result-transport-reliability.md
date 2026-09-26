@@ -31,6 +31,235 @@ inventing Android action progress. The existing 100 ms subscription fallback
 remains a timing heuristic, not proof of a connected logcat reader. No timeout
 inflation, transport replacement or mutation replay was introduced.
 
+## Large snapshot and deadline investigation, September 2026
+
+An investigation on 27 September reproduced large-hierarchy failure and a
+misleading evidence-deadline outcome on an emulator. The baseline findings and
+subsequent repairs are recorded below. Physical-device timing remains unverified.
+
+### Scope and build identity
+
+The baseline was commit `e2ca7b86b5b3e63061582addcc2af275511cb838`, branch-local
+Node CLI 0.12.3 and a freshly built 0.12.3-d Operator. The target was an Android
+16/API-36 arm64 emulator at 1344 x 2992, density 480. The installed Chromium-based stable browser was
+1.94.121; its flags page displayed version 152.1.94.121. Both release and dev
+Operator accessibility services were enabled; every command explicitly selected
+the dev package. Doctor passed after installation.
+
+The originating report used CLI 0.12.0, a physical API-37 device and the nightly
+browser variant 1.98.19. The emulator is a useful reproduction of failure classes, not
+an equivalent timing environment. The original mobile YouTube page, daemon
+routing, release APK and a physical device were not tested in this investigation.
+
+Baseline APK SHA-256:
+`2571aa97460bc9eda2597abdd756d683b9e3bb77b1c1618f16851a5dd25eee8a`.
+The instrumented APK added only opt-in timing subdivisions in
+`TaskScopeDefault.logUiTree`; its SHA-256 was
+`0ce67bd673464209e2422b35533bb0e04a5d72dbcc71702093c698c7f4d4854d`.
+
+### Reproduction and retained outcomes
+
+The branch-local CLI opened the browser, focused its observed address field, and typed
+its internal flags URL with the fullscreen-workaround fragment and submission.
+The exact browser identity and URL remain in private command receipts.
+A separate screenshot verified the Experiments page. The older browser showed
+the full flags list, not an isolated matching experiment. No flag was changed.
+All snapshots and evidence captures below used `--no-daemon`; each CLI process
+had a 45-second outer deadline and an 8 MiB output buffer. Failed observations
+were retained, and no mutation was replayed as recovery.
+
+| Observation | Host duration | Outcome |
+| --- | --- | --- |
+| Launcher compact snapshot | 0.403 s | Complete, 36 nodes |
+| Initial browser snapshot | 0.398 s | Complete, 46 nodes; this did not establish loaded version-page content |
+| Flags snapshot, 200 nodes / 1200 text characters | 18.815 s | `SNAPSHOT_EXTRACTION_FAILED`, malformed XML, 1,946,337 received bytes |
+| Independent flags screenshot | 0.936 s | PNG saved and inspected; flags page visible |
+| Flags evidence capture, default 30-second budget | 11.829 s | Partial; screenshot complete in 0.403 s, hierarchy malformed after 11.054 s |
+| Flags evidence capture, explicit 5-second budget | 5.116 s | Partial; screenshot complete in 0.419 s, hierarchy reader killed after 4.559 s |
+| Flags snapshot with timing subdivisions | 14.689 s | `SNAPSHOT_EXTRACTION_FAILED`, malformed XML, 1,939,470 received bytes |
+
+The default-budget evidence hierarchy had 1,934,792 received bytes. All three
+malformed captures reported `closingHierarchySeen: true`; seeing the closing
+tag is insufficient to establish a complete source. The original report's
+missing closing tag was not reproduced. Neither was its 45-second caller
+`ETIMEDOUT` outcome.
+
+To inspect the same stages on a prepared, explicitly selected target:
+
+```sh
+adb -s <device_serial> shell setprop log.tag.ClawpSnapshotTiming DEBUG
+node apps/node/dist/cli/index.js snapshot \
+  --compact --max-nodes 200 --max-text-chars 1200 --no-daemon \
+  --device <device_serial> --operator-package com.clawperator.operator.dev
+node apps/node/dist/cli/index.js evidence capture \
+  --timeout 5000 --output-dir /tmp/new-snapshot-budget-bundle --no-daemon \
+  --device <device_serial> --operator-package com.clawperator.operator.dev
+adb -s <device_serial> logcat -d -v time -s ClawpSnapshotTiming:I
+adb -s <device_serial> shell setprop log.tag.ClawpSnapshotTiming INFO
+```
+
+The short evidence budget is a deliberate diagnostic trigger, not a recommended
+operating timeout. Preserve stdout, stderr, exit status and elapsed time for
+each command, plus each bundle's manifest and `captures.json`. Save an
+independent logcat capture promptly: large subsequent snapshots can overwrite
+the device ring buffer. Keep raw hierarchy and screenshot artifacts out of Git.
+
+### Finding 1: loss precedes XML validation
+
+For the first flags snapshot, Android's timing record reported a generated
+2,071,952-byte hierarchy, and its stage-success record counted 4,496 nodes. The
+CLI reconstructed 1,946,337 bytes. Applying the same extractor to a separately
+retrieved device log buffer produced the same malformed payload and byte count;
+that payload contained 4,223 `<node ` occurrences. Trimming the generated final
+newline accounts for one byte, not the remaining deficit.
+
+This localizes loss before Node XML validation and implicates hierarchy
+publication or Android logging. It does not identify the exact dropped-record
+mechanism or establish a universal size limit. The generated source was not
+saved independently before logging, so its full XML validity was not directly
+verified. The live reader and device-buffer agreement does not support blaming
+compact projection or a Node-only streaming boundary.
+
+`TaskScopeDefault.logUiTree` publishes XML through `Log.d`, which delegates to
+Timber's `DebugTree`. The host reconstructs that text from logcat. This is a
+separate path from `publishResultEnvelope`: the existing result chunk byte
+counts, hashes and pacing do not protect snapshot XML. Compact projection runs
+only after source validation. Rejecting these incomplete snapshots is correct;
+accepting a repaired-looking prefix would weaken selector evidence.
+
+### Finding 2: node counting dominates the warm snapshot
+
+The timing subdivisions preserve the existing `metadataAndStatsUs` aggregate
+and add `nodeCountUs`, `maxDepthUs` and `windowMetadataUs`, only when the existing
+`ClawpSnapshotTiming` debug tag is enabled. They do not change snapshot behavior.
+
+The instrumented flags observation measured:
+
+| Android stage | Duration |
+| --- | --- |
+| Generate hierarchy | 4.126 s |
+| Log hierarchy | 60.852 ms |
+| Count nodes | 10.164 s |
+| Calculate maximum depth | 4.605 ms |
+| Fetch window metadata | 9.910 ms |
+| Total measured snapshot work | 14.366 s |
+
+The two earlier evidence observations generated the hierarchy in 137-140 ms,
+but spent 9.883-10.624 seconds in the then-unsplit statistics/metadata stage.
+The subdivided observation identifies
+`"<node ".toRegex().findAll(hierarchyDump).count()` as the expensive operation
+in that run. It does not establish why the Android regex implementation is
+slow, or a growth-rate claim from one payload size. Window metadata is not the
+source of that measured ten-second delay.
+
+### Finding 3: an owned deadline is reported as a transport exit
+
+At the five-second evidence deadline, `EvidenceBudgetRunner` aborts its signal
+with `COMMAND_TIMEOUT`, then kills its streaming children with `SIGKILL`.
+Screenshot capture consumes that signal. The hierarchy call passes the budget
+runner and remaining time to `runExecution`, but does not propagate that budget
+signal into the result reader. The result reader therefore observes process
+exit before its own timer fires and reports:
+
+```text
+RESULT_TRANSPORT_EXITED
+logcat exited before terminal envelope (code=null, signal=SIGKILL)
+```
+
+The retained hierarchy failure correctly says `phase: result_wait`,
+`dispatchState: dispatched`, and `earlierEffects: []`; the bundle correctly
+remains partial with its screenshot intact. However, its code/message omits
+the known cause: the capture owner exhausted its deadline. This reproduces the
+reported error shape without a daemon or a physical-device disconnect. It does
+not prove that the original session had the same cause.
+
+Android subsequently emitted snapshot timing for that command after 10.076
+seconds of work, beyond the host's five-second budget. Host process cleanup is
+not evidence that device work stopped. Standalone snapshot result waiting also
+starts its timer at dispatch, after readiness, rather than enforcing a single
+whole-process deadline. The original 45-second outer timeout still needs its
+own correlated reproduction before assigning a root cause.
+
+### Implemented repair
+
+The Operator now returns snapshot XML inside the canonical action step's
+`data.text`. This reuses `publishResultEnvelope`, including its paced 1024-byte
+chunks, command/task identity, ordered indices, declared byte length and SHA-256.
+Agent snapshots no longer emit a second unverified raw hierarchy log. Manual
+hierarchy logging without a command context retains its existing diagnostic
+output. No socket, new chunk format or file-transfer service was introduced.
+
+Node preserves canonical `data.text`, validates its XML and applies the existing
+presentation. Tagged legacy extraction remains available for older Operators,
+but cannot overwrite an explicitly supplied source, even an empty invalid one.
+Current snapshots stay associated with their action IDs inside the verified
+result; legacy occurrence ordering is not used for them. Missing or corrupt
+result chunks fail at transport before any snapshot can be used. The existing
+transport limit applies to the whole envelope, including multiple snapshots.
+Pacing is not durable delivery or permission to accept incomplete data.
+
+Node counting now uses a forward literal scan instead of regex iteration. The
+first repaired 2,071,952-byte flags capture counted its 4,496 nodes in 12.700 ms,
+compared with the baseline 10.164 seconds. Subsequent large captures counted in
+11.503-13.046 ms. These measurements do not predict physical-device latency.
+
+The evidence budget now propagates its abort signal into `runExecution` and the
+result reader. Budget exhaustion settles as `COMMAND_TIMEOUT` before owned
+process cleanup, with `details.deadlineOwner: "evidence_capture"`. Pre-dispatch
+expiry prevents the requested broadcast and retains any earlier host effects;
+after-dispatch expiry retains reader/chunk progress and dispatch uncertainty.
+An already accepted terminal outcome wins over later cancellation. The budget
+runner also expires synchronously if a new operation observes no time remaining
+before the timer callback has run. This does not add a global CLI process
+deadline or promise to stop Android work already dispatched.
+
+The public snapshot arguments, success shapes, XML and compact presentation are
+unchanged. Evidence consumers should use the new truthful `COMMAND_TIMEOUT`
+outcome for owned hierarchy-budget expiry rather than expecting
+`RESULT_TRANSPORT_EXITED` for that case. Unexplained transport exits still retain
+their existing code. No runtime skill depends on the internal XML log marker,
+and no runtime-skill input or output contract was changed.
+
+### Repaired live evidence and limits
+
+The same explicit API-36 emulator, selected dev Operator and browser were used.
+The rebuilt Operator passed doctor before observation. The first repaired flags
+snapshot completed in 8.513 seconds and returned all 4,496 nodes before compact
+projection to 200 nodes. A later raw-artifact snapshot completed in 7.685 seconds,
+with 4,706 nodes and 2,167,613 XML bytes, exactly matching Android's generated
+byte count. Browser state changed between observations, so these are not paired
+end-to-end speed benchmarks.
+
+A flags-page evidence bundle completed in 8.117 seconds. Its screenshot was
+visually checked, and its hierarchy had 4,705 nodes and 2,167,159 bytes, matching
+Android's source byte count. The hierarchy artifact and capture receipt agreed.
+A deliberate two-second capture finished partial in 2.080 seconds: the
+screenshot remained complete, and the hierarchy failed as `COMMAND_TIMEOUT`,
+`phase: result_wait`, `dispatchState: dispatched`, with
+`deadlineOwner: evidence_capture`. Diagnostics retained 759 of 2,298 chunks and
+777,216 of 2,352,444 envelope bytes. No partial XML was accepted or mutation
+replayed.
+
+All attempts remain in private receipts. An intervening snapshot observed
+Settings (143 nodes), and its evidence bundle also completed. A snapshot
+immediately after returning to the browser captured a 46-node transitional tree.
+Those successful observations are excluded from the large-page measurements.
+The flags page was then explicitly loaded and checked again. The finite sample
+proves the repaired paths on this emulator; it does not establish a universal
+size threshold or zero-flake logging. Physical API-37 hardware, the original
+45-second outer timeout, the original video page, release APK and live daemon
+parity remain outside this validation.
+
+Regression coverage exercises multi-megabyte Unicode XML, multiple action IDs,
+compact projection after reassembly, missing middle/tail chunks, checksum
+failure, malformed XML after valid transport, legacy compatibility and explicit
+empty sources. Deadline tests cover pre-dispatch expiry, retained force-stop
+effects, expiry after dispatch, terminal/deadline races and partial evidence
+bundles. Android tests verify source preservation without the raw agent log,
+exact node counts and placement in canonical action data. The Node suite, debug
+APK build, app and all-module Android unit suites, and docs build validate the
+change. Source and artifact identities remain in the private evidence directory.
+
 ## Reproduced publication loss
 
 A fixed debug baseline on 13 September 2026 ran 20 immediate Settings open/query

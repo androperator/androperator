@@ -258,11 +258,16 @@ class TaskScopeDefault(
                         uiTreeInspector.getUnavailableHierarchyDiagnostics(), "SNAPSHOT_HIERARCHY_UNAVAILABLE",
                     )
                 val hierarchyReadyNs = if (snapshotTimingEnabled) SystemClock.elapsedRealtimeNanos() else 0L
-                val commandId = currentTaskCommandId() ?: "unknown"
-                Log.d("$TAG UI Hierarchy [commandId=$commandId]:\n$hierarchyDump")
+                val commandId = currentTaskCommandId()
+                // Agent snapshots travel inside the verified canonical result, not a second raw log stream.
+                if (commandId == null) {
+                    Log.d("$TAG UI Hierarchy [commandId=unknown]:\n$hierarchyDump")
+                }
                 val hierarchyLoggedNs = if (snapshotTimingEnabled) SystemClock.elapsedRealtimeNanos() else 0L
                 val nodeCount = countNodesInHierarchyDump(hierarchyDump)
+                val nodeCountReadyNs = if (snapshotTimingEnabled) SystemClock.elapsedRealtimeNanos() else 0L
                 val maxDepth = maxDepthInHierarchyDump(hierarchyDump)
+                val maxDepthReadyNs = if (snapshotTimingEnabled) SystemClock.elapsedRealtimeNanos() else 0L
                 val actualFormat = UiSnapshotActualFormat.HierarchyXml
                 val windowMetadata = uiTreeInspector.getCurrentWindowMetadata()
                 if (snapshotTimingEnabled) {
@@ -272,6 +277,9 @@ class TaskScopeDefault(
                         "[SnapshotTiming] commandId=$commandId hierarchyBytes=${hierarchyDump.encodeToByteArray().size} " +
                             "hierarchyBuildUs=${(hierarchyReadyNs - snapshotStartNs) / 1_000} " +
                             "logCallUs=${(hierarchyLoggedNs - hierarchyReadyNs) / 1_000} " +
+                            "nodeCountUs=${(nodeCountReadyNs - hierarchyLoggedNs) / 1_000} " +
+                            "maxDepthUs=${(maxDepthReadyNs - nodeCountReadyNs) / 1_000} " +
+                            "windowMetadataUs=${(metadataReadyNs - maxDepthReadyNs) / 1_000} " +
                             "metadataAndStatsUs=${(metadataReadyNs - hierarchyLoggedNs) / 1_000} " +
                             "operatorSnapshotUs=${(metadataReadyNs - snapshotStartNs) / 1_000}",
                     )
@@ -297,6 +305,7 @@ class TaskScopeDefault(
                 sink.emit(TaskEvent.StageSuccess("logUiTree", successPayload))
                 return UiSnapshotResult(
                     actualFormat = actualFormat,
+                    hierarchyXml = hierarchyDump,
                     foregroundPackage = windowMetadata?.foregroundPackage,
                     hasOverlay = windowMetadata?.hasOverlay ?: false,
                     overlayPackage = windowMetadata?.overlayPackage,
@@ -371,7 +380,15 @@ class TaskScopeDefault(
         return node.children.maxOf { calculateMaxDepth(it, currentDepth + 1) }
     }
 
-    private fun countNodesInHierarchyDump(hierarchyDump: String): Int = "<node ".toRegex().findAll(hierarchyDump).count()
+    private fun countNodesInHierarchyDump(hierarchyDump: String): Int {
+        var count = 0
+        var offset = hierarchyDump.indexOf("<node ")
+        while (offset >= 0) {
+            count++
+            offset = hierarchyDump.indexOf("<node ", startIndex = offset + 6)
+        }
+        return count
+    }
 
     private fun maxDepthInHierarchyDump(hierarchyDump: String): Int {
         val tokenRegex = Regex("</?node\b[^>]*?/?>")

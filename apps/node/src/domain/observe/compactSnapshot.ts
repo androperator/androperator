@@ -36,12 +36,16 @@ export interface CompactSnapshotNode {
 export function validateSnapshotPresentationOptions(options: SnapshotPresentationOptions): void {
   for (const [name, maximum] of [["maxNodes", 1000], ["maxTextChars", 4096]] as const) {
     const value = options[name];
-    if (value !== undefined && (!options.compact || !Number.isInteger(value) || value < 1 || value > maximum)) {
-      throw { code: "USAGE", message: `${name} requires compact and an integer from 1 to ${maximum}` };
+    if (value === undefined) continue;
+    if (!options.compact) {
+      throw { code: "USAGE", message: `${name} requires compact: true. Set compact to true (CLI: --compact), or omit ${name} for raw XML.` };
+    }
+    if (!Number.isInteger(value) || value < 1 || value > maximum) {
+      throw { code: "USAGE", message: `${name} must be an integer from 1 to ${maximum}.` };
     }
   }
   if (options.compact && options.maxChars !== undefined) {
-    throw { code: "USAGE", message: "compact and maxChars cannot be combined" };
+    throw { code: "USAGE", message: "compact and maxChars cannot be combined. Omit maxChars and use maxNodes or maxTextChars to bound compact output, or omit compact for raw XML." };
   }
   if (options.rawPath !== undefined && options.rawPath.trim().length === 0) {
     throw { code: "USAGE", message: "rawPath must be nonblank" };

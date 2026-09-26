@@ -183,14 +183,27 @@ export function getCoreMcpTools(
     },
     {
       name: "snapshot",
-      description: "Capture the current Android UI hierarchy as XML.",
-      inputSchema: buildCommonExecutionSchema({
-        compact: { type: "boolean" },
-        maxNodes: { type: "integer", minimum: 1, maximum: 1000 },
-        maxTextChars: { type: "integer", minimum: 1, maximum: 4096 },
-        saveRaw: { type: "boolean" },
-        maxChars: { type: "integer", minimum: 1 },
-      }),
+      description: 'Capture the current Android UI hierarchy as XML, or bounded JSON with compact: true. maxNodes and maxTextChars require compact: true. Example: {"compact":true,"maxNodes":100}. Limits affect returned output, not capture or transfer cost.',
+      inputSchema: {
+        ...buildCommonExecutionSchema({
+          compact: { type: "boolean", default: false, description: "Return bounded structural JSON instead of XML. Required to use maxNodes or maxTextChars; cannot be combined with maxChars." },
+          maxNodes: { type: "integer", minimum: 1, maximum: 1000, description: "Requires compact: true. Maximum returned nodes; defaults to 100 in compact mode. Does not limit source capture." },
+          maxTextChars: { type: "integer", minimum: 1, maximum: 4096, description: "Requires compact: true. Maximum Unicode code points per text or content-description field; defaults to 256 in compact mode." },
+          saveRaw: { type: "boolean", default: false, description: "Save complete XML to a runtime-owned temporary file in either mode and return rawArtifactPath. Caller-provided paths are not accepted." },
+          maxChars: { type: "integer", minimum: 1, description: "Raw XML mode only. Truncate returned XML to this many characters; omit with compact: true. Defaults to no truncation." },
+        }),
+        examples: [{ compact: true, maxNodes: 100 }],
+        allOf: [
+          {
+            if: { anyOf: [{ required: ["maxNodes"] }, { required: ["maxTextChars"] }] },
+            then: { required: ["compact"], properties: { compact: { const: true } } },
+          },
+          {
+            if: { required: ["compact"], properties: { compact: { const: true } } },
+            then: { not: { required: ["maxChars"] } },
+          },
+        ],
+      },
       handler: async (args) => {
         const parsed = parseToolArguments(snapshotArgsSchema, args);
         try { validateSnapshotPresentationOptions(parsed); }

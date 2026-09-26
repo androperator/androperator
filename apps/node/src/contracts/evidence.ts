@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { screenshotMetadataSchema } from "./screenshot.js";
 
 export const evidenceErrorSchema = z.object({
   code: z.string(), stage: z.string(), message: z.string(), component: z.string().nullable(),
@@ -12,8 +13,12 @@ export const evidenceArtifactSchema = z.object({
   path: relativePath.nullable(), mimeType: z.string(), status: z.enum(["complete", "partial", "failed"]),
   bytes: z.number().int().nonnegative().nullable(), sha256: z.string().regex(/^[a-f0-9]{64}$/).nullable(),
   startedAt: z.string().datetime(), finishedAt: z.string().datetime(), durationMs: z.number().nonnegative(),
+  image: screenshotMetadataSchema.optional(),
   commandId: z.string().optional(), taskId: z.string().optional(), error: evidenceErrorSchema.optional(),
 }).strict().superRefine((artifact, context) => {
+  if (artifact.image !== undefined && (artifact.kind !== "screenshot" || artifact.status !== "complete")) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: "Image geometry requires a complete screenshot" });
+  }
   const hasFile = artifact.path !== null && artifact.bytes !== null && (artifact.bytes > 0 || artifact.kind === "encoder_stderr") && artifact.sha256 !== null;
   if (artifact.status === "failed") {
     if (artifact.path !== null || artifact.bytes !== null || artifact.sha256 !== null || artifact.error === undefined) {

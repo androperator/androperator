@@ -12,7 +12,7 @@ const captureSchema = executionToolOptionsSchema.extend({
 export function getEvidenceMcpTools(logger?: Logger, session: SessionDefaults = createSessionDefaults(), dependencies?: EvidenceCaptureDependencies): McpToolDefinition[] {
   return [{
     name: "evidence_capture",
-    description: "Capture a local screenshot and raw hierarchy bundle with correlated metadata and explicit partial failures.",
+    description: "Capture a local screenshot and raw hierarchy bundle with correlated metadata and explicit partial failures. Complete screenshot artifacts include original PNG pixel dimensions and a top-left coordinate origin; resized preview coordinates must be mapped back before use.",
     inputSchema: buildCommonExecutionSchema({ label: { type: "string", maxLength: 2048 }, context: { type: "object" } }),
     handler: async args => {
       const options = mergeWithSessionDefaults(parseToolArguments(captureSchema, args), session);

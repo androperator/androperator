@@ -16,7 +16,7 @@ describe("verified screenshot fallback", () => {
       const directory = await mkdtemp(join(tmpdir(), "screenshot-reliability-"));
       try {
         const path = join(directory, scenario === "missing_parent" ? "absent/image.png" : "image.png");
-        const png = new PNG({ width: 1, height: 1 });
+        const png = new PNG({ width: 6, height: 3 });
         const bytes = scenario === "empty" ? undefined : scenario === "invalid_png" ? Buffer.from("not a PNG") : PNG.sync.write(png);
         const envelope: ResultEnvelope = { commandId: "screenshot-request", taskId: "screenshot-task", status: "failed", error: "Runtime screenshot unsupported", stepResults: [{ id: "shot", actionType: "take_screenshot", success: false, data: { error: "UNSUPPORTED_RUNTIME_SCREENSHOT", errorCode: "UNSUPPORTED_RUNTIME_SCREENSHOT", message: "unsupported", provenance: "keep" } }] };
         const result = await runExecution({ commandId: envelope.commandId, taskId: envelope.taskId, source: "test", expectedFormat: "android-ui-automator", timeoutMs: 1000, actions: [{ id: "shot", type: "take_screenshot", params: { path } }] }, {
@@ -33,10 +33,16 @@ describe("verified screenshot fallback", () => {
           assert.equal(step.data.error, undefined);
           assert.equal(step.data.message, undefined);
           assert.equal(step.data.captureSource, "host");
+          assert.equal(step.data.width, "6");
+          assert.equal(step.data.height, "3");
+          assert.equal(step.data.coordinateSpace, "screenshot_pixels");
+          assert.equal(step.data.origin, "top_left");
           assert.deepEqual(await readFile(path), bytes);
         } else {
           assert.equal(step.data.errorCode, "EVIDENCE_CAPTURE_FAILED");
           assert.equal(step.data.path, undefined);
+          assert.equal(step.data.width, undefined);
+          assert.equal(step.data.height, undefined);
         }
       } finally { await rm(directory, { recursive: true, force: true }); }
     });

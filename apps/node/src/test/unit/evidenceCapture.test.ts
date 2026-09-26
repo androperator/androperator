@@ -71,6 +71,8 @@ describe("still evidence capture", () => {
       assert.deepEqual(manifest.device.display, { width: 100, height: 200, density: 200, rotation: 1 });
       assert.equal(manifest.device.deviceType, "physical");
       assert.equal(manifest.device.deviceTypeProperties["ro.kernel.qemu"], null);
+      assert.deepEqual(manifest.artifacts[0].image, { width: 2, height: 2, coordinateSpace: "screenshot_pixels", origin: "top_left" });
+      assert.notEqual(manifest.artifacts[0].image!.width, manifest.device.display.width);
       assert.deepEqual(manifest.artifacts.map(value => value.kind), ["screenshot", "hierarchy", "capture_envelopes"]);
       for (const artifact of manifest.artifacts) {
         assert.equal(artifact.status, "complete");
@@ -140,6 +142,7 @@ describe("still evidence capture", () => {
       const manifest = await manifestAt(result.manifestPath);
       assert.equal(manifest.artifacts[0].error?.code, "COMMAND_TIMEOUT");
       assert.equal(manifest.artifacts[0].path, "screenshot.partial.png");
+      assert.equal(manifest.artifacts[0].image, undefined);
       assert.equal(await fs.readFile(join(f.outputDir, "screenshot.partial.png"), "utf8"), "partial");
       const captures = JSON.parse(await fs.readFile(join(f.outputDir, "captures.json"), "utf8"));
       assert.equal(captures[0].result.error.code, "COMMAND_TIMEOUT");
@@ -171,6 +174,7 @@ describe("still evidence capture", () => {
         const manifest = await manifestAt(result.manifestPath);
         assert.notEqual(manifest.artifacts[0].status, "complete");
         assert.equal(manifest.artifacts[0].path, bytes.length > 0 ? "screenshot.partial.png" : null);
+        assert.equal(manifest.artifacts[0].image, undefined);
         assert.equal(manifest.artifacts[1].status, "complete");
       } finally { await f.cleanup(); }
     });
@@ -265,6 +269,7 @@ describe("still evidence capture", () => {
       assert.equal(result.status, "partial");
       assert.equal(manifest.artifacts[0].status, "partial");
       assert.equal(manifest.artifacts[0].path, "screenshot.partial.png");
+      assert.equal(manifest.artifacts[0].image, undefined);
     } finally { await f.cleanup(); }
   });
   it("bounds the shared screenshot subprocess and preserves partial bytes", async () => {

@@ -3,7 +3,8 @@ import * as fs from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
 import { evidenceRoot, storageError } from "./storage.js";
 import { isAbsolute, join, parse, resolve } from "node:path";
-import { PNG } from "pngjs";
+import { verifyScreenshot } from "../observe/screenshotMetadata.js";
+import type { ScreenshotMetadata } from "../../contracts/screenshot.js";
 import { type EvidenceArtifact, type EvidenceCaptureResult, type EvidenceError } from "../../contracts/evidence.js";
 import { getDefaultRuntimeConfig, type RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 import { resolveOperatorPackageForRequest } from "../config/resolveOperatorPackage.js";
@@ -66,13 +67,6 @@ function captureError(error: unknown, stage: string, component: string | null): 
   return { code: typeof value?.code === "string" ? value.code : "EVIDENCE_CAPTURE_FAILED", stage, component,
     message: typeof value?.message === "string" ? value.message : String(error) };
 }
-function verifyPng(buffer: Buffer): void {
-  if (buffer.length < 24 || !buffer.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) throw new Error("Invalid PNG signature");
-  const width = buffer.readUInt32BE(16), height = buffer.readUInt32BE(20);
-  if (width === 0 || height === 0 || width * height > 32_000_000) throw new Error("PNG dimensions exceed the 32-million-pixel decoding limit");
-  const decoded = PNG.sync.read(buffer, { checkCRC: true });
-  if (decoded.width !== width || decoded.height !== height || decoded.data.length !== width * height * 4) throw new Error("PNG decoding failed");
-}
 
 export async function captureEvidence(options: EvidenceCaptureOptions, dependencies: EvidenceCaptureDependencies = {}): Promise<EvidenceCaptureResult> {
   validateEvidenceCaptureOptions(options);
@@ -107,18 +101,19 @@ export async function captureEvidence(options: EvidenceCaptureOptions, dependenc
     const artifacts: EvidenceArtifact[] = [];
     const errors: EvidenceError[] = [];
     const captures: Array<Record<string, unknown>> = [];
-    const store = async (kind: EvidenceArtifact["kind"], filename: string, mimeType: string, work: () => Promise<Buffer>, verify: (data: Buffer) => void, correlation: { commandId?: string; taskId?: string } = {}) => {
+    const store = async (kind: EvidenceArtifact["kind"], filename: string, mimeType: string, work: () => Promise<Buffer>, verify: (data: Buffer) => ScreenshotMetadata | void, correlation: { commandId?: string; taskId?: string } = {}) => {
       const artifactStart = new Date().toISOString(), monotonicStart = now();
       const partialPath = filename.replace(/(\.[^.]+)$/, ".partial$1");
       let path: string | null = null, bytes: number | null = null, sha256: string | null = null;
       let status: EvidenceArtifact["status"] = "failed";
       let error: EvidenceError | undefined;
+      let image: ScreenshotMetadata | void = undefined;
       try {
         const data = await work();
         if (data.length === 0) throw new Error("Captured output is empty");
         await files.writeFile(join(outputDir, partialPath), data, { flag: "wx", mode: 0o600 });
         const saved = await files.readFile(join(outputDir, partialPath));
-        verify(saved);
+        image = verify(saved);
         await files.rename(join(outputDir, partialPath), join(outputDir, filename));
         path = filename; bytes = saved.length; sha256 = createHash("sha256").update(saved).digest("hex"); status = "complete";
       } catch (caught) {
@@ -144,7 +139,7 @@ export async function captureEvidence(options: EvidenceCaptureOptions, dependenc
         Object.assign(record, { startedAt: artifactStart, finishedAt: artifactFinishedAt, durationMs });
       }
       artifacts.push({ kind, path, mimeType, status, bytes, sha256, startedAt: artifactStart,
-        finishedAt: artifactFinishedAt, durationMs, ...correlation, ...(error ? { error } : {}) });
+        finishedAt: artifactFinishedAt, durationMs, ...correlation, ...(status === "complete" && image ? { image } : {}), ...(error ? { error } : {}) });
     };
     const screenshotIds = { commandId: `${evidenceId}-screenshot`, taskId: evidenceId };
     await store("screenshot", "screenshot.png", "image/png", async () => {
@@ -157,7 +152,7 @@ export async function captureEvidence(options: EvidenceCaptureOptions, dependenc
         captures.push({ kind: "screenshot", source: "adb_screencap", ...screenshotIds, result: { ok: false, error: captureError(error, "capture", "screenshot") } });
         throw error;
       }
-    }, verifyPng, screenshotIds);
+    }, verifyScreenshot, screenshotIds);
     const execution = { ...buildSnapshotExecution(), commandId: `${evidenceId}-hierarchy`, taskId: evidenceId };
     await store("hierarchy", "hierarchy.xml", "application/xml", async () => {
       if (remaining() < 1000) throw { code: "COMMAND_TIMEOUT", message: "Hierarchy not dispatched: less than the minimum execution budget remains" };

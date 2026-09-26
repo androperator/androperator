@@ -1133,6 +1133,28 @@ Success data:
 
 - `data.path` after Node verifies and writes the host screenshot
 - `data.captureSource: "host"` and `data.capturedAt` (host ISO timestamp after persistence)
+- `data.width` and `data.height`: original, decoded PNG dimensions in pixels, encoded as decimal strings like other step data
+- `data.coordinateSpace: "screenshot_pixels"` and `data.origin: "top_left"`
+
+These dimensions describe the saved image, not a resized preview or Android dp.
+The x axis runs right and the y axis runs down. Pixel indices range from zero to
+`width - 1` and `height - 1`. Metadata is published only after PNG validation and
+successful persistence. Older captures may omit it; read the original image's
+dimensions instead of guessing from its preview.
+
+For an uncropped preview rendered at `previewWidth` by `previewHeight`, map a
+point inside the image to the original with
+`x = floor(previewX * width / previewWidth)` and
+`y = floor(previewY * height / previewHeight)`. For example, a 1080 x 2400 PNG
+shown at 360 x 800 maps preview point (120, 200) to image point (360, 600).
+Measure preview coordinates relative to the image itself: remove padding or
+letterboxing first. This formula is not sufficient for cropped or rotated previews.
+
+Image coordinates are not a guarantee about the device's current input space.
+Before clicking or swiping, verify that the current display orientation and
+coordinate dimensions match the capture; recapture after rotation, display
+changes, or navigation. Do not use density scaling to convert pixels to dp.
+Prefer a fresh semantic selector when available.
 
 The host capture occurs after the runtime envelope, not at the runtime step's
 exact instant. A successful fallback clears the superseded

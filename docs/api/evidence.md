@@ -127,6 +127,20 @@ without usable files have null path/size/hash and an `error`; retained partial
 files have their own partial entry and error. The manifest never hashes itself.
 Errors contain `{code,stage,message,component}`, with component nullable.
 
+Complete screenshot artifacts additionally contain `image`:
+
+```json
+{"width": 1080, "height": 2400, "coordinateSpace": "screenshot_pixels", "origin": "top_left"}
+```
+
+`width` and `height` are numbers from the verified saved PNG. They are distinct
+from the separately sampled `device.display` metadata and from viewer preview
+sizes. Failed or partial artifacts do not carry verified image geometry; older
+bundles can omit it. See [screenshot coordinate guidance](actions.md#action-take-screenshot)
+for preview scaling, axis directions, and checking the current input space.
+Screenshot and hierarchy captures remain sequential observations, not a shared
+coordinate-state guarantee.
+
 `captures.json` retains the Operator result under its hierarchy record's
 `result`, including the canonical envelope and fields such as
 `operator_overlay_visible` when supplied. The screenshot record has

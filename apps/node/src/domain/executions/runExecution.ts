@@ -1,5 +1,6 @@
 import { getLoggingStatus } from "../../adapters/logger.js";
-import { PNG } from "pngjs";
+import { verifyScreenshot } from "../observe/screenshotMetadata.js";
+import type { ScreenshotMetadata } from "../../contracts/screenshot.js";
 import { probeUserUnlockState } from "../device/userUnlockState.js";
 import { isBackgroundServiceExecution } from "../../contracts/notifications.js";
 import { writeFile } from "node:fs/promises";
@@ -351,7 +352,8 @@ export function buildTimeoutError(
 
 export function finalizeSuccessfulScreenshotCapture(
   screenStep: ResultEnvelope["stepResults"][number] | undefined,
-  screenshotPath: string
+  screenshotPath: string,
+  image: ScreenshotMetadata,
 ): void {
   if (!screenStep) {
     return;
@@ -363,7 +365,8 @@ export function finalizeSuccessfulScreenshotCapture(
     screenStep.data = remainingData;
   }
 
-  screenStep.data = { ...screenStep.data, path: screenshotPath, captureSource: "host", capturedAt: new Date().toISOString() };
+  screenStep.data = { ...screenStep.data, path: screenshotPath, captureSource: "host", capturedAt: new Date().toISOString(),
+    width: String(image.width), height: String(image.height), coordinateSpace: image.coordinateSpace, origin: image.origin };
 }
 
 /**
@@ -841,17 +844,14 @@ async function performExecution(
             taskId: execution.taskId,
           });
 
-          if (buffer.length < 24 || buffer.readUInt32BE(16) * buffer.readUInt32BE(20) > 32_000_000) {
-            throw new Error("Screenshot exceeds PNG decoding limits");
-          }
-          PNG.sync.read(buffer, { checkCRC: true });
+          const image = verifyScreenshot(buffer);
           await writeFile(screenshotPath, buffer);
-          finalizeSuccessfulScreenshotCapture(screenStep, screenshotPath);
+          finalizeSuccessfulScreenshotCapture(screenStep, screenshotPath, image);
         } catch (e) {
           const screenStep = result.envelope.stepResults.find(step => step.actionType === "take_screenshot");
           if (screenStep !== undefined) {
             screenStep.success = false;
-            const { path: _path, ...previousData } = screenStep.data;
+            const { path: _path, width: _width, height: _height, coordinateSpace: _space, origin: _origin, ...previousData } = screenStep.data;
             screenStep.data = { ...previousData,
               runtimeError: previousData.error ?? "",
               error: ERROR_CODES.EVIDENCE_CAPTURE_FAILED,

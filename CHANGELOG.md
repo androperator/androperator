@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims to follow Semantic Versioning.
 
+## [0.12.3] - 2026-09-27
+
+This release makes large UI snapshots more reliable by carrying the hierarchy in the verified result envelope. It also speeds up Android node counting and preserves timeout evidence when capture budgets expire.
+
+### 🤖 Node API & CLI
+
+- **Fixed:** Verified snapshot XML through the correlated, paced result-envelope chunks, including byte counts and SHA-256, and preferred that canonical result over legacy log extraction. Public snapshot arguments and success shapes remain unchanged.
+- **Fixed:** Preserved `COMMAND_TIMEOUT`, dispatch state, earlier effects, and partial artifacts when an evidence capture budget expires.
+
+### 📚 Documentation & Website
+
+- **Changed:** Updated public release and installer version markers to the published 0.12.2 release.
+- **Changed:** Documented canonical snapshot delivery, chunk verification, and timeout behavior in the snapshot, action, and evidence guides.
+
+### 📱 Android Operator APK
+
+- **Fixed:** Included snapshot XML in the canonical result envelope and counted hierarchy nodes with a literal scan. Counting 4,496 nodes on an API 36 emulator fell from 10.164 seconds to 12.700 milliseconds; this measures node counting, not the full snapshot operation.
+
+Pull requests:
+- [chore(release): complete 0.12.2 follow-up](https://github.com/clawperator/clawperator/pull/343)
+- [fix(snapshot): verify hierarchy delivery and speed up node counting](https://github.com/clawperator/clawperator/pull/344)
+
 ## [0.12.2] - 2026-09-25
 
 **Breaking:** Video recording now requires ffmpeg 6.1 or newer with a working libx264 encoder. This release checks video encoding support before capture, preserves frame timing and the original recording when finalization fails, and makes doctor guidance easier to read.

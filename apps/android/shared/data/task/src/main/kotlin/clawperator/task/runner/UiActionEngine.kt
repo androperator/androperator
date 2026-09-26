@@ -1,5 +1,6 @@
 package clawperator.task.runner
 
+import clawperator.uitree.TextSubmissionOutcome
 import action.log.Log
 import action.media.NotificationMediaService
 import action.media.NotificationMediaException
@@ -927,7 +928,7 @@ class UiActionEngineDefault(
         taskScope: TaskScope,
         action: UiAction.EnterText,
     ): UiActionStepResult {
-        taskScope.ui {
+        val submission = taskScope.ui {
             enterText(
                 matcher = action.matcher,
                 text = action.text,
@@ -946,6 +947,13 @@ class UiActionEngineDefault(
                     "text" to action.text,
                     "clear" to action.clear.toString(),
                     "submit" to action.submit.toString(),
+                    "text_entry" to "accepted",
+                    "submission" to when (submission) {
+                        TextSubmissionOutcome.NotRequested -> "not_requested"
+                        TextSubmissionOutcome.Unavailable -> "unavailable"
+                        else -> "accepted"
+                    },
+                    "submit_method" to submission.wireValue,
                 ),
         )
     }

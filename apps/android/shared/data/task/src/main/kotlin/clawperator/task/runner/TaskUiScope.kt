@@ -1,5 +1,6 @@
 package clawperator.task.runner
 
+import clawperator.uitree.TextSubmissionOutcome
 import action.math.geometry.Point
 import clawperator.uitree.ToggleState
 import clawperator.uitree.UiTreeClickTypes
@@ -387,5 +388,5 @@ interface TaskUiScope {
         retry: TaskRetry = TaskRetry.None,
         strict: Boolean = false,
         container: NodeMatcher? = null,
-    )
+    ): TextSubmissionOutcome
 }

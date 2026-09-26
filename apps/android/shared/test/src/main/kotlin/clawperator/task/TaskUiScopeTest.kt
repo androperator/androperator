@@ -1,5 +1,6 @@
 package clawperator.task
 
+import clawperator.uitree.TextSubmissionOutcome
 import action.log.Log
 import clawperator.task.runner.NodeMatcher
 import clawperator.task.runner.TaskRetry
@@ -444,7 +445,7 @@ class TaskUiScopeTest(
         retry: TaskRetry,
         strict: Boolean,
         container: NodeMatcher?,
-    ) {
+    ): TextSubmissionOutcome {
         val node =
             findNodeByMatcher(matcher)
                 ?: throw IllegalStateException("No node found matching criteria")
@@ -454,6 +455,7 @@ class TaskUiScopeTest(
         }
 
         println("[TaskUiScopeTest] Entered text into node: ${node.label} (len=${text.length}, clear=$clear, submit=$submit)")
+        return if (submit) TextSubmissionOutcome.Unavailable else TextSubmissionOutcome.NotRequested
     }
 
     /**

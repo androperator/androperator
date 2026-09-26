@@ -152,7 +152,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = false, clear = true)
 
-            assertTrue(result)
+            assertEquals(TextSubmissionOutcome.NotRequested, result)
             assertEquals(listOf("", "hello"), performedSetTextValues(nodeInfo))
         }
 
@@ -173,7 +173,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = false, clear = true)
 
-            assertFalse(result)
+            assertEquals(null, result)
             assertEquals(listOf(""), performedSetTextValues(nodeInfo))
         }
 
@@ -195,7 +195,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = false, clear = true)
 
-            assertTrue(result)
+            assertEquals(TextSubmissionOutcome.NotRequested, result)
             assertEquals(listOf(""), performedSetTextValues(nodeInfo))
             assertEquals("hello", session.text)
             assertEquals(
@@ -220,7 +220,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = false, clear = false)
 
-            assertTrue(result)
+            assertEquals(TextSubmissionOutcome.NotRequested, result)
             assertEquals(listOf("hello"), performedSetTextValues(nodeInfo))
         }
 
@@ -233,7 +233,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = true, clear = false)
 
-            assertTrue(result)
+            assertEquals(TextSubmissionOutcome.ImeEditorAction, result)
             assertEquals(listOf("hello"), performedSetTextValues(nodeInfo))
             assertTrue(performedActionIds(nodeInfo).contains(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.id))
             assertFalse(performedActionIds(nodeInfo).contains(AccessibilityNodeInfo.ACTION_CLICK))
@@ -248,7 +248,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = true, clear = false)
 
-            assertTrue(result)
+            assertEquals(TextSubmissionOutcome.ClickFallback, result)
             assertEquals(listOf("hello"), performedSetTextValues(nodeInfo))
             assertFalse(performedActionIds(nodeInfo).contains(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.id))
             assertTrue(performedActionIds(nodeInfo).contains(AccessibilityNodeInfo.ACTION_CLICK))
@@ -271,7 +271,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = true, clear = false)
 
-            assertTrue(result)
+            assertEquals(TextSubmissionOutcome.Unavailable, result)
             assertEquals(listOf("hello"), performedSetTextValues(nodeInfo))
             assertTrue(performedActionIds(nodeInfo).contains(AccessibilityNodeInfo.ACTION_CLICK))
         }
@@ -292,7 +292,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = false, clear = false)
 
-            assertFalse(result)
+            assertEquals(null, result)
             assertEquals(listOf("hello"), performedSetTextValues(nodeInfo))
         }
 
@@ -306,7 +306,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = false, clear = false)
 
-            assertTrue(result)
+            assertEquals(TextSubmissionOutcome.NotRequested, result)
             assertEquals("hello", session.text)
             assertEquals(
                 listOf(
@@ -331,7 +331,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = false, clear = false)
 
-            assertTrue(result)
+            assertEquals(TextSubmissionOutcome.NotRequested, result)
             assertEquals("hello", session.text)
             assertEquals(
                 listOf(
@@ -357,14 +357,29 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = true, clear = false)
 
-            assertTrue(result)
+            assertEquals(TextSubmissionOutcome.ImeEditorAction, result)
             assertEquals("hello", session.text)
             assertTrue(session.operations.contains("performEditorAction(42)"))
             assertFalse(performedActionIds(nodeInfo).contains(AccessibilityNodeInfo.ACTION_CLICK))
         }
 
     @Test
-    fun `setText api33 path returns false when session is missing and legacy route is unavailable`() =
+    fun `setText retains accepted text when editor action is rejected`() = runTest {
+        val session = FakeTextInputSession(
+            initialText = "existing",
+            editorInfo = FakeTextInputSession.editorInfo(actionId = 42),
+            allowEditorAction = false,
+        )
+        val manager = createManager(textInputConnectionSource = FakeTextInputConnectionSource(session))
+        val result = manager.setText(uiNode(editableNode(includeSetTextAction = false)), "hello", submit = true)
+        assertEquals(TextSubmissionOutcome.Unavailable, result)
+        assertEquals("hello", session.text)
+        assertEquals(1, session.operations.count { it == "commitText(hello,1)" })
+        assertEquals(1, session.operations.count { it == "performEditorAction(42)" })
+    }
+
+    @Test
+    fun `setText api33 path returns null when session is missing and legacy route is unavailable`() =
         runTest {
             val manager = createManager(textInputConnectionSource = NoOpTextInputConnectionSource)
             val nodeInfo = editableNode(includeSetTextAction = false)
@@ -372,11 +387,11 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = false, clear = false)
 
-            assertFalse(result)
+            assertEquals(null, result)
         }
 
     @Test
-    fun `setText api33 path returns false when session is finished and legacy route is unavailable`() =
+    fun `setText api33 path returns null when session is finished and legacy route is unavailable`() =
         runTest {
             val session = FakeTextInputSession(initialText = "existing", isActive = false)
             val manager = createManager(textInputConnectionSource = FakeTextInputConnectionSource(session))
@@ -385,7 +400,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = false, clear = false)
 
-            assertFalse(result)
+            assertEquals(null, result)
         }
 
     @Test
@@ -398,7 +413,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = true, clear = false)
 
-            assertTrue(result)
+            assertEquals(TextSubmissionOutcome.Unavailable, result)
             assertEquals("hello", session.text)
             assertEquals(
                 listOf(
@@ -423,7 +438,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = false, clear = false)
 
-            assertFalse(result)
+            assertEquals(null, result)
             assertEquals("existing", session.text)
             assertEquals(emptyList(), session.operations)
             assertTrue(performedActionIds(nodeInfo).contains(AccessibilityNodeInfo.ACTION_FOCUS))
@@ -443,7 +458,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = false, clear = true)
 
-            assertTrue(result)
+            assertEquals(TextSubmissionOutcome.NotRequested, result)
             assertEquals("hello", session.text)
             assertEquals(
                 listOf(
@@ -465,7 +480,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = false, clear = false)
 
-            assertFalse(result)
+            assertEquals(null, result)
             assertEquals("existing", session.text)
             assertEquals(
                 listOf(
@@ -490,7 +505,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = false, clear = false)
 
-            assertFalse(result)
+            assertEquals(null, result)
             assertEquals("", session.text)
             assertEquals(
                 listOf(
@@ -513,7 +528,7 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode = uiNode, text = "hello", submit = false, clear = false)
 
-            assertFalse(result)
+            assertEquals(null, result)
             assertEquals(emptyList(), session.operations)
         }
 
@@ -618,7 +633,7 @@ class UiTreeManagerAndroidTest {
         val success = kotlinx.coroutines.withContext(observer) {
             manager.setText(uiNode(nodeInfo), "hello", submit = false, clear = true)
         }
-        assertFalse(success)
+        assertEquals(null, success)
         assertTrue(observer.retryBlocked)
         assertEquals(listOf("", "hello"), performedSetTextValues(nodeInfo))
     }
@@ -707,6 +722,7 @@ class UiTreeManagerAndroidTest {
         override val editorInfo: TextInputEditorInfo? = editorInfo(),
         private val allowDeleteSurroundingText: Boolean = true,
         private val allowCommitText: Boolean = true,
+        private val allowEditorAction: Boolean = true,
     ) : TextInputSession {
         var text: String = initialText
             private set
@@ -775,7 +791,7 @@ class UiTreeManagerAndroidTest {
 
         override fun performEditorAction(editorAction: Int): Boolean {
             operations += "performEditorAction($editorAction)"
-            return isActive
+            return isActive && allowEditorAction
         }
 
         companion object {

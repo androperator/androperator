@@ -9666,7 +9666,7 @@ For the underlying selector contract, see [Selectors](selectors.md).
 | Tool | Purpose |
 | --- | --- |
 | `devices` | List connected Android devices visible to adb. |
-| `snapshot` | Capture the current Android UI hierarchy as XML. |
+| `snapshot` | Capture the current Android UI hierarchy as XML, or bounded JSON with compact: true. maxNodes and maxTextChars require compact: true. Example: {"compact":true,"maxNodes":100}. Limits affect returned output, not capture or transfer cost. |
 | `execute` | Run a validated Clawperator execution payload over the canonical execution engine. |
 | `configure` | Store per-session defaults for deviceId, operatorPackage, and timeoutMs. |
 | `query_ui` | Inspect fresh UI nodes, including blank labels and state. Omit matcher for all eligible nodes. Paths are observation-local, never action handles; visibility is not an occlusion guarantee. Does not wait for navigation; use wait for the destination before querying. |
@@ -9753,6 +9753,20 @@ Example call:
   "maxChars": 2000
 }
 ```
+
+Minimal compact call:
+
+```json
+{"compact": true, "maxNodes": 100}
+```
+
+Set `compact: true` whenever supplying `maxNodes` or `maxTextChars`.
+Omitting `compact`, or setting it to `false`, selects raw XML and rejects those
+limits. Omit `maxChars` in compact mode. Invalid combinations return MCP
+`-32602` before device dispatch, with guidance for correcting the arguments.
+The published tool schema also describes and encodes these dependencies.
+Compact limits bound returned output only; they do not reduce hierarchy capture
+or transfer cost.
 
 Success payload includes:
 

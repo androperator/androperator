@@ -1,3 +1,4 @@
+import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
@@ -701,4 +702,39 @@ it("read preserves scalar and array results while surfacing duplicate-selection 
     assert.deepStrictEqual(advised.content[0], plain.content[0]);
     assert.deepStrictEqual(advised.content.slice(1), [{ type: "text", text: JSON.stringify({ selection_warning: warning }) }]);
   }
+});
+
+
+describe("snapshot presentation schema guidance", () => {
+  const tool = getCoreMcpTools().find(tool => tool.name === "snapshot")!;
+  const validate = new AjvJsonSchemaValidator().getValidator(tool.inputSchema);
+
+  it("accepts raw defaults and compact limits without inserting mode-dependent defaults", () => {
+    for (const args of [{}, { compact: false }, { maxChars: 20 }, { saveRaw: true },
+      { compact: true }, { compact: true, maxNodes: 1, maxTextChars: 4096 },
+      { compact: true, maxNodes: 1000, maxTextChars: 1, saveRaw: true }]) {
+      const before = JSON.stringify(args);
+      assert.strictEqual(validate(args).valid, true, before);
+      assert.strictEqual(JSON.stringify(args), before);
+    }
+  });
+
+  it("rejects missing or false compact and conflicting or invalid limits in the published schema", () => {
+    for (const args of [{ maxNodes: 20 }, { maxTextChars: 10 }, { compact: false, maxNodes: 20 },
+      { compact: false, maxTextChars: 10 }, { compact: true, maxChars: 20 },
+      { compact: true, maxNodes: 0 }, { compact: true, maxNodes: 1001 },
+      { compact: true, maxTextChars: 4097 }, { compact: true, maxNodes: 1.5 },
+      { compact: true, maxTextChars: "10" }]) {
+      assert.strictEqual(validate(args).valid, false, JSON.stringify(args));
+    }
+  });
+
+  it("publishes a valid minimal example and descriptions for every presentation option", () => {
+    const schema = tool.inputSchema as { examples: Record<string, unknown>[]; properties: Record<string, { description?: string }> };
+    for (const example of schema.examples) assert.strictEqual(validate(example).valid, true);
+    for (const field of ["compact", "maxNodes", "maxTextChars", "saveRaw", "maxChars"]) {
+      assert.ok(schema.properties[field].description);
+    }
+    assert.match(tool.description, /compact.*true/);
+  });
 });

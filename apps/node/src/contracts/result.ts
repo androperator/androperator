@@ -38,7 +38,7 @@ export interface StepResultData {
   sessionId?: string;
   selection_warning?: string;
   warn?: string;
-  capturedAt?: string;
+  persistedAt?: string;
   value?: string;
 }
 

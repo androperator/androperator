@@ -33,6 +33,8 @@ describe("verified screenshot fallback", () => {
           assert.equal(step.data.error, undefined);
           assert.equal(step.data.message, undefined);
           assert.equal(step.data.captureSource, "host");
+          assert.equal(step.data.capturedAt, undefined);
+          assert.ok(!Number.isNaN(Date.parse(step.data.persistedAt!)));
           assert.equal(step.data.captureWidthPx, "6");
           assert.equal(step.data.captureHeightPx, "3");
           assert.equal(step.data.coordinateSpace, "screenshot_pixels");

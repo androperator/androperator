@@ -455,8 +455,8 @@ describe("finalizeSuccessfulScreenshotCapture", () => {
     finalizeSuccessfulScreenshotCapture(screenStep, "/tmp/capture.png", { captureWidthPx: 100, captureHeightPx: 200, coordinateSpace: "screenshot_pixels", origin: "top_left" });
 
     assert.strictEqual(screenStep.success, true);
-    assert.deepStrictEqual(screenStep.data, { path: "/tmp/capture.png", captureSource: "host", capturedAt: screenStep.data.capturedAt, captureWidthPx: "100", captureHeightPx: "200", coordinateSpace: "screenshot_pixels", origin: "top_left" });
-    assert.ok(!Number.isNaN(Date.parse(screenStep.data.capturedAt!)));
+    assert.deepStrictEqual(screenStep.data, { path: "/tmp/capture.png", captureSource: "host", persistedAt: screenStep.data.persistedAt, captureWidthPx: "100", captureHeightPx: "200", coordinateSpace: "screenshot_pixels", origin: "top_left" });
+    assert.ok(!Number.isNaN(Date.parse(screenStep.data.persistedAt!)));
   });
 
   it("preserves existing success state and metadata for already-supported screenshots", () => {
@@ -464,7 +464,7 @@ describe("finalizeSuccessfulScreenshotCapture", () => {
       id: "shot-2",
       actionType: "take_screenshot",
       success: true,
-      data: { source: "adb-fallback" },
+      data: { source: "adb-fallback", capturedAt: "2026-01-01T00:00:00Z" },
     };
 
     finalizeSuccessfulScreenshotCapture(screenStep, "/tmp/capture.png", { captureWidthPx: 100, captureHeightPx: 200, coordinateSpace: "screenshot_pixels", origin: "top_left" });
@@ -473,7 +473,7 @@ describe("finalizeSuccessfulScreenshotCapture", () => {
     assert.deepStrictEqual(screenStep.data, {
       source: "adb-fallback",
       captureSource: "host",
-      capturedAt: screenStep.data.capturedAt,
+      persistedAt: screenStep.data.persistedAt,
       captureWidthPx: "100", captureHeightPx: "200", coordinateSpace: "screenshot_pixels", origin: "top_left",
       path: "/tmp/capture.png",
     });

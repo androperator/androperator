@@ -365,7 +365,8 @@ export function finalizeSuccessfulScreenshotCapture(
     screenStep.data = remainingData;
   }
 
-  screenStep.data = { ...screenStep.data, path: screenshotPath, captureSource: "host", capturedAt: new Date().toISOString(),
+  const { capturedAt: _capturedAt, ...captureData } = screenStep.data;
+  screenStep.data = { ...captureData, path: screenshotPath, captureSource: "host", persistedAt: new Date().toISOString(),
     captureWidthPx: String(image.captureWidthPx), captureHeightPx: String(image.captureHeightPx), coordinateSpace: image.coordinateSpace, origin: image.origin };
 }
 
@@ -851,7 +852,7 @@ async function performExecution(
           const screenStep = result.envelope.stepResults.find(step => step.actionType === "take_screenshot");
           if (screenStep !== undefined) {
             screenStep.success = false;
-            const { path: _path, captureWidthPx: _width, captureHeightPx: _height, coordinateSpace: _space, origin: _origin, ...previousData } = screenStep.data;
+            const { path: _path, capturedAt: _capturedAt, persistedAt: _persistedAt, captureWidthPx: _width, captureHeightPx: _height, coordinateSpace: _space, origin: _origin, ...previousData } = screenStep.data;
             screenStep.data = { ...previousData,
               runtimeError: previousData.error ?? "",
               error: ERROR_CODES.EVIDENCE_CAPTURE_FAILED,

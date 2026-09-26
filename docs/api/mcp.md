@@ -243,6 +243,20 @@ Example call:
 }
 ```
 
+Minimal compact call:
+
+```json
+{"compact": true, "maxNodes": 100}
+```
+
+Set `compact: true` whenever supplying `maxNodes` or `maxTextChars`.
+Omitting `compact`, or setting it to `false`, selects raw XML and rejects those
+limits. Omit `maxChars` in compact mode. Invalid combinations return MCP
+`-32602` before device dispatch, with guidance for correcting the arguments.
+The published tool schema also describes and encodes these dependencies.
+Compact limits bound returned output only; they do not reduce hierarchy capture
+or transfer cost.
+
 Success payload includes:
 
 - `snapshot`: XML string from `snapshot`

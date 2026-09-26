@@ -285,6 +285,21 @@ describe("mcp stdio integration", () => {
     }
   });
 
+  it("teaches how to correct compact dependencies over stdio", async () => {
+    await client.initialize();
+    for (const field of ["maxNodes", "maxTextChars"]) {
+      for (const compact of [undefined, false]) {
+        const response = await client.requestTool("snapshot", { [field]: 20, ...(compact === undefined ? {} : { compact }) });
+        assertInvalidParams(response);
+        assert.match(response.error!.message, new RegExp(`${field} requires compact: true`));
+        assert.match(response.error!.message, /or omit/);
+      }
+    }
+    const conflict = await client.requestTool("snapshot", { compact: true, maxChars: 20 });
+    assertInvalidParams(conflict);
+    assert.match(conflict.error!.message, /Omit maxChars and use maxNodes or maxTextChars/);
+  });
+
   it("rejects evidence output paths and invalid context over stdio", async () => {
     await client.initialize();
     for (const args of [{ outputDir: "/tmp/forbidden" }, { rawPath: "/tmp/forbidden" },

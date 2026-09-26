@@ -130,10 +130,10 @@ Errors contain `{code,stage,message,component}`, with component nullable.
 Complete screenshot artifacts additionally contain `image`:
 
 ```json
-{"width": 1080, "height": 2400, "coordinateSpace": "screenshot_pixels", "origin": "top_left"}
+{"captureWidthPx": 1080, "captureHeightPx": 2400, "coordinateSpace": "screenshot_pixels", "origin": "top_left"}
 ```
 
-`width` and `height` are numbers from the verified saved PNG. They are distinct
+`captureWidthPx` and `captureHeightPx` are numbers from the verified saved PNG. They are distinct
 from the separately sampled `device.display` metadata and from viewer preview
 sizes. Failed or partial artifacts do not carry verified image geometry; older
 bundles can omit it. See [screenshot coordinate guidance](actions.md#action-take-screenshot)

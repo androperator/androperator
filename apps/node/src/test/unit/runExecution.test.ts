@@ -452,10 +452,10 @@ describe("finalizeSuccessfulScreenshotCapture", () => {
       },
     };
 
-    finalizeSuccessfulScreenshotCapture(screenStep, "/tmp/capture.png", { width: 100, height: 200, coordinateSpace: "screenshot_pixels", origin: "top_left" });
+    finalizeSuccessfulScreenshotCapture(screenStep, "/tmp/capture.png", { captureWidthPx: 100, captureHeightPx: 200, coordinateSpace: "screenshot_pixels", origin: "top_left" });
 
     assert.strictEqual(screenStep.success, true);
-    assert.deepStrictEqual(screenStep.data, { path: "/tmp/capture.png", captureSource: "host", capturedAt: screenStep.data.capturedAt, width: "100", height: "200", coordinateSpace: "screenshot_pixels", origin: "top_left" });
+    assert.deepStrictEqual(screenStep.data, { path: "/tmp/capture.png", captureSource: "host", capturedAt: screenStep.data.capturedAt, captureWidthPx: "100", captureHeightPx: "200", coordinateSpace: "screenshot_pixels", origin: "top_left" });
     assert.ok(!Number.isNaN(Date.parse(screenStep.data.capturedAt!)));
   });
 
@@ -467,14 +467,14 @@ describe("finalizeSuccessfulScreenshotCapture", () => {
       data: { source: "adb-fallback" },
     };
 
-    finalizeSuccessfulScreenshotCapture(screenStep, "/tmp/capture.png", { width: 100, height: 200, coordinateSpace: "screenshot_pixels", origin: "top_left" });
+    finalizeSuccessfulScreenshotCapture(screenStep, "/tmp/capture.png", { captureWidthPx: 100, captureHeightPx: 200, coordinateSpace: "screenshot_pixels", origin: "top_left" });
 
     assert.strictEqual(screenStep.success, true);
     assert.deepStrictEqual(screenStep.data, {
       source: "adb-fallback",
       captureSource: "host",
       capturedAt: screenStep.data.capturedAt,
-      width: "100", height: "200", coordinateSpace: "screenshot_pixels", origin: "top_left",
+      captureWidthPx: "100", captureHeightPx: "200", coordinateSpace: "screenshot_pixels", origin: "top_left",
       path: "/tmp/capture.png",
     });
   });

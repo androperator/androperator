@@ -33,16 +33,16 @@ describe("verified screenshot fallback", () => {
           assert.equal(step.data.error, undefined);
           assert.equal(step.data.message, undefined);
           assert.equal(step.data.captureSource, "host");
-          assert.equal(step.data.width, "6");
-          assert.equal(step.data.height, "3");
+          assert.equal(step.data.captureWidthPx, "6");
+          assert.equal(step.data.captureHeightPx, "3");
           assert.equal(step.data.coordinateSpace, "screenshot_pixels");
           assert.equal(step.data.origin, "top_left");
           assert.deepEqual(await readFile(path), bytes);
         } else {
           assert.equal(step.data.errorCode, "EVIDENCE_CAPTURE_FAILED");
           assert.equal(step.data.path, undefined);
-          assert.equal(step.data.width, undefined);
-          assert.equal(step.data.height, undefined);
+          assert.equal(step.data.captureWidthPx, undefined);
+          assert.equal(step.data.captureHeightPx, undefined);
         }
       } finally { await rm(directory, { recursive: true, force: true }); }
     });

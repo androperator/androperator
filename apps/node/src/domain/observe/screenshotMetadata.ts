@@ -8,5 +8,5 @@ export function verifyScreenshot(buffer: Buffer): ScreenshotMetadata {
   if (width === 0 || height === 0 || width * height > 32_000_000) throw new Error("PNG dimensions exceed the 32-million-pixel decoding limit");
   const decoded = PNG.sync.read(buffer, { checkCRC: true });
   if (decoded.width !== width || decoded.height !== height || decoded.data.length !== width * height * 4) throw new Error("PNG decoding failed");
-  return { width, height, coordinateSpace: "screenshot_pixels", origin: "top_left" };
+  return { captureWidthPx: width, captureHeightPx: height, coordinateSpace: "screenshot_pixels", origin: "top_left" };
 }

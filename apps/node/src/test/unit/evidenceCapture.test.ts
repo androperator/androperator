@@ -71,8 +71,8 @@ describe("still evidence capture", () => {
       assert.deepEqual(manifest.device.display, { width: 100, height: 200, density: 200, rotation: 1 });
       assert.equal(manifest.device.deviceType, "physical");
       assert.equal(manifest.device.deviceTypeProperties["ro.kernel.qemu"], null);
-      assert.deepEqual(manifest.artifacts[0].image, { width: 2, height: 2, coordinateSpace: "screenshot_pixels", origin: "top_left" });
-      assert.notEqual(manifest.artifacts[0].image!.width, manifest.device.display.width);
+      assert.deepEqual(manifest.artifacts[0].image, { captureWidthPx: 2, captureHeightPx: 2, coordinateSpace: "screenshot_pixels", origin: "top_left" });
+      assert.notEqual(manifest.artifacts[0].image!.captureWidthPx, manifest.device.display.width);
       assert.deepEqual(manifest.artifacts.map(value => value.kind), ["screenshot", "hierarchy", "capture_envelopes"]);
       for (const artifact of manifest.artifacts) {
         assert.equal(artifact.status, "complete");

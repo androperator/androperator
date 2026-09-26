@@ -1133,19 +1133,19 @@ Success data:
 
 - `data.path` after Node verifies and writes the host screenshot
 - `data.captureSource: "host"` and `data.capturedAt` (host ISO timestamp after persistence)
-- `data.width` and `data.height`: original, decoded PNG dimensions in pixels, encoded as decimal strings like other step data
+- `data.captureWidthPx` and `data.captureHeightPx`: original, decoded PNG dimensions in pixels, encoded as decimal strings like other step data
 - `data.coordinateSpace: "screenshot_pixels"` and `data.origin: "top_left"`
 
 These dimensions describe the saved image, not a resized preview or Android dp.
 The x axis runs right and the y axis runs down. Pixel indices range from zero to
-`width - 1` and `height - 1`. Metadata is published only after PNG validation and
+`captureWidthPx - 1` and `captureHeightPx - 1`. Metadata is published only after PNG validation and
 successful persistence. Older captures may omit it; read the original image's
 dimensions instead of guessing from its preview.
 
 For an uncropped preview rendered at `previewWidth` by `previewHeight`, map a
 point inside the image to the original with
-`x = floor(previewX * width / previewWidth)` and
-`y = floor(previewY * height / previewHeight)`. For example, a 1080 x 2400 PNG
+`x = floor(previewX * captureWidthPx / previewWidth)` and
+`y = floor(previewY * captureHeightPx / previewHeight)`. For example, a 1080 x 2400 PNG
 shown at 360 x 800 maps preview point (120, 200) to image point (360, 600).
 Measure preview coordinates relative to the image itself: remove padding or
 letterboxing first. This formula is not sufficient for cropped or rotated previews.

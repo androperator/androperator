@@ -619,7 +619,7 @@ Options:
 Also accepted as: --device-id, --file
 
 Result geometry:
-  width and height describe the original PNG in pixels, with a top-left origin.
+  captureWidthPx and captureHeightPx describe the original PNG in pixels, with a top-left origin.
   Resized previews use different coordinates; scale back to the original image first.
   Verify current display geometry before using image coordinates for clicks.
 

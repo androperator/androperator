@@ -1,5 +1,6 @@
 package clawperator.task.runner
 
+import clawperator.uitree.TextSubmissionOutcome
 import action.developeroptions.DeveloperOptionsManager
 import action.devicestate.DeviceState
 import action.devicestate.DeviceStateMock
@@ -328,6 +329,34 @@ class UiActionEngineDefaultTest : ActionTest {
             assertEquals(1, result.stepResults.size)
             assertEquals(action.math.geometry.Point(120, 240), uiScope.clickCoordinate)
         }
+
+    @Test
+    fun `execute enter_text reports submission evidence without changing requested submit`() = actionTest {
+        for (outcome in TextSubmissionOutcome.entries) {
+            val uiScope = RecordingTaskUiScope().apply { submissionOutcome = outcome }
+            val submitRequested = outcome != TextSubmissionOutcome.NotRequested
+            val result = UiActionEngineDefault(DeveloperOptionsManagerMock(), UiGlobalActionDispatcherMock()).execute(
+                taskScope = RecordingTaskScope(uiScope),
+                plan = UiActionPlan(
+                    commandId = "cmd-text-evidence", taskId = "task-text-evidence", source = "test",
+                    actions = listOf(UiAction.EnterText(
+                        id = "type", matcher = nodeMatcher { resourceId("com.example:id/search") },
+                        text = "hello", submit = submitRequested,
+                    )),
+                ),
+            )
+            val step = result.stepResults.single()
+            assertTrue(step.success)
+            assertEquals("accepted", step.data["text_entry"])
+            assertEquals(submitRequested.toString(), step.data["submit"])
+            assertEquals(outcome.wireValue, step.data["submit_method"])
+            assertEquals(when (outcome) {
+                TextSubmissionOutcome.NotRequested -> "not_requested"
+                TextSubmissionOutcome.Unavailable -> "unavailable"
+                else -> "accepted"
+            }, step.data["submission"])
+        }
+    }
 
     @Test
     fun `execute enter_text forwards clear true`() =
@@ -2110,6 +2139,7 @@ open class RecordingTaskUiScope(
     var scrollOnceCalled: Boolean = false
     var clickCalled: Boolean = false
     var clickCoordinate: action.math.geometry.Point? = null
+    var submissionOutcome: TextSubmissionOutcome? = null
     var enteredText: String? = null
     var enterTextClear: Boolean? = null
     var enterTextSubmit: Boolean? = null
@@ -2303,11 +2333,12 @@ open class RecordingTaskUiScope(
         retry: TaskRetry,
         strict: Boolean,
         container: NodeMatcher?,
-    ) {
+    ): TextSubmissionOutcome {
         enteredText = text
         enterTextClear = clear
         enterTextSubmit = submit
         enterTextRetry = retry
+        return submissionOutcome ?: if (submit) TextSubmissionOutcome.Unavailable else TextSubmissionOutcome.NotRequested
     }
 }
 

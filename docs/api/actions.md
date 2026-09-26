@@ -775,7 +775,22 @@ Semantics:
 Success data:
 
 - Node does not declare a richer static schema here
-- current Android runtime behavior returns `data.text`, `data.clear`, and `data.submit`
+- `data.text`, `data.clear`, and `data.submit` retain the requested values; `submit` is a request, not an outcome
+- `data.text_entry` is `"accepted"` after Android accepts text entry
+- `data.submission` is `"not_requested"`, `"accepted"`, or `"unavailable"`
+- `data.submit_method` is `"not_requested"`, `"ime_action"`, `"click_fallback"`, or `"submit_unavailable"`
+
+`submission: "accepted"` pairs with `ime_action` or `click_fallback` and means
+Android accepted that action. A fallback click can merely focus the field.
+`submission: "unavailable"` pairs with `submit_unavailable` when no supported
+submission path succeeds, including rejected actions; text entry still succeeds.
+No submission request produces `not_requested` in both fields.
+
+These fields report action acceptance, not read-back verification of text or
+proof of navigation. After typing a URL or search query, the agent or browser
+skill must observe the destination before declaring navigation complete. Do not
+repeat text entry solely because submission is unavailable. Older Operators
+may omit these additive fields; absence means unknown, not submission success.
 
 Common failures:
 

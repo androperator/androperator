@@ -257,7 +257,7 @@ export function getNamedMcpTools(
     },
     {
       name: "type",
-      description: "Type text into a matching field, optionally clearing first or submitting after.",
+      description: "Type text into a matching field, optionally clearing first or submitting after. Step data reports text_entry, submission, and submit_method separately; accepted submission does not verify navigation. Observe the destination before declaring success.",
       inputSchema: buildCommonExecutionSchema({
         selector: selectorJsonSchema,
         strict: { type: "boolean" },

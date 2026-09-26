@@ -31,7 +31,10 @@ class StrictSelectionTest : ActionTest {
             },
             object : UiTreeFilterer { override fun filterOnScreenOnly(uiTree: UiTree) = uiTree },
             proxy<UiTreeFormatter> { error("unused formatter") },
-            proxy<UiTreeManager> { name -> dispatches += name; true },
+            proxy<UiTreeManager> { name ->
+                dispatches += name
+                if (name == "setText") TextSubmissionOutcome.NotRequested else true
+            },
             scope,
         )
     }

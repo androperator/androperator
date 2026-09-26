@@ -1,6 +1,7 @@
 package clawperator.task.runner
 
 // Helper function to get current task status from coroutine context
+import clawperator.uitree.TextSubmissionOutcome
 import action.log.Log
 import action.time.getCurrentTimeMillis
 import action.math.geometry.Point
@@ -632,19 +633,19 @@ class TaskUiScopeDefault(
             actionNodes(matcher, uiTree, strict, container, recordReceipt = true).firstOrNull()
                 ?: throw UiActionFailure("NODE_NOT_FOUND", "No UI node found matching criteria: $matcher")
 
-        val setTextSuccessful =
+        val submission =
             uiTreeManager.setText(
                 uiNode = uiNode,
                 text = text,
                 submit = submit,
                 clear = clear,
             )
-        if (!setTextSuccessful) {
+        if (submission == null) {
             throw UiActionFailure("ACTION_FAILED", "Failed to set text on matching UI node")
         }
 
         Log.d("$TAG Successfully entered text into matching node")
-        Unit
+        submission
     }
 
     override suspend fun clickScrollTarget(

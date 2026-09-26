@@ -112,8 +112,8 @@ class UiTreeManagerAndroid(
         text: String,
         submit: Boolean,
         clear: Boolean,
-    ): Boolean {
-        val accessibilityNodeInfo = uiNode.accessibilityNodeInfo as? AccessibilityNodeInfo ?: return false
+    ): TextSubmissionOutcome? {
+        val accessibilityNodeInfo = uiNode.accessibilityNodeInfo as? AccessibilityNodeInfo ?: return null
         val target = accessibilityNodeInfo.firstEditableAncestorOrSelf() ?: accessibilityNodeInfo
         val request =
             TextEntryRequest(
@@ -137,11 +137,11 @@ class UiTreeManagerAndroid(
             Log.d(
                 "[UiTreeManager] enter_text strategy=${strategy.name} submit_method=${attempt.submitMethod.wireValue} succeeded for id=${uiNode.id}",
             )
-            return true
+            return attempt.submitMethod
         }
 
         Log.d("[UiTreeManager] All enter_text strategies failed for id=${uiNode.id}")
-        return false
+        return null
     }
 
     override suspend fun swipeWithinVertical(
@@ -298,17 +298,8 @@ class UiTreeManagerAndroid(
     }
 
     private data class TextEntryAttemptResult(
-        val submitMethod: SubmitMethod,
+        val submitMethod: TextSubmissionOutcome,
     )
-
-    private enum class SubmitMethod(
-        val wireValue: String,
-    ) {
-        NotRequested("not_requested"),
-        ImeEditorAction("ime_action"),
-        ClickFallback("click_fallback"),
-        Unavailable("submit_unavailable"),
-    }
 
     private object LegacySetTextStrategy : TextEntryStrategy {
         override val name: String = "legacy_action_set_text"
@@ -373,22 +364,22 @@ class UiTreeManagerAndroid(
         private fun performLegacySubmit(
             target: AccessibilityNodeInfo,
             submitRequested: Boolean,
-        ): SubmitMethod {
+        ): TextSubmissionOutcome {
             if (!submitRequested) {
-                return SubmitMethod.NotRequested
+                return TextSubmissionOutcome.NotRequested
             }
 
             if (
                 supportsImeEnterAction(target) &&
                 target.performAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_IME_ENTER.id)
             ) {
-                return SubmitMethod.ImeEditorAction
+                return TextSubmissionOutcome.ImeEditorAction
             }
 
             return if (target.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
-                SubmitMethod.ClickFallback
+                TextSubmissionOutcome.ClickFallback
             } else {
-                SubmitMethod.Unavailable
+                TextSubmissionOutcome.Unavailable
             }
         }
 
@@ -478,16 +469,16 @@ class UiTreeManagerAndroid(
             session: TextInputSession,
             editorInfo: TextInputEditorInfo?,
             submitRequested: Boolean,
-        ): SubmitMethod {
+        ): TextSubmissionOutcome {
             if (!submitRequested) {
-                return SubmitMethod.NotRequested
+                return TextSubmissionOutcome.NotRequested
             }
 
-            val editorAction = editorInfo?.let(::resolveEditorAction) ?: return SubmitMethod.Unavailable
+            val editorAction = editorInfo?.let(::resolveEditorAction) ?: return TextSubmissionOutcome.Unavailable
             return if (session.performEditorAction(editorAction)) {
-                SubmitMethod.ImeEditorAction
+                TextSubmissionOutcome.ImeEditorAction
             } else {
-                SubmitMethod.Unavailable
+                TextSubmissionOutcome.Unavailable
             }
         }
 

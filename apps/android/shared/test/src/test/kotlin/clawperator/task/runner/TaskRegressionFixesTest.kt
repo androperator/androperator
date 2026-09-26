@@ -1,5 +1,6 @@
 package clawperator.task.runner
 
+import clawperator.uitree.TextSubmissionOutcome
 import action.math.geometry.Rect
 import clawperator.app.close.AppCloseManager
 import clawperator.apps.AppsRepository
@@ -399,9 +400,9 @@ class TaskRegressionFixesTest : ActionTest {
                                 text: String,
                                 submit: Boolean,
                                 clear: Boolean,
-                            ): Boolean {
+                            ): TextSubmissionOutcome? {
                                 setTextCalls += RecordedSetTextCall(text = text, clear = clear, submit = submit)
-                                return false
+                                return null
                             }
 
                             override suspend fun swipeWithinVertical(
@@ -498,9 +499,9 @@ class TaskRegressionFixesTest : ActionTest {
                                 text: String,
                                 submit: Boolean,
                                 clear: Boolean,
-                            ): Boolean {
+                            ): TextSubmissionOutcome? {
                                 setTextCalls += RecordedSetTextCall(text = text, clear = clear, submit = submit)
-                                return true
+                                return if (submit) TextSubmissionOutcome.Unavailable else TextSubmissionOutcome.NotRequested
                             }
 
                             override suspend fun swipeWithinVertical(

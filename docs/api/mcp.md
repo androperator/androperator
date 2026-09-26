@@ -490,6 +490,9 @@ Behavior notes:
 
 - the MCP `type` tool builds a normal `enter_text` execution and returns the
   standard execution payload
+- The returned step separates `data.text_entry`, `data.submission`, and
+  `data.submit_method`; `data.submit` remains the requested flag. Accepted submission
+  does not prove navigation. Observe the destination separately.
 - Android prefers a real editor action for `submit=true` when one is available
 - if submit is requested but no truthful submit action exists after text entry,
   the text-entry step still succeeds

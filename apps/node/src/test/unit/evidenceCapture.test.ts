@@ -1,3 +1,4 @@
+import { runExecution } from "../../domain/executions/runExecution.js";
 import { captureScreenshot } from "../../domain/observe/captureScreenshot.js";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
@@ -462,4 +463,42 @@ describe("evidence metadata classification", () => {
       } finally { await f.cleanup(); }
     });
   }
+});
+
+
+it("keeps the screenshot and owned timeout when the evidence budget cancels a dispatched hierarchy", async () => {
+  const f = await fixture();
+  let broadcasts = 0;
+  const run = f.runner.run.bind(f.runner);
+  f.runner.run = async (command, args) => {
+    if (args.includes("packages")) return { code: 0, stdout: "package:com.example.operator\n", stderr: "" };
+    if (args.some(arg => arg.startsWith("am broadcast "))) { broadcasts++; return { code: 0, stdout: "Broadcast completed: result=0", stderr: "" }; }
+    return run(command, args);
+  };
+  f.runner.spawn = () => {
+    const child = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill: () => {
+      queueMicrotask(() => { child.emit("exit", null, "SIGKILL"); child.emit("close", null, "SIGKILL"); });
+      return true;
+    } });
+    return child;
+  };
+  f.dependencies.screenshot = async () => png;
+  f.dependencies.snapshot = (execution, options) => runExecution(execution, { ...options,
+    ensureInteractiveAutomationReadyFn: async () => ({ ok: true, state: { screenOn: true, deviceLocked: false, userUnlocked: true } }) });
+  try {
+    const result = await captureEvidence({ outputDir: f.outputDir, timeoutMs: 1500 }, f.dependencies);
+    const manifest = await manifestAt(result.manifestPath);
+    assert.equal(result.status, "partial");
+    assert.equal(manifest.artifacts[0].status, "complete");
+    assert.equal(manifest.artifacts[1].error?.code, "COMMAND_TIMEOUT");
+    assert.equal(broadcasts, 1);
+    const captures = JSON.parse(await fs.readFile(join(f.outputDir, "captures.json"), "utf8"));
+    const error = captures[1].result.error;
+    assert.equal(error.code, "COMMAND_TIMEOUT");
+    assert.equal(error.details.deadlineOwner, "evidence_capture");
+    assert.equal(error.details.dispatchState, "dispatched");
+    assert.equal(error.details.phase, "result_wait");
+    assert.deepEqual(error.details.earlierEffects, []);
+    assert.equal(error.details.transport.receivedChunks, 0);
+  } finally { await f.cleanup(); }
 });

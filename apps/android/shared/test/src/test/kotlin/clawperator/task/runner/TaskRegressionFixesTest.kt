@@ -305,15 +305,19 @@ class TaskRegressionFixesTest : ActionTest {
         }
 
     @Test
-    fun `logUiTree emits commandId-tagged hierarchy marker without changing XML`() =
+    fun `logUiTree returns exact XML without publishing an unverified agent log copy`() =
         actionTest {
-            val hierarchyDump =
-                """
-                <?xml version='1.0' encoding='UTF-8' standalone='yes' ?>
-                <hierarchy rotation="0">
-                  <node index="0" text="Settings" />
-                </hierarchy>
-                """.trimIndent()
+            val hierarchyDump = buildString {
+                append("<hierarchy>")
+                repeat(4496) { index ->
+                    append("<node index='$index' text='界😀 &amp; &lt;node escaped' />")
+                }
+                append("</hierarchy>")
+            }
+            val events = mutableListOf<TaskEvent>()
+            val sink = object : TaskStatusSink {
+                override fun emit(event: TaskEvent) { events += event }
+            }
             val logTree = RecordingTimberTree()
             Timber.plant(logTree)
             try {
@@ -331,20 +335,14 @@ class TaskRegressionFixesTest : ActionTest {
                     )
 
                 val result =
-                    withContext(EmptyCoroutineContext + TaskStatusElement(TaskStatusSinkNoOp(), "cmd-snapshot-log")) {
+                    withContext(EmptyCoroutineContext + TaskStatusElement(sink, "cmd-snapshot-log")) {
                         taskScope.logUiTree(TaskRetry.None)
                     }
 
-                val hierarchyMessage =
-                    logTree.messages.single { (_, message) ->
-                        message.startsWith("[TaskScope] UI Hierarchy [commandId=cmd-snapshot-log]:")
-                    }.second
-
                 assertEquals(UiSnapshotActualFormat.HierarchyXml, result.actualFormat)
-                assertEquals(
-                    "[TaskScope] UI Hierarchy [commandId=cmd-snapshot-log]:\n$hierarchyDump",
-                    hierarchyMessage,
-                )
+                assertEquals(hierarchyDump, result.hierarchyXml)
+                assertEquals("4496", events.filterIsInstance<TaskEvent.StageSuccess>().single().data["node_count"])
+                assertTrue(logTree.messages.none { (_, message) -> message.contains(hierarchyDump) })
             } finally {
                 Timber.uproot(logTree)
             }

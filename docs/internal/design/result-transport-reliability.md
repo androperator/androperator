@@ -34,8 +34,8 @@ inflation, transport replacement or mutation replay was introduced.
 ## Large snapshot and deadline investigation, September 2026
 
 An investigation on 27 September reproduced large-hierarchy failure and a
-misleading evidence-deadline outcome on an emulator. These are unresolved
-findings, not a claim that the physical-device incident has been fixed.
+misleading evidence-deadline outcome on an emulator. The baseline findings and
+subsequent repairs are recorded below. Physical-device timing remains unverified.
 
 ### Scope and build identity
 
@@ -180,33 +180,85 @@ starts its timer at dispatch, after readiness, rather than enforcing a single
 whole-process deadline. The original 45-second outer timeout still needs its
 own correlated reproduction before assigning a root cause.
 
-### Follow-up implementation boundaries
+### Implemented repair
 
-1. Replace the expensive node-count scan with a verified cheaper count, ideally
-   collected during serialization or using a simple literal scan. Check exact
-   counts against representative hierarchies and repeat the live measurement.
-   Keep this change separate from delivery repair so reduced latency is not
-   mistaken for recovered bytes.
-2. Give hierarchy delivery explicit identity, source length, integrity and
-   completion checks. Evaluate a framed/paced or file-backed path using large
-   sources and controlled interruption. Preserve failed source evidence through
-   an explicit diagnostic option. Do not assume the existing result-envelope
-   fix automatically covers hierarchy XML or promise reliability from pacing
-   alone.
-3. Propagate deadline ownership/cause into hierarchy execution before cleanup,
-   preserving phase, dispatch uncertainty, earlier effects and underlying
-   transport diagnostics. Cover expiry before dispatch, after dispatch,
-   terminal/deadline races and partial bundles. A completed result must not be
-   overwritten by later cleanup, and recovery must not replay mutations.
-4. Verify the repairs on the emulator, then on a physical device and the
-   originally reported browser/page class. Physical-device access is not
-   required to begin these fixes, but emulator success will not close the
-   original timing report.
+The Operator now returns snapshot XML inside the canonical action step's
+`data.text`. This reuses `publishResultEnvelope`, including its paced 1024-byte
+chunks, command/task identity, ordered indices, declared byte length and SHA-256.
+Agent snapshots no longer emit a second unverified raw hierarchy log. Manual
+hierarchy logging without a command context retains its existing diagnostic
+output. No socket, new chunk format or file-transfer service was introduced.
 
-The investigation changes only opt-in timing diagnostics and this engineering
-record. Node build, debug APK build and app unit tests passed. The docs build
-validates the added record. No new transport behavior, timeout semantics,
-recovery feature or runtime-skill contract is introduced.
+Node preserves canonical `data.text`, validates its XML and applies the existing
+presentation. Tagged legacy extraction remains available for older Operators,
+but cannot overwrite an explicitly supplied source, even an empty invalid one.
+Current snapshots stay associated with their action IDs inside the verified
+result; legacy occurrence ordering is not used for them. Missing or corrupt
+result chunks fail at transport before any snapshot can be used. The existing
+transport limit applies to the whole envelope, including multiple snapshots.
+Pacing is not durable delivery or permission to accept incomplete data.
+
+Node counting now uses a forward literal scan instead of regex iteration. The
+first repaired 2,071,952-byte flags capture counted its 4,496 nodes in 12.700 ms,
+compared with the baseline 10.164 seconds. Subsequent large captures counted in
+11.503-13.046 ms. These measurements do not predict physical-device latency.
+
+The evidence budget now propagates its abort signal into `runExecution` and the
+result reader. Budget exhaustion settles as `COMMAND_TIMEOUT` before owned
+process cleanup, with `details.deadlineOwner: "evidence_capture"`. Pre-dispatch
+expiry prevents the requested broadcast and retains any earlier host effects;
+after-dispatch expiry retains reader/chunk progress and dispatch uncertainty.
+An already accepted terminal outcome wins over later cancellation. The budget
+runner also expires synchronously if a new operation observes no time remaining
+before the timer callback has run. This does not add a global CLI process
+deadline or promise to stop Android work already dispatched.
+
+The public snapshot arguments, success shapes, XML and compact presentation are
+unchanged. Evidence consumers should use the new truthful `COMMAND_TIMEOUT`
+outcome for owned hierarchy-budget expiry rather than expecting
+`RESULT_TRANSPORT_EXITED` for that case. Unexplained transport exits still retain
+their existing code. No runtime skill depends on the internal XML log marker,
+and no runtime-skill input or output contract was changed.
+
+### Repaired live evidence and limits
+
+The same explicit API-36 emulator, selected dev Operator and browser were used.
+The rebuilt Operator passed doctor before observation. The first repaired flags
+snapshot completed in 8.513 seconds and returned all 4,496 nodes before compact
+projection to 200 nodes. A later raw-artifact snapshot completed in 7.685 seconds,
+with 4,706 nodes and 2,167,613 XML bytes, exactly matching Android's generated
+byte count. Browser state changed between observations, so these are not paired
+end-to-end speed benchmarks.
+
+A flags-page evidence bundle completed in 8.117 seconds. Its screenshot was
+visually checked, and its hierarchy had 4,705 nodes and 2,167,159 bytes, matching
+Android's source byte count. The hierarchy artifact and capture receipt agreed.
+A deliberate two-second capture finished partial in 2.080 seconds: the
+screenshot remained complete, and the hierarchy failed as `COMMAND_TIMEOUT`,
+`phase: result_wait`, `dispatchState: dispatched`, with
+`deadlineOwner: evidence_capture`. Diagnostics retained 759 of 2,298 chunks and
+777,216 of 2,352,444 envelope bytes. No partial XML was accepted or mutation
+replayed.
+
+All attempts remain in private receipts. An intervening snapshot observed
+Settings (143 nodes), and its evidence bundle also completed. A snapshot
+immediately after returning to the browser captured a 46-node transitional tree.
+Those successful observations are excluded from the large-page measurements.
+The flags page was then explicitly loaded and checked again. The finite sample
+proves the repaired paths on this emulator; it does not establish a universal
+size threshold or zero-flake logging. Physical API-37 hardware, the original
+45-second outer timeout, the original video page, release APK and live daemon
+parity remain outside this validation.
+
+Regression coverage exercises multi-megabyte Unicode XML, multiple action IDs,
+compact projection after reassembly, missing middle/tail chunks, checksum
+failure, malformed XML after valid transport, legacy compatibility and explicit
+empty sources. Deadline tests cover pre-dispatch expiry, retained force-stop
+effects, expiry after dispatch, terminal/deadline races and partial evidence
+bundles. Android tests verify source preservation without the raw agent log,
+exact node counts and placement in canonical action data. The Node suite, debug
+APK build, app and all-module Android unit suites, and docs build validate the
+change. Source and artifact identities remain in the private evidence directory.
 
 ## Reproduced publication loss
 

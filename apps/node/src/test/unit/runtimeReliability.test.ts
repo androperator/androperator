@@ -328,3 +328,57 @@ it("preserves logging status through pre-envelope MCP errors while removing loca
   const result = buildMcpErrorResult({ code: "RESULT_ENVELOPE_TIMEOUT", message: "No envelope", diagnostics: { logging: { status: "available", logPath: "/private/log" } } });
   assert.deepEqual(result.structuredContent?.diagnostics, { logging: { status: "available" } });
 });
+
+
+describe("canonical snapshot source precedence", () => {
+  for (const text of ["<hierarchy/>", ""]) {
+    it(`does not overwrite an explicitly supplied source ${JSON.stringify(text)} with legacy logs`, async () => {
+      const envelope: ResultEnvelope = { commandId: "requested", taskId: "task", status: "success", error: null,
+        stepResults: [{ id: "snap", actionType: "snapshot", success: true, data: { text } }] };
+      const result = await runExecution({ commandId: "requested", taskId: "task", source: "test",
+        expectedFormat: "android-ui-automator", timeoutMs: 1000, actions: [{ id: "snap", type: "snapshot" }] },
+      { runner: executionRunner(envelope, "<hierarchy><node text='legacy'/></hierarchy>"), deviceId: "test-device",
+        operatorPackage: "com.test.operator", ensureInteractiveAutomationReadyFn: ready, logcatBroadcastDelayMs: 0 });
+      assert.ok(result.ok);
+      assert.equal(result.envelope.status, text === "" ? "failed" : "success");
+      if (text !== "") assert.equal(result.envelope.stepResults[0].data.text, text);
+      else assert.equal(result.envelope.stepResults[0].data.error, "SNAPSHOT_EXTRACTION_FAILED");
+    });
+  }
+});
+
+describe("execution deadline evidence before dispatch", () => {
+  const deadline = () => ({ code: "COMMAND_TIMEOUT", message: "Evidence capture budget exhausted", details: { deadlineOwner: "evidence_capture" } });
+  const execution = { commandId: "deadline-preflight", taskId: "deadline-task", source: "test", expectedFormat: "android-ui-automator", timeoutMs: 1000,
+    actions: [{ id: "close", type: "close_app", params: { applicationId: "com.example.app" } }, { id: "snap", type: "snapshot" }] };
+
+  it("does no device work for an already expired deadline", async () => {
+    const controller = new AbortController();
+    controller.abort(deadline());
+    const runner = new FakeProcessRunner();
+    const result = await runExecution(execution, { runner, deviceId: "test-device", signal: controller.signal });
+    assert.ok(!result.ok);
+    assert.equal(result.error.code, "COMMAND_TIMEOUT");
+    assert.equal((result.error.details as Record<string, unknown>).dispatchState, "not_dispatched");
+    assert.deepEqual(runner.calls, []);
+  });
+
+  it("retains prior force-stop effects when the budget expires during readiness without broadcasting", async () => {
+    const runner = new FakeProcessRunner();
+    runner.queueResult({ code: 0, stdout: "List of devices attached\ntest-device\tdevice\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.test.operator\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "", stderr: "" });
+    runner.spawn = () => Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} });
+    const controller = new AbortController();
+    const result = await runExecution(execution, { runner, deviceId: "test-device", operatorPackage: "com.test.operator", signal: controller.signal,
+      ensureInteractiveAutomationReadyFn: async () => { controller.abort(deadline()); return ready(); } });
+    assert.ok(!result.ok);
+    assert.equal(result.error.code, "COMMAND_TIMEOUT");
+    const details = result.error.details as Record<string, unknown>;
+    assert.equal(details.deadlineOwner, "evidence_capture");
+    assert.equal(details.phase, "readiness");
+    assert.equal(details.dispatchState, "not_dispatched");
+    assert.deepEqual(details.earlierEffects, [{ actionId: "close", effect: "force_stop" }]);
+    assert.equal(runner.calls.some(call => call.args.some(arg => arg.startsWith("am broadcast "))), false);
+  });
+});

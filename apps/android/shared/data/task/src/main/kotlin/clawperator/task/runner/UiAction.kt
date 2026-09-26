@@ -233,6 +233,7 @@ enum class UiSnapshotActualFormat(
 
 data class UiSnapshotResult(
     val actualFormat: UiSnapshotActualFormat,
+    val hierarchyXml: String? = null,
     val foregroundPackage: String? = null,
     val hasOverlay: Boolean = false,
     val overlayPackage: String? = null,

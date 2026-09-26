@@ -249,17 +249,29 @@ export async function waitForResultEnvelope(
     };
 
     const abortHandler = () => {
+      const reason = cancelSignal?.reason;
+      const deadlineExpired = reason?.code === ERROR_CODES.COMMAND_TIMEOUT;
+      timeline.record("cancellation_requested", { deadlineExpired });
       finalize({
         ok: false,
-        error: "Logcat result wait canceled",
-        code: ERROR_CODES.RESULT_TRANSPORT_CANCELLED,
+        error: deadlineExpired && typeof reason.message === "string" ? reason.message : "Logcat result wait canceled",
+        code: deadlineExpired ? ERROR_CODES.COMMAND_TIMEOUT : ERROR_CODES.RESULT_TRANSPORT_CANCELLED,
+        ...(deadlineExpired ? { diagnostics: { deadlineOwner: reason.details?.deadlineOwner } } : {}),
       });
     };
 
+    if (cancelSignal?.aborted) {
+      abortHandler();
+      return;
+    }
     try {
       proc = config.runner.spawn(config.adbPath, args);
       timeline.spawned(proc.pid);
     } catch (error) {
+      if (cancelSignal?.aborted) {
+        abortHandler();
+        return;
+      }
       const cause = error as NodeJS.ErrnoException;
       timeline.record("spawn_error", { processErrorCode: cause.code ?? null });
       finalize({ ok: false, code: cause.code === "ENOENT" ? ERROR_CODES.ADB_NOT_FOUND : ERROR_CODES.RESULT_TRANSPORT_SPAWN_FAILED,

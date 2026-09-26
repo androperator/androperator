@@ -162,7 +162,7 @@ export async function captureEvidence(options: EvidenceCaptureOptions, dependenc
     await store("hierarchy", "hierarchy.xml", "application/xml", async () => {
       if (remaining() < 1000) throw { code: "COMMAND_TIMEOUT", message: "Hierarchy not dispatched: less than the minimum execution budget remains" };
       const result = await (dependencies.snapshot ?? runExecution)(execution, { deviceId: runtime.deviceId, operatorPackage: runtime.operatorPackage,
-        adbPath: runtime.adbPath, runner, timeoutMs: remaining(), resultEnvelopeTimeoutMs: remaining(), logger: options.logger,
+        adbPath: runtime.adbPath, runner, signal: runner.signal, timeoutMs: remaining(), resultEnvelopeTimeoutMs: remaining(), logger: options.logger,
         ensureInteractiveAutomationReadyFn: async (config, probeOptions) => {
           const probe = await (probeOptions?.probeInteractiveStateFn ?? probeInteractiveState)(config);
           if (!probe.ok) return { ok: false, error: { code: probe.code, message: probe.message } };

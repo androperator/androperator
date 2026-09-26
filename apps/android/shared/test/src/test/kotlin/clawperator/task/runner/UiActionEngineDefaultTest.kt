@@ -437,7 +437,7 @@ class UiActionEngineDefaultTest : ActionTest {
         }
 
     @Test
-    fun `execute snapshot_ui returns overlay metadata when available`() =
+    fun `execute snapshot_ui returns XML with overlay metadata in the canonical step`() =
         actionTest {
             val uiScope = RecordingTaskUiScope()
             val taskScope =
@@ -446,6 +446,7 @@ class UiActionEngineDefaultTest : ActionTest {
                     snapshotResult =
                         UiSnapshotResult(
                             actualFormat = UiSnapshotActualFormat.HierarchyXml,
+                            hierarchyXml = "<hierarchy><node text='界😀 &amp; settings'/></hierarchy>",
                             foregroundPackage = "com.android.permissioncontroller",
                             hasOverlay = true,
                             overlayPackage = "com.android.permissioncontroller",
@@ -470,6 +471,7 @@ class UiActionEngineDefaultTest : ActionTest {
             val stepResult = result.stepResults.single()
             assertEquals("snapshot_ui", stepResult.actionType)
             assertEquals("hierarchy_xml", stepResult.data["actual_format"])
+            assertEquals("<hierarchy><node text='界😀 &amp; settings'/></hierarchy>", stepResult.data["text"])
             assertEquals("com.android.permissioncontroller", stepResult.data["foreground_package"])
             assertEquals("true", stepResult.data["has_overlay"])
             assertEquals("com.android.permissioncontroller", stepResult.data["overlay_package"])

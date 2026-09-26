@@ -718,6 +718,7 @@ class UiActionEngineDefault(
                 ).let { base ->
                     buildMap {
                         putAll(base)
+                        snapshotResult.hierarchyXml?.let { put("text", it) }
                         snapshotResult.foregroundPackage?.let { put("foreground_package", it) }
                         put("has_overlay", snapshotResult.hasOverlay.toString())
                         snapshotResult.overlayPackage?.let { put("overlay_package", it) }

@@ -3,6 +3,9 @@ package clawperator.uitree
 import clawperator.uitree.UiTreeClickTypes
 
 interface UiTreeManager {
+    /** Holds, moves and releases one pointer on the default display. Requires API 26. */
+    suspend fun dragAt(startX: Int, startY: Int, endX: Int, endY: Int, holdDurationMs: Long, moveDurationMs: Long): Boolean
+
     /** Swipes once between default-display screen pixels, awaiting completion. */
     suspend fun swipeAt(startX: Int, startY: Int, endX: Int, endY: Int, durationMs: Long): Boolean
 

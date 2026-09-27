@@ -15,12 +15,14 @@ export interface ActionParams {
   sessionId?: string;
   uri?: string;
   durationMs?: number;
+  holdDurationMs?: number;
+  moveDurationMs?: number;
   path?: string;
   matcher?: NodeMatcher;
   visibility?: "on_screen" | "all";
   limit?: number;
   coordinate?: { x: number; y: number };
-  /** swipe: required endpoints in screen pixels; durationMs is also required. */
+  /** swipe/drag: required endpoints in screen pixels; each action requires its duration fields. */
   start?: { x: number; y: number };
   end?: { x: number; y: number };
   text?: string;

@@ -31,7 +31,7 @@ Define the canonical `ExecutionAction.type` values, the exact parameters each ac
 
 ## Action receipts and failure evidence
 
-An accepted click, text operation, swipe, or scroll dispatch is evidence of the Android
+An accepted click, text operation, swipe, drag, or scroll dispatch is evidence of the Android
 attempt. It does not verify navigation, persisted state, or any application
 postcondition. Follow it with a wait, query, read, or snapshot that checks the
 specific expected state. A wait for a label already present before the click
@@ -487,6 +487,76 @@ rejected or cancelled. A gesture accepted and later cancelled retains
 `dispatch_accepted: "true"` on the failed step. Command timeout/cancellation
 retains dispatch evidence and does not replay the gesture; a gesture already
 accepted by Android may finish after the caller stops waiting.
+
+<a id="action-drag"></a>
+### `drag`
+
+Press at a screen coordinate, hold without moving, move in a straight line while
+keeping the same pointer down, then release. Requires Android 8 (API 26) or later
+and an available accessibility service. Unlike `swipe`, this action has an
+explicit initial hold. Choose a hold long enough for the target app to enter
+its drag state; 1200 ms is a useful starting point for launcher icons.
+
+| Field | Valid values |
+| --- | --- |
+| `start` | required object with only integer `x` and `y`, each in `[0, 2147483647]` |
+| `end` | required object with only integer `x` and `y`, each in `[0, 2147483647]`; must differ from `start` |
+| `holdDurationMs` | required integer in `[1, 10000]`; no default |
+| `moveDurationMs` | required integer in `[1, 10000]`; no default |
+
+Coordinates are physical screen pixels on the current default display, with
+origin at the top left. Android rejects endpoints outside its bounds before
+dispatch. No selector, grid position, path waypoints, retry, or extra params are
+accepted. Find the source icon with a snapshot and start inside its bounds.
+Mapping grid cells to pixels and choosing a free destination belong in the
+agent or app-specific skill.
+
+```bash
+clawperator drag --start 600 1600 --end 200 1000 \
+  --hold-duration-ms 1200 --move-duration-ms 800
+```
+
+Raw execution action, also usable through HTTP `POST /execute` and the MCP
+`drag` tool with the same four parameter fields:
+
+```json
+{
+  "id": "drag-1",
+  "type": "drag",
+  "params": {
+    "start": { "x": 600, "y": 1600 },
+    "end": { "x": 200, "y": 1000 },
+    "holdDurationMs": 1200,
+    "moveDurationMs": 800
+  }
+}
+```
+
+Success means both Android gesture segments completed, including pointer-up.
+It does not prove a successful drop. Query or snapshot the resulting app state;
+for a launcher icon, check the same visible workspace icon at the destination.
+This version provides a straight same-screen gesture, not a launcher-specific
+folder, page-switching, or grid-reordering command.
+
+Successful step data includes JSON-encoded `start` and `end`, string-valued
+`hold_duration_ms` and `move_duration_ms`, plus `dispatch_method`,
+`dispatch_accepted`, and `elapsed_ms`. A dispatched drag uses
+`dispatch_method: "coordinate_gesture"`. Once the hold is accepted,
+`dispatch_accepted` stays `"true"` even if movement fails.
+
+Invalid parameters produce `EXECUTION_VALIDATION_FAILED` at the Node boundary.
+Android reports `GESTURE_UNSUPPORTED` below API 26, or `GESTURE_FAILED` for
+out-of-display coordinates, an unavailable service, rejection, or platform
+cancellation. The execution deadline bounds missing or delayed callbacks and
+reports `COMMAND_TIMEOUT`.
+
+The action is never automatically replayed. Cancellation before movement removes
+the pending hold timer and requests a stationary pointer-up continuation. If the
+initial down acknowledgement is still pending, release is requested when it arrives.
+A rejected movement also requests that release. Cleanup is best effort if the
+service or platform is unavailable. An already accepted movement can finish and
+release at its endpoint after command cancellation; cancellation does not undo
+application effects. Inspect current state before deciding whether to act again.
 
 <a id="action-scroll"></a>
 ### `scroll`

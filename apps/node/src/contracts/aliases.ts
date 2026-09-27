@@ -43,6 +43,7 @@ export const CANONICAL_ACTION_TYPES = [
   "wait_for_node",
   "click",
   "swipe",
+  "drag",
   "scroll_and_click",
   "scroll",
   "scroll_until",

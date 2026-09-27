@@ -1,121 +1,75 @@
-# Drag and drop feasibility prototype
+# Drag and drop implementation
 
-Status: research prototype, 2026-09-27. This does not add a public drag action.
+The public `drag` action implements a coordinate-based hold, straight movement,
+and release through Android accessibility. See [the action contract](../../api/actions.md#action-drag)
+for fields, error values, evidence, and cancellation semantics.
 
-## Verdict
+## Why a separate action
 
-A coordinate-based press, hold, move, and release action is feasible. Pixel
-Launcher exposes enough workspace icon information in the existing snapshot
-API to verify an ordinary move to an empty cell. Grid interpretation and
-launcher-specific success checks belong in the agent or skill.
+A long-click followed by a swipe releases the first touch. A slower swipe moves
+immediately. Neither expresses a stationary hold followed by movement of the
+same pointer. `drag` uses an API 26 continuing stationary stroke followed by a
+non-continuing movement stroke; it does not change `swipe` behavior.
 
-The prototype uses diagnostic ADB motion events. It establishes launcher and
-snapshot behavior, not accessibility gesture execution. The recommended
-production implementation must still be built and proved through the Operator.
+A zero-distance continuing stroke can complete immediately after DOWN because
+there are no later motion events. Giving it a long Android stroke duration does
+not implement a real hold. Live evidence caught this: a 1200 ms hold plus an
+800 ms move completed in 810 ms and opened the app drawer. Dispatch a minimal
+stationary continuing stroke, then wait `holdDurationMs` on the main handler
+after its completion acknowledgement before continuing. The regression test
+requires no movement before that timer expires.
 
-## Observed behavior
+The execution timeout governs the full operation. Do not derive a shorter
+callback deadline from hold and movement durations: those describe physical
+gestures, not main-thread scheduling or callback latency. An early prototype
+with a durations-plus-2000-ms deadline timed out on a loaded emulator. A
+regression test now covers delayed hold callbacks.
 
-On an Android 16 (API 36) emulator running Pixel Launcher, Photos initially had
-workspace bounds `[696,1800][957,2154]`. A touch over the icon at `(826,1935)`,
-a 1200 ms hold, movement to `(209,1173)`, and release moved it to
-`[78,996][339,1350]`. The existing branch-local snapshot API returned the new
-bounds. Both positions were on the same workspace page. The repeatable probe
-then moved Photos back to its original bounds and observed those same bounds
-again after pressing Home.
+After an accepted hold, failed movement retains `dispatch_accepted: "true"`.
+Cancellation removes the pending hold timer and requests a stationary release.
+If the initial down acknowledgement is pending, its callback requests release. A movement already accepted finishes with its own
+pointer-up; cancellation does not reverse app effects. No failure automatically
+replays the drag, and cleanup cannot be guaranteed if the service disappears.
 
-A later verification read hit a readiness timeout, and subsequent inspection
-found an Android system dialog reporting that Settings Services was not
-responding. This limits any reliability claim from the session. The probe now
-preserves failures and retries only snapshot timeouts, never the drag itself.
-It also refused to act when the system dialog obscured the workspace.
+## Verify effects, not dispatch
 
-Two initial `input draganddrop` attempts opened the app drawer instead. Their
-failure does not establish whether touch targeting, timing, or injection
-behavior caused the result. Explicit down/hold/move/up succeeded. Shell input
-behavior must not be treated as equivalent to accessibility dispatch.
+Pixel Launcher exposes icon bounds through the snapshot API, including
+visibility and workspace ancestry. Match the launcher package, visible workspace,
+label, and positive-area bounds; require a unique source. The hierarchy can also
+contain off-screen icons and duplicate labels in the drawer or dock.
 
-The hierarchy also contains off-screen workspace icons and can contain duplicate
-app labels in the drawer. Match the launcher package, workspace ancestry,
-visibility, label, and positive-area bounds; require a unique source. Bounds
-changing alone does not prove the requested drop. Require the destination to
-lie inside the resulting icon bounds on the workspace, and check the placement
-again after leaving the drag state. Duplicate copies of the same app need a
-stronger source selection rule than this prototype supports.
+Require the destination to lie inside the resulting icon bounds, then verify
+placement after pressing Home. A changed rectangle alone can describe opening
+the drawer rather than a successful drop. Duplicate copies of one app need a
+stronger source selection rule than the live regression uses.
 
-Empty cells are not individually exposed as labeled snapshot nodes. A request
-such as column 3, row 2 to column 1, row 1 therefore needs a known grid geometry
-or launcher-specific interpretation. Pixel Launcher's first-page top row can
-contain its At a Glance area; it is not an unrestricted empty drop target.
+Empty cells are not individually exposed as labeled nodes. Mapping column/row
+positions to coordinates remains launcher-specific. At a Glance can occupy the
+first-page top row. Folder creation, occupied-cell reordering, edge-hover page
+changes, drawer-to-workspace placement, widgets, and cross-app drops require
+separate live scenarios; the same-page empty-cell check does not prove them.
 
-## Reproduce
+## Validation
 
-Build the Node checkout and put a uniquely labeled icon on the visible Pixel
-Launcher workspace. Choose an empty destination from the current layout.
+`validation/drag-drop/run.mjs` moves a visible Pixel Launcher icon through the
+branch-local Node CLI, verifies its destination and placement after Home, and
+optionally restores the exact original bounds. Its correlated drag envelopes
+and before/after XML are local evidence. It retries timed-out snapshot reads,
+never gestures. The manual `Launcher drag and drop` GitHub workflow invokes the
+same check on a disposable Google Play emulator and uploads its evidence.
 
-```bash
-npm --prefix apps/node ci
-npm --prefix apps/node run build
-node apps/node/prototypes/drag-drop.mjs \
-  --device '<device_serial>' --label Photos --x 209 --y 1173 \
-  --output-dir tmp/drag-drop-probe --restore
-```
+An earlier feasibility probe used ADB motion events. It established that Photos
+could move from `[696,1800][957,2154]` to `[78,996][339,1350]`, and that snapshot
+bounds could verify this. The live regression now uses the actual accessibility
+backend; no shell-injection fallback is part of the public action.
 
-The output directory must be new. The script saves full snapshot envelopes,
-XML, touch coordinates and timestamps, and verified bounds. It checks placement
-after pressing Home and optionally restores the source position. It fails if
-there is no unique visible workspace source, the requested placement is not
-observed, or restoration does not reproduce the original bounds. It does not
-retry an unverified drag automatically. Inspect the launcher if it fails.
-
-This diagnostic uses separate ADB calls for touch events, so movement duration
-is host-dependent and can be much slower than a real gesture. It is not a
-shipping backend or a duration benchmark. Local raw evidence may contain device
-metadata; keep it under ignored `tmp/`, outside committed documentation.
-
-## Proposed implementation
-
-Add a distinct `drag` action with explicit `start`, `end`, `holdDurationMs`, and
-`moveDurationMs` fields. Keep the first version to one straight path on the
-default display. Reuse swipe's strict coordinate validation, display bounds
-checks, correlated execution envelope, and dispatch diagnostics. Reject
-unsupported Android versions before touching the screen. Do not change swipe
-semantics or silently substitute shell input.
-
-Android API 26 supports a stationary `GestureDescription.StrokeDescription`
-with `willContinue=true`. Once that segment completes, use its `continueStroke`
-with a path beginning at the same coordinates and `willContinue=false` for
-movement and release. Separate long-click and swipe calls cannot substitute:
-they release the first touch. A longer ordinary swipe also starts moving
-immediately rather than holding at the source.
-
-The current repository minimum SDK is 21, so this implementation needs an
-explicit API 26 capability guard. Existing swipe only requires API 24.
-
-Cancellation, rejected continuation, timeouts, and exception cleanup need
-particular care because the first segment deliberately leaves a pointer down.
-Bound total duration, propagate cancellation, ensure a best-effort release on
-failure, report partial dispatch accurately, and do not automatically retry a
-possibly applied drag. A completed gesture callback means delivery completed;
-it cannot assert that the launcher accepted the drop.
-
-Integration follows the existing swipe route:
-
-- Node action contract and execution validator, then CLI and MCP exposure.
-- Android command parser, `UiAction`, action engine, `TaskUiScope`, and
-  `UiTreeManager` gesture dispatch.
-- Strict parameter and capability tests, continued-pointer/callback tests,
-  failure and cancellation tests, and live snapshot verification.
-- Public documentation and affected runtime skill updates before shipping.
-
-For the first implementation, prove same-page empty-cell moves and reversal
-through accessibility dispatch. Folder creation, occupied-cell reordering,
-edge-hover page changes, drawer-to-workspace placement, widgets, and cross-app
-drops need separate scenarios. They should not be claimed from this result.
+The initial research emulator also encountered a Settings Services ANR and
+readiness failures. Preserve such infrastructure failures rather than treating
+them as successful gesture verification.
 
 ## Sources
 
-- [Android StrokeDescription and continued strokes](https://developer.android.com/reference/android/accessibilityservice/GestureDescription.StrokeDescription)
+- [Android continued strokes](https://developer.android.com/reference/android/accessibilityservice/GestureDescription.StrokeDescription)
 - [Android accessibility gesture guide](https://developer.android.com/guide/topics/ui/accessibility/service)
-- [AOSP shell input implementation](https://android.googlesource.com/platform/frameworks/base/+/refs/heads/main/services/core/java/com/android/server/input/InputShellCommand.java)
-- Existing implementation: `apps/android/shared/data/uitree/src/main/kotlin/clawperator/accessibilityservice/AccessibilityNodeInfoExtAndroid.kt`
-- Existing dispatch validation: `apps/android/shared/data/uitree/src/main/kotlin/clawperator/uitree/UiTreeManagerAndroid.kt`
+- Gesture implementation: `apps/android/shared/data/uitree/src/main/kotlin/clawperator/accessibilityservice/DragGestureAndroid.kt`
+- Live regression: `validation/drag-drop/README.md`

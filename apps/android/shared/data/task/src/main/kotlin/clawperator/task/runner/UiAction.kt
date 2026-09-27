@@ -53,6 +53,14 @@ sealed interface UiAction {
         val container: NodeMatcher? = null,
     ) : UiAction
 
+    data class Drag(
+        override val id: String,
+        val start: Point,
+        val end: Point,
+        val holdDurationMs: Long,
+        val moveDurationMs: Long,
+    ) : UiAction
+
     data class Swipe(
         override val id: String,
         val start: Point,

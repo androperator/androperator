@@ -440,6 +440,15 @@ and failures. Common `deviceId`, `operatorPackage`, and `timeoutMs` options appl
 }
 ```
 
+<a id="mcp-tool-drag"></a>
+### `drag`
+
+Hold at `start`, move to `end` without lifting, then release. `start`, `end`,
+`holdDurationMs`, and `moveDurationMs` are required. Requires Android API 26.
+See the [drag action contract](actions.md#action-drag) for validation, evidence,
+and cancellation semantics. Common `deviceId`, `operatorPackage`, and `timeoutMs`
+options apply. Use a fresh snapshot to verify the application's drop result.
+
 <a id="mcp-tool-click"></a>
 ### `click`
 

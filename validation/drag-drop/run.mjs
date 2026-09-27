@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// Feasibility probe: ADB touch injection, verified with the branch-local snapshot API.
-// This is not a public Clawperator action or an accessibility gesture implementation.
+// Live launcher regression through the branch-local drag and snapshot APIs.
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { SaxesParser } from 'saxes';
+import { createRequire } from 'node:module';
+const { SaxesParser } = createRequire(new URL('../../apps/node/package.json', import.meta.url))('saxes');
 
 const { values } = parseArgs({ options: {
   device: { type: 'string' }, label: { type: 'string' },
@@ -24,9 +24,9 @@ const destination = [values.x, values.y].map(value => {
 const output = resolve(values['output-dir']);
 mkdirSync(dirname(output), { recursive: true });
 mkdirSync(output); // Never overwrite earlier evidence.
-const cli = fileURLToPath(new URL('../dist/cli/index.js', import.meta.url));
+const cli = fileURLToPath(new URL('../../apps/node/dist/cli/index.js', import.meta.url));
 const pause = ms => new Promise(done => setTimeout(done, ms));
-const events = [];
+
 function run(command, args) {
   return execFileSync(command, args, { encoding: 'utf8', timeout: 60000, maxBuffer: 16 * 1024 * 1024,
     env: { ...process.env, CLAWPERATOR_LOG_DIR: resolve(output, 'logs') } });
@@ -81,23 +81,20 @@ async function snapshot(name) {
 }
 const center = box => [Math.floor((box[0] + box[2]) / 2), Math.floor((box[1] + box[3]) / 2)];
 const contains = (box, point) => point[0] >= box[0] && point[0] < box[2] && point[1] >= box[1] && point[1] < box[3];
-function motion(type, point) {
-  events.push({ type, point, startedAt: new Date().toISOString() });
-  run('adb', ['-s', values.device, 'shell', 'input', 'touchscreen', 'motionevent', type, ...point.map(String)]);
-}
+let dragCount = 0;
 async function drag(start, end) {
-  let current = start;
+  const name = `drag-${++dragCount}`;
+  let result;
   try {
-    motion('DOWN', start);
-    await pause(1200);
-    for (let step = 1; step <= 20; step++) {
-      current = start.map((value, axis) => Math.round(value + (end[axis] - value) * step / 20));
-      motion('MOVE', current);
-    }
-  } finally {
-    motion('UP', current);
-    writeFileSync(resolve(output, 'touch-events.json'), JSON.stringify(events, null, 2));
+    result = api('drag', '--start', ...start.map(String), '--end', ...end.map(String),
+      '--hold-duration-ms', '1200', '--move-duration-ms', '800');
+  } catch (error) {
+    writeFileSync(resolve(output, `${name}-failure.txt`), error.stdout ? String(error.stdout) : String(error));
+    throw error;
   }
+  writeFileSync(resolve(output, `${name}.json`), JSON.stringify(result, null, 2));
+  const step = result.envelope.stepResults[0];
+  if (!step.success || step.data.dispatch_accepted !== 'true') throw new Error('Drag was not accepted');
   await pause(1200);
 }
 async function verify(name, target, previous) {
@@ -117,7 +114,7 @@ api('press', 'home');
 await pause(1000);
 const persisted = await snapshot('persisted');
 if (JSON.stringify(after) !== JSON.stringify(persisted)) throw new Error('Placement changed after pressing Home');
-const result = { backend: 'experimental-adb-motionevent', label: values.label, before, after, persisted };
+const result = { backend: 'operator-accessibility-drag', label: values.label, before, after, persisted };
 if (values.restore) {
   await drag(center(persisted), center(before));
   result.restored = await verify('restored', center(before), after);

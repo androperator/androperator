@@ -2125,6 +2125,8 @@ open class RecordingTaskUiScope(
     private val scrollLoopResult: TaskScrollLoopResult = TaskScrollLoopResult(TaskScrollTerminationReason.EdgeReached, scrollsExecuted = 3),
     private val waitForNodeThrows: Exception? = null,
 ) : TaskUiScope {
+    override suspend fun drag(start: action.math.geometry.Point, end: action.math.geometry.Point, holdDurationMs: Long, moveDurationMs: Long) { error("Unexpected drag") }
+
     override suspend fun swipe(start: action.math.geometry.Point, end: action.math.geometry.Point, durationMs: Long) {
         error("Swipe not configured in test")
     }

@@ -290,3 +290,100 @@ evidence. Physical devices, multi-megabyte live payloads, restart-in-transfer,
 same-Operator contention and release/dev endpoint separation still need their
 own live acceptance checks. The larger-payload and corruption coverage above
 remains deterministic protocol-test evidence.
+
+## Repeatable Settings flow benchmark
+
+`validation/direct-result-transport/settings-flow.mjs` compares both result
+transports through the persistent, branch-local Node API. This is a deterministic
+performance validation, not an agent planning eval. Both modes use the same Node
+build and installed APK; only `resultTransport` changes. The harness verifies the
+installed base APK's SHA-256 against `--apk` before measuring.
+
+The flow closes Settings outside the measured interval, then opens Settings,
+waits for the initial page, scrolls the main list to its verified bottom, opens
+About, scrolls that page to its verified bottom, takes a final hierarchy snapshot,
+and saves a screenshot. A further snapshot verifies the screen remained stable
+during capture; that verification is timed separately and excluded from the flow
+total. APK checking, artifact writes, and initial setup are also excluded.
+
+The literal last main-list entry on the tested Google emulator images is
+**Tips & support**, which opens a help flow. To avoid network-dependent content,
+the benchmark verifies that entry at the bottom, then selects **About emulated
+device**. On API 37 that requires scrolling back up. The final About entry is
+**Build number** on API 35 and **Send feedback** on API 37. The benchmark never
+presses either final entry. Profiles record these differences explicitly.
+
+Use an English-language device in a fixed orientation and fold posture, with no
+other agent or person interacting with that device during the run. Inspect a new
+device's Settings layout and create a local profile using the checked-in profiles
+as examples. Do not infer a profile solely from its API level: manufacturer and
+system-image differences can change the layout. A mismatched endpoint fails the
+trial rather than silently choosing another flow.
+
+```bash
+npm --prefix apps/node run build
+./gradlew :app:assembleDebug
+node apps/node/dist/cli/index.js operator setup \
+  --device <device_serial> --operator-package com.clawperator.operator.dev \
+  --apk apps/android/app/build/outputs/apk/debug/app-debug.apk
+node validation/direct-result-transport/settings-flow.mjs \
+  --device <device_serial> \
+  --profile validation/direct-result-transport/profiles/settings-api35.json \
+  --operator-package com.clawperator.operator.dev \
+  --apk apps/android/app/build/outputs/apk/debug/app-debug.apk \
+  --warmups 3 --measured 10
+```
+
+For the unfolded API 37 emulator use `profiles/settings-api37.json` in the same
+validation directory. Counts are per transport: the defaults run six warmups and
+20 measured trials. Pair order alternates logcat/direct, then direct/logcat. Run
+devices sequentially for latency comparisons so they do not compete for host
+resources. Independent devices and harness processes use explicit serials and
+unique output directories; do not run two harnesses against the same device.
+
+Each swipe uses coordinates derived from the current container bounds, a 300 ms
+gesture, and 300 ms settling. Endpoint verification requires the configured last
+label to be visible and last in the container, plus two consecutive swipes with
+unchanged visible label positions. There is a 20-swipe bound per scrolling stage
+and a 20-second command timeout. This deliberately does not treat a runtime
+`NO_POSITION_CHANGE` result as proof of reaching the end. The harness retains
+failed trials and exits nonzero if any warmup or measured trial fails. It never
+replays a failed action automatically.
+
+Output defaults to a unique run directory under
+`~/.clawperator/timings/<UTC-date>/<device_serial>/`. `--out-dir` overrides the
+parent directory. Raw trial files contain command identities, canonical results,
+and hierarchy evidence; PNGs contain the final screen. Keep these local because
+About pages expose device identifiers. Only sanitized aggregate reports belong
+in Git. The summary includes mean, median, min, max, and nearest-rank p95 for
+successful measured trials; failures and warmups remain in the raw trial log.
+
+Measurements include flow and stage wall times, command and swipe counts,
+hierarchy bytes and nodes, screenshot bytes and dimensions, screenshot ADB time,
+and the direct transport's setup, ping round trip, receipt/validation, and Android
+write/acknowledgment timings. Timing evidence is correlated by command ID.
+`androidSnapshotTimings` reports Android hierarchy and metadata costs in
+microseconds, including expected versus observed snapshot commands. Missing
+Android logs or direct timing confirmations are visible, not treated as zero.
+The harness temporarily enables `ClawpSnapshotTiming` and restores its prior
+value on normal completion or a caught run failure. After forcibly terminating
+the process, check that property and restore it if necessary.
+
+This is a debug APK diagnostic, not a release performance claim. Flow totals
+include app launch, UI animations, intentional settling, all observation round
+trips, and screenshot acquisition through ADB in both modes. Direct ACK timing is
+a round trip including host validation, not a measured one-way network delay.
+Separate final-snapshot and transport timings help distinguish result delivery
+from the rest of the flow. A physical-device run remains necessary before drawing
+conclusions about hardware performance.
+
+Offline regression tests run in the normal validation CI suite and the manual
+direct-transport workflow:
+
+```bash
+node --test validation/direct-result-transport/settings-flow.test.mjs
+```
+
+The live Settings benchmark is opt-in because its profile must match the device.
+The existing manual transport workflow still runs its profile-independent
+snapshot smoke test on its API 35 and 36 images.

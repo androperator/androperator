@@ -1,0 +1,11 @@
+{
+  "name": "Settings on API 37 Google APIs foldable emulator, English, unfolded",
+  "apiLevel": "37",
+  "mainReady": "Network & internet",
+  "mainContainer": "com.android.settings:id/main_content_scrollable_container",
+  "mainLastItem": "Tips & support",
+  "detailEntry": "About emulated device",
+  "detailReady": "Device name",
+  "detailContainer": "com.android.settings:id/recycler_view",
+  "detailLastItem": "Send feedback"
+}

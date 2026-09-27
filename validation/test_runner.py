@@ -45,6 +45,7 @@ def main(argv=None):
         'node': [['npm', '--prefix', 'apps/node', 'test']],
         'evals': [['uv', 'run', '--project', 'evals', '--extra', 'dev', 'pytest', 'evals/harness', '-v']],
         'validation': [
+            ['node', '--test', 'validation/direct-result-transport/settings-flow.test.mjs'],
             ['node', 'validation/video-stream-verification/test-video-stream.mjs'],
             ['python3', '-m', 'unittest', 'discover', '-s', 'validation'],
             ['python3', '-m', 'unittest', 'discover', '-s', 'validation/sensitive-hierarchy-access'],

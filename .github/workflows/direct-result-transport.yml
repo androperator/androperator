@@ -23,6 +23,7 @@ jobs:
           npm --prefix apps/node ci
           npm --prefix apps/node run build
           node --test apps/node/dist/test/unit/directResultReader.test.js
+          node --test validation/direct-result-transport/settings-flow.test.mjs
           ./gradlew :app:assembleDebug :shared:data:operator:testDebugUnitTest
       - name: Enable KVM
         run: |

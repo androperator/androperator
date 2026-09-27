@@ -1,0 +1,11 @@
+{
+  "name": "Settings on API 35 Google APIs emulator, English, portrait",
+  "apiLevel": "35",
+  "mainReady": "Network & internet",
+  "mainContainer": "com.android.settings:id/main_content_scrollable_container",
+  "mainLastItem": "Tips & support",
+  "detailEntry": "About emulated device",
+  "detailReady": "Device name",
+  "detailContainer": "com.android.settings:id/recycler_view",
+  "detailLastItem": "Build number"
+}

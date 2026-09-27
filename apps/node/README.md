@@ -87,6 +87,7 @@ Full docs: [docs.clawperator.com](https://docs.clawperator.com)
 - First-time setup: [docs/setup.md](../../docs/setup.md)
 - Node API contract: [docs/api/overview.md](../../docs/api/overview.md)
 - MCP server: [docs/api/mcp.md](../../docs/api/mcp.md)
+- Branch-local direct-result transport prototype: [opt-in guide and timing definitions](../../docs/internal/design/direct-result-transport-prototype.md)
 
 ## Build and Test
 

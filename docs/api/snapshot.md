@@ -17,7 +17,7 @@ like, and what parts of the snapshot contract an agent can rely on.
 ## What `snapshot` Returns
 
 `snapshot` is the canonical read-only UI observation action. The Android runtime
-returns the XML as `data.text` in the canonical result envelope. Large envelopes
+returns the XML as `data.text` in the canonical result envelope. By default, large envelopes
 travel over logcat in paced chunks with command/task identity, ordered indices,
 byte length and SHA-256 verification. Node validates the complete XML before
 returning raw or compact output.
@@ -130,7 +130,7 @@ size for short or sparse nodes; choose a node limit appropriate to the task.
 
 ## How Snapshot Data Flows
 
-The current flow is:
+The default CLI, MCP and Serve flow is:
 
 1. Node dispatches the canonical `snapshot` action using its Android-compatible action name.
 2. Android captures XML and places it in that action's `data.text` in the canonical result envelope.

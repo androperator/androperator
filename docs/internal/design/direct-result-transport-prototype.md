@@ -10,6 +10,12 @@ The Node `runExecution` option `resultTransport: "direct"` selects the prototype
 validation. Use the matching branch-local APK. This is an experimental Node
 option, not a new public CLI flag or a default transport migration.
 
+`resultTransport` belongs in the second `runExecution(execution, options)`
+argument. It is not an execution payload field or the payload
+`mode: "direct"` marker. There is no `--result-transport` CLI flag, MCP tool
+argument, Serve request setting, or environment variable that enables it.
+The repository probe below is the simplest supported way to evaluate it.
+
 ## Run and compare
 
 Build Node and Android, install the debug APK on each explicit target, and ensure
@@ -18,6 +24,7 @@ Settings. The probe observes the current screen; `--sleep-ms` optionally adds a
 bounded delay before the snapshot.
 
 ```bash
+adb devices -l
 npm --prefix apps/node ci
 npm --prefix apps/node run build
 ./gradlew :app:assembleDebug
@@ -30,10 +37,27 @@ node validation/direct-result-transport/probe.mjs \
   --device <device_serial> --transport direct --iterations 5
 ```
 
+Run these commands from the repository root and replace `<device_serial>` with
+an online target from `adb devices -l`. Repeat APK setup for each selected device.
+The `--transport` flag above belongs to the repository probe only.
+
+| Probe argument | Requirement/default |
+| --- | --- |
+| `--device` | Required explicit device serial |
+| `--transport` | `direct` (default) or `logcat` |
+| `--operator-package` | Defaults to `com.clawperator.operator.dev`; must match the installed prototype APK |
+| `--iterations` | Integer from 1 to 20; defaults to 3 |
+| `--sleep-ms` | Integer from 0 to 10000 before each snapshot; defaults to 0 |
+
 The probe prints JSON lines with success, snapshot byte count, total execution
 time and direct-transport timing events. It checks for a successful snapshot
 with a complete hierarchy. It does not print hierarchy contents. Keep timing
 samples local or sanitize device identifiers before committing evidence.
+Exit code 0 means every requested sample passed; the probe stops at the first
+failed sample with exit code 1. An invalid invocation can fail before any sample
+JSON is written. `transportTimings` is empty for logcat and can also be empty if
+a direct attempt fails during earlier readiness checks. Empty measurements are
+not zero-duration measurements.
 
 To represent independent agents, launch the probe in separate host processes,
 with a different `--device` in each. Compare similarly sized hierarchies on the
@@ -44,6 +68,53 @@ The manually dispatched `direct-result-transport.yml` workflow builds and runs
 protocol tests plus the probe on API 35 and 36. Those separate CI jobs do not
 prove two devices on one host. That acceptance check requires concurrent local
 processes and devices.
+
+## Call from branch-local Node code
+
+After building, run this from the repository root. The imports are checkout
+paths, not a promised stable package-level SDK entrypoint. The logger writes
+structured events to the chosen local directory; `runExecution` does not create
+a logger automatically.
+
+```bash
+DEVICE_SERIAL='<device_serial>' node --input-type=module <<'JS'
+import { randomUUID } from 'node:crypto';
+import { runExecution } from './apps/node/dist/domain/executions/runExecution.js';
+import { createClawperatorLogger } from './apps/node/dist/adapters/logger.js';
+
+const result = await runExecution({
+  commandId: `direct-example-${randomUUID()}`,
+  taskId: 'direct-result-example',
+  source: 'debug',
+  expectedFormat: 'android-ui-automator',
+  timeoutMs: 30000,
+  actions: [{ id: 'snapshot', type: 'snapshot' }],
+}, {
+  deviceId: process.env.DEVICE_SERIAL,
+  operatorPackage: 'com.clawperator.operator.dev',
+  resultTransport: 'direct',
+  logger: createClawperatorLogger({ logDir: './artifacts/direct-result-example' }),
+});
+
+const snapshot = result.ok
+  ? result.envelope.stepResults.find(step => step.id === 'snapshot')
+  : undefined;
+const passed = result.ok && result.envelope.status === 'success'
+  && snapshot?.success === true && typeof snapshot.data.text === 'string';
+console.log(JSON.stringify({
+  passed,
+  ...(result.ok
+    ? { status: result.envelope.status, stepError: snapshot?.data.error }
+    : { error: result.error }),
+}));
+process.exitCode = passed ? 0 : 1;
+JS
+```
+
+`result.ok: true` means Node obtained an envelope, including an envelope that
+reports failed actions. Check `envelope.status` and the relevant step's `success`
+for action success. A timing event with `outcome: "received"` proves verified
+transport receipt, not action success or a UI postcondition.
 
 ## Connection and isolation
 
@@ -88,7 +159,11 @@ outside this prototype.
 
 `transport.direct.timing` is emitted through the structured logger. Its JSON
 message contains only timing/status metadata; the event carries command, task
-and device correlation. Durations are milliseconds measured with local monotonic
+and device correlation. In a logger event, parse `JSON.parse(event.message)`
+after checking `event.event === "transport.direct.timing"`. These measurements
+are not added to `envelope.diagnostics`; the repository probe collects them into
+its own `transportTimings` array. A caller that supplies no logger receives no
+timing events. Durations are milliseconds measured with local monotonic
 clocks (`performance.now` on Node, `System.nanoTime` on Android).
 
 | Field | Measured interval |
@@ -125,11 +200,35 @@ replace the earlier readiness budget or cancel Android actions.
 There is no automatic fallback or replay after connection or dispatch failure.
 Checksum, length, identity, premature-close and framing failures return
 `RESULT_TRANSPORT_FAILED`; elapsed transport deadlines return `COMMAND_TIMEOUT`.
-Cancellation preserves a structured caller reason when present. Existing
+Cancellation without a structured reason returns `RESULT_TRANSPORT_CANCELLED`.
+A structured caller reason preserves its code and message; its other custom
+fields are not copied by the direct result reader. Existing
 failure evidence records dispatch uncertainty and prior host-side effects.
 A failed connection cannot establish whether a dispatched mutation completed.
 Logcat remains available for diagnostics but is not a second result source for
 a direct execution.
+
+### Recovery decisions
+
+Inspect `error.code` and `error.details` together. Correlation, `phase`,
+`dispatchState` and `earlierEffects` remain available through `runExecution`.
+For direct-reader failures, `details.transport` is `"direct"`. A readiness
+failure can still mention logcat because readiness uses the existing transport.
+
+| Observation | Next step |
+| --- | --- |
+| `EXECUTION_VALIDATION_FAILED` for `resultTransport` | Pass `"direct"`, `"logcat"`, or omit the option; do not use an empty string or put it in the execution payload. |
+| Setup/handshake failure before command dispatch | Check `adb devices -l`, the selected package, matching prototype APK and Doctor readiness. Older APKs do not implement this endpoint. Repair setup before another attempt. |
+| `RESULT_TRANSPORT_FAILED`, `COMMAND_TIMEOUT` or cancellation after dispatch, or with `dispatchState: "unknown"` | Preserve the command/task IDs and logs. Establish current device state with a new bounded read-only observation before deciding what to do next; do not replay a mutation merely because its receipt is missing. |
+| Verified envelope but a failed action or snapshot step | Use that envelope's error and step evidence. Successful transport does not repair an action or invalid snapshot. |
+| `timingConfirmation: "missing"` with `outcome: "received"` | Keep the verified result; record the missing acknowledgement measurement. Do not rerun a mutation just to obtain timing. |
+| `transport.direct.cleanup_failed` logger event | Inspect `adb forward --list`. Remove only the exact port still associated with the failed session after confirming its client has ended; never use `adb forward --remove-all` on a shared host. |
+
+`dispatchState: "not_dispatched"` describes the Android command broadcast, not
+an absence of all effects. Existing host-side `close_app` preflight can already
+have acted; inspect `earlierEffects` before retrying mixed executions. An explicit
+later `resultTransport: "logcat"` call is a new execution, not automatic recovery
+or continuation of a failed direct attempt.
 
 Regression coverage includes large fragmented Unicode payloads, corruption,
 oversized/truncated frames, incorrect identities, cancellation, independent

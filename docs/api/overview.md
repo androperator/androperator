@@ -85,6 +85,13 @@ Top-level execution fields:
 | `actions` | `ExecutionAction[]` | Ordered action list. |
 | `mode` | `"artifact_compiled" | "direct"` | Optional runtime mode marker. |
 
+The execution `mode: "direct"` marker does not select a connection transport.
+The repository's experimental direct-result prototype is enabled only through
+`runExecution`'s separate Node options or its local validation probe; CLI, MCP
+and Serve calls keep their existing transport. See the
+[prototype guide](https://github.com/clawperator/clawperator/blob/main/docs/internal/design/direct-result-transport-prototype.md)
+for opt-in examples, timing interpretation and recovery.
+
 Each action has:
 
 | Field | Type | Meaning |

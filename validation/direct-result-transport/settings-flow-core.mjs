@@ -1,4 +1,12 @@
 // Pure measurement and endpoint helpers, shared with the offline regression tests.
+export function redactDeviceIdentifier(text, identifier, label) {
+  return identifier && label ? text.replaceAll(identifier, label) : text;
+}
+
+export function timingOnlyTrial(trial) {
+  return { ...trial, commands: trial.commands.map(({ result, ...record }) => record) };
+}
+
 export function statistics(values) {
   if (!values.length) return null;
   if (values.some(value => !Number.isFinite(value) || value < 0)) throw new Error('Invalid measurement');

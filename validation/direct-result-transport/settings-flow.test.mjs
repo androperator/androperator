@@ -75,3 +75,38 @@ test('Android timing aggregation correlates command IDs and exposes missing evid
   assert.equal(result.direct.observedCommands, 1);
   assert.equal(result.direct.fields.operatorSnapshotUs.median, 2500);
 });
+
+test('summary evidence drops raw results and replaces every device identifier', async () => {
+  const { timingOnlyTrial, redactDeviceIdentifier } = await import('./settings-flow-core.mjs');
+  const trial = { error: 'TEST-DEVICE unavailable: TEST-DEVICE', commands: [
+    { wallMs: 10, result: { envelope: { text: 'private hierarchy', screenshot: 'private path' } } },
+  ] };
+  const serialized = redactDeviceIdentifier(JSON.stringify(timingOnlyTrial(trial)), 'TEST-DEVICE', 'Physical test device');
+  assert.equal(serialized.includes('TEST-DEVICE'), false);
+  assert.equal(serialized.includes('private'), false);
+  assert.equal(JSON.parse(serialized).commands[0].wallMs, 10);
+  assert.equal(trial.commands[0].result.envelope.text, 'private hierarchy');
+});
+
+test('summary-only CLI requires an alias and redacts failed ADB command output', async () => {
+  const { spawnSync } = await import('node:child_process');
+  const { mkdtempSync, writeFileSync, rmSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join, delimiter } = await import('node:path');
+  const { fileURLToPath } = await import('node:url');
+  const script = fileURLToPath(new URL('./settings-flow.mjs', import.meta.url));
+  const noAlias = spawnSync(process.execPath, [script, '--summary-only'], { encoding: 'utf8' });
+  assert.equal(noAlias.status, 1);
+  assert.match(noAlias.stderr, /requires --device-label/);
+  const directory = mkdtempSync(join(tmpdir(), 'settings-privacy-test-'));
+  try {
+    writeFileSync(join(directory, 'adb'), '#!/usr/bin/env node\nprocess.stderr.write(process.argv.join(" "));process.exit(1);\n', { mode: 0o700 });
+    const profile = fileURLToPath(new URL('./profiles/settings-api35.json', import.meta.url));
+    const result = spawnSync(process.execPath, [script, '--device', 'TEST-DEVICE', '--profile', profile,
+      '--apk', 'unused.apk', '--summary-only', '--device-label', 'Physical test device'],
+    { encoding: 'utf8', env: { ...process.env, PATH: directory + delimiter + process.env.PATH } });
+    assert.equal(result.status, 1);
+    assert.equal((result.stdout + result.stderr).includes('TEST-DEVICE'), false);
+    assert.match(result.stderr, /Physical test device/);
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});

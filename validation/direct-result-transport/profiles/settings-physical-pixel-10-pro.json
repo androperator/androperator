@@ -1,0 +1,11 @@
+{
+  "name": "Physical Pixel 10 Pro",
+  "apiLevel": "37",
+  "mainReady": "Network and internet",
+  "mainContainer": "com.android.settings:id/main_content_scrollable_container",
+  "mainLastItem": "Device health and support",
+  "detailEntry": "About phone",
+  "detailReady": "Device name",
+  "detailContainer": "com.android.settings:id/recycler_view",
+  "detailLastItem": "Build number"
+}

@@ -400,3 +400,19 @@ node --test validation/direct-result-transport/settings-flow.test.mjs
 The live Settings benchmark is opt-in because its profile must match the device.
 The existing manual transport workflow still runs its profile-independent
 snapshot smoke test on its API 35 and 36 images.
+
+### Physical-device privacy mode
+
+Use `--device-label "Physical Pixel 10 Pro" --summary-only` when device identities
+must not appear in retained results. The label replaces the ADB identifier in
+output directory names, metadata, persisted JSON, console output, and fatal ADB
+errors. `--summary-only` requires a nonblank label and does not save canonical
+results or hierarchy XML. It still captures and validates each PNG, then deletes
+it after the trial, including a failed trial. Avoid force-killing a run during
+capture, when that temporary PNG can still exist.
+
+Only numeric Android snapshot timing lines with benchmark-generated command IDs
+are retained from logcat. Raw screen evidence is discarded, so a later failure
+investigation has less detail available. Per-command timing, stage failures,
+endpoint checks, node/byte counts, and image dimensions remain in the summary.
+The device identifier is still used in memory to route ADB commands.

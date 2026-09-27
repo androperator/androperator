@@ -45,6 +45,10 @@ export function endpointVisible(view, text) {
   return hasLabel(view, text) && view.labels.at(-1).text === text;
 }
 
+export function targetStable(before, after, text) {
+  return hasLabel(before, text) && hasLabel(after, text) && before.signature === after.signature;
+}
+
 export function swipeParams(view, direction) {
   const { left, right, top, bottom } = view.area;
   const x = Math.round(left + (right - left) * 0.5);

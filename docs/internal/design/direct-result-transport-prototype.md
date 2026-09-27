@@ -304,7 +304,8 @@ waits for the initial page, scrolls the main list to its verified bottom, opens
 About, scrolls that page to its verified bottom, takes a final hierarchy snapshot,
 and saves a screenshot. A further snapshot verifies the screen remained stable
 during capture; that verification is timed separately and excluded from the flow
-total. APK checking, artifact writes, and initial setup are also excluded.
+total. APK checking, raw JSON/report writes, and initial setup are also excluded.
+Screenshot acquisition and PNG persistence remain inside the measured interval.
 
 The literal last main-list entry on the tested Google emulator images is
 **Tips & support**, which opens a help flow. To avoid network-dependent content,
@@ -349,6 +350,14 @@ and a 20-second command timeout. This deliberately does not treat a runtime
 `NO_POSITION_CHANGE` result as proof of reaching the end. The harness retains
 failed trials and exits nonzero if any warmup or measured trial fails. It never
 replays a failed action automatically.
+
+Before selecting About, the harness also requires two consecutive unchanged
+visible-label observations with the target still visible. If a residual fling
+carries the row out of view, it reverses the reveal direction before dispatching
+any click. This has a 20-observation bound, and its cost is included in
+`selectDetail`. Initial emulator trials without this check exposed
+`NODE_NOT_FOUND` failures after a transiently visible target on both transports;
+those diagnostic trials must not be mixed with the stabilized comparison.
 
 Output defaults to a unique run directory under
 `~/.clawperator/timings/<UTC-date>/<device_serial>/`. `--out-dir` overrides the

@@ -9,7 +9,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runExecution } from '../../apps/node/dist/domain/executions/runExecution.js';
 import { projectCompactSnapshot } from '../../apps/node/dist/domain/observe/compactSnapshot.js';
-import { trialSchedule, viewport, hasLabel, endpointVisible, swipeParams, summarize, summarizeAndroidTimings } from './settings-flow-core.mjs';
+import { trialSchedule, viewport, hasLabel, endpointVisible, targetStable, swipeParams, summarize, summarizeAndroidTimings } from './settings-flow-core.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const { values } = parseArgs({ options: {
@@ -56,7 +56,7 @@ const metadata = {
   androidVersion: adb('shell', 'getprop', 'ro.build.version.release'), buildFingerprint: adb('shell', 'getprop', 'ro.build.fingerprint'),
   display: adb('shell', 'wm', 'size'), density: adb('shell', 'wm', 'density'),
   animations: Object.fromEntries(['window_animation_scale', 'transition_animation_scale', 'animator_duration_scale'].map(key => [key, adb('shell', 'settings', 'get', 'global', key)])),
-  method: 'Persistent Node API; same APK; alternating AB/BA pairs; reset excluded; 300 ms swipes and 300 ms settling; endpoint label plus two stable viewport confirmations; no automatic action retries.',
+  method: 'Persistent Node API; same APK; alternating AB/BA pairs; reset excluded; 300 ms swipes and 300 ms settling; endpoint and pre-click target each require two stable viewport confirmations; no automatic action retries.',
 };
 save('metadata.json', metadata);
 console.log(JSON.stringify({ event: 'started', outDir, metadata }));
@@ -135,11 +135,22 @@ async function runTrial(spec) {
     if (!hasLabel(viewport(screen.nodes, profile.mainContainer), profile.mainReady)) throw new Error('Initial Settings page not verified');
     screen = await stage('mainBottom', () => scrollToBottom(screen, profile.mainContainer, profile.mainLastItem));
     screen = await stage('selectDetail', async () => {
-      let swipes = 0;
-      while (!hasLabel(viewport(screen.nodes, profile.mainContainer), profile.detailEntry)) {
-        if (++swipes > 20) throw new Error('Detail entry not found above main-list endpoint');
-        screen = readSnapshot(await command([{ id: 'swipe', type: 'swipe', params: swipeParams(viewport(screen.nodes, profile.mainContainer), 'up') }, sleep, snapshot]));
+      let swipes = 0, stable = 0, direction = 'up';
+      for (let observation = 0; observation < 20 && stable < 2; observation++) {
+        const before = viewport(screen.nodes, profile.mainContainer);
+        const visible = hasLabel(before, profile.detailEntry);
+        const actions = visible ? [sleep, snapshot] : [
+          { id: 'swipe', type: 'swipe', params: swipeParams(before, direction) }, sleep, snapshot,
+        ];
+        if (!visible) swipes++;
+        screen = readSnapshot(await command(actions));
+        const after = viewport(screen.nodes, profile.mainContainer);
+        stable = targetStable(before, after, profile.detailEntry) ? stable + 1 : 0;
+        // A residual fling can carry a briefly visible row past the viewport.
+        // Reveal it in the opposite direction before any click is dispatched.
+        if (visible && !hasLabel(after, profile.detailEntry)) direction = direction === 'up' ? 'down' : 'up';
       }
+      if (stable < 2) throw new Error('Detail entry did not become stable within 20 observations');
       activeTrial.scrollCounts.selectDetail = swipes;
       const detail = readSnapshot(await command([
         { id: 'select', type: 'click', params: { matcher: matcher(profile.detailEntry) } },

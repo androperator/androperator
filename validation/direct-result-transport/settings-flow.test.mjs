@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { statistics, trialSchedule, viewport, endpointVisible, swipeParams, summarize } from './settings-flow-core.mjs';
+import { statistics, trialSchedule, viewport, endpointVisible, targetStable, swipeParams, summarize } from './settings-flow-core.mjs';
 
 test('statistics use nearest-rank p95 and do not mutate evidence', () => {
   const values = [4, 1, 2, 3];
@@ -36,6 +36,15 @@ test('stability signature detects actual viewport movement and ignores changing 
   assert.equal(before.signature, same.signature);
   assert.notEqual(before.signature, moved.signature);
   assert.deepEqual(swipeParams(before, 'down'), { start: { x: 500, y: 1620 }, end: { x: 500, y: 480 }, durationMs: 300 });
+});
+
+test('a briefly visible selection target cannot pass the pre-click stability check', () => {
+  const before = viewport([container, label('About', '0.1.1', '[10,1900][900,1970]')], 'list');
+  const moving = viewport([container, label('About', '0.1.1', '[10,1930][900,2000]')], 'list');
+  const gone = viewport([container, { ...label('About'), visibleToUser: false }, label('Other', '0.1.2')], 'list');
+  assert.equal(targetStable(before, moving, 'About'), false);
+  assert.equal(targetStable(before, gone, 'About'), false);
+  assert.equal(targetStable(before, before, 'About'), true);
 });
 
 test('failed runs remain visible and warmups never enter successful latency aggregates', () => {

@@ -123,10 +123,9 @@ export async function waitForDirectResult(
     const dispatchStarted = performance.now();
     dispatched = true;
     // Observe errors immediately, but do not delay receipt on the adb process exiting.
-    const broadcast = onBroadcast(() => {}, sessionId).then(result => {
+    void onBroadcast(() => {}, sessionId).then(result => {
       if (!result.success) fail(new Error("Command broadcast failed; execution outcome may be unknown"));
     }, error => fail(error instanceof Error ? error : new Error(String(error))));
-    void broadcast;
     const header = await reader.control("result");
     const receiptStarted = performance.now();
     timings.dispatchToResultHeaderMs = receiptStarted - dispatchStarted;

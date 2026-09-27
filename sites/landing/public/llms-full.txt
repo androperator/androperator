@@ -1680,7 +1680,7 @@ Define the canonical `ExecutionAction.type` values, the exact parameters each ac
 
 ## Action receipts and failure evidence
 
-An accepted click, text operation, swipe, or scroll dispatch is evidence of the Android
+An accepted click, text operation, swipe, drag, or scroll dispatch is evidence of the Android
 attempt. It does not verify navigation, persisted state, or any application
 postcondition. Follow it with a wait, query, read, or snapshot that checks the
 specific expected state. A wait for a label already present before the click
@@ -2087,7 +2087,8 @@ Example:
 
 Move one finger immediately along a straight line between two screen coordinates,
 then release. This does not require a UI node or scrollable container. It has no
-initial hold and does not perform drag and drop.
+initial hold and does not perform drag and drop. Use [drag](#action-drag) when
+the app needs a long press before movement.
 
 | Field | Valid values |
 | --- | --- |
@@ -2136,6 +2137,80 @@ rejected or cancelled. A gesture accepted and later cancelled retains
 `dispatch_accepted: "true"` on the failed step. Command timeout/cancellation
 retains dispatch evidence and does not replay the gesture; a gesture already
 accepted by Android may finish after the caller stops waiting.
+
+<a id="action-drag"></a>
+### `drag`
+
+Press at a screen coordinate, hold without moving, move in a straight line while
+keeping the same pointer down, then release. Requires Android 8 (API 26) or later
+and an available accessibility service. Unlike `swipe`, this action has an
+explicit initial hold. Choose a hold long enough for the target app to enter
+its drag state. The required hold duration depends on the target app.
+
+| Field | Valid values |
+| --- | --- |
+| `start` | required object with only integer `x` and `y`, each in `[0, 2147483647]` |
+| `end` | required object with only integer `x` and `y`, each in `[0, 2147483647]`; must differ from `start` |
+| `holdDurationMs` | required integer in `[1, 10000]`; no default |
+| `moveDurationMs` | required integer in `[1, 10000]`; no default |
+
+Coordinates are physical screen pixels on the current default display, with
+origin at the top left. Android rejects endpoints outside its bounds before
+dispatch. No selector, grid position, path waypoints, retry, or extra params are
+accepted. Find the source item with a snapshot and start inside its bounds.
+Choosing a destination and interpreting the result belong in the agent or
+app-specific skill.
+
+```bash
+clawperator drag --start 600 1600 --end 200 1000 \
+  --hold-duration-ms 1200 --move-duration-ms 800 --device <device_serial>
+```
+
+The flat CLI defaults to a 30000 ms execution budget; `--timeout <ms>` overrides
+it. Budget for the hold, movement, and scheduling overhead. In a multi-action
+execution, `timeoutMs` covers the entire sequence, not each gesture separately.
+For a local development Operator, also pass
+`--operator-package com.clawperator.operator.dev` consistently on every command.
+
+Raw execution action, also usable through HTTP `POST /execute` and the MCP
+`drag` tool with the same four parameter fields:
+
+```json
+{
+  "id": "drag-1",
+  "type": "drag",
+  "params": {
+    "start": { "x": 600, "y": 1600 },
+    "end": { "x": 200, "y": 1000 },
+    "holdDurationMs": 1200,
+    "moveDurationMs": 800
+  }
+}
+```
+
+Success means Android completed the gesture, including pointer release.
+It does not prove a successful drop. Query or snapshot the resulting app state;
+check that the intended item reached the destination. This action provides a
+straight same-screen gesture; app-specific drop behavior is not guaranteed.
+
+Successful step data includes JSON-encoded `start` and `end`, string-valued
+`hold_duration_ms` and `move_duration_ms`, plus `dispatch_method`,
+`dispatch_accepted`, and `elapsed_ms`. A dispatched drag uses
+`dispatch_method: "coordinate_gesture"`. Once the hold is accepted,
+`dispatch_accepted` stays `"true"` even if movement fails.
+
+Invalid parameters produce `EXECUTION_VALIDATION_FAILED` at the Node boundary.
+Android reports `GESTURE_UNSUPPORTED` below API 26, or `GESTURE_FAILED` for
+out-of-display coordinates, an unavailable service, rejection, or platform
+cancellation. The execution deadline bounds missing or delayed callbacks and
+reports `COMMAND_TIMEOUT`.
+
+The action is never automatically replayed. On cancellation before movement,
+Android attempts to release the held pointer without moving it. Cleanup is best
+effort if the service or platform is unavailable. An already accepted movement
+can finish and release at its endpoint after command cancellation. Timeout and
+cancellation do not undo application effects; inspect current state before
+deciding whether to act again.
 
 <a id="action-scroll"></a>
 ### `scroll`
@@ -3054,6 +3129,8 @@ Example:
 | CLI command | Canonical action type | Notes |
 | --- | --- | --- |
 | `click` | `click` | `tap` is a CLI synonym |
+| `swipe` | `swipe` | explicit endpoints and `--duration-ms`; no initial hold |
+| `drag` | `drag` | explicit endpoints, `--hold-duration-ms`, and `--move-duration-ms` |
 | `type` | `enter_text` | built from selector + text |
 | `read` | `read_text` | supports optional container matcher |
 | `read-value` | `read_key_value_pair` | built from label selector flags |
@@ -3078,6 +3155,7 @@ Example:
 | Action type | Success keys exposed by the current execution runtime |
 | --- | --- |
 | `snapshot` | `data.text`; optional `data.warn` |
+| `drag` | JSON-encoded `start` and `end`; string-valued `hold_duration_ms`, `move_duration_ms`, `dispatch_method`, `dispatch_accepted`, and `elapsed_ms`; see [drag](#action-drag) |
 | `take_screenshot` | `data.path` |
 | `close_app` | `data.application_id` when Node pre-flight succeeded |
 | `set_on_screen_log` | `visible`, `rendered`, `truncated`, normalized style values, and `bounds`; all values are strings and caller text is omitted |
@@ -4242,6 +4320,7 @@ Use this page as a command index. Detailed behavior, output shapes, and recovery
 | [`snapshot`](#command-snapshot) | Device Interaction | `snapshot [--device <id>] [--operator-package <pkg>]` | `--no-daemon`, `--compact`, `--max-nodes`, `--max-text-chars`, `--raw-path` | [Action: snapshot](actions.md#action-snapshot) | Get current Android UI hierarchy as XML |
 | [`screenshot`](#command-screenshot) | Device Interaction | `screenshot [--device <id>] [--operator-package <pkg>] [--path <file>]` | `--path`, `--no-daemon` | [Action: take_screenshot](actions.md#action-take-screenshot) | Capture a screenshot from the device |
 | [`swipe`](#command-swipe) | Device Interaction | `swipe --start <x> <y> --end <x> <y> --duration-ms <ms>` | `--start`, `--end`, `--duration-ms`, `--no-daemon` | [Action: swipe](actions.md#action-swipe) | Swipe between screen coordinates with an explicit duration |
+| [`drag`](#command-drag) | Device Interaction | `drag --start <x> <y> --end <x> <y> --hold-duration-ms <ms> --move-duration-ms <ms>` | `--start`, `--end`, `--hold-duration-ms`, `--move-duration-ms`, `--no-daemon` | [Action: drag](actions.md#action-drag) | Drag between screen coordinates with explicit hold and movement durations |
 | [`click`](#command-click) | Device Interaction | `click --text <text> \| --id <id> \| --role <role> [--device <id>] [--operator-package <pkg>]` | `--strict`, `--container-json`, `--text`, `--id`, `--desc`, `--role`, `--coordinate`, `--long`, `--focus`, `--no-daemon` | [Action: click](actions.md#action-click) | Tap the first matching UI element |
 | [`open`](#command-open) | Device Interaction | `open <package-id\|url\|uri> [--device <id>] [--operator-package <pkg>]` | `--app`, `--navigation-timeout-ms`, `--skip-navigation-wait`, `--no-daemon` | [Actions: open_app / open_uri](actions.md#action-open-app) | Open an app, URL, or URI on the device |
 | [`type`](#command-type) | Device Interaction | `type <text> --role <role> \| --id <id> [--device <id>] [--operator-package <pkg>]` | `--strict`, `--container-json`, `--id`, `--desc`, `--role`, `--submit`, `--clear`, `--no-daemon` | [Action: enter_text](actions.md#action-enter-text) | Type text into the first matching UI element |
@@ -4395,6 +4474,17 @@ Swipe between screen coordinates with an explicit duration
 - Primary flags: `--start`, `--end`, `--duration-ms`, `--no-daemon`
 - Details: [Action: swipe](actions.md#action-swipe)
 - Action links: [`swipe`](actions.md#action-swipe)
+
+<a id="command-drag"></a>
+### `drag`
+
+Drag between screen coordinates with explicit hold and movement durations
+
+- Group: Device Interaction
+- Syntax: `drag --start <x> <y> --end <x> <y> --hold-duration-ms <ms> --move-duration-ms <ms>`
+- Primary flags: `--start`, `--end`, `--hold-duration-ms`, `--move-duration-ms`, `--no-daemon`
+- Details: [Action: drag](actions.md#action-drag)
+- Action links: [`drag`](actions.md#action-drag)
 
 <a id="command-click"></a>
 ### `click`
@@ -7724,6 +7814,7 @@ Only the codes defined in `apps/node/src/contracts/errors.ts` are part of the pu
 | <a id="error-container-not-found"></a>`CONTAINER_NOT_FOUND` | Container not found | - |
 | <a id="error-container-not-scrollable"></a>`CONTAINER_NOT_SCROLLABLE` | Container not scrollable | - |
 | <a id="error-gesture-failed"></a>`GESTURE_FAILED` | Gesture failed | - |
+| <a id="error-gesture-unsupported"></a>`GESTURE_UNSUPPORTED` | Gesture unsupported | Continued-pointer gestures require Android API 26 or newer. |
 | <a id="error-on-screen-log-service-unavailable"></a>`ON_SCREEN_LOG_SERVICE_UNAVAILABLE` | On screen log service unavailable | On-screen log panel |
 | <a id="error-on-screen-log-layout-invalid"></a>`ON_SCREEN_LOG_LAYOUT_INVALID` | On screen log layout invalid | - |
 | <a id="error-on-screen-log-render-failed"></a>`ON_SCREEN_LOG_RENDER_FAILED` | On screen log render failed | - |
@@ -7823,6 +7914,7 @@ Notes:
 | Payload or flag validation | `MISSING_ARGUMENT`, `EXECUTION_VALIDATION_FAILED`, `EXECUTION_ACTION_UNSUPPORTED`, `PAYLOAD_TOO_LARGE` | Change the command or payload. Do not retry unchanged |
 | Dispatch or service availability | `RESULT_ENVELOPE_TIMEOUT`, `RESULT_ENVELOPE_MALFORMED`, `BROADCAST_FAILED`, `DEVICE_ACCESSIBILITY_NOT_RUNNING`, `DEVICE_SHELL_UNAVAILABLE` | Run `clawperator doctor`, repair the reported issue, then retry |
 | UI lookup or gesture | `NODE_NOT_FOUND`, `NODE_AMBIGUOUS`, `NODE_NOT_CLICKABLE`, `CONTAINER_NOT_FOUND`, `CONTAINER_AMBIGUOUS`, `CONTAINER_NOT_SCROLLABLE`, `GESTURE_FAILED`, `SECURITY_BLOCK_DETECTED` | Refresh state with `snapshot`, wait for UI readiness, or adjust selectors and scroll strategy |
+| Unsupported gesture platform | `GESTURE_UNSUPPORTED` | `drag` requires Android API 26 or newer. Use a supported device; retrying or increasing the timeout cannot enable continued-pointer gestures on an older platform. |
 | On-screen log panel | `ON_SCREEN_LOG_SERVICE_UNAVAILABLE`, `ON_SCREEN_LOG_LAYOUT_INVALID`, `ON_SCREEN_LOG_RENDER_FAILED`, `ON_SCREEN_LOG_RENDER_TIMEOUT` | Repair the Operator service or supplied layout, then issue a replacement `set_on_screen_log` or `clear_on_screen_log` action as appropriate. |
 | Recording state | `RECORDING_ALREADY_IN_PROGRESS`, `RECORDING_NOT_IN_PROGRESS`, `RECORDING_SESSION_NOT_FOUND`, `RECORDING_PULL_FAILED`, `RECORDING_PARSE_FAILED`, `RECORDING_SCHEMA_VERSION_UNSUPPORTED` | Repair recording state or use the right session before retrying |
 
@@ -9729,6 +9821,7 @@ For the underlying selector contract, see [Selectors](selectors.md).
 | `query_ui` | Inspect fresh UI nodes, including blank labels and state. Omit matcher for all eligible nodes. Paths are observation-local, never action handles; visibility is not an occlusion guarantee. Does not wait for navigation; use wait for the destination before querying. |
 | `open` | Open an Android application by package id or launch a URI. |
 | `swipe` | Swipe in a straight line between screen pixels, then release. Duration is required. Completion does not prove an app-specific effect. |
+| `drag` | Hold at the start, move in a straight line without lifting, then release. Requires Android API 26. Both durations are required. Completion does not prove a successful drop. |
 | `click` | Click a matching node or absolute screen coordinate. |
 | `type` | Type text into a matching field, optionally clearing first or submitting after. Step data reports text_entry, submission, and submit_method separately; accepted submission does not verify navigation. Observe the destination before declaring success. |
 | `read` | Read text from a matching node, optionally returning all matches. Supports regex validation via validator and validatorPattern. |
@@ -10007,6 +10100,32 @@ and failures. Common `deviceId`, `operatorPackage`, and `timeoutMs` options appl
   "deviceId": "<device_serial>"
 }
 ```
+
+<a id="mcp-tool-drag"></a>
+### `drag`
+
+Hold at `start`, move to `end` without lifting, then release. `start`, `end`,
+`holdDurationMs`, and `moveDurationMs` are required. Requires Android API 26.
+See the [drag action contract](actions.md#action-drag) for validation, evidence,
+and cancellation semantics. Common `deviceId`, `operatorPackage`, and `timeoutMs`
+options apply. Use a fresh snapshot to verify the application's drop result.
+
+Call the named `drag` tool with these arguments, not an execution action wrapper:
+
+```json
+{
+  "start": { "x": 600, "y": 1600 },
+  "end": { "x": 200, "y": 1000 },
+  "holdDurationMs": 1200,
+  "moveDurationMs": 800,
+  "deviceId": "<device_serial>",
+  "timeoutMs": 30000
+}
+```
+
+Replace the example coordinates with bounds from the target's current snapshot.
+For a local development Operator, include
+`"operatorPackage": "com.clawperator.operator.dev"`.
 
 <a id="mcp-tool-click"></a>
 ### `click`

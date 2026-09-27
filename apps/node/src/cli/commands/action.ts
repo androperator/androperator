@@ -1,3 +1,5 @@
+import { buildDragExecution } from "../../domain/actions/drag.js";
+import type { DragParams } from "../../contracts/drag.js";
 import { buildToastExecution } from "../../domain/actions/toast.js";
 import { buildNotificationMediaExecution } from "../../domain/notifications/service.js";
 import type { NotificationMediaAction } from "../../contracts/notifications.js";
@@ -27,6 +29,14 @@ import type { SwipeParams } from "../../contracts/swipe.js";
 export async function cmdActionSwipe(options: ActionCommandOptions & SwipeParams): Promise<string> {
   try {
     return await runActionExecution(buildSwipeExecution({ start: options.start, end: options.end, durationMs: options.durationMs }, options.timeoutMs), options);
+  } catch (error) {
+    return formatError(error, options);
+  }
+}
+
+export async function cmdActionDrag(options: ActionCommandOptions & DragParams): Promise<string> {
+  try {
+    return await runActionExecution(buildDragExecution({ start: options.start, end: options.end, holdDurationMs: options.holdDurationMs, moveDurationMs: options.moveDurationMs }, options.timeoutMs), options);
   } catch (error) {
     return formatError(error, options);
   }

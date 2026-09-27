@@ -440,6 +440,32 @@ and failures. Common `deviceId`, `operatorPackage`, and `timeoutMs` options appl
 }
 ```
 
+<a id="mcp-tool-drag"></a>
+### `drag`
+
+Hold at `start`, move to `end` without lifting, then release. `start`, `end`,
+`holdDurationMs`, and `moveDurationMs` are required. Requires Android API 26.
+See the [drag action contract](actions.md#action-drag) for validation, evidence,
+and cancellation semantics. Common `deviceId`, `operatorPackage`, and `timeoutMs`
+options apply. Use a fresh snapshot to verify the application's drop result.
+
+Call the named `drag` tool with these arguments, not an execution action wrapper:
+
+```json
+{
+  "start": { "x": 600, "y": 1600 },
+  "end": { "x": 200, "y": 1000 },
+  "holdDurationMs": 1200,
+  "moveDurationMs": 800,
+  "deviceId": "<device_serial>",
+  "timeoutMs": 30000
+}
+```
+
+Replace the example coordinates with bounds from the target's current snapshot.
+For a local development Operator, include
+`"operatorPackage": "com.clawperator.operator.dev"`.
+
 <a id="mcp-tool-click"></a>
 ### `click`
 

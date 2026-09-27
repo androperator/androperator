@@ -32,6 +32,18 @@ class TaskUiScopeDefault(
     private val uiTreeManager: UiTreeManager,
     private val coroutineScopeIo: CoroutineScope,
 ) : TaskUiScope {
+    override suspend fun drag(start: Point, end: Point, holdDurationMs: Long, moveDurationMs: Long) {
+        require(start.x >= 0 && start.y >= 0 && end.x >= 0 && end.y >= 0) { "drag coordinates must be non-negative" }
+        require(start != end) { "drag start and end must differ" }
+        require(holdDurationMs in 1L..10000L && moveDurationMs in 1L..10000L) { "drag durations must be in [1, 10000]" }
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
+            throw UiActionFailure("GESTURE_UNSUPPORTED", "Drag requires Android API 26 or newer")
+        }
+        if (!uiTreeManager.dragAt(start.x, start.y, end.x, end.y, holdDurationMs, moveDurationMs)) {
+            throw UiActionFailure("GESTURE_FAILED", "Drag could not complete; check display bounds, accessibility service availability, and gesture cancellation")
+        }
+    }
+
     override suspend fun swipe(start: Point, end: Point, durationMs: Long) {
         require(start.x >= 0 && start.y >= 0 && end.x >= 0 && end.y >= 0) { "swipe coordinates must be non-negative" }
         require(start != end) { "swipe start and end must differ" }

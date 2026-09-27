@@ -185,6 +185,32 @@ class AgentCommandParserDefault : AgentCommandParser {
                         container = params.parseMatcherOrNull("container"),
                     )
                 }
+            "drag" -> {
+                require(params.keys == setOf("start", "end", "holdDurationMs", "moveDurationMs")) { "drag requires only start, end, holdDurationMs, and moveDurationMs" }
+                fun point(key: String): Point {
+                    val value = params[key] as? JsonObject ?: error("$key must be an object")
+                    require(value.keys == setOf("x", "y")) { "$key requires only x and y" }
+                    fun coordinate(axis: String): Int {
+                        val primitive = value[axis] as? JsonPrimitive ?: error("$key.$axis must be an integer")
+                        require(!primitive.isString) { "$key.$axis must be an integer" }
+                        val number = primitive.intOrNull ?: error("$key.$axis must be an integer")
+                        require(number >= 0) { "$key.$axis must be non-negative" }
+                        return number
+                    }
+                    return Point(coordinate("x"), coordinate("y"))
+                }
+                val start = point("start")
+                val end = point("end")
+                require(start != end) { "drag start and end must differ" }
+                fun duration(key: String): Long {
+                    val value = params[key] as? JsonPrimitive ?: error("$key must be an integer")
+                    require(!value.isString) { "$key must be an integer" }
+                    val number = value.longOrNull ?: error("$key must be an integer")
+                    require(number in 1L..10000L) { "$key must be in [1, 10000]" }
+                    return number
+                }
+                UiAction.Drag(id, start, end, duration("holdDurationMs"), duration("moveDurationMs"))
+            }
             "swipe" -> {
                 require(params.keys == setOf("start", "end", "durationMs")) { "swipe requires only start, end, and durationMs" }
                 fun point(key: String): Point {

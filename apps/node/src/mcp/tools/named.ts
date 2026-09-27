@@ -1,3 +1,5 @@
+import { dragParamsSchema } from "../../contracts/drag.js";
+import { buildDragExecution } from "../../domain/actions/drag.js";
 import { swipeParamsSchema } from "../../contracts/swipe.js";
 import { buildSwipeExecution } from "../../domain/actions/swipe.js";
 import { z } from "zod";
@@ -45,6 +47,9 @@ const swipePointJsonSchema = {
 
 const swipeArgsSchema = swipeParamsSchema.innerType().extend(executionToolOptionsSchema.shape).strict().refine(
   value => value.start.x !== value.end.x || value.start.y !== value.end.y, "swipe start and end must differ");
+
+const dragArgsSchema = dragParamsSchema.innerType().extend(executionToolOptionsSchema.shape).strict().refine(
+  value => value.start.x !== value.end.x || value.start.y !== value.end.y, "drag start and end must differ");
 
 const queryArgsSchema = executionToolOptionsSchema.merge(queryParamsSchema).strict();
 
@@ -216,6 +221,21 @@ export function getNamedMcpTools(
       handler: async (args) => {
         const opts = mergeWithSessionDefaults(parseToolArguments(swipeArgsSchema, args), session);
         const execution = applyMcpExecutionMetadata(buildSwipeExecution({ start: opts.start, end: opts.end, durationMs: opts.durationMs }), "swipe", opts.timeoutMs);
+        return await runExecutionTool(execution, opts, logger, result => buildSuccessResult(buildExecutionSuccessPayload(result)));
+      },
+    },
+    {
+      name: "drag",
+      description: "Hold at the start, move in a straight line without lifting, then release. Requires Android API 26. Both durations are required. Completion does not prove a successful drop.",
+      inputSchema: buildCommonExecutionSchema({
+        start: swipePointJsonSchema,
+        end: swipePointJsonSchema,
+        holdDurationMs: { type: "integer", minimum: 1, maximum: 10000 },
+        moveDurationMs: { type: "integer", minimum: 1, maximum: 10000 },
+      }, ["start", "end", "holdDurationMs", "moveDurationMs"]),
+      handler: async (args) => {
+        const opts = mergeWithSessionDefaults(parseToolArguments(dragArgsSchema, args), session);
+        const execution = applyMcpExecutionMetadata(buildDragExecution({ start: opts.start, end: opts.end, holdDurationMs: opts.holdDurationMs, moveDurationMs: opts.moveDurationMs }), "drag", opts.timeoutMs);
         return await runExecutionTool(execution, opts, logger, result => buildSuccessResult(buildExecutionSuccessPayload(result)));
       },
     },

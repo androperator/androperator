@@ -1640,6 +1640,64 @@ Example:
   },
 };
 
+COMMANDS["drag"] = {
+  name: "drag",
+  group: "Device Interaction",
+  documentedFlags: ["--start", "--end", "--hold-duration-ms", "--move-duration-ms", "--no-daemon"],
+  supportedFlags: ["--start", "--end", "--hold-duration-ms", "--move-duration-ms", "--no-daemon"],
+  summary: "Drag between screen coordinates with explicit hold and movement durations",
+  help: `clawperator drag - Drag between screen coordinates
+
+Usage:
+  clawperator drag --start <x> <y> --end <x> <y> --hold-duration-ms <ms> --move-duration-ms <ms>
+
+All four flags are required. Coordinates are non-negative integer screen pixels,
+with origin at the top left, and must be inside the current default display.
+Start and end must differ. Each duration must be an integer from 1 to 10000 milliseconds.
+Requires Android 8 (API 26). The finger holds at the start, moves in a straight
+line without lifting, then releases. Choose a hold long enough for the app.
+Success means gesture completion, not confirmation of an app-specific effect.
+
+Example:
+  clawperator drag --start 100 500 --end 800 500 --hold-duration-ms 1000 --move-duration-ms 500
+`,
+  topLevelBlock: `  drag --start <x> <y> --end <x> <y> --hold-duration-ms <ms> --move-duration-ms <ms>
+                                            Drag between screen coordinates`,
+  handler: async (ctx) => {
+    const values = new Map<string, number[]>();
+    const arities = new Map([["--start", 2], ["--end", 2], ["--hold-duration-ms", 1], ["--move-duration-ms", 1]]);
+    const invalid = (message: string) => formatError({
+      code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
+      message: `${message}\nExample: clawperator drag --start 100 500 --end 800 500 --hold-duration-ms 1000 --move-duration-ms 500`,
+    }, { format: ctx.format });
+    for (let i = 0; i < ctx.rest.length; i++) {
+      const flag = ctx.rest[i];
+      if (flag === "--no-daemon") continue;
+      const arity = arities.get(flag);
+      if (arity === undefined) return invalid(`Unexpected drag argument: ${flag}`);
+      if (values.has(flag)) return invalid(`${flag} must not appear more than once`);
+      const tokens = ctx.rest.slice(i + 1, i + 1 + arity);
+      if (tokens.length !== arity || tokens.some(token => !/^\d+$/.test(token))) {
+        return invalid(`${flag} requires ${arity} non-negative integer value(s)`);
+      }
+      values.set(flag, tokens.map(Number));
+      i += arity;
+    }
+    for (const flag of arities.keys()) {
+      if (!values.has(flag)) return invalid(`${flag} is required`);
+    }
+    const [startX, startY] = values.get("--start")!;
+    const [endX, endY] = values.get("--end")!;
+    return (await import("./commands/action.js")).cmdActionDrag({
+      start: { x: startX, y: startY }, end: { x: endX, y: endY },
+      holdDurationMs: values.get("--hold-duration-ms")![0],
+      moveDurationMs: values.get("--move-duration-ms")![0],
+      format: ctx.format, deviceId: ctx.deviceId, operatorPackage: ctx.operatorPackage,
+      noDaemon: ctx.noDaemon, logger: ctx.logger, timeoutMs: ctx.timeoutMs,
+    });
+  },
+};
+
 COMMANDS["click"] = {
   name: "click",
   synonyms: ["tap"],

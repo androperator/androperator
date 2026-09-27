@@ -1,5 +1,6 @@
 import { validateOnScreenLogTemplate } from "../../contracts/onScreenLogTemplate.js";
 import { notificationMediaParamsSchema } from "../../contracts/notifications.js";
+import { dragParamsSchema } from "../../contracts/drag.js";
 import { swipeParamsSchema } from "../../contracts/swipe.js";
 import { z } from "zod";
 import { LIMITS } from "../../contracts/limits.js";
@@ -139,6 +140,7 @@ function paramsSchemaForAction(actionType: string) {
   }).strict();
   if (actionType === "cancel_toast") return z.object({}).strict().optional();
   if (actionType === "swipe") return swipeParamsSchema;
+  if (actionType === "drag") return dragParamsSchema;
   const serviceSchema = notificationMediaParamsSchema(actionType);
   if (serviceSchema !== undefined) return serviceSchema;
   if (actionType === "query_ui") return queryParamsSchema.optional();
@@ -170,6 +172,7 @@ const supportedTypes = [
   "wait_for_node",
   "click",
   "swipe",
+  "drag",
   "scroll_and_click",
   "scroll",
   "scroll_until",

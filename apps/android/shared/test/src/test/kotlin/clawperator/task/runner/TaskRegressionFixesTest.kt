@@ -385,6 +385,7 @@ class TaskRegressionFixesTest : ActionTest {
                     uiTreeFormatter = unusedProxy(),
                     uiTreeManager =
                         object : UiTreeManager {
+                            override suspend fun dragAt(startX: Int, startY: Int, endX: Int, endY: Int, holdDurationMs: Long, moveDurationMs: Long): Boolean = error("Unexpected drag")
                             override suspend fun swipeAt(startX: Int, startY: Int, endX: Int, endY: Int, durationMs: Long): Boolean = error("Unexpected swipe")
                             override suspend fun triggerClick(uiNode: UiNode, clickTypes: clawperator.uitree.UiTreeClickTypes): Boolean =
                                 error("unused in test")
@@ -484,6 +485,7 @@ class TaskRegressionFixesTest : ActionTest {
                     uiTreeFormatter = unusedProxy(),
                     uiTreeManager =
                         object : UiTreeManager {
+                            override suspend fun dragAt(startX: Int, startY: Int, endX: Int, endY: Int, holdDurationMs: Long, moveDurationMs: Long): Boolean = error("Unexpected drag")
                             override suspend fun swipeAt(startX: Int, startY: Int, endX: Int, endY: Int, durationMs: Long): Boolean = error("Unexpected swipe")
                             override suspend fun triggerClick(uiNode: UiNode, clickTypes: clawperator.uitree.UiTreeClickTypes): Boolean =
                                 error("unused in test")

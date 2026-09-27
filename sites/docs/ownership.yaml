@@ -62,6 +62,10 @@ command_details:
     href: actions.md#action-take-screenshot
     label: "Action: take_screenshot"
     action: take_screenshot
+  drag:
+    href: actions.md#action-drag
+    label: "Action: drag"
+    action: drag
   swipe:
     href: actions.md#action-swipe
     label: "Action: swipe"

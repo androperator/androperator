@@ -18,6 +18,7 @@ import clawperator.accessibilityservice.debugNode
 import clawperator.accessibilityservice.debugNodeRedacted
 import clawperator.accessibilityservice.dispatchLongPress
 import clawperator.accessibilityservice.dispatchSingleTap
+import clawperator.accessibilityservice.dispatchDrag
 import clawperator.accessibilityservice.dispatchSwipe
 import clawperator.accessibilityservice.firstClickableAncestorOrSelf
 import clawperator.accessibilityservice.firstEditableAncestorOrSelf
@@ -35,6 +36,20 @@ class UiTreeManagerAndroid(
         return action().also {
             // Gesture acceptance is observed at dispatchGesture, before its asynchronous callback.
             if (method != "coordinate_gesture") observeDispatch(target, method, it)
+        }
+    }
+
+    override suspend fun dragAt(startX: Int, startY: Int, endX: Int, endY: Int, holdDurationMs: Long, moveDurationMs: Long): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
+        val service = accessibilityServiceManager.currentAccessibilityService ?: return false
+        val metrics = android.util.DisplayMetrics()
+        @Suppress("DEPRECATION")
+        (service.getSystemService(android.content.Context.WINDOW_SERVICE) as android.view.WindowManager).defaultDisplay.getRealMetrics(metrics)
+        if (startX !in 0 until metrics.widthPixels || endX !in 0 until metrics.widthPixels ||
+            startY !in 0 until metrics.heightPixels || endY !in 0 until metrics.heightPixels ||
+            (startX == endX && startY == endY) || holdDurationMs !in 1L..10000L || moveDurationMs !in 1L..10000L) return false
+        return dispatch(null, "coordinate_gesture") {
+            service.dispatchDrag(startX.toFloat(), startY.toFloat(), endX.toFloat(), endY.toFloat(), holdDurationMs, moveDurationMs)
         }
     }
 

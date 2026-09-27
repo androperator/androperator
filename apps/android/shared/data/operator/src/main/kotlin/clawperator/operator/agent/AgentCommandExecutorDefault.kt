@@ -1,18 +1,18 @@
 package clawperator.operator.agent
 
 import action.log.Log
+import clawperator.task.runner.ActionExecutionJournal
 import clawperator.task.runner.TaskEvent
 import clawperator.task.runner.TaskResult
 import clawperator.task.runner.TaskRunnerManager
 import clawperator.task.runner.TaskStatusSink
 import clawperator.task.runner.UiActionEngine
 import clawperator.task.runner.UiActionExecutionResult
-import clawperator.task.runner.ActionExecutionJournal
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 
 class AgentCommandExecutorDefault(
@@ -24,6 +24,7 @@ class AgentCommandExecutorDefault(
 
     companion object {
         private const val TAG = "[Clawperator-Command]"
+
         /** Message prefix for canonical-envelope build errors (not a Log tag override). */
         private const val CLAWPERATOR_RESULT_TAG = "ClawperatorResult"
     }
@@ -40,7 +41,11 @@ class AgentCommandExecutorDefault(
         suspend fun publish(canonicalLine: String) {
             if (terminalPublished) return
             terminalPublished = true
-            publishResultEnvelope(canonicalLine, command.commandId, command.taskId)
+            if (command.resultSessionId != null) {
+                DirectResultConnection.publish(command.resultSessionId, canonicalLine)
+            } else {
+                publishResultEnvelope(canonicalLine, command.commandId, command.taskId)
+            }
         }
         return try {
             // Timeout intentionally includes queue wait + execution time.

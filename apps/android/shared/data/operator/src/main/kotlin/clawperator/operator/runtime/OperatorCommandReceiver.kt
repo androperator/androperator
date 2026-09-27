@@ -11,6 +11,7 @@ import clawperator.accessibilityservice.closeNotificationPanel
 import clawperator.accessibilityservice.currentAccessibilityService
 import clawperator.operator.agent.AgentCommandExecutor
 import clawperator.operator.agent.AgentCommandParser
+import clawperator.operator.agent.DirectResultConnection
 import clawperator.operator.agent.EnvelopeErrorCodes
 import clawperator.operator.agent.buildCanonicalFailureLine
 import clawperator.task.runner.TaskResult
@@ -24,6 +25,7 @@ class OperatorCommandReceiver :
     KoinComponent {
     companion object {
         const val ACTION_AGENT_COMMAND = "app.clawperator.operator.ACTION_AGENT_COMMAND"
+        const val ACTION_PREPARE_RESULT_CONNECTION = "app.clawperator.operator.ACTION_PREPARE_RESULT_CONNECTION"
         const val EXTRA_AGENT_PAYLOAD = "payload"
     }
 
@@ -37,6 +39,14 @@ class OperatorCommandReceiver :
         intent: Intent?,
     ) {
         when (intent?.action) {
+            ACTION_PREPARE_RESULT_CONNECTION -> {
+                try {
+                    requireNotNull(context)
+                    DirectResultConnection.prepare(context.packageName, requireNotNull(intent.getStringExtra(EXTRA_AGENT_PAYLOAD)))
+                } catch (_: Exception) {
+                    Log.e("[Operator-Receiver] Could not prepare direct result connection")
+                }
+            }
             ACTION_AGENT_COMMAND -> {
                 val payload = intent.getStringExtra(EXTRA_AGENT_PAYLOAD)
                 if (payload.isNullOrBlank()) {
@@ -44,7 +54,15 @@ class OperatorCommandReceiver :
                     return
                 }
 
-                val parsedCommand = agentCommandParser.parse(payload)
+                val resultSessionId = intent.getStringExtra("result_session")
+                val parsedCommand = agentCommandParser.parse(payload).map { it.copy(resultSessionId = resultSessionId) }
+                if (resultSessionId != null) {
+                    val command = parsedCommand.getOrNull()
+                    if (command == null || !DirectResultConnection.claim(resultSessionId, command)) {
+                        Log.e("[Operator-Receiver] Direct result session unavailable; command not executed")
+                        return
+                    }
+                }
                 val background = parsedCommand.getOrNull()?.actions?.isBackgroundServiceExecution() == true
                 val accessibilityService = if (background) null else accessibilityServiceManager.currentAccessibilityService
                 if (!background && accessibilityService == null) {
@@ -52,14 +70,17 @@ class OperatorCommandReceiver :
                     parsedCommand
                         .onSuccess { command ->
                             Log.e("[Operator-Receiver] $reason commandId=${command.commandId} taskId=${command.taskId}")
-                            Log.i(
-                                buildCanonicalFailureLine(
-                                    commandId = command.commandId,
-                                    taskId = command.taskId,
-                                    reason = reason,
-                                    errorCode = EnvelopeErrorCodes.SERVICE_UNAVAILABLE,
-                                ),
+                            val canonicalFailure = buildCanonicalFailureLine(
+                                commandId = command.commandId,
+                                taskId = command.taskId,
+                                reason = reason,
+                                errorCode = EnvelopeErrorCodes.SERVICE_UNAVAILABLE,
                             )
+                            if (resultSessionId != null) {
+                                DirectResultConnection.publish(resultSessionId, canonicalFailure)
+                            } else {
+                                Log.i(canonicalFailure)
+                            }
                         }.onFailure { error ->
                             Log.e(error, "[Operator-Receiver] $reason and failed to parse agent command payload")
                         }

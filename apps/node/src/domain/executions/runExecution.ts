@@ -1,3 +1,4 @@
+import { waitForDirectResult } from "../../adapters/android-bridge/directResultReader.js";
 import { getLoggingStatus } from "../../adapters/logger.js";
 import { verifyScreenshot } from "../observe/screenshotMetadata.js";
 import type { ScreenshotMetadata } from "../../contracts/screenshot.js";
@@ -29,6 +30,8 @@ import type { Logger } from "../../adapters/logger.js";
 import { buildResultEnvelopeTimeoutHint } from "./timeoutGuidance.js";
 
 export interface RunExecutionOptions {
+  /** Experimental per-command ADB-forwarded result transport; defaults to logcat. */
+  resultTransport?: "logcat" | "direct";
   deviceId?: string;
   operatorPackage?: string;
   adbPath?: string;
@@ -552,11 +555,14 @@ async function performExecution(
     return { execution, result: { ok: false, error: e as { code: string; message: string; [k: string]: unknown } } };
   }
 
+  if (options.resultTransport !== undefined && options.resultTransport !== "logcat" && options.resultTransport !== "direct") {
+    return { execution, result: { ok: false, error: { code: ERROR_CODES.EXECUTION_VALIDATION_FAILED, message: "resultTransport must be logcat or direct" } } };
+  }
   const hasExplicitDevice = typeof config.deviceId === "string" && config.deviceId.trim().length > 0;
   // Explicit-device logcat can start early because resolveDevice validates the
   // provided serial exactly. Auto-resolve must stay sequential so the logcat
   // reader is attached to the final resolved device.
-  const deferredBroadcast = hasExplicitDevice ? createDeferredBroadcast() : undefined;
+  const deferredBroadcast = hasExplicitDevice && options.resultTransport !== "direct" ? createDeferredBroadcast() : undefined;
   const earlyResultAbortController = hasExplicitDevice ? new AbortController() : undefined;
   const earlyResultWaiter = deferredBroadcast !== undefined
     ? waitForResultEnvelope(
@@ -744,12 +750,14 @@ async function performExecution(
 
     evidence.phase = "dispatch";
     let dispatchStart = Date.now();
-    const runBroadcast: BroadcastFn = async (beginDispatchCapture) => {
+    const runBroadcast = async (beginDispatchCapture: () => void, resultSessionId?: string) => {
+      const cancellation = executionCancellationError(options.signal);
+      if (cancellation !== undefined) throw cancellation;
       evidence.phase = "dispatch";
       beginDispatchCapture();
       evidence.dispatchState = "unknown";
       evidence.dispatchStartedAt = new Date().toISOString();
-      const broadcast = await broadcastAgentCommand(config, payload);
+      const broadcast = await broadcastAgentCommand(config, payload, { resultSessionId, timeoutMs: resultSessionId === undefined ? undefined : execution.timeoutMs });
       if (broadcast.success) {
         evidence.dispatchState = "dispatched";
         // A terminal result may already have started asynchronous post-processing.
@@ -766,7 +774,10 @@ async function performExecution(
       }
       return { success: broadcast.success, stdout: broadcast.stdout, stderr: broadcast.stderr };
     };
-    const result = earlyResultWaiter !== undefined && deferredBroadcast !== undefined
+    const result = options.resultTransport === "direct"
+      ? await waitForDirectResult(config, { commandId: execution.commandId, taskId: execution.taskId,
+          timeoutMs: options.resultEnvelopeTimeoutMs ?? (execution.timeoutMs + 5000), cancelSignal: options.signal }, runBroadcast)
+      : earlyResultWaiter !== undefined && deferredBroadcast !== undefined
       ? await (async () => {
           dispatchStart = Date.now();
           broadcastReleased = true;

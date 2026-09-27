@@ -1,0 +1,43 @@
+name: Direct result transport prototype
+on:
+  workflow_dispatch:
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        api: [35, 36]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.14.1'
+      - uses: android-actions/setup-android@v3
+      - name: Build and protocol regression tests
+        run: |
+          npm --prefix apps/node ci
+          npm --prefix apps/node run build
+          node --test apps/node/dist/test/unit/directResultReader.test.js
+          ./gradlew :app:assembleDebug :shared:data:operator:testDebugUnitTest
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: bash validation/direct-result-transport/ci-device.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: direct-result-api${{ matrix.api }}
+          path: artifacts/direct-result-transport/

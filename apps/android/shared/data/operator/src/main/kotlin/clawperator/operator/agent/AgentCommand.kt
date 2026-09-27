@@ -9,12 +9,12 @@ data class AgentCommand(
     val source: String,
     val timeoutMs: Long,
     val actions: List<UiAction>,
+    val resultSessionId: String? = null,
 ) {
-    fun toPlan(): UiActionPlan =
-        UiActionPlan(
-            commandId = commandId,
-            taskId = taskId,
-            source = source,
-            actions = actions,
-        )
+    fun toPlan(): UiActionPlan = UiActionPlan(
+        commandId = commandId,
+        taskId = taskId,
+        source = source,
+        actions = actions,
+    )
 }

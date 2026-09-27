@@ -69,6 +69,7 @@
         android:permission="android.permission.DUMP">
         <intent-filter>
           <action android:name="app.clawperator.operator.ACTION_AGENT_COMMAND" />
+          <action android:name="app.clawperator.operator.ACTION_PREPARE_RESULT_CONNECTION" />
         </intent-filter>
       </receiver>
 

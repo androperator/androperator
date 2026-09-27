@@ -21,14 +21,16 @@ export function buildBroadcastShellCommand(config: RuntimeConfig, payloadJson: s
  */
 export async function broadcastAgentCommand(
   config: RuntimeConfig,
-  payloadJson: string
+  payloadJson: string,
+  options?: { timeoutMs?: number; resultSessionId?: string },
 ): Promise<{ success: boolean; stdout: string; stderr: string }> {
-  const shellCommand = buildBroadcastShellCommand(config, payloadJson);
+  const sessionExtra = options?.resultSessionId === undefined ? "" : ` --es result_session ${singleQuoteForDeviceShell(options.resultSessionId)}`;
+  const shellCommand = buildBroadcastShellCommand(config, payloadJson) + sessionExtra;
   const redactedShellCommand = buildBroadcastShellCommand(config, "[REDACTED]");
   const result = await runAdb(
     config,
     ["shell", shellCommand],
-    { redactedArgs: ["shell", redactedShellCommand] }
+    { redactedArgs: ["shell", redactedShellCommand], timeoutMs: options?.timeoutMs }
   );
 
   return { success: result.code === 0, stdout: result.stdout, stderr: result.stderr };

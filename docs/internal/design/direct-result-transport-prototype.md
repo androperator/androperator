@@ -293,6 +293,10 @@ remains deterministic protocol-test evidence.
 
 ## Repeatable Settings flow benchmark
 
+See the [recorded emulator comparison](direct-result-transport-settings-benchmark.md)
+for complete-flow, stage, and communication timings, including the selection
+stability problem found in the first diagnostic batch.
+
 `validation/direct-result-transport/settings-flow.mjs` compares both result
 transports through the persistent, branch-local Node API. This is a deterministic
 performance validation, not an agent planning eval. Both modes use the same Node

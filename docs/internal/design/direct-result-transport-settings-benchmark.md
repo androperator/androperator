@@ -102,4 +102,4 @@ Direct did not improve every stage: the phone emulator's final snapshot median i
 
 Flow totals are dominated by navigation, gestures, and intentional settling. Smaller result-delivery times therefore cannot translate directly into the same percentage improvement for the whole task. Launch-time variation and a small sample size also limit causal claims from the aggregate differences.
 
-Next: repeat the same paired method on a physical device with an inspected local profile, matching APK, and fixed orientation. Preserve all failures. Release-build measurements and larger payloads remain separate follow-up before changing the default transport.
+The subsequent [Physical Pixel 10 Pro comparison](direct-result-transport-physical-benchmark.md) uses the same verification policy and matching APK. Direct transport was slower there, so the emulator improvement does not generalize to that physical device. Release-build measurements and larger payloads remain separate follow-up before changing the default transport.

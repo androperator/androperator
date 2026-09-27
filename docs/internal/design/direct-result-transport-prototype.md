@@ -16,6 +16,51 @@ argument. It is not an execution payload field or the payload
 argument, Serve request setting, or environment variable that enables it.
 The repository probe below is the simplest supported way to evaluate it.
 
+## Current API status and limitations
+
+| Surface | Behavior in this prototype |
+| --- | --- |
+| `runExecution(execution, options)` | Optional `options.resultTransport` accepts `"logcat"` or `"direct"`; omission uses logcat |
+| Node helpers forwarding `RunExecutionOptions` | `observeSnapshot`, `observeScreenshot`, and `runNotificationMedia` already forward the optional transport selection |
+| CLI, MCP, Serve HTTP API, and daemon entry points | No exposed transport selector; their ordinary execution calls continue to use logcat |
+| Shared runtime configuration | No transport environment variable, persisted setting, or server-startup option exists yet |
+| Execution and result contracts | Action payloads, selectors, canonical result-envelope shape, command/task correlation, and error-code definitions are unchanged |
+
+Existing callers require no migration. Direct attempts can return
+transport-specific diagnostic details using existing error codes and emit
+`transport.direct.timing` events through a supplied logger. These events are
+diagnostic output, not new fields agents must add to action requests.
+
+Direct selection changes canonical result delivery only. Commands still enter
+Android through broadcasts; readiness checks retain their existing paths, and
+screenshot PNG acquisition still uses ADB screencap. It requires a matching
+Operator APK that implements the direct protocol. It does not automatically
+fall back to logcat or replay a failed command. Connections are per command;
+this prototype is not a persistent connection shared across all calls.
+
+## Broader adoption: proposed work, not implemented
+
+Making direct the default would not require adding a transport argument to every
+public operation. Calls that converge on `runExecution` can inherit a transport
+choice resolved in that shared execution layer. Changing its default would
+change omitted-option behavior without changing action payloads or result
+schemas. It would still require compatible Operator deployments and validation
+of the entry points that use that layer.
+
+The recommended configuration design is one shared runtime transport setting,
+with an explicit per-call override taking precedence. Exposing that setting at
+CLI or server startup would let agents use normal actions without choosing a
+transport for each click or snapshot. This precedence and these configuration
+surfaces are proposals; they are not available in this PR.
+
+Before broader adoption, wire and test the selected configuration through CLI,
+MCP, Serve, daemon, and relevant Node helper paths; define compatibility errors
+for Operators without direct-protocol support; and validate cancellation,
+timeouts, connection cleanup, and concurrent clients on separate devices.
+Preserve the distinction between transport failure and an unknown execution
+outcome. Any compatibility fallback would need an explicit pre-dispatch design;
+it must not silently replay a command after dispatch may have occurred.
+
 ## Run and compare
 
 Build Node and Android, install the debug APK on each explicit target, and ensure
@@ -286,16 +331,19 @@ not stop Android work or replay it. No ADB forwards remained after either the
 concurrent-success series or the cancellation-isolation series.
 
 This supplies live basic-transfer, concurrent-device and cancellation-isolation
-evidence. Physical devices, multi-megabyte live payloads, restart-in-transfer,
-same-Operator contention and release/dev endpoint separation still need their
-own live acceptance checks. The larger-payload and corruption coverage above
+evidence. The [Physical Pixel 10 Pro comparison](direct-result-transport-physical-benchmark.md)
+adds single-device transfer and timing evidence. Concurrent physical-device runs,
+multi-megabyte live payloads, restart-in-transfer, same-Operator contention and
+release/dev endpoint separation still need their own live acceptance checks. The larger-payload and corruption coverage above
 remains deterministic protocol-test evidence.
 
 ## Repeatable Settings flow benchmark
 
 See the [recorded emulator comparison](direct-result-transport-settings-benchmark.md)
 for complete-flow, stage, and communication timings, including the selection
-stability problem found in the first diagnostic batch.
+stability problem found in the first diagnostic batch. The
+[Physical Pixel 10 Pro comparison](direct-result-transport-physical-benchmark.md)
+uses the same verification policy and records a slower direct-transport result.
 
 `validation/direct-result-transport/settings-flow.mjs` compares both result
 transports through the persistent, branch-local Node API. This is a deterministic
@@ -387,8 +435,8 @@ include app launch, UI animations, intentional settling, all observation round
 trips, and screenshot acquisition through ADB in both modes. Direct ACK timing is
 a round trip including host validation, not a measured one-way network delay.
 Separate final-snapshot and transport timings help distinguish result delivery
-from the rest of the flow. A physical-device run remains necessary before drawing
-conclusions about hardware performance.
+from the rest of the flow. The recorded physical comparison covers one device
+and debug build; it does not establish release or general hardware performance.
 
 Offline regression tests run in the normal validation CI suite and the manual
 direct-transport workflow:
@@ -416,3 +464,16 @@ are retained from logcat. Raw screen evidence is discarded, so a later failure
 investigation has less detail available. Per-command timing, stage failures,
 endpoint checks, node/byte counts, and image dimensions remain in the summary.
 The device identifier is still used in memory to route ADB commands.
+
+Physical Pixel 10 Pro reproduction command (substitute the identifier locally;
+keep the label and summary-only flags):
+
+```bash
+node validation/direct-result-transport/settings-flow.mjs \
+  --device <device_serial> \
+  --device-label "Physical Pixel 10 Pro" --summary-only \
+  --profile validation/direct-result-transport/profiles/settings-physical-pixel-10-pro.json \
+  --operator-package com.clawperator.operator.dev \
+  --apk apps/android/app/build/outputs/apk/debug/app-debug.apk \
+  --warmups 3 --measured 10
+```

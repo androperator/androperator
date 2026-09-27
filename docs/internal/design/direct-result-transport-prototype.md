@@ -150,3 +150,44 @@ Before considering default adoption, obtain live evidence for:
 
 This prototype does not change public result envelopes, automate Operator
 selection, stream screenshots, or replace broadcast command delivery.
+
+## Live emulator observations, 27 September 2026
+
+The matching prototype APK was installed on a freshly started Pixel 10 Pro Fold
+emulator (API 37). Settings snapshots passed over both transports. Five
+consecutive samples per transport observed the same 70,491-byte hierarchy;
+direct canonical envelopes were 77,057 bytes.
+
+| Measurement | Median | Sample range |
+| --- | --- | --- |
+| Logcat total execution | 277.914 ms | 255.620-455.541 ms |
+| Direct total execution | 143.154 ms | 141.234-253.720 ms |
+| Direct connection setup | 50.733 ms | 49.150-54.412 ms |
+| Direct handshake round trip | 1.370 ms | 1.183-1.808 ms |
+| Direct receipt and validation | 0.345 ms | 0.325-0.704 ms |
+| Android send-to-verified-acknowledgement round trip | 2.675 ms | 2.033-2.986 ms |
+
+These are small, sequential emulator samples: logcat ran first, then direct,
+with a fresh Node process for each five-sample series. The first iteration of
+each series includes cold readiness work. The approximately 49% lower median
+total time is an observation for this screen and run, not a physical-device or
+large-hierarchy performance guarantee.
+
+A second emulator, previously offline, also recovered and passed with the same
+APK. Two independent Node processes then ran three direct snapshots each on the
+two devices, adding a one-second Android sleep per command to ensure overlapping
+work. All six snapshots passed with verified timing confirmations.
+
+For failure isolation, a separate process canceled its wait 100 ms after its
+command broadcast was acknowledged on the second emulator. It returned
+`COMMAND_TIMEOUT` with `dispatchState: dispatched`. Meanwhile, another process
+completed all three direct snapshots on the foldable. Android logs show a single
+start and eventual completion of the canceled command: host cancellation did
+not stop Android work or replay it. No ADB forwards remained after either the
+concurrent-success series or the cancellation-isolation series.
+
+This supplies live basic-transfer, concurrent-device and cancellation-isolation
+evidence. Physical devices, multi-megabyte live payloads, restart-in-transfer,
+same-Operator contention and release/dev endpoint separation still need their
+own live acceptance checks. The larger-payload and corruption coverage above
+remains deterministic protocol-test evidence.

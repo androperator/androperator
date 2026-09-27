@@ -496,7 +496,7 @@ Press at a screen coordinate, hold without moving, move in a straight line while
 keeping the same pointer down, then release. Requires Android 8 (API 26) or later
 and an available accessibility service. Unlike `swipe`, this action has an
 explicit initial hold. Choose a hold long enough for the target app to enter
-its drag state; 1200 ms is a useful starting point for launcher icons.
+its drag state. The required hold duration depends on the target app.
 
 | Field | Valid values |
 | --- | --- |
@@ -508,29 +508,9 @@ its drag state; 1200 ms is a useful starting point for launcher icons.
 Coordinates are physical screen pixels on the current default display, with
 origin at the top left. Android rejects endpoints outside its bounds before
 dispatch. No selector, grid position, path waypoints, retry, or extra params are
-accepted. Find the source icon with a snapshot and start inside its bounds.
-Mapping grid cells to pixels and choosing a free destination belong in the
-agent or app-specific skill.
-
-#### Move and verify a launcher icon
-
-1. Run `clawperator snapshot --device <device_serial>` on the home screen.
-   Identify one visible workspace icon by package, label, workspace ancestry,
-   and bounds. Exclude drawer, dock, and off-screen duplicates. Start at the
-   center of that icon; starting on empty space can open the app drawer.
-2. Choose an empty workspace cell and derive its center from the current layout.
-   The example coordinates below are illustrative, not portable grid positions.
-3. Run `drag` on the same device, then take a fresh snapshot. Require the same
-   workspace icon's new bounds to contain the destination and differ from its
-   original bounds. Gesture success alone is insufficient.
-4. Run `clawperator press home --device <device_serial>` and snapshot again to
-   confirm the placement persists. To restore it, drag from its current center
-   to the original center and verify the original bounds.
-
-The CLI returns JSON by default. Inspect `envelope.status` and the drag step's
-`success` and `data.dispatch_accepted`; see [result branching](overview.md#result-envelope)
-for wrapper and error shapes. Failed or timed-out dispatch may already have
-changed the app, so inspect fresh state before deciding on another gesture.
+accepted. Find the source item with a snapshot and start inside its bounds.
+Choosing a destination and interpreting the result belong in the agent or
+app-specific skill.
 
 ```bash
 clawperator drag --start 600 1600 --end 200 1000 \
@@ -561,9 +541,8 @@ Raw execution action, also usable through HTTP `POST /execute` and the MCP
 
 Success means both Android gesture segments completed, including pointer-up.
 It does not prove a successful drop. Query or snapshot the resulting app state;
-for a launcher icon, check the same visible workspace icon at the destination.
-This version provides a straight same-screen gesture, not a launcher-specific
-folder, page-switching, or grid-reordering command.
+check that the intended item reached the destination. This action provides a
+straight same-screen gesture; app-specific drop behavior is not guaranteed.
 
 Successful step data includes JSON-encoded `start` and `end`, string-valued
 `hold_duration_ms` and `move_duration_ms`, plus `dispatch_method`,

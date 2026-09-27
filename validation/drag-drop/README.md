@@ -17,6 +17,25 @@ snapshots and correlated drag result envelopes. Timed-out snapshot reads can be
 retried; gestures are never automatically replayed. A failed check can leave the
 icon moved; inspect its actual state before another run.
 
-`.github/workflows/drag-drop.yml` runs this on a disposable Google Play emulator.
-Only its `ci-device.sh` wrapper resets launcher data. Do not run that wrapper on
-a personal device. The local runner does not reset launcher data.
+The runner does not reset launcher data. It is a manual, opt-in scenario and is
+not run by CI. Use `adb devices` to select the explicit target before running it.
+The example coordinates must be replaced with a known empty destination in the
+current layout.
+
+## Scenario assumptions and limits
+
+The runner matches a uniquely labeled, visible, long-clickable node inside
+Pixel Launcher's workspace with positive-area bounds. Drawer, dock, off-screen,
+and duplicate matches must not be mistaken for the source. Empty cells are not
+individually exposed as labeled nodes; choosing one remains the caller's job.
+A changed rectangle alone is insufficient evidence of a drop, so the runner
+checks destination containment and placement after Home.
+
+This scenario covers same-page movement into an empty cell and optional
+restoration. It does not establish folder creation, occupied-cell reordering,
+edge-hover page changes, drawer-to-workspace placement, widgets, cross-app drops,
+or behavior in other launchers. Snapshot retries only handle
+`RESULT_ENVELOPE_TIMEOUT`; readiness and infrastructure failures remain failures.
+
+The gesture lifecycle rationale belongs in the
+[internal design note](../../docs/internal/design/drag-gesture.md).

@@ -2188,7 +2188,7 @@ Raw execution action, also usable through HTTP `POST /execute` and the MCP
 }
 ```
 
-Success means both Android gesture segments completed, including pointer-up.
+Success means Android completed the gesture, including pointer release.
 It does not prove a successful drop. Query or snapshot the resulting app state;
 check that the intended item reached the destination. This action provides a
 straight same-screen gesture; app-specific drop behavior is not guaranteed.
@@ -2205,13 +2205,12 @@ out-of-display coordinates, an unavailable service, rejection, or platform
 cancellation. The execution deadline bounds missing or delayed callbacks and
 reports `COMMAND_TIMEOUT`.
 
-The action is never automatically replayed. Cancellation before movement removes
-the pending hold timer and requests a stationary pointer-up continuation. If the
-initial down acknowledgement is still pending, release is requested when it arrives.
-A rejected movement also requests that release. Cleanup is best effort if the
-service or platform is unavailable. An already accepted movement can finish and
-release at its endpoint after command cancellation; cancellation does not undo
-application effects. Inspect current state before deciding whether to act again.
+The action is never automatically replayed. On cancellation before movement,
+Android attempts to release the held pointer without moving it. Cleanup is best
+effort if the service or platform is unavailable. An already accepted movement
+can finish and release at its endpoint after command cancellation. Timeout and
+cancellation do not undo application effects; inspect current state before
+deciding whether to act again.
 
 <a id="action-scroll"></a>
 ### `scroll`

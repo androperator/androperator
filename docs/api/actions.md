@@ -438,7 +438,8 @@ Example:
 
 Move one finger immediately along a straight line between two screen coordinates,
 then release. This does not require a UI node or scrollable container. It has no
-initial hold and does not perform drag and drop.
+initial hold and does not perform drag and drop. Use [drag](#action-drag) when
+the app needs a long press before movement.
 
 | Field | Valid values |
 | --- | --- |
@@ -511,10 +512,36 @@ accepted. Find the source icon with a snapshot and start inside its bounds.
 Mapping grid cells to pixels and choosing a free destination belong in the
 agent or app-specific skill.
 
+#### Move and verify a launcher icon
+
+1. Run `clawperator snapshot --device <device_serial>` on the home screen.
+   Identify one visible workspace icon by package, label, workspace ancestry,
+   and bounds. Exclude drawer, dock, and off-screen duplicates. Start at the
+   center of that icon; starting on empty space can open the app drawer.
+2. Choose an empty workspace cell and derive its center from the current layout.
+   The example coordinates below are illustrative, not portable grid positions.
+3. Run `drag` on the same device, then take a fresh snapshot. Require the same
+   workspace icon's new bounds to contain the destination and differ from its
+   original bounds. Gesture success alone is insufficient.
+4. Run `clawperator press home --device <device_serial>` and snapshot again to
+   confirm the placement persists. To restore it, drag from its current center
+   to the original center and verify the original bounds.
+
+The CLI returns JSON by default. Inspect `envelope.status` and the drag step's
+`success` and `data.dispatch_accepted`; see [result branching](overview.md#result-envelope)
+for wrapper and error shapes. Failed or timed-out dispatch may already have
+changed the app, so inspect fresh state before deciding on another gesture.
+
 ```bash
 clawperator drag --start 600 1600 --end 200 1000 \
-  --hold-duration-ms 1200 --move-duration-ms 800
+  --hold-duration-ms 1200 --move-duration-ms 800 --device <device_serial>
 ```
+
+The flat CLI defaults to a 30000 ms execution budget; `--timeout <ms>` overrides
+it. Budget for the hold, movement, and scheduling overhead. In a multi-action
+execution, `timeoutMs` covers the entire sequence, not each gesture separately.
+For a local development Operator, also pass
+`--operator-package com.clawperator.operator.dev` consistently on every command.
 
 Raw execution action, also usable through HTTP `POST /execute` and the MCP
 `drag` tool with the same four parameter fields:
@@ -1475,6 +1502,8 @@ Example:
 | CLI command | Canonical action type | Notes |
 | --- | --- | --- |
 | `click` | `click` | `tap` is a CLI synonym |
+| `swipe` | `swipe` | explicit endpoints and `--duration-ms`; no initial hold |
+| `drag` | `drag` | explicit endpoints, `--hold-duration-ms`, and `--move-duration-ms` |
 | `type` | `enter_text` | built from selector + text |
 | `read` | `read_text` | supports optional container matcher |
 | `read-value` | `read_key_value_pair` | built from label selector flags |
@@ -1499,6 +1528,7 @@ Example:
 | Action type | Success keys exposed by the current execution runtime |
 | --- | --- |
 | `snapshot` | `data.text`; optional `data.warn` |
+| `drag` | JSON-encoded `start` and `end`; string-valued `hold_duration_ms`, `move_duration_ms`, `dispatch_method`, `dispatch_accepted`, and `elapsed_ms`; see [drag](#action-drag) |
 | `take_screenshot` | `data.path` |
 | `close_app` | `data.application_id` when Node pre-flight succeeded |
 | `set_on_screen_log` | `visible`, `rendered`, `truncated`, normalized style values, and `bounds`; all values are strings and caller text is omitted |

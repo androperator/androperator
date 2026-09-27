@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims to follow Semantic Versioning.
 
+## [0.12.5] - 2026-09-28
+
+This release adds coordinate drag gestures across the CLI, named MCP tools, raw executions, and the Android Operator.
+
+### 🤖 Node API & CLI
+
+- **Added:** Accepted `drag` with distinct start and end screen coordinates and required hold and movement durations of 1-10000 ms. Strict validation rejects missing, extra, or invalid parameters before dispatch. Results retain correlated execution envelopes and gesture receipts, including an accepted hold when movement fails; completion confirms the gesture, not an application's drop result.
+
+### 📚 Documentation & Website
+
+- **Added:** Documented drag inputs, timing, Android API requirements, dispatch receipts, cancellation limits, and the need to observe the app to verify a drop.
+- **Changed:** Updated public release and installer version markers to the published 0.12.4 release.
+
+### 📱 Android Operator APK
+
+- **Added:** Dispatched drag gestures on Android API 26 or newer by holding, moving in a straight line with the same pointer down, and releasing. Cancellation attempts release before movement; an already accepted movement may finish after cancellation.
+
+Pull requests:
+- [chore(release): complete 0.12.4 follow-up](https://github.com/clawperator/clawperator/pull/351)
+- [feat: add coordinate drag gestures across CLI MCP and Android](https://github.com/clawperator/clawperator/pull/352)
+
 ## [0.12.4] - 2026-09-27
 
 **Breaking:** Screenshot step results now use `data.persistedAt` in place of `data.capturedAt`. This release also exposes saved-image geometry, reports text-entry and submission outcomes separately, and clarifies MCP snapshot presentation options.

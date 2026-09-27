@@ -58,6 +58,25 @@ and before/after XML are local evidence. It retries timed-out snapshot reads,
 never gestures. The manual `Launcher drag and drop` GitHub workflow invokes the
 same check on a disposable Google Play emulator and uploads its evidence.
 
+Live verification on Android 15 (API 35), using the worktree APK and CLI,
+passed on Pixel Launcher with a 1200 ms hold and 800 ms movement:
+
+| Check | Observed bounds or result |
+| --- | --- |
+| Photos before | `[561,1419][766,1690]` |
+| Photos after | `[67,793][272,1064]` |
+| After Home | `[67,793][272,1064]` |
+| Restored | `[561,1419][766,1690]` |
+| Forward/reverse gesture receipts | success, 2024 ms / 2006 ms |
+| Out-of-bounds endpoint | `GESTURE_FAILED`, `dispatch_accepted: "false"` |
+| Timeout during a 3000 ms hold | `COMMAND_TIMEOUT`, `dispatch_accepted: "true"`; icon unchanged |
+
+The host's GUI emulator runs encountered system and APK-loading ANRs. The
+successful run used a headless emulator with software graphics and 4 GB RAM,
+which is also the live CI configuration. The installed APK checksum matched
+the worktree build. These checks establish same-page empty-cell movement, not
+all launchers or other drag interactions.
+
 An earlier feasibility probe used ADB motion events. It established that Photos
 could move from `[696,1800][957,2154]` to `[78,996][339,1350]`, and that snapshot
 bounds could verify this. The live regression now uses the actual accessibility

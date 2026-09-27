@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims to follow Semantic Versioning.
 
+## [0.12.4] - 2026-09-27
+
+**Breaking:** Screenshot step results now use `data.persistedAt` in place of `data.capturedAt`. This release also exposes saved-image geometry, reports text-entry and submission outcomes separately, and clarifies MCP snapshot presentation options.
+
+### 🤖 Node API & CLI
+
+- **Added:** Returned `text_entry`, `submission`, and `submit_method` in `enter_text` results so callers can distinguish accepted typing from requested submission. Acceptance acknowledges dispatch; callers must observe the destination to confirm navigation or entered text.
+- **Added:** Returned original PNG width, height, coordinate space, and origin on successful screenshot steps and complete evidence artifacts. The metadata describes the saved image and may differ from resized previews or current input geometry.
+- **Breaking:** **Changed:** Replaced screenshot step `data.capturedAt` with `data.persistedAt`, with no alias. The new timestamp marks host PNG file-write completion rather than the exact screen-capture instant; the `query_ui` timestamp is unchanged.
+- **Fixed:** Explained raw XML and compact JSON modes in MCP snapshot tool discovery, encoded option dependencies in its schema, and returned actionable validation errors for incompatible options before device dispatch.
+
+### 📚 Documentation & Website
+
+- **Added:** Documented text-entry submission receipts and screenshot image geometry, timestamps, and preview-coordinate limits in the action, evidence, and MCP guides.
+- **Changed:** Updated public release and installer version markers to the published 0.12.3 release.
+- **Changed:** Clarified MCP snapshot compact-mode requirements, raw-mode limits, and a minimal valid compact call.
+
+### 📱 Android Operator APK
+
+- **Added:** Reported text-entry and submission outcomes separately, including IME action, fallback click, and unavailable submission, while keeping submission best-effort and preserving successful typing when submission is rejected.
+
+Pull requests:
+- [fix(mcp): explain snapshot compact option dependencies](https://github.com/clawperator/clawperator/pull/346)
+- [chore(release): complete 0.12.3 follow-up](https://github.com/clawperator/clawperator/pull/347)
+- [feat(type): distinguish text entry from submission](https://github.com/clawperator/clawperator/pull/348)
+- [feat(screenshot)!: expose capture geometry and persistence timestamp](https://github.com/clawperator/clawperator/pull/349)
+
 ## [0.12.3] - 2026-09-27
 
 This release makes large UI snapshots more reliable by carrying the hierarchy in the verified result envelope. It also speeds up Android node counting and preserves timeout evidence when capture budgets expire.

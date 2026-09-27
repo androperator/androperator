@@ -37,13 +37,13 @@ For the full release reference, see `docs/internal/release-reference.md`.
 Release creation:
 
 ```bash
-.agents/skills/release-create/scripts/create_release.sh 0.12.3 [commit_sha]
+.agents/skills/release-create/scripts/create_release.sh 0.12.4 [commit_sha]
 ```
 
 Release verification:
 
 ```bash
-.agents/skills/release-verify/scripts/release_verify.sh 0.12.3
+.agents/skills/release-verify/scripts/release_verify.sh 0.12.4
 ```
 
 ## What Success Looks Like

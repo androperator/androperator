@@ -37,7 +37,7 @@ describe("cmdDoctor", () => {
                 summary: "Operator APK not installed.",
               },
             ],
-            nextActions: ["clawperator operator setup --apk ~/.clawperator/downloads/operator.apk --device test-device-1"],
+            nextActions: ["androperator operator setup --apk ~/.androperator/downloads/operator.apk --device test-device-1"],
           }),
         },
       }
@@ -204,7 +204,7 @@ describe("cmdDoctor", () => {
                 fix: {
                   title: "Grant accessibility permissions via adb",
                   platform: "any",
-                  steps: [{ kind: "shell", value: "clawperator grant-device-permissions --device test-device" }],
+                  steps: [{ kind: "shell", value: "androperator grant-device-permissions --device test-device" }],
                   docsUrl: DOCTOR_DOCS_URLS.operator,
                 },
               },
@@ -214,7 +214,7 @@ describe("cmdDoctor", () => {
       }
     );
 
-    assert.match(output, /Docs: https:\/\/docs\.clawperator\.com\/troubleshooting\/operator\//);
+    assert.match(output, /Docs: https:\/\/docs\.androperator\.com\/troubleshooting\/operator\//);
   });
 
   it("formats shell commands in pretty checks and next actions without changing JSON values", async () => {
@@ -262,16 +262,16 @@ describe("cmdDoctor", () => {
             title: "Align CLI and APK versions",
             platform: "any",
             steps: [
-              { kind: "manual", value: "Reinstall the CLI: npm install -g clawperator@latest" },
-              { kind: "manual", value: "Use --operator-package com.clawperator.operator.dev" },
+              { kind: "manual", value: "Reinstall the CLI: npm install -g androperator@latest" },
+              { kind: "manual", value: "Use --operator-package com.androperator.operator.dev" },
             ],
           },
         }],
       }) },
     });
 
-    assert.match(output, /Reinstall the CLI: `npm install -g clawperator@latest`/);
-    assert.match(output, /Use `--operator-package com\.clawperator\.operator\.dev`/);
+    assert.match(output, /Reinstall the CLI: `npm install -g androperator@latest`/);
+    assert.match(output, /Use `--operator-package com\.androperator\.operator\.dev`/);
   });
 
   it("uses the lowercase ffmpeg executable name in pretty video guidance", async () => {
@@ -307,7 +307,7 @@ describe("cmdDoctor", () => {
 
     for (const [docsUrl, navPath] of docsUrlToNavPath) {
       assert.match(mkdocsText, new RegExp(navPath.replace("/", "\\/")));
-      assert.match(docsUrl, /^https:\/\/docs\.clawperator\.com\/.+\/$/);
+      assert.match(docsUrl, /^https:\/\/docs\.androperator\.com\/.+\/$/);
     }
   });
 });

@@ -1,7 +1,7 @@
 import { runBackgroundObservationDoctor } from "../../domain/doctor/backgroundObservation.js";
 import { formatError } from "../output.js";
 /**
- * Doctor diagnostics for Clawperator.
+ * Doctor diagnostics for Androperator.
  * Checks host, device, and readiness state for end-to-end automation.
  */
 import { getDefaultRuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
@@ -30,7 +30,7 @@ export async function cmdDoctor(options: {
   }
   const config = getDefaultRuntimeConfig({
     deviceId: options.deviceId,
-    operatorPackage: options.operatorPackage ?? process.env.CLAWPERATOR_OPERATOR_PACKAGE,
+    operatorPackage: options.operatorPackage ?? process.env.ANDROPERATOR_OPERATOR_PACKAGE,
     adbPath: process.env.ADB_PATH,
   });
 
@@ -57,7 +57,7 @@ function renderPrettyDoctorReport(report: DoctorReport): string {
   const allOk = report.checks.every(check => check.status === "pass");
 
   lines.push("");
-  lines.push(`Clawperator Doctor Diagnostics (${report.capability ?? "interactive"})`);
+  lines.push(`Androperator Doctor Diagnostics (${report.capability ?? "interactive"})`);
   lines.push("");
   lines.push(`  Device:           ${report.deviceId !== undefined ? `\`${report.deviceId}\`` : "(auto-detect)"}`);
   lines.push(`  Operator package: ${report.operatorPackage !== undefined ? `\`${report.operatorPackage}\`` : "(default)"}`);
@@ -89,7 +89,7 @@ function renderPrettyDoctorReport(report: DoctorReport): string {
   }
 
   if (report.criticalOk ?? report.ok) {
-    lines.push(allOk ? `[OK] Ready for ${report.capability ?? "interactive"}.` : "[OK] Ready to use Clawperator. Advisory warnings are listed above.");
+    lines.push(allOk ? `[OK] Ready for ${report.capability ?? "interactive"}.` : "[OK] Ready to use Androperator. Advisory warnings are listed above.");
   } else {
     lines.push("[FAIL] Required setup verification did not complete successfully.");
   }
@@ -99,7 +99,7 @@ function renderPrettyDoctorReport(report: DoctorReport): string {
     lines.push("Next actions:");
     const shellSteps = new Set(report.checks.flatMap(check => check.fix?.steps.filter(step => step.kind === "shell").map(step => step.value) ?? []));
     for (const action of report.nextActions) {
-      const displayedAction = action.startsWith("Try: clawperator ")
+      const displayedAction = action.startsWith("Try: androperator ")
         ? `Try: \`${action.slice("Try: ".length)}\``
         : shellSteps.has(action) ? `\`${action}\`` : formatDoctorText(action);
       lines.push(`  - ${displayedAction}`);
@@ -144,12 +144,12 @@ function formatDoctorText(value: string): string {
   if (prefixedCommand) return `${prefixedCommand[1]}\`${prefixedCommand[2]}\``;
 
   const withCommands = value
-    .replace(/\[Clawperator-Result\]/g, "`[Clawperator-Result]`")
-    .replace(/\b(?:brew install --cask android-platform-tools|sudo apt update && sudo apt install android-tools-adb|brew install scrcpy ffmpeg|clawperator skills install|clawperator doctor --device <device_serial>)(?=\b|[\s.,])/g, command => `\`${command}\``)
+    .replace(/\[Androperator-Result\]/g, "`[Androperator-Result]`")
+    .replace(/\b(?:brew install --cask android-platform-tools|sudo apt update && sudo apt install android-tools-adb|brew install scrcpy ffmpeg|androperator skills install|androperator doctor --device <device_serial>)(?=\b|[\s.,])/g, command => `\`${command}\``)
     .replace(/--operator-package [\w.]+/g, code => `\`${code}\``)
     .replace(/'([A-Za-z][\w.-]*)'/g, (_match, code: string) => `\`${code}\``);
   return withCommands.split(/(`[^`]*`)/g).map(segment => segment.startsWith("`")
     ? segment
-    : segment.replace(/\b(?:CLAWPERATOR_[A-Z_]+|PATH|skill\.json(?:\.agent\.cliPath)?|skills-registry\.json|SKILL\.md|doctor_ping|host\.video\.dependencies|com\.clawperator\.operator(?:\.dev)?|adb|ffmpeg|ffprobe|scrcpy|libx264)\b|--[a-z][\w-]*|-(?:fps_mode|enc_time_base)\s+\w+/g, code => `\`${code}\``)
+    : segment.replace(/\b(?:ANDROPERATOR_[A-Z_]+|PATH|skill\.json(?:\.agent\.cliPath)?|skills-registry\.json|SKILL\.md|doctor_ping|host\.video\.dependencies|com\.androperator\.operator(?:\.dev)?|adb|ffmpeg|ffprobe|scrcpy|libx264)\b|--[a-z][\w-]*|-(?:fps_mode|enc_time_base)\s+\w+/g, code => `\`${code}\``)
   ).join("");
 }

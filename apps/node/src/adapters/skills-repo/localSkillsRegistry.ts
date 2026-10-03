@@ -13,7 +13,7 @@ function getDefaultRegistryPath(): string {
 }
 
 function getInstalledHomeRegistryPath(): string {
-  return join(homedir(), ".clawperator", "skills", "skills", "skills-registry.json");
+  return join(homedir(), ".androperator", "skills", "skills", "skills-registry.json");
 }
 
 function getRepoRelativeFallbackPath(): string | undefined {
@@ -32,7 +32,7 @@ function isMissingRegistryFileError(error: unknown): boolean {
 }
 
 function getConfiguredRegistryPathFromEnv(): string | undefined {
-  const configuredPath = process.env.CLAWPERATOR_SKILLS_REGISTRY;
+  const configuredPath = process.env.ANDROPERATOR_SKILLS_REGISTRY;
   if (configuredPath === undefined) {
     return undefined;
   }
@@ -40,7 +40,7 @@ function getConfiguredRegistryPathFromEnv(): string | undefined {
   const trimmedPath = configuredPath.trim();
   if (trimmedPath.length === 0) {
     throw new Error(
-      "CLAWPERATOR_SKILLS_REGISTRY is set but blank. Unset it or set it to a valid skills-registry.json path."
+      "ANDROPERATOR_SKILLS_REGISTRY is set but blank. Unset it or set it to a valid skills-registry.json path."
     );
   }
 
@@ -86,7 +86,7 @@ export async function loadRegistry(registryPath?: string): Promise<LoadRegistryR
       configuredPath = getConfiguredRegistryPathFromEnv();
     } catch (error) {
       process.stderr.write(
-        "Error: CLAWPERATOR_SKILLS_REGISTRY is set but blank. " +
+        "Error: ANDROPERATOR_SKILLS_REGISTRY is set but blank. " +
         "Unset it or set it to a valid skills-registry.json path.\n"
       );
       throw error;
@@ -114,14 +114,14 @@ export async function loadRegistry(registryPath?: string): Promise<LoadRegistryR
         throw error;
       }
       process.stderr.write(
-        `Error: Registry file not found at ${path} (from CLAWPERATOR_SKILLS_REGISTRY). ` +
+        `Error: Registry file not found at ${path} (from ANDROPERATOR_SKILLS_REGISTRY). ` +
         `The installed registry normally lives at ${installedHomeRegistryPath}. ` +
         "Check that the path is correct.\n"
       );
       throw new Error(
         `Registry not found at configured path: ${path}. ` +
         `The installed registry normally lives at ${installedHomeRegistryPath}. ` +
-        "Fix CLAWPERATOR_SKILLS_REGISTRY, unset it to use the installed copy, then rerun clawperator skills list, or run clawperator skills install."
+        "Fix ANDROPERATOR_SKILLS_REGISTRY, unset it to use the installed copy, then rerun androperator skills list, or run androperator skills install."
       );
     }
 
@@ -153,14 +153,14 @@ export async function loadRegistry(registryPath?: string): Promise<LoadRegistryR
     if (raw === undefined) {
       if (!explicitRegistryPath && !configuredPath) {
         process.stderr.write(
-          "Warning: CLAWPERATOR_SKILLS_REGISTRY is not set. " +
-          `Clawperator also checked the installed registry at ${installedHomeRegistryPath}. ` +
-          "Verify that file, then rerun 'clawperator skills list', or run 'clawperator skills install'.\n"
+          "Warning: ANDROPERATOR_SKILLS_REGISTRY is not set. " +
+          `Androperator also checked the installed registry at ${installedHomeRegistryPath}. ` +
+          "Verify that file, then rerun 'androperator skills list', or run 'androperator skills install'.\n"
         );
         throw new Error(
           `Registry not found. Checked: ${[path, ...candidates].join(", ")}. ` +
           `The installed registry normally lives at ${installedHomeRegistryPath}. ` +
-          "Verify that path, then rerun clawperator skills list, or run clawperator skills install."
+          "Verify that path, then rerun androperator skills list, or run androperator skills install."
         );
       }
 
@@ -168,14 +168,14 @@ export async function loadRegistry(registryPath?: string): Promise<LoadRegistryR
         throw new Error(
           `Registry not found. Checked: ${[path, ...candidates].join(", ")}. ` +
           `The installed registry normally lives at ${installedHomeRegistryPath}. ` +
-          "Verify that path, then rerun clawperator skills list, or run clawperator skills install."
+          "Verify that path, then rerun androperator skills list, or run androperator skills install."
         );
       }
 
       throw new Error(
         `Registry not found: ${path}. ` +
         `The installed registry normally lives at ${installedHomeRegistryPath}. ` +
-        "Verify that path, then rerun clawperator skills list, or run clawperator skills install."
+        "Verify that path, then rerun androperator skills list, or run androperator skills install."
       );
     }
   }

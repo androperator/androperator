@@ -30,7 +30,7 @@ from evals.harness.environment import (
     REPO_ROOT,
     preflight,
     resolve_inputs,
-    _resolve_clawperator_cmd,
+    _resolve_androperator_cmd,
 )
 from evals.harness.live_skill_eval import (
     DEFAULT_SKILLS_REGISTRY,
@@ -42,7 +42,7 @@ from evals.harness.runner import (
     run_eval,
     _apply_skill_generation_contract,
     _apply_skill_generation_outcome,
-    _prepare_clawperator_launcher,
+    _prepare_androperator_launcher,
     _synthesize_skill_score_for_contract,
 )
 from evals.harness.replay import run_replay, DEFAULT_REPLAY_TIMEOUT_S
@@ -118,17 +118,17 @@ def _load_replay_runtime(config: dict) -> tuple[list[str], str, str]:
     if not isinstance(operator_package, str) or not operator_package.strip():
         operator_package = RELEASE_OPERATOR_PACKAGE if runtime_target == "published" else LOCAL_DEV_OPERATOR_PACKAGE
 
-    configured_cmd = environment.get("runtime_clawperator_cmd")
+    configured_cmd = environment.get("runtime_androperator_cmd")
     if isinstance(configured_cmd, list) and configured_cmd and all(isinstance(part, str) and part for part in configured_cmd):
-        clawperator_cmd = list(configured_cmd)
+        androperator_cmd = list(configured_cmd)
     else:
-        display_cmd = environment.get("clawperator_cmd")
+        display_cmd = environment.get("androperator_cmd")
         if runtime_target == "published" and isinstance(display_cmd, list) and display_cmd and all(isinstance(part, str) and part for part in display_cmd):
-            clawperator_cmd = list(display_cmd)
+            androperator_cmd = list(display_cmd)
         else:
-            clawperator_cmd = _resolve_clawperator_cmd(runtime_target)
+            androperator_cmd = _resolve_androperator_cmd(runtime_target)
 
-    return clawperator_cmd, operator_package, runtime_target
+    return androperator_cmd, operator_package, runtime_target
 
 
 def _config_used_skill_prompt(config: dict, spec: dict) -> bool:
@@ -270,11 +270,11 @@ def _rescore_run(runs_dir: Path, run_id: str) -> dict:
         skill_generation = spec.get("skill_generation")
         skill_score = result.get("skill_score")
         if skill_generation and (_config_used_skill_prompt(config, spec) or isinstance(skill_score, dict)):
-            clawperator_cmd, operator_package, _ = _load_replay_runtime(config)
+            androperator_cmd, operator_package, _ = _load_replay_runtime(config)
             prepared_skill_score = _synthesize_skill_score_for_contract(
                 transcript=transcript,
                 skill_generation=skill_generation,
-                clawperator_cmd=clawperator_cmd,
+                androperator_cmd=androperator_cmd,
                 operator_package=operator_package,
                 existing_skill_score=skill_score if isinstance(skill_score, dict) else None,
             )
@@ -305,19 +305,19 @@ def _write_preflight_failure_run(
     run_dir.mkdir(parents=True, exist_ok=False)
 
     prompt_path = _resolve_prompt_path(args.eval_id, spec, args.mode, skill_prompt)
-    clawperator_cmd = (
-        runtime_inputs.clawperator_cmd
+    androperator_cmd = (
+        runtime_inputs.androperator_cmd
         if runtime_inputs is not None
-        else (["clawperator"] if args.runtime == "published" else ["node", str(REPO_ROOT / "apps/node/dist/cli/index.js")])
+        else (["androperator"] if args.runtime == "published" else ["node", str(REPO_ROOT / "apps/node/dist/cli/index.js")])
     )
-    display_clawperator_cmd = list(clawperator_cmd)
+    display_androperator_cmd = list(androperator_cmd)
     default_operator_package = RELEASE_OPERATOR_PACKAGE if args.runtime == "published" else LOCAL_DEV_OPERATOR_PACKAGE
     if runtime_inputs is not None:
         operator_package = runtime_inputs.operator_package
     elif args.runtime == "published":
         operator_package = RELEASE_OPERATOR_PACKAGE
     else:
-        env_operator_package = os.environ.get("CLAWPERATOR_OPERATOR_PACKAGE")
+        env_operator_package = os.environ.get("ANDROPERATOR_OPERATOR_PACKAGE")
         operator_package = (
             env_operator_package.strip()
             if env_operator_package is not None and env_operator_package.strip()
@@ -328,10 +328,10 @@ def _write_preflight_failure_run(
     runs_dir_display = str(runs_dir) if args.mode == "full-repo" else "<redacted>"
     launcher_work_dir: tempfile.TemporaryDirectory[str] | None = None
     if args.mode == "public-surface":
-        launcher_work_dir = tempfile.TemporaryDirectory(prefix="clawperator-eval-preflight-")
-        display_clawperator_cmd, _ = _prepare_clawperator_launcher(
+        launcher_work_dir = tempfile.TemporaryDirectory(prefix="androperator-eval-preflight-")
+        display_androperator_cmd, _ = _prepare_androperator_launcher(
             Path(launcher_work_dir.name),
-            clawperator_cmd,
+            androperator_cmd,
             args.mode,
             args.runtime,
         )
@@ -339,10 +339,10 @@ def _write_preflight_failure_run(
         str(prompt_path),
         {
             **{
-                "CLAWPERATOR_CMD": shlex.join(display_clawperator_cmd),
-                "CLAWPERATOR_OPERATOR_PACKAGE": operator_package,
+                "ANDROPERATOR_CMD": shlex.join(display_androperator_cmd),
+                "ANDROPERATOR_OPERATOR_PACKAGE": operator_package,
                 "DEVICE_SERIAL": runtime_inputs.device_serial if runtime_inputs is not None else "<unresolved>",
-                "DOCS_URL": "https://docs.clawperator.com",
+                "DOCS_URL": "https://docs.androperator.com",
             },
             **({"REPO_ROOT": str(REPO_ROOT)} if args.mode == "full-repo" else {}),
         },
@@ -382,10 +382,10 @@ def _write_preflight_failure_run(
             "ground_truth_android_version": None,
             "ground_truth_collected_at": None,
             "ground_truth_rechecked_at": None,
-            "clawperator_cmd": display_clawperator_cmd,
-            "runtime_clawperator_cmd": clawperator_cmd,
-            "clawperator_version": runtime_inputs.clawperator_version if runtime_inputs is not None else None,
-            "clawperator_npm_version": runtime_inputs.clawperator_npm_version if runtime_inputs is not None else None,
+            "androperator_cmd": display_androperator_cmd,
+            "runtime_androperator_cmd": androperator_cmd,
+            "androperator_version": runtime_inputs.androperator_version if runtime_inputs is not None else None,
+            "androperator_npm_version": runtime_inputs.androperator_npm_version if runtime_inputs is not None else None,
             "operator_package": operator_package,
             "cwd": cwd_display,
             "runs_dir": runs_dir_display,
@@ -401,9 +401,9 @@ def _write_preflight_failure_run(
         **({"preflight": persisted_preflight_details} if persisted_preflight_details is not None else {}),
         "metrics": {
             "wall_clock_s": 0.0,
-            "time_to_first_clawperator_command_s": None,
+            "time_to_first_androperator_command_s": None,
             "timeout_budget_s": args.timeout_s,
-            "clawperator_commands_detected": 0,
+            "androperator_commands_detected": 0,
             "actions_per_turn": None,
             "answer_emitted": False,
             "violations": {"used_adb": False},
@@ -449,10 +449,10 @@ def _write_preflight_failure_run(
             "agent_binary_version": "unknown",
             "env_hash": "",
             "runs_dir": runs_dir_display,
-            "clawperator_cmd": display_clawperator_cmd,
-            "runtime_clawperator_cmd": clawperator_cmd,
+            "androperator_cmd": display_androperator_cmd,
+            "runtime_androperator_cmd": androperator_cmd,
             "ground_truth_android_version": None,
-            "clawperator_npm_version": runtime_inputs.clawperator_npm_version if runtime_inputs is not None else None,
+            "androperator_npm_version": runtime_inputs.androperator_npm_version if runtime_inputs is not None else None,
             "operator_package": operator_package,
         },
         "timeout_s": args.timeout_s,
@@ -574,13 +574,13 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit("replay failed: missing run_id")
         run_dir = _resolve_run_dir(Path(args.runs_dir), args.replay)
         config = json.loads((run_dir / "config.json").read_text(encoding="utf-8"))
-        clawperator_cmd, operator_package, runtime_target = _load_replay_runtime(config)
+        androperator_cmd, operator_package, runtime_target = _load_replay_runtime(config)
         device_serial = config.get("environment", {}).get("device_serial")
         if not isinstance(device_serial, str) or not device_serial.strip():
             raise SystemExit("replay failed: run artifacts missing environment.device_serial")
         skill_score = run_replay(
             run_dir=run_dir,
-            clawperator_cmd=clawperator_cmd,
+            androperator_cmd=androperator_cmd,
             operator_package=operator_package,
             device_serial=device_serial,
             timeout_s=args.replay_timeout_s,
@@ -641,25 +641,25 @@ def main(argv: list[str] | None = None) -> int:
             print(str(exc), file=sys.stderr)
             return 1
         resolved_config["device_serial"] = inputs.device_serial
-        dry_run_work_dir = Path(tempfile.mkdtemp(prefix="clawperator-eval-")) if args.mode == "public-surface" else REPO_ROOT
-        display_clawperator_cmd, path_prefix = _prepare_clawperator_launcher(
+        dry_run_work_dir = Path(tempfile.mkdtemp(prefix="androperator-eval-")) if args.mode == "public-surface" else REPO_ROOT
+        display_androperator_cmd, path_prefix = _prepare_androperator_launcher(
             dry_run_work_dir,
-            inputs.clawperator_cmd,
+            inputs.androperator_cmd,
             args.mode,
             args.runtime,
         )
-        resolved_config["clawperator_cmd"] = display_clawperator_cmd
+        resolved_config["androperator_cmd"] = display_androperator_cmd
         resolved_config["operator_package"] = inputs.operator_package
-        resolved_config["clawperator_version"] = inputs.clawperator_version
-        resolved_config["clawperator_npm_version"] = inputs.clawperator_npm_version
+        resolved_config["androperator_version"] = inputs.androperator_version
+        resolved_config["androperator_npm_version"] = inputs.androperator_npm_version
         prompt_path = _resolve_prompt_path(args.eval_id, spec, args.mode, args.skill_prompt)
         prompt_text = build_prompt(
             str(prompt_path),
             {
-                "CLAWPERATOR_CMD": shlex.join(display_clawperator_cmd),
-                "CLAWPERATOR_OPERATOR_PACKAGE": inputs.operator_package,
+                "ANDROPERATOR_CMD": shlex.join(display_androperator_cmd),
+                "ANDROPERATOR_OPERATOR_PACKAGE": inputs.operator_package,
                 "DEVICE_SERIAL": inputs.device_serial,
-                "DOCS_URL": "https://docs.clawperator.com",
+                "DOCS_URL": "https://docs.androperator.com",
                 **({"REPO_ROOT": str(REPO_ROOT)} if args.mode == "full-repo" else {}),
             },
         )
@@ -670,14 +670,14 @@ def main(argv: list[str] | None = None) -> int:
             base_env["PATH"] = f"{path_prefix}{os.pathsep}{base_env['PATH']}"
         env_overrides = _sanitize_env_overrides({
             "ANDROID_SERIAL": inputs.device_serial,
-            "CLAWPERATOR_CMD": shlex.join(display_clawperator_cmd),
-            "CLAWPERATOR_OPERATOR_PACKAGE": inputs.operator_package,
+            "ANDROPERATOR_CMD": shlex.join(display_androperator_cmd),
+            "ANDROPERATOR_OPERATOR_PACKAGE": inputs.operator_package,
             **({"EVAL_LABEL": args.label} if args.label is not None else {}),
             **agent.build_env({
                 **base_env,
                 "ANDROID_SERIAL": inputs.device_serial,
-                "CLAWPERATOR_CMD": shlex.join(display_clawperator_cmd),
-                "CLAWPERATOR_OPERATOR_PACKAGE": inputs.operator_package,
+                "ANDROPERATOR_CMD": shlex.join(display_androperator_cmd),
+                "ANDROPERATOR_OPERATOR_PACKAGE": inputs.operator_package,
             }),
         })
         try:

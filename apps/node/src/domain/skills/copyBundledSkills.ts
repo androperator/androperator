@@ -7,10 +7,10 @@ import { fileURLToPath } from "node:url";
 import { getCliVersion } from "../version/compatibility.js";
 import { DEFAULT_BUNDLED_SKILLS_DIR } from "./skillsConfig.js";
 
-const BUNDLED_SKILLS_SOURCE_ENV_VAR = "CLAWPERATOR_BUNDLED_SKILLS";
+const BUNDLED_SKILLS_SOURCE_ENV_VAR = "ANDROPERATOR_BUNDLED_SKILLS";
 const VERSION_FILENAME = "version.txt";
-export const MANAGED_BUNDLED_SKILL_COPY_MARKER = ".clawperator-managed";
-export const MANAGED_BUNDLED_SKILL_COPY_MARKER_CONTENT = "managed-by=clawperator\nkind=bundled-skill-copy\n";
+export const MANAGED_BUNDLED_SKILL_COPY_MARKER = ".androperator-managed";
+export const MANAGED_BUNDLED_SKILL_COPY_MARKER_CONTENT = "managed-by=androperator\nkind=bundled-skill-copy\n";
 
 export interface BundledSkillDiscoveryDirEntry {
   label: string;
@@ -67,7 +67,7 @@ export function resolveBundledSkillsInstalledDir(options: Pick<CopyBundledSkills
     return resolve(options.installedDir);
   }
   if (options.homeDir) {
-    return join(resolveHomeDir(options), ".clawperator", "bundled-skills");
+    return join(resolveHomeDir(options), ".androperator", "bundled-skills");
   }
   return DEFAULT_BUNDLED_SKILLS_DIR;
 }
@@ -342,13 +342,13 @@ async function isManagedBundledSkillSymlink(linkPath: string, installedDir: stri
   const inspection = await inspectManagedBundledSkillLink(linkPath, installedDir, skillName);
   const legacyTargets = new Set(legacyOwnedSkillTargets(installedDir, skillName));
   // A dangling symlink that points at the correct expected target is still considered managed:
-  // it means Clawperator previously installed the link but the install dir was subsequently
+  // it means Androperator previously installed the link but the install dir was subsequently
   // removed. The install/update flow is allowed to recreate it.
   if (!inspection.ok && inspection.status === "broken" && inspection.actualTarget === inspection.expectedTarget) {
     return true;
   }
   // The public rename is a clean break, but rerunning the new install flow
-  // should still be able to replace discovery links that Clawperator itself
+  // should still be able to replace discovery links that Androperator itself
   // previously managed when they still point at the pre-rename install store.
   if (!inspection.ok && inspection.actualTarget !== undefined && legacyTargets.has(inspection.actualTarget)) {
     return true;
@@ -466,7 +466,7 @@ async function ensureManagedSymlink(targetPath: string, linkPath: string, instal
   if (exists) {
     const managed = await isManagedBundledSkillSymlink(linkPath, installedDir, skillName);
     if (!managed) {
-      throw new Error(`Refusing to overwrite non-Clawperator skill entry: ${linkPath}`);
+      throw new Error(`Refusing to overwrite non-Androperator skill entry: ${linkPath}`);
     }
     await rm(linkPath, { recursive: true, force: true });
   }
@@ -483,7 +483,7 @@ async function assertManagedSymlinkWritable(linkPath: string, installedDir: stri
 
   const managed = await isManagedBundledSkillSymlink(linkPath, installedDir, skillName);
   if (!managed) {
-    throw new Error(`Refusing to overwrite non-Clawperator skill entry: ${linkPath}`);
+    throw new Error(`Refusing to overwrite non-Androperator skill entry: ${linkPath}`);
   }
 }
 
@@ -492,7 +492,7 @@ async function ensureManagedDirectoryCopy(sourcePath: string, directoryPath: str
   if (exists) {
     const inspection = await inspectManagedBundledSkillDirectory(directoryPath, installedDir, skillName);
     if (inspection.status !== "ok" && inspection.status !== "legacy-symlink" && inspection.status !== "stale") {
-      throw new Error(`Refusing to overwrite non-Clawperator skill entry: ${directoryPath}`);
+      throw new Error(`Refusing to overwrite non-Androperator skill entry: ${directoryPath}`);
     }
     await rm(directoryPath, { recursive: true, force: true });
   }
@@ -510,7 +510,7 @@ async function assertManagedDirectoryCopyWritable(directoryPath: string, install
 
   const inspection = await inspectManagedBundledSkillDirectory(directoryPath, installedDir, skillName);
   if (inspection.status !== "ok" && inspection.status !== "legacy-symlink" && inspection.status !== "stale") {
-    throw new Error(`Refusing to overwrite non-Clawperator skill entry: ${directoryPath}`);
+    throw new Error(`Refusing to overwrite non-Androperator skill entry: ${directoryPath}`);
   }
 }
 
@@ -527,7 +527,7 @@ async function removeStaleBundledSkillSymlinks(agentDir: string, activeSkills: S
     } catch {
       // Agent discovery directories are shared user space. If an entry disappears
       // mid-scan or is unreadable, skip it rather than failing the whole install.
-      // We only clean up links we can positively identify as Clawperator-owned.
+      // We only clean up links we can positively identify as Androperator-owned.
       continue;
     }
     if (!entryStat.isSymbolicLink()) {
@@ -556,7 +556,7 @@ async function removeStaleBundledSkillCopies(agentDir: string, activeSkills: Set
       inspection = await inspectManagedBundledSkillDirectory(entryPath, installedDir, entry);
     } catch {
       // Shared discovery directories can change while being scanned. Only remove
-      // entries that can be positively identified as Clawperator-managed.
+      // entries that can be positively identified as Androperator-managed.
       continue;
     }
     if (inspection.status === "ok" || inspection.status === "legacy-symlink" || inspection.status === "stale") {

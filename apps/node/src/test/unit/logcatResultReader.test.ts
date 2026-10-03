@@ -8,7 +8,7 @@ import { getDefaultRuntimeConfig } from "../../adapters/android-bridge/runtimeCo
 
 const options = { commandId: "transport-command", taskId: "transport-task", timeoutMs: 1000, broadcastDelayMs: 0 };
 const config = () => getDefaultRuntimeConfig({ deviceId: "test-device", operatorPackage: "com.test.operator" });
-const terminal = '[Clawperator-Result] {"commandId":"transport-command","taskId":"transport-task","status":"success","stepResults":[],"error":null}';
+const terminal = '[Androperator-Result] {"commandId":"transport-command","taskId":"transport-task","status":"success","stepResults":[],"error":null}';
 function fake() {
   const proc = new EventEmitter() as ChildProcess;
   const stdout = new PassThrough();
@@ -128,7 +128,7 @@ it("retains bounded stderr and rejected chunk evidence without replay", async ()
   const result = await waitForResultEnvelope(f.runtime, { ...options, timeoutMs: 10 }, async begin => {
     begin(); dispatches++;
     f.stderr.write("x".repeat(20000));
-    f.stdout.write('I/Result: [Clawperator-Result-Chunk] {"commandId":"transport-command","index":1}\n');
+    f.stdout.write('I/Result: [Androperator-Result-Chunk] {"commandId":"transport-command","index":1}\n');
     return { success: true };
   });
   assert.ok(!result.ok && "error" in result);
@@ -272,7 +272,7 @@ it("preserves a signal and rejected framing at the exit-drain deadline", { timeo
     const result = await waitForResultEnvelope(f.runtime, { ...options, timeoutMs: 20 }, async begin => {
       begin();
       f.proc.emit("exit", null, "SIGTERM");
-      if (malformed) f.stdout.write('[Clawperator-Result-Chunk] {"commandId":"transport-command","index":1}');
+      if (malformed) f.stdout.write('[Androperator-Result-Chunk] {"commandId":"transport-command","index":1}');
       return { success: true };
     });
     assert.ok(!result.ok && "error" in result);
@@ -288,7 +288,7 @@ it("reports stdout observed when command-start arrives after fallback dispatch",
   let dispatches = 0;
   const result = await waitForResultEnvelope(f.runtime, options, async begin => {
     begin(); dispatches++;
-    f.stdout.write(`[Clawperator-Command] start commandId=${options.commandId}\n`);
+    f.stdout.write(`[Androperator-Command] start commandId=${options.commandId}\n`);
     f.proc.emit("exit", 255, null);
     f.proc.emit("close", 255, null);
     return { success: true };

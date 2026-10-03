@@ -82,7 +82,7 @@ An external agent or human author must write the reusable skill logic.
 
   return `---
 name: ${skillId}
-clawperator-skill-type: replay
+androperator-skill-type: replay
 description: |-
 ${indentYamlBlockScalar(summary, 2)}
 ---
@@ -177,12 +177,12 @@ function parseCommandSpec(commandSpec) {
   return { cmd: parts[0], args: parts.slice(1) };
 }
 
-function getLocalClawperatorCliPath() {
-  const configuredCliPath = process.env.CLAWPERATOR_CLI_PATH;
+function getLocalAndroperatorCliPath() {
+  const configuredCliPath = process.env.ANDROPERATOR_CLI_PATH;
   const candidates = [
     configuredCliPath,
     resolve(__dirname, "..", "..", "..", "apps", "node", "dist", "cli", "index.js"),
-    resolve(__dirname, "..", "..", "..", "..", "clawperator", "apps", "node", "dist", "cli", "index.js"),
+    resolve(__dirname, "..", "..", "..", "..", "androperator", "apps", "node", "dist", "cli", "index.js"),
   ].filter((candidate) => typeof candidate === "string" && candidate.length > 0);
 
   for (const candidate of candidates) {
@@ -194,8 +194,8 @@ function getLocalClawperatorCliPath() {
   return null;
 }
 
-function resolveClawperatorBin() {
-  const explicitBin = process.env.CLAWPERATOR_BIN;
+function resolveAndroperatorBin() {
+  const explicitBin = process.env.ANDROPERATOR_BIN;
   if (explicitBin) {
     if (existsSync(explicitBin)) {
       if (extname(explicitBin) === ".js") {
@@ -212,12 +212,12 @@ function resolveClawperatorBin() {
     return { cmd: explicitBin, args: [] };
   }
 
-  const localCliPath = getLocalClawperatorCliPath();
+  const localCliPath = getLocalAndroperatorCliPath();
   if (localCliPath !== null) {
     return { cmd: process.execPath, args: [localCliPath] };
   }
 
-  return { cmd: "clawperator", args: [] };
+  return { cmd: "androperator", args: [] };
 }
 
 function resolveOperatorPackage(explicitPkg) {
@@ -225,12 +225,12 @@ function resolveOperatorPackage(explicitPkg) {
     return explicitPkg;
   }
 
-  const envPkg = process.env.CLAWPERATOR_OPERATOR_PACKAGE;
+  const envPkg = process.env.ANDROPERATOR_OPERATOR_PACKAGE;
   if (envPkg !== undefined && envPkg !== "") {
     return envPkg;
   }
 
-  return "com.clawperator.operator";
+  return "com.androperator.operator";
 }
 
 const [, , deviceId, operatorPackageArg] = process.argv;
@@ -241,7 +241,7 @@ if (!deviceId) {
 }
 
 const operatorPackage = resolveOperatorPackage(operatorPackageArg);
-const resolvedClawperatorBin = resolveClawperatorBin();
+const resolvedAndroperatorBin = resolveAndroperatorBin();
 
 const execution = {
   commandId: "${skillId}-" + Date.now(),
@@ -259,9 +259,9 @@ const execution = {
 };
 
 const child = spawnSync(
-  resolvedClawperatorBin.cmd,
+  resolvedAndroperatorBin.cmd,
   [
-    ...resolvedClawperatorBin.args,
+    ...resolvedAndroperatorBin.args,
     "exec",
     "--device",
     deviceId,
@@ -282,7 +282,7 @@ if (child.stderr) process.stderr.write(child.stderr);
 if (child.error || child.signal || !Number.isInteger(child.status) || child.status < 0) {
   const reason = child.error?.message
     ?? (child.signal ? "terminated by signal " + child.signal : "unusable child exit status");
-  console.error("clawperator execution failed: " + reason);
+  console.error("androperator execution failed: " + reason);
   process.exitCode = 1;
 } else {
   process.exitCode = child.status;

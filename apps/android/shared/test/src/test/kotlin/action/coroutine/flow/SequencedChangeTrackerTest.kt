@@ -1,7 +1,7 @@
 package action.coroutine.flow
 
 import app.cash.turbine.test
-import clawperator.test.actionTest
+import androperator.test.actionTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

@@ -12,7 +12,7 @@ import { getDefaultRuntimeConfig } from "../../adapters/android-bridge/runtimeCo
 const commandId = "query-command";
 const taskId = "query-task";
 const query = JSON.stringify({ label: "界😀".repeat(30000), checked: false });
-const canonical = `[Clawperator-Result] ${JSON.stringify({ commandId, taskId, status: "success", error: null,
+const canonical = `[Androperator-Result] ${JSON.stringify({ commandId, taskId, status: "success", error: null,
   stepResults: [{ id: "query", actionType: "query_ui", success: true, data: { query } }] })}`;
 
 function chunks(line = canonical) {
@@ -23,7 +23,7 @@ function chunks(line = canonical) {
     data: bytes.subarray(index * 1024, (index + 1) * 1024).toString("base64"),
   }));
 }
-function frame(chunk: unknown) { return `[Clawperator-Result-Chunk] ${JSON.stringify(chunk)}`; }
+function frame(chunk: unknown) { return `[Androperator-Result-Chunk] ${JSON.stringify(chunk)}`; }
 
 describe("large query result transport", () => {
   it("reassembles a complete Unicode query while preserving the canonical envelope", () => {
@@ -40,7 +40,7 @@ describe("large query result transport", () => {
   it("ignores other commands, retains small lines and never completes a missing chunk", () => {
     const reader = new ResultEnvelopeTransport(commandId);
     assert.equal(reader.consume("ordinary log"), "ordinary log");
-    const nestedMarker = '[Clawperator-Result] {"label":"[Clawperator-Result-Chunk]"}';
+    const nestedMarker = '[Androperator-Result] {"label":"[Androperator-Result-Chunk]"}';
     assert.equal(reader.consume(nestedMarker), nestedMarker);
     assert.equal(reader.consume(frame({ ...chunks()[0], commandId: "other" })), null);
     assert.equal(reader.consume(frame(chunks()[0])), null);

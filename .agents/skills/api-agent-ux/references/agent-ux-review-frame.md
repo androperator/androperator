@@ -10,7 +10,7 @@ needs the fuller design rationale.
 
 The command an agent tries first, based on intuition from Playwright, adb, GitHub
 CLI, or general CLI habits, should work when it maps cleanly to a deterministic
-Clawperator contract. When it does not, consider an alias or a teaching error
+Androperator contract. When it does not, consider an alias or a teaching error
 within the requested scope. Report the gap during a review-only task; do not
 silently change runtime behavior.
 

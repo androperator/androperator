@@ -21,7 +21,7 @@ function buildHeader(overrides?: { schemaVersion?: number; sessionId?: string })
     schemaVersion: overrides?.schemaVersion ?? 1,
     sessionId: overrides?.sessionId ?? "export-session-001",
     startedAt: 1710000000000,
-    operatorPackage: "com.clawperator.operator.dev",
+    operatorPackage: "com.androperator.operator.dev",
   });
 }
 
@@ -236,7 +236,7 @@ describe("exportRecording", () => {
   });
 
   it("writes a known-good export file that reads back exactly", async () => {
-    const dir = await makeTempDir("clawperator-recording-export-");
+    const dir = await makeTempDir("androperator-recording-export-");
     const inputFile = join(dir, "demo.ndjson");
     const outputFile = join(dir, "nested", "demo.export.json");
     await mkdir(join(dir, "nested"), { recursive: true });
@@ -274,7 +274,7 @@ describe("exportRecording", () => {
         sessionId: "demo-session",
         schemaVersion: 1,
         startedAt: 1710000000000,
-        operatorPackage: "com.clawperator.operator.dev",
+        operatorPackage: "com.androperator.operator.dev",
       },
       snapshotMode: "include",
       events: [
@@ -318,7 +318,7 @@ describe("exportRecording", () => {
   });
 
   it("exports a pulled session directory by choosing the newest NDJSON file", async () => {
-    const dir = await makeTempDir("clawperator-recording-export-dir-");
+    const dir = await makeTempDir("androperator-recording-export-dir-");
     const pulledDir = join(dir, "pulled");
     await mkdir(pulledDir, { recursive: true });
 
@@ -361,7 +361,7 @@ describe("exportRecording", () => {
   });
 
   it("fails malformed headers, malformed events, and unsupported schema versions", async () => {
-    const dir = await makeTempDir("clawperator-recording-export-errors-");
+    const dir = await makeTempDir("androperator-recording-export-errors-");
     const malformedHeader = join(dir, "bad-header.ndjson");
     const malformedEvent = join(dir, "bad-event.ndjson");
     const badSchema = join(dir, "bad-schema.ndjson");
@@ -384,7 +384,7 @@ describe("exportRecording", () => {
   });
 
   it("surfaces RECORDING_EXPORT_FAILED when the output path cannot be written", async () => {
-    const dir = await makeTempDir("clawperator-recording-export-write-fail-");
+    const dir = await makeTempDir("androperator-recording-export-write-fail-");
     const inputFile = join(dir, "demo.ndjson");
     const outputPath = join(dir, "occupied");
     await writeFile(inputFile, `${buildHeader()}\n`, "utf8");
@@ -410,7 +410,7 @@ describe("exportRecording", () => {
 
 describe("recording export CLI", () => {
   it("supports both recording export and record export without parser stderr output", async () => {
-    const dir = await makeTempDir("clawperator-recording-export-cli-");
+    const dir = await makeTempDir("androperator-recording-export-cli-");
     const inputFile = join(dir, "demo.ndjson");
     const pulledDir = join(dir, "pulled");
     await mkdir(pulledDir, { recursive: true });
@@ -480,7 +480,7 @@ describe("recording export CLI", () => {
   });
 
   it("uses the resolved NDJSON file when deriving the default output path for directory input", async () => {
-    const dir = await makeTempDir("clawperator-recording-export-cli-dir-default-");
+    const dir = await makeTempDir("androperator-recording-export-cli-dir-default-");
     const pulledDir = join(dir, "pulled");
     await mkdir(pulledDir, { recursive: true });
     await writeFile(join(pulledDir, "export-demo.ndjson"), [

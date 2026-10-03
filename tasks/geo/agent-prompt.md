@@ -5,8 +5,8 @@ Created: 2026-03-12
 Use Cloudflare Browser Rendering REST APIs to audit the public agent-facing
 accessibility of:
 
-- `https://clawperator.com`
-- `https://docs.clawperator.com`
+- `https://androperator.com`
+- `https://docs.androperator.com`
 
 This is a GEO audit, not a generic SEO audit.
 
@@ -33,7 +33,7 @@ Important Cloudflare API quirk:
 
 - After a successful `POST /crawl`, early `GET /crawl/<job_id>` calls may return
   `404 Crawl job not found`.
-- This has been observed both on Clawperator URLs and on Cloudflare's own docs
+- This has been observed both on Androperator URLs and on Cloudflare's own docs
   URLs.
 - Treat this as eventual consistency in the Cloudflare service.
 - Poll for a reasonable window before concluding that crawl lookup is truly
@@ -72,18 +72,18 @@ Important Cloudflare API quirk:
 
 ## Critical URLs
 
-- `https://clawperator.com/robots.txt`
-- `https://clawperator.com/llms.txt`
-- `https://clawperator.com/llms-full.txt`
-- `https://clawperator.com/index.md`
-- `https://clawperator.com/agents`
-- `https://clawperator.com/sitemap.xml`
-- `https://docs.clawperator.com/robots.txt`
-- `https://docs.clawperator.com/llms.txt`
-- `https://docs.clawperator.com/llms-full.txt`
-- `https://docs.clawperator.com/sitemap.xml`
-- `https://docs.clawperator.com/ai-agents/node-api-for-agents/`
-- `https://docs.clawperator.com/reference/cli-reference/`
+- `https://androperator.com/robots.txt`
+- `https://androperator.com/llms.txt`
+- `https://androperator.com/llms-full.txt`
+- `https://androperator.com/index.md`
+- `https://androperator.com/agents`
+- `https://androperator.com/sitemap.xml`
+- `https://docs.androperator.com/robots.txt`
+- `https://docs.androperator.com/llms.txt`
+- `https://docs.androperator.com/llms-full.txt`
+- `https://docs.androperator.com/sitemap.xml`
+- `https://docs.androperator.com/ai-agents/node-api-for-agents/`
+- `https://docs.androperator.com/reference/cli-reference/`
 
 ## Output format
 

@@ -1,6 +1,6 @@
 import type { RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 import { assertRequiredEmulatorTools } from "./hostRequirements.js";
-import { type ClawperatorError, ERROR_CODES } from "../../contracts/errors.js";
+import { type AndroperatorError, ERROR_CODES } from "../../contracts/errors.js";
 import {
   DEFAULT_EMULATOR_DEVICE_PROFILE,
   DEFAULT_EMULATOR_SYSTEM_IMAGE,
@@ -18,10 +18,10 @@ import { listRunningEmulators } from "./runningEmulators.js";
 import type { ConfiguredAvd, ProvisionedEmulator } from "./types.js";
 
 function buildError(
-  code: ClawperatorError["code"],
+  code: AndroperatorError["code"],
   message: string,
   details?: Record<string, unknown>
-): ClawperatorError {
+): AndroperatorError {
   return { code, message, details };
 }
 

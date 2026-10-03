@@ -2,7 +2,7 @@
   "source": "Sanitized excerpt of jev-r&d/transport-failures.json, samsung-a4 command 23. IDs are replaced; no dispatch acknowledgement was retained in that audit.",
   "operation": "screenshot",
   "code": "RESULT_ENVELOPE_TIMEOUT",
-  "message": "No [Clawperator-Result] envelope within 7000ms",
+  "message": "No [Androperator-Result] envelope within 7000ms",
   "elapsedMs": 7273.149958,
   "probeFailure": { "timestamp": "2026-09-19T23:04:29.342Z", "commandId": "doctor-handshake-retained", "event": "result_reader.failure" },
   "requestedFailure": { "timestamp": "2026-09-19T23:04:29.344Z", "commandId": "screenshot-retained", "event": "result_reader.failure" },

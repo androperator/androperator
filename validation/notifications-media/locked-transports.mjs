@@ -14,12 +14,12 @@ const [deviceId, mediaSessionId, output, selectedTransport] = process.argv.slice
 const transports = ["typed", "http", "mcp"];
 assert.ok(selectedTransport === undefined || transports.includes(selectedTransport));
 assert.ok(output);
-const operatorPackage = 'com.clawperator.operator.dev';
+const operatorPackage = 'com.androperator.operator.dev';
 const records = [];
 const sample = () => {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      return JSON.parse(execFileSync('adb', ['-s', deviceId, 'shell', 'run-as', 'com.clawperator.fixture.media', 'cat', 'files/media-proof.json'], { encoding: 'utf8' }));
+      return JSON.parse(execFileSync('adb', ['-s', deviceId, 'shell', 'run-as', 'com.androperator.fixture.media', 'cat', 'files/media-proof.json'], { encoding: 'utf8' }));
     } catch (error) {
       records.push({ sampleReadFailure: { attempt, status: error.status ?? null, message: error.message } });
       if (attempt === 2) throw error;
@@ -31,7 +31,7 @@ assert.equal(initial.deviceLocked, true);
 const client = new Client({ name: 'locked-controls', version: '1' });
 const server = await startServer({ port: 0, host: '127.0.0.1', verbose: false, operatorPackage });
 try {
-  await client.connect(new StdioClientTransport({ command: process.execPath, args: [resolve(root, 'apps/node/dist/cli/index.js'), 'mcp', 'serve'], env: { ...process.env, CLAWPERATOR_NO_DAEMON: '1' } }));
+  await client.connect(new StdioClientTransport({ command: process.execPath, args: [resolve(root, 'apps/node/dist/cli/index.js'), 'mcp', 'serve'], env: { ...process.env, ANDROPERATOR_NO_DAEMON: '1' } }));
   for (const transport of selectedTransport === undefined ? transports : [selectedTransport]) {
     for (const operation of ['pause', 'seek', 'play']) {
       const before = sample();

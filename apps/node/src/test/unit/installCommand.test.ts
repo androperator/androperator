@@ -10,7 +10,7 @@ function makeOperatorRemediationResult(
 ): OperatorRemediateResult {
   return {
     ok: true,
-    operatorPackage: "com.clawperator.operator",
+    operatorPackage: "com.androperator.operator",
     summary: {
       totalDevices: 1,
       connectedDevices: 1,
@@ -58,7 +58,7 @@ function makeHostSetupResult(overrides: Partial<HostSetupResult> = {}): HostSetu
 function makeBundledSkillsResult(): CopyBundledSkillsSuccess {
   return {
     ok: true,
-    skills: ["clawperator-agent-orientation"],
+    skills: ["androperator-agent-orientation"],
     installedDir: "/tmp/bundled-skills",
     discoveryGroups: [],
     migrations: [],
@@ -75,7 +75,7 @@ describe("cmdInstall", () => {
     const setupHostCalls: Array<Record<string, unknown>> = [];
 
     const output = await cmdInstall(
-      { format: "json", operatorPackage: "com.clawperator.operator" },
+      { format: "json", operatorPackage: "com.androperator.operator" },
       {
         runOperatorRemediateImpl: async () => makeOperatorRemediationResult(),
         syncSkillsImpl: async () => ({
@@ -104,16 +104,16 @@ describe("cmdInstall", () => {
     assert.strictEqual(setupHostCalls.length, 1);
     assert.strictEqual(setupHostCalls[0].registryPath, "/tmp/skills/skills/skills-registry.json");
     assert.strictEqual(setupHostCalls[0].lastDeviceSerial, "serial-solo");
-    assert.strictEqual(setupHostCalls[0].operatorPackage, "com.clawperator.operator");
+    assert.strictEqual(setupHostCalls[0].operatorPackage, "com.androperator.operator");
     assert.strictEqual(setupHostCalls[0].cliVersion, undefined);
   });
 
   it("returns a warning when multiple connected devices require explicit selection", async () => {
     const output = await cmdInstall(
-      { format: "pretty", operatorPackage: "com.clawperator.operator.dev" },
+      { format: "pretty", operatorPackage: "com.androperator.operator.dev" },
       {
         runOperatorRemediateImpl: async () => makeOperatorRemediationResult({
-          operatorPackage: "com.clawperator.operator.dev",
+          operatorPackage: "com.androperator.operator.dev",
           summary: {
             totalDevices: 2,
             connectedDevices: 2,
@@ -162,10 +162,10 @@ describe("cmdInstall", () => {
       },
     );
 
-    assert.match(output, /Clawperator install: WARN/);
+    assert.match(output, /Androperator install: WARN/);
     assert.match(output, /Future commands must target one device explicitly with --device\./);
     assert.match(output, /serial-alpha - ready: Device is ready\./);
-    assert.match(output, /Verify one device explicitly with: clawperator doctor --device <device_id> --output pretty --operator-package com\.clawperator\.operator\.dev/);
+    assert.match(output, /Verify one device explicitly with: androperator doctor --device <device_id> --output pretty --operator-package com\.androperator\.operator\.dev/);
     assert.strictEqual(process.exitCode, undefined);
   });
 
@@ -207,10 +207,10 @@ describe("cmdInstall", () => {
 
   it("includes reconnect guidance in pretty output when no connected Android devices are available", async () => {
     const output = await cmdInstall(
-      { format: "pretty", operatorPackage: "com.clawperator.operator.dev" },
+      { format: "pretty", operatorPackage: "com.androperator.operator.dev" },
       {
         runOperatorRemediateImpl: async () => makeOperatorRemediationResult({
-          operatorPackage: "com.clawperator.operator.dev",
+          operatorPackage: "com.androperator.operator.dev",
           summary: {
             totalDevices: 0,
             connectedDevices: 0,
@@ -235,8 +235,8 @@ describe("cmdInstall", () => {
       },
     );
 
-    assert.match(output, /Clawperator install: FAILED/);
-    assert.match(output, /Connect and authorize a device, then rerun: clawperator install --operator-package com\.clawperator\.operator\.dev/);
+    assert.match(output, /Androperator install: FAILED/);
+    assert.match(output, /Connect and authorize a device, then rerun: androperator install --operator-package com\.androperator\.operator\.dev/);
     assert.strictEqual(process.exitCode, 1);
   });
 
@@ -304,11 +304,11 @@ describe("cmdInstall", () => {
 
   it("includes remediation follow-up guidance in pretty output when connected devices still fail", async () => {
     const output = await cmdInstall(
-      { format: "pretty", operatorPackage: "com.clawperator.operator.dev" },
+      { format: "pretty", operatorPackage: "com.androperator.operator.dev" },
       {
         runOperatorRemediateImpl: async () => makeOperatorRemediationResult({
           ok: false,
-          operatorPackage: "com.clawperator.operator.dev",
+          operatorPackage: "com.androperator.operator.dev",
           summary: {
             totalDevices: 2,
             connectedDevices: 2,
@@ -358,8 +358,8 @@ describe("cmdInstall", () => {
       },
     );
 
-    assert.match(output, /Clawperator install: FAILED/);
-    assert.match(output, /Rerun remediation after resolving device issues: clawperator operator remediate --operator-package com\.clawperator\.operator\.dev/);
+    assert.match(output, /Androperator install: FAILED/);
+    assert.match(output, /Rerun remediation after resolving device issues: androperator operator remediate --operator-package com\.androperator\.operator\.dev/);
     assert.strictEqual(process.exitCode, 1);
   });
 
@@ -412,17 +412,17 @@ describe("cmdInstall", () => {
       },
     );
 
-    assert.match(output, /Clawperator install: FAILED/);
-    assert.match(output, /Retry host artifact setup after resolving the failure: clawperator host setup/);
+    assert.match(output, /Androperator install: FAILED/);
+    assert.match(output, /Retry host artifact setup after resolving the failure: androperator host setup/);
     assert.strictEqual(process.exitCode, 1);
   });
 
   it("prioritizes host-setup retry guidance over no-device guidance on mixed failures", async () => {
     const output = await cmdInstall(
-      { format: "pretty", operatorPackage: "com.clawperator.operator.dev" },
+      { format: "pretty", operatorPackage: "com.androperator.operator.dev" },
       {
         runOperatorRemediateImpl: async () => makeOperatorRemediationResult({
-          operatorPackage: "com.clawperator.operator.dev",
+          operatorPackage: "com.androperator.operator.dev",
           summary: {
             totalDevices: 0,
             connectedDevices: 0,
@@ -451,8 +451,8 @@ describe("cmdInstall", () => {
       },
     );
 
-    assert.match(output, /Clawperator install: FAILED/);
-    assert.match(output, /Retry host artifact setup after resolving the failure: clawperator host setup/);
+    assert.match(output, /Androperator install: FAILED/);
+    assert.match(output, /Retry host artifact setup after resolving the failure: androperator host setup/);
     assert.doesNotMatch(output, /Connect and authorize a device, then rerun:/);
     assert.strictEqual(process.exitCode, 1);
   });
@@ -510,10 +510,10 @@ describe("cmdInstall", () => {
       },
     );
 
-    assert.match(output, /Clawperator install: WARN/);
-    assert.match(output, /Install runtime skills later with: clawperator skills install/);
-    assert.match(output, /Repair bundled-skills later with: clawperator bundled-skills install/);
-    assert.match(output, /Rerun host artifact setup after resolving the warning if needed: clawperator host setup/);
+    assert.match(output, /Androperator install: WARN/);
+    assert.match(output, /Install runtime skills later with: androperator skills install/);
+    assert.match(output, /Repair bundled-skills later with: androperator bundled-skills install/);
+    assert.match(output, /Rerun host artifact setup after resolving the warning if needed: androperator host setup/);
     assert.strictEqual(process.exitCode, undefined);
   });
 });

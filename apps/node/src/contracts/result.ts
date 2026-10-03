@@ -2,12 +2,12 @@ import type { LoggingStatus } from "./logging.js";
 import type { ExecutionFailureEvidence } from "./errors.js";
 
 /**
- * How the terminal result was obtained. Canonical-only: Node accepts only [Clawperator-Result].
+ * How the terminal result was obtained. Canonical-only: Node accepts only [Androperator-Result].
  */
-export type TerminalSource = "clawperator_result";
+export type TerminalSource = "androperator_result";
 
 /**
- * Result envelope contract: [Clawperator-Result] terminal envelope.
+ * Result envelope contract: [Androperator-Result] terminal envelope.
  */
 /** Receipt JSON fields (target/matched_target/coordinate/progress) remain serialized strings.
  * Dispatch acceptance never asserts an application postcondition.
@@ -67,5 +67,5 @@ export interface ResultEnvelope {
   diagnostics?: { logging: LoggingStatus };
 }
 
-export const RESULT_ENVELOPE_PREFIX = "[Clawperator-Result]";
-export const EVENT_ENVELOPE_PREFIX = "[Clawperator-Event]";
+export const RESULT_ENVELOPE_PREFIX = "[Androperator-Result]";
+export const EVENT_ENVELOPE_PREFIX = "[Androperator-Event]";

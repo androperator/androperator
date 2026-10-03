@@ -3,9 +3,9 @@ import assert from "node:assert";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { createClawperatorLogger } from "../../adapters/logger.js";
+import { createAndroperatorLogger } from "../../adapters/logger.js";
 
-describe("createClawperatorLogger (compat tests)", () => {
+describe("createAndroperatorLogger (compat tests)", () => {
   let tempRoot: string;
   let stderrWrite: typeof process.stderr.write;
   let originalHome: string | undefined;
@@ -17,21 +17,21 @@ describe("createClawperatorLogger (compat tests)", () => {
     const yyyy = String(now.getFullYear());
     const mm = String(now.getMonth() + 1).padStart(2, "0");
     const dd = String(now.getDate()).padStart(2, "0");
-    return join(root, ".clawperator", "logs", `clawperator-${yyyy}-${mm}-${dd}.log`);
+    return join(root, ".androperator", "logs", `androperator-${yyyy}-${mm}-${dd}.log`);
   }
 
   beforeEach(async () => {
-    tempRoot = await mkdtemp(join(tmpdir(), "clawperator-logger-"));
+    tempRoot = await mkdtemp(join(tmpdir(), "androperator-logger-"));
     stderrWrite = process.stderr.write.bind(process.stderr);
     originalHome = process.env.HOME;
-    originalLogDir = process.env.CLAWPERATOR_LOG_DIR;
+    originalLogDir = process.env.ANDROPERATOR_LOG_DIR;
     stderrLines.length = 0;
     process.stderr.write = ((chunk: unknown) => {
       stderrLines.push(String(chunk));
       return true;
     }) as typeof process.stderr.write;
     process.env.HOME = tempRoot;
-    delete process.env.CLAWPERATOR_LOG_DIR;
+    delete process.env.ANDROPERATOR_LOG_DIR;
   });
 
   afterEach(async () => {
@@ -42,16 +42,16 @@ describe("createClawperatorLogger (compat tests)", () => {
       process.env.HOME = originalHome;
     }
     if (originalLogDir === undefined) {
-      delete process.env.CLAWPERATOR_LOG_DIR;
+      delete process.env.ANDROPERATOR_LOG_DIR;
     } else {
-      process.env.CLAWPERATOR_LOG_DIR = originalLogDir;
+      process.env.ANDROPERATOR_LOG_DIR = originalLogDir;
     }
     await rm(tempRoot, { recursive: true, force: true });
   });
 
   it("writes parseable NDJSON entries", async () => {
     const logDir = join(tempRoot, "logs");
-    const logger = createClawperatorLogger({ logDir, logLevel: "info" });
+    const logger = createAndroperatorLogger({ logDir, logLevel: "info" });
 
     logger.emit({
       ts: "2026-03-22T00:00:00.000Z",
@@ -81,7 +81,7 @@ describe("createClawperatorLogger (compat tests)", () => {
 
   it("preserves inherited deviceId when child context omits it", async () => {
     const logDir = join(tempRoot, "logs");
-    const parentLogger = createClawperatorLogger({ logDir, logLevel: "info" }).child({
+    const parentLogger = createAndroperatorLogger({ logDir, logLevel: "info" }).child({
       deviceId: "device-parent",
     });
     const childLogger = parentLogger.child({
@@ -104,7 +104,7 @@ describe("createClawperatorLogger (compat tests)", () => {
 
   it("appends entries instead of overwriting the file", async () => {
     const logDir = join(tempRoot, "logs");
-    const logger = createClawperatorLogger({ logDir, logLevel: "info" });
+    const logger = createAndroperatorLogger({ logDir, logLevel: "info" });
 
     logger.emit({
       ts: "2026-03-22T00:00:00.000Z",
@@ -138,7 +138,7 @@ describe("createClawperatorLogger (compat tests)", () => {
 
   it("creates the missing log directory on first write", async () => {
     const logDir = join(tempRoot, "nested", "logs", "deep");
-    const logger = createClawperatorLogger({ logDir, logLevel: "info" });
+    const logger = createAndroperatorLogger({ logDir, logLevel: "info" });
 
     logger.emit({
       ts: "2026-03-22T00:00:00.000Z",
@@ -151,8 +151,8 @@ describe("createClawperatorLogger (compat tests)", () => {
     assert.match(contents, /test\.mkdir/);
   });
 
-  it("defaults to ~/.clawperator/logs when no log dir is configured", async () => {
-    const logger = createClawperatorLogger({ logLevel: "info" });
+  it("defaults to ~/.androperator/logs when no log dir is configured", async () => {
+    const logger = createAndroperatorLogger({ logLevel: "info" });
 
     assert.strictEqual(logger.logPath(), undefined);
 
@@ -171,7 +171,7 @@ describe("createClawperatorLogger (compat tests)", () => {
   it("warns once and fails open when log directory creation fails", async () => {
     const logDir = join(tempRoot, "blocked");
     await writeFile(logDir, "not a directory", "utf8");
-    const logger = createClawperatorLogger({ logDir, logLevel: "info" });
+    const logger = createAndroperatorLogger({ logDir, logLevel: "info" });
 
     assert.doesNotThrow(() => {
       logger.emit({
@@ -197,11 +197,11 @@ describe("createClawperatorLogger (compat tests)", () => {
 it("reports disabled and failed logging without claiming an unpersisted artifact", async () => {
   const root = await mkdtemp(join(tmpdir(), "logging-status-"));
   try {
-    const disabled = createClawperatorLogger({ logDir: root, fileLogging: false });
+    const disabled = createAndroperatorLogger({ logDir: root, fileLogging: false });
     disabled.emit({ ts: "now", level: "error", event: "test", message: "test" });
     assert.deepStrictEqual(disabled.status(), { status: "disabled" });
     assert.equal(disabled.logPath(), undefined);
-    const logger = createClawperatorLogger({ logDir: join(root, "logs") });
+    const logger = createAndroperatorLogger({ logDir: join(root, "logs") });
     assert.deepStrictEqual(logger.status(), { status: "available" });
     logger.emit({ ts: "now", level: "error", event: "test", message: "first" });
     const persisted = logger.logPath();

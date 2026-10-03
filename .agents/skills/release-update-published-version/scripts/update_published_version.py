@@ -56,13 +56,13 @@ def parse_version(version: str) -> tuple[int, int, int]:
 
 
 def current_release_marker_html(version: str) -> re.Pattern[str]:
-    tag_href = re.escape(f"https://github.com/clawperator/clawperator/releases/tag/v{version}")
+    tag_href = re.escape(f"https://github.com/androperator/androperator/releases/tag/v{version}")
     release_text = re.escape(version)
     return re.compile(rf'<strong>Current release:\s*<a href="{tag_href}">{release_text}</a></strong>')
 
 
 def current_release_marker_text(version: str) -> str:
-    return f"**Current release: [{version}](https://github.com/clawperator/clawperator/releases/tag/v{version})**"
+    return f"**Current release: [{version}](https://github.com/androperator/androperator/releases/tag/v{version})**"
 
 
 def published_version_output_problems(repo_root: Path, version: str) -> list[str]:
@@ -79,7 +79,7 @@ def published_version_output_problems(repo_root: Path, version: str) -> list[str
     artifact_paths = [
         repo_root / "sites" / "docs" / "static" / "llms-full.txt",
         repo_root / "sites" / "docs" / "site" / "llms-full.txt",
-        repo_root / "sites" / "landing-clawperator" / "public" / "llms-full.txt",
+        repo_root / "sites" / "androperator-public" / "llms-full.txt",
     ]
     for artifact_path in artifact_paths:
         if not artifact_path.exists():
@@ -111,21 +111,21 @@ def update_compatibility_versioned_apk_downloads(path: Path, version: str) -> bo
     changed = False
 
     # Update the version badge at the top of the page
-    # Pattern matches: **Current release: [X.Y.Z](https://github.com/clawperator/clawperator/releases/tag/vX.Y.Z)**
-    badge_pattern = r'(\*\*Current release: \[)[0-9]+\.[0-9]+\.[0-9]+(\]\(https://github\.com/clawperator/clawperator/releases/tag/v)[0-9]+\.[0-9]+\.[0-9]+(\)\*\*)'
+    # Pattern matches: **Current release: [X.Y.Z](https://github.com/androperator/androperator/releases/tag/vX.Y.Z)**
+    badge_pattern = r'(\*\*Current release: \[)[0-9]+\.[0-9]+\.[0-9]+(\]\(https://github\.com/androperator/androperator/releases/tag/v)[0-9]+\.[0-9]+\.[0-9]+(\)\*\*)'
     badge_repl = f"\\g<1>{version}\\g<2>{version}\\g<3>"
     content, replacements = re.subn(badge_pattern, badge_repl, content, flags=re.MULTILINE)
     changed = changed or replacements > 0
 
     # Update versioned URLs inside the remediation bullet strings.
     # Note: intentionally only matches numeric x.y.z versions (not `v<version>` templates).
-    url_apk_pat = r"(https://downloads\.clawperator\.com/operator/)v([0-9]+\.[0-9]+\.[0-9]+)/operator-v\2\.apk"
+    url_apk_pat = r"(https://downloads\.androperator\.com/operator/)v([0-9]+\.[0-9]+\.[0-9]+)/operator-v\2\.apk"
     url_apk_repl = f"\\1v{version}/operator-v{version}.apk"
     content, replacements = re.subn(url_apk_pat, url_apk_repl, content, flags=re.MULTILINE)
     changed = changed or replacements > 0
 
     url_sha_pat = (
-        r"(https://downloads\.clawperator\.com/operator/)v([0-9]+\.[0-9]+\.[0-9]+)/operator-v\2\.apk\.sha256"
+        r"(https://downloads\.androperator\.com/operator/)v([0-9]+\.[0-9]+\.[0-9]+)/operator-v\2\.apk\.sha256"
     )
     url_sha_repl = f"\\1v{version}/operator-v{version}.apk.sha256"
     content, replacements = re.subn(url_sha_pat, url_sha_repl, content, flags=re.MULTILINE)
@@ -171,11 +171,11 @@ def main() -> None:
     if published_tag != f"v{version}":
         die(f"GitHub Release v{version} was not found")
 
-    npm_version = run(["npm", "view", f"clawperator@{version}", "version"], cwd=repo_root).strip()
+    npm_version = run(["npm", "view", f"androperator@{version}", "version"], cwd=repo_root).strip()
     if npm_version != version:
-        die(f"npm does not report clawperator@{version}")
+        die(f"npm does not report androperator@{version}")
 
-    latest_npm_version = run(["npm", "view", "clawperator", "version"], cwd=repo_root).strip()
+    latest_npm_version = run(["npm", "view", "androperator", "version"], cwd=repo_root).strip()
     if latest_npm_version != version:
         die(f"{version} is not the current npm release (latest is {latest_npm_version})")
 
@@ -185,11 +185,19 @@ def main() -> None:
     docs_index_path = repo_root / "docs" / "index.md"
     if replace_required(
         docs_index_path,
-        r'(\*\*Current release: \[)[0-9]+\.[0-9]+\.[0-9]+(\]\(https://github\.com/clawperator/clawperator/releases/tag/v)[0-9]+\.[0-9]+\.[0-9]+(\)\*\*)',
+        r'(\*\*Current release: \[)[0-9]+\.[0-9]+\.[0-9]+(\]\(https://github\.com/androperator/androperator/releases/tag/v)[0-9]+\.[0-9]+\.[0-9]+(\)\*\*)',
         f"\\g<1>{version}\\g<2>{version}\\g<3>",
         fatal=False,
     ):
         updated_docs.append(docs_index_path)
+
+    preparing_marker = "**Androperator 1.0.0 is being prepared for release.**"
+    for marker_path in [docs_index_path, repo_root / "docs" / "troubleshooting" / "compatibility.md"]:
+        text = marker_path.read_text(encoding="utf-8")
+        if preparing_marker in text:
+            marker_path.write_text(text.replace(preparing_marker, current_release_marker_text(version)), encoding="utf-8")
+            if marker_path not in updated_docs:
+                updated_docs.append(marker_path)
 
     # The historical `docs/android-operator-apk.md` doc was removed/migrated.
     # Release follow-ups should keep working even when that legacy input is
@@ -217,7 +225,7 @@ def main() -> None:
             updated_docs.append(release_procedure_path)
 
     replace_required(
-        repo_root / "sites" / "landing-clawperator" / "public" / "install.sh",
+        repo_root / "sites" / "androperator-public" / "install.sh",
         r"# install\.sh \(v[0-9]+\.[0-9]+\.[0-9]+\)",
         f"# install.sh (v{version})",
     )
@@ -237,8 +245,8 @@ def main() -> None:
     # aborting the follow-up commit due to removed/migrated doc inputs.
     paths_to_stage = {
         repo_root / "sites" / "docs" / "static" / "llms-full.txt",
-        repo_root / "sites" / "landing-clawperator" / "public" / "install.sh",
-        repo_root / "sites" / "landing-clawperator" / "public" / "llms-full.txt",
+        repo_root / "sites" / "androperator-public" / "install.sh",
+        repo_root / "sites" / "androperator-public" / "llms-full.txt",
     }
     for p in updated_docs:
         paths_to_stage.add(p)

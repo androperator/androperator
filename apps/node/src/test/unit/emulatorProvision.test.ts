@@ -28,7 +28,7 @@ describe("emulator provisioning", () => {
   let testHome: string;
 
   beforeEach(async () => {
-    testHome = await mkdtemp(join(tmpdir(), "clawperator-emulator-provision-test-"));
+    testHome = await mkdtemp(join(tmpdir(), "androperator-emulator-provision-test-"));
     process.env.HOME = testHome;
   });
 
@@ -39,7 +39,7 @@ describe("emulator provisioning", () => {
   it("reuses a running supported emulator immediately", async () => {
     await writeAvd(
       testHome,
-      "clawperator-pixel",
+      "androperator-pixel",
       [
         "PlayStore.enabled=true",
         "abi.type=arm64-v8a",
@@ -51,7 +51,7 @@ describe("emulator provisioning", () => {
     const runner = new FakeProcessRunner();
     queueToolChecks(runner);
     runner.queueResult({ code: 0, stdout: "List of devices attached\nemulator-5554\tdevice\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "OK\nclawperator-pixel\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "OK\nandroperator-pixel\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" }); // sys.boot_completed
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" }); // dev.bootcomplete
     runner.queueResult({ code: 0, stdout: "", stderr: "" }); // development_settings_enabled
@@ -62,7 +62,7 @@ describe("emulator provisioning", () => {
 
     assert.deepStrictEqual(result, {
       type: "emulator",
-      avdName: "clawperator-pixel",
+      avdName: "androperator-pixel",
       serial: "emulator-5554",
       booted: true,
       created: false,
@@ -74,7 +74,7 @@ describe("emulator provisioning", () => {
   it("waits for boot completion when reusing an unbooted running emulator", async () => {
     await writeAvd(
       testHome,
-      "clawperator-pixel",
+      "androperator-pixel",
       [
         "PlayStore.enabled=true",
         "abi.type=arm64-v8a",
@@ -87,7 +87,7 @@ describe("emulator provisioning", () => {
     queueToolChecks(runner);
     // listRunningEmulators: device found but not yet booted
     runner.queueResult({ code: 0, stdout: "List of devices attached\nemulator-5554\tdevice\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "OK\nclawperator-pixel\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "OK\nandroperator-pixel\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "0\n", stderr: "" }); // sys.boot_completed = 0
     runner.queueResult({ code: 0, stdout: "0\n", stderr: "" }); // dev.bootcomplete = 0
     // waitForBootCompletion polling: both props now 1
@@ -99,7 +99,7 @@ describe("emulator provisioning", () => {
     const config = getDefaultRuntimeConfig({ runner });
     const result = await provisionEmulator(config);
 
-    assert.strictEqual(result.avdName, "clawperator-pixel");
+    assert.strictEqual(result.avdName, "androperator-pixel");
     assert.strictEqual(result.serial, "emulator-5554");
     assert.strictEqual(result.booted, true);
     assert.strictEqual(result.reused, true);
@@ -110,7 +110,7 @@ describe("emulator provisioning", () => {
   it("starts a supported configured AVD when none are running", async () => {
     await writeAvd(
       testHome,
-      "clawperator-pixel",
+      "androperator-pixel",
       [
         "PlayStore.enabled=true",
         "abi.type=arm64-v8a",
@@ -122,15 +122,15 @@ describe("emulator provisioning", () => {
     const runner = new FakeProcessRunner();
     queueToolChecks(runner);
     runner.queueResult({ code: 0, stdout: "List of devices attached\n", stderr: "" }); // no running emulators
-    runner.queueResult({ code: 0, stdout: "clawperator-pixel\n", stderr: "" }); // emulator -list-avds
+    runner.queueResult({ code: 0, stdout: "androperator-pixel\n", stderr: "" }); // emulator -list-avds
     // waitForEmulatorRegistration: first poll finds no device, second finds it
     runner.queueResult({ code: 0, stdout: "List of devices attached\nemulator-5554\tdevice\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "OK\nclawperator-pixel\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "OK\nandroperator-pixel\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "0\n", stderr: "" }); // not booted yet (registration poll)
     runner.queueResult({ code: 0, stdout: "0\n", stderr: "" });
     // waitForBootCompletion
     runner.queueResult({ code: 0, stdout: "List of devices attached\nemulator-5554\tdevice\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "OK\nclawperator-pixel\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "OK\nandroperator-pixel\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" }); // sys.boot_completed
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" }); // dev.bootcomplete
     runner.queueResult({ code: 0, stdout: "", stderr: "" }); // development_settings_enabled
@@ -139,7 +139,7 @@ describe("emulator provisioning", () => {
     const config = getDefaultRuntimeConfig({ runner });
     const result = await provisionEmulator(config);
 
-    assert.strictEqual(result.avdName, "clawperator-pixel");
+    assert.strictEqual(result.avdName, "androperator-pixel");
     assert.strictEqual(result.serial, "emulator-5554");
     assert.strictEqual(result.created, false);
     assert.strictEqual(result.started, true);
@@ -158,7 +158,7 @@ describe("emulator provisioning", () => {
       { code: 0, stdout: "created", stderr: "" },
       () => writeAvd(
         testHome,
-        "clawperator-pixel-20gb",
+        "androperator-pixel-20gb",
         [
           "PlayStore.enabled=true",
           "abi.type=arm64-v8a",
@@ -170,7 +170,7 @@ describe("emulator provisioning", () => {
     ); // avdmanager create avd
     // waitForEmulatorRegistration
     runner.queueResult({ code: 0, stdout: "List of devices attached\nemulator-5554\tdevice\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "OK\nclawperator-pixel-20gb\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "OK\nandroperator-pixel-20gb\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" }); // sys.boot_completed
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" }); // dev.bootcomplete
     // waitForBootCompletion
@@ -185,20 +185,20 @@ describe("emulator provisioning", () => {
     assert.strictEqual(result.created, true);
     assert.strictEqual(result.started, true);
     assert.strictEqual(result.reused, false);
-    assert.strictEqual(result.avdName, "clawperator-pixel-20gb");
+    assert.strictEqual(result.avdName, "androperator-pixel-20gb");
     assert.deepStrictEqual(runner.calls[9].args, [
-      "create", "avd", "--force", "--name", "clawperator-pixel-20gb",
+      "create", "avd", "--force", "--name", "androperator-pixel-20gb",
       "--package", "system-images;android-35;google_apis_playstore;arm64-v8a",
       "--device", "pixel_7",
     ]);
-    const configIni = await readFile(join(testHome, ".android", "avd", "clawperator-pixel-20gb.avd", "config.ini"), "utf8");
+    const configIni = await readFile(join(testHome, ".android", "avd", "androperator-pixel-20gb.avd", "config.ini"), "utf8");
     assert.match(configIni, /^disk\.dataPartition\.size=20G$/m);
   });
 
   it("refuses to auto-provision an existing unsupported default AVD", async () => {
     await writeAvd(
       testHome,
-      "clawperator-pixel-12gb",
+      "androperator-pixel-12gb",
       [
         "PlayStore.enabled=false",
         "abi.type=x86_64",

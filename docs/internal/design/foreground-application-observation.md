@@ -124,7 +124,7 @@ The matching debug APK was built and installed. A bounded, privileged debug
 activity, `ForegroundObservationProofActivity`, collected the production
 observer inside Android after the activity itself finished. No recording was
 started. Branch-local Node commands explicitly selected the discovered device
-and `com.clawperator.operator.dev` for setup, overlay set/clear, and snapshot
+and `com.androperator.operator.dev` for setup, overlay set/clear, and snapshot
 verification. They did not poll or drive foreground changes. Shell launches,
 key events, taps, and real soft-key taps exercised Android input independently.
 
@@ -226,7 +226,7 @@ launch the debug consumer:
 
 ```bash
 adb -s <device_serial> shell am start \
-  -n com.clawperator.operator.dev/clawperator.operator.debug.ForegroundObservationProofActivity \
+  -n com.androperator.operator.dev/androperator.operator.debug.ForegroundObservationProofActivity \
   --el duration_ms 600000
 ```
 
@@ -236,16 +236,16 @@ collection; its timeout cancels collection. `ForegroundObservationProof` logs
 states and window evidence; `ForegroundObservationEvent` logs event/ingress
 uptime only in debug builds while there is a subscriber.
 
-For a quiet live view, filter Logcat by **`ClawperatorForegroundApp`**. This
+For a quiet live view, filter Logcat by **`AndroperatorForegroundApp`**. This
 dedicated tag emits only the initial delivered state and subsequent distinct
 observations, for example `foreground_state=system_panel
 foreground_app=com.android.chrome displayId=0`. A null app is logged as
 `foreground_app=unknown`. It excludes window dumps, event traces, and
 session lifecycle messages. In ADBuddy, select the target emulator's Logcat
-and enter `ClawperatorForegroundApp` in Search Logcat. With adb, use:
+and enter `AndroperatorForegroundApp` in Search Logcat. With adb, use:
 
 ```bash
-adb -s <device_serial> logcat -s ClawperatorForegroundApp:I '*:S'
+adb -s <device_serial> logcat -s AndroperatorForegroundApp:I '*:S'
 ```
 
 This debug log is emitted by the bounded proof consumer, not by an always-on

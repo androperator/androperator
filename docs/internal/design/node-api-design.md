@@ -1,20 +1,20 @@
-# Clawperator Runtime Architecture and API Rationale
+# Androperator Runtime Architecture and API Rationale
 
 Product naming:
 
-- Product: `Clawperator`
-- Android package/application namespace: `com.clawperator.operator`
+- Product: `Androperator`
+- Android package/application namespace: `com.androperator.operator`
 
 ## Purpose
 
-Clawperator is a deterministic actuator tool that allows agents to execute Android automations on behalf of a user. It provides a stable layer for LLM-driven device control with deterministic inputs/outputs, eliminating the need for brittle, direct recipe-specific shell scripting.
+Androperator is a deterministic actuator tool that allows agents to execute Android automations on behalf of a user. It provides a stable layer for LLM-driven device control with deterministic inputs/outputs, eliminating the need for brittle, direct recipe-specific shell scripting.
 
 Execution model:
 
-1. Agents call Clawperator CLI/API.
-2. Clawperator performs `adb` and Android tooling interactions.
-3. Clawperator sends validated runtime commands to Android (`ACTION_AGENT_COMMAND`).
-4. Clawperator returns structured execution results.
+1. Agents call Androperator CLI/API.
+2. Androperator performs `adb` and Android tooling interactions.
+3. Androperator sends validated runtime commands to Android (`ACTION_AGENT_COMMAND`).
+4. Androperator returns structured execution results.
 
 Critical requirement:
 
@@ -23,40 +23,40 @@ Critical requirement:
 
 Agent-customer policy:
 
-- The **Clawperator Node runtime interface** (CLI + HTTP API) is the primary/default interface for agents.
+- The **Androperator Node runtime interface** (CLI + HTTP API) is the primary/default interface for agents.
 - The Android APK/runtime service is an execution target, not the agent-facing integration surface.
 - Agents should not need direct `adb` for common tasks.
 - Raw `adb` remains available as an explicit fallback for edge cases and debugging.
 
 Design implication:
 
-- If a workflow is common (for example package listing, screenshots, device discovery, app open/close, execution, snapshot, logs), provide a first-class Clawperator command/API for it.
+- If a workflow is common (for example package listing, screenshots, device discovery, app open/close, execution, snapshot, logs), provide a first-class Androperator command/API for it.
 
 ## Shipped Commands
 
 Core commands:
 
-- `clawperator doctor`: Validate prerequisites and environment.
-- `clawperator devices`: Discover connected device IDs.
-- `clawperator packages list`: Confirm presence of receiver and target apps on device.
-- `clawperator exec`: Run an execution JSON payload (`execute` is a supported synonym).
-- `clawperator snapshot`: Get current UI hierarchy as `hierarchy_xml`.
-- `clawperator screenshot`: Capture device screen.
-- Flat device interaction commands (single-step wrappers): `clawperator open`, `clawperator click`, `clawperator type`, `clawperator read`, `clawperator wait`, `clawperator press`, `clawperator back`, `clawperator scroll`, and related flags documented in the CLI reference.
-- `clawperator serve`: Start HTTP/SSE server for remote agent access.
-- `clawperator doctor --fix`: Best-effort environment remediation.
-- `clawperator skills install/update/search/run`: Skills lifecycle.
-- `clawperator version --check-compat`: CLI/APK compatibility check.
+- `androperator doctor`: Validate prerequisites and environment.
+- `androperator devices`: Discover connected device IDs.
+- `androperator packages list`: Confirm presence of receiver and target apps on device.
+- `androperator exec`: Run an execution JSON payload (`execute` is a supported synonym).
+- `androperator snapshot`: Get current UI hierarchy as `hierarchy_xml`.
+- `androperator screenshot`: Capture device screen.
+- Flat device interaction commands (single-step wrappers): `androperator open`, `androperator click`, `androperator type`, `androperator read`, `androperator wait`, `androperator press`, `androperator back`, `androperator scroll`, and related flags documented in the CLI reference.
+- `androperator serve`: Start HTTP/SSE server for remote agent access.
+- `androperator doctor --fix`: Best-effort environment remediation.
+- `androperator skills install/update/search/run`: Skills lifecycle.
+- `androperator version --check-compat`: CLI/APK compatibility check.
 
 Contracts:
 
-- **Canonical Envelope:** `[Clawperator-Result] {JSON}` is the ONLY way success/failure is reported.
+- **Canonical Envelope:** `[Androperator-Result] {JSON}` is the ONLY way success/failure is reported.
 - **`expectedFormat` Required:** Every observation/execution must include `expectedFormat: "android-ui-automator"`.
 - **Single-Flight Lock:** Only one execution per `deviceId` / `operatorPackage` at a time. Overlaps return `EXECUTION_CONFLICT_IN_FLIGHT`.
 
 ## HTTP API Server (`serve`)
 
-When running `clawperator serve [--port <number>] [--host <string>]`, a local HTTP server is started to allow remote agents to interact with Clawperator without direct CLI access.
+When running `androperator serve [--port <number>] [--host <string>]`, a local HTTP server is started to allow remote agents to interact with Androperator without direct CLI access.
 
 > ⚠️ **Security Warning**: The HTTP API currently provides **no authentication or authorization**. By default, it binds to `127.0.0.1` (localhost) for safety. If you bind to `0.0.0.0` or a public IP via `--host`, any client on your network can remotely control your connected Android devices. Only expose this API on trusted networks or behind an authenticated gateway.
 
@@ -76,9 +76,9 @@ When running `clawperator serve [--port <number>] [--host <string>]`, a local HT
 
 The server provides a real-time event stream at **`GET /events`**. Callers should use a standard SSE client to subscribe.
 
-- **Event: `clawperator:result`**: Emitted when an execution reaches a terminal state (success or failure) and a deviceId is known.
+- **Event: `androperator:result`**: Emitted when an execution reaches a terminal state (success or failure) and a deviceId is known.
     - Data: `{"deviceId": "...", "envelope": {...}}`
-- **Event: `clawperator:execution`**: Emitted for *every* attempt to run an execution, including pre-resolution failures.
+- **Event: `androperator:execution`**: Emitted for *every* attempt to run an execution, including pre-resolution failures.
     - Data: `{"deviceId": "...", "input": {...}, "result": {...}}`
 - **Event: `heartbeat`**: Upon connection, a `{"code": "CONNECTED", ...}` message is sent to verify the stream is active.
 
@@ -88,7 +88,7 @@ The server utilizes an in-memory single-flight lock per `deviceId`. If a second 
 
 ## Determinism Doctrine
 
-1. **No Hidden Logic:** Clawperator never retries a failed action or auto-falls back to a different strategy (e.g., from `artifact` to `direct`).
+1. **No Hidden Logic:** Androperator never retries a failed action or auto-falls back to a different strategy (e.g., from `artifact` to `direct`).
 2. **Pre-Flight Validation:** Every execution is validated against the target device and receiver capabilities before any ADB call is made.
 3. **Canonical Result:** Exactly one terminal envelope per `commandId`. If a timeout occurs, the CLI emits a `RESULT_ENVELOPE_TIMEOUT` error.
 
@@ -145,29 +145,29 @@ rewriting the step to success.
 ## Safety & Concurrency
 
 ### In-Flight Semantics
-A command is considered "in-flight" from the moment the ADB broadcast is sent until the `[Clawperator-Result]` is received or the `timeoutMs` is reached. If a command times out, the lock is held for an additional 2000ms "settle" window before allowing the next execution.
+A command is considered "in-flight" from the moment the ADB broadcast is sent until the `[Androperator-Result]` is received or the `timeoutMs` is reached. If a command times out, the lock is held for an additional 2000ms "settle" window before allowing the next execution.
 
 ### PII Redaction Policy
-By default, Clawperator returns **full-fidelity** UI text to the agent for maximum reasoning accuracy.
+By default, Androperator returns **full-fidelity** UI text to the agent for maximum reasoning accuracy.
 
 - **User Warning:** Results *will* contain sensitive data (names, account digits, OTPs) if they are visible on the screen.
-- **Agent Mitigation:** Do not ship raw Clawperator results to long-term storage without user consent.
+- **Agent Mitigation:** Do not ship raw Androperator results to long-term storage without user consent.
 
 ## API-First, ADB-Capable
 
 This runtime is intentionally **API-first**:
 
-1. Agents should use Clawperator commands/APIs by default.
-2. Clawperator should wrap common Android/adb operations behind stable, typed contracts.
+1. Agents should use Androperator commands/APIs by default.
+2. Androperator should wrap common Android/adb operations behind stable, typed contracts.
 3. Direct adb usage is a fallback path, not the baseline integration model.
 
 Direct adb is still supported for:
 
 - unsupported/emerging edge cases,
 - low-level diagnostics,
-- temporary gaps before a stable Clawperator primitive exists.
+- temporary gaps before a stable Androperator primitive exists.
 
-When fallback adb is used, Clawperator should still encourage convergence back to first-class APIs by:
+When fallback adb is used, Androperator should still encourage convergence back to first-class APIs by:
 
 - exposing equivalent primitives as they become common,
 - keeping result/error formats structured and machine-readable,
@@ -178,8 +178,8 @@ When fallback adb is used, Clawperator should still encourage convergence back t
 Skill artifacts are optional, but fallback behavior is explicit:
 
 1. If artifact compile succeeds, execute compiled execution.
-2. If artifact compile fails, Clawperator returns a structured compile error and does not auto-fallback.
-3. If runtime verification fails, Clawperator returns a structured execution failure and does not auto-retry with alternate strategy.
+2. If artifact compile fails, Androperator returns a structured compile error and does not auto-fallback.
+3. If runtime verification fails, Androperator returns a structured execution failure and does not auto-retry with alternate strategy.
 4. Agent chooses next step (retry, inspect UI, switch to direct actions, or abort).
 
 Runtime must expose a `mode` on each execution:
@@ -234,9 +234,9 @@ Selection behavior:
 
 > **Status: alpha/unstable.** `exec best-effort` may break without a major version bump until promoted to stable. See Stability section.
 
-Best-effort mode is an execution path for unknown or drifting UIs where the agent needs to make progress without a pre-authored action plan. It does not change the ownership model: Clawperator still executes individual actions and reports results; the agent still owns strategy.
+Best-effort mode is an execution path for unknown or drifting UIs where the agent needs to make progress without a pre-authored action plan. It does not change the ownership model: Androperator still executes individual actions and reports results; the agent still owns strategy.
 
-The steps below describe what an **agent** should do using Clawperator's primitives - not what Clawperator does autonomously:
+The steps below describe what an **agent** should do using Androperator's primitives - not what Androperator does autonomously:
 
 1. Agent calls `snapshot` to observe current UI.
 2. Agent identifies likely anchors (toolbar/tab/menu/button/search patterns) from the snapshot.
@@ -244,15 +244,15 @@ The steps below describe what an **agent** should do using Clawperator's primiti
 4. Agent calls `snapshot` again to verify progress.
 5. Agent retries within its own safety bounds if progress stalled.
 
-Clawperator's role in each step is unchanged: execute the requested action, return the result. It does not identify anchors, decide whether progress was made, or choose the next action. Those decisions belong to the agent.
+Androperator's role in each step is unchanged: execute the requested action, return the result. It does not identify anchors, decide whether progress was made, or choose the next action. Those decisions belong to the agent.
 
 Best-effort does not imply unsafe freeform behavior; all attempts remain within validated runtime action limits and capability policy.
 
 Important ownership split:
 
-- Clawperator provides primitives and structured observations.
+- Androperator provides primitives and structured observations.
 - The agent owns exploration policy/strategy.
-- Clawperator must not silently invent fallback control flow.
+- Androperator must not silently invent fallback control flow.
 
 Cardinality drift handling:
 
@@ -268,23 +268,23 @@ Chosen v1 mechanism:
 
 Required Android emission format (single line):
 
-- `[Clawperator-Result] {"commandId":"...","taskId":"...","status":"success|failed","stepResults":[...],"error":null}`
+- `[Androperator-Result] {"commandId":"...","taskId":"...","status":"success|failed","stepResults":[...],"error":null}`
 
 Current implementation note:
-- Android emits canonical `[Clawperator-Result]` terminal envelopes for command completion.
+- Android emits canonical `[Androperator-Result]` terminal envelopes for command completion.
 
 Rules:
 
 1. Exactly one terminal result envelope per `commandId`.
 2. Envelope payload must be valid single-line JSON.
-3. Clawperator parser filters by `commandId` and prefix.
+3. Androperator parser filters by `commandId` and prefix.
 4. Non-envelope logs are ignored for result semantics.
 
 This removes ad-hoc scraping patterns and provides deterministic parsing until a stronger transport is added.
 
 Additionally, intermediate observation envelopes may be emitted with prefix:
 
-- `[Clawperator-Event] {json...}`
+- `[Androperator-Event] {json...}`
 
 This supports agent feedback loops during best-effort execution.
 
@@ -328,7 +328,7 @@ Supported action types (v1):
 
 ## Doctor and Dependency Management
 
-`clawperator doctor` checks:
+`androperator doctor` checks:
 
 1. `adb` installed and executable
 2. adb server reachable
@@ -337,25 +337,25 @@ Supported action types (v1):
 5. Android Developer Options and USB debugging (advisory)
 6. end-to-end handshake via `doctor_ping`
 
-`clawperator doctor --fix` capabilities (best effort):
+`androperator doctor --fix` capabilities (best effort):
 
 1. restart adb server
-2. run `clawperator grant-device-permissions`
+2. run `androperator grant-device-permissions`
 3. print exact remediation when automatic fix is unavailable
 
-See [Clawperator Doctor](../reference/node-api-doctor.md) for the full check list and JSON report shape.
+See [Androperator Doctor](../reference/node-api-doctor.md) for the full check list and JSON report shape.
 
 ## Skill Integration Mechanism
 
 Canonical source of skills:
 
-- `clawperator-skills` repository
+- `local skill workspace` repository
 
 Distribution model:
 
-1. `clawperator-skills` CI generates `skills-index.json` on `main`.
-2. `clawperator skills install` clones the local skills checkout on first setup.
-3. `clawperator skills update [--ref <ref>]` refreshes the checkout and can pin to a specific ref when needed.
+1. `local skill workspace` CI generates `skills-index.json` on `main`.
+2. `androperator skills install` clones the local skills checkout on first setup.
+3. `androperator skills update [--ref <ref>]` refreshes the checkout and can pin to a specific ref when needed.
 4. Local cache stores synced artifacts for deterministic offline execution.
 
 Runtime should execute against cached/pinned skill content, not live network fetches during execution.
@@ -432,7 +432,7 @@ and will be updated as the command surface evolves.
 
 ## Testing Strategy
 
-Clawperator should define layered tests, with real-device execution as a first-class requirement.
+Androperator should define layered tests, with real-device execution as a first-class requirement.
 
 1. Unit tests (Node/CLI)
    - execution schema validation and hard bounds
@@ -445,7 +445,7 @@ Clawperator should define layered tests, with real-device execution as a first-c
    - failure contracts and fallback instruction pointers
 3. Android instrumentation tests
    - `ACTION_AGENT_COMMAND` execution path
-   - `[Clawperator-Result]` envelope emission
+   - `[Androperator-Result]` envelope emission
    - step result mapping and verification semantics
 4. Real-device tests
    - run a baseline skill/execution on a known installed app (current baseline can be Google Home)
@@ -464,7 +464,7 @@ Clawperator should define layered tests, with real-device execution as a first-c
 
 ## Stability & Versioning
 
-Clawperator follows Semantic Versioning (SemVer) for the Node SDK/CLI and its API contracts.
+Androperator follows Semantic Versioning (SemVer) for the Node SDK/CLI and its API contracts.
 
 ### Versioning Rules
 - **Major Bump (`1.x.x`):** Breaking changes to the result envelope JSON schema, CLI command removal, or incompatible `ACTION_AGENT_COMMAND` protocol changes.
@@ -472,5 +472,5 @@ Clawperator follows Semantic Versioning (SemVer) for the Node SDK/CLI and its AP
 - **Patch Bump (`x.x.1`):** Bug fixes, internal refactoring, or documentation updates.
 
 ### Stability Boundary
-- **Stable (v1):** `exec`, `snapshot`, `devices`, and the `[Clawperator-Result]` envelope structure.
+- **Stable (v1):** `exec`, `snapshot`, `devices`, and the `[Androperator-Result]` envelope structure.
 - **Alpha/Unstable:** `exec best-effort`, `--serve` (HTTP), and any feature marked as `(Upcoming)` in these docs. These may break without a major version bump until they are promoted to stable.

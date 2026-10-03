@@ -39,7 +39,7 @@ Interpretation:
 
 - Do not reintroduce per-command `logcat -c` or post-success `logcat -d`
   snapshot recovery for the standard snapshot path.
-- Do not embed full snapshot XML inside the single-line `[Clawperator-Result]`
+- Do not embed full snapshot XML inside the single-line `[Androperator-Result]`
   envelope.
 - Keep snapshot capture scoped to the active command's dispatch-to-envelope
   interval.
@@ -78,10 +78,10 @@ Candidate filters:
 
 Start from these source files:
 
-- `apps/android/shared/data/task/src/main/kotlin/clawperator/task/runner/TaskScopeDefault.kt`
-- `apps/android/shared/data/task/src/main/kotlin/clawperator/task/runner/UiActionEngine.kt`
-- `apps/android/shared/data/uitree/src/main/kotlin/clawperator/accessibilityservice/AccessibilityNodeInfoExtAndroid.kt`
-- `apps/android/shared/data/uitree/src/main/kotlin/clawperator/uitree/UiTreeFilterer.kt`
+- `apps/android/shared/data/task/src/main/kotlin/androperator/task/runner/TaskScopeDefault.kt`
+- `apps/android/shared/data/task/src/main/kotlin/androperator/task/runner/UiActionEngine.kt`
+- `apps/android/shared/data/uitree/src/main/kotlin/androperator/accessibilityservice/AccessibilityNodeInfoExtAndroid.kt`
+- `apps/android/shared/data/uitree/src/main/kotlin/androperator/uitree/UiTreeFilterer.kt`
 - `apps/node/src/contracts/execution.ts`
 - `docs/api/snapshot.md`
 
@@ -117,7 +117,7 @@ Candidate shape:
 
 - Android operator hosts a local socket or equivalent endpoint
 - Node forwards or connects through adb
-- `[Clawperator-Result]` semantics remain preserved or explicitly versioned
+- `[Androperator-Result]` semantics remain preserved or explicitly versioned
 - large payloads can be chunked or streamed without logcat line limits
 
 This is higher risk than filtering or reduced output because it touches the main
@@ -142,15 +142,15 @@ Authoring rule:
 - stop as soon as terminal state is observed
 - keep fixed `sleep` only when no observable UI condition exists, and document
   why in the skill
-- ensure nested skill calls use the wrapper-injected `CLAWPERATOR_BIN`
+- ensure nested skill calls use the wrapper-injected `ANDROPERATOR_BIN`
 
 Durable guidance already lives in:
 
 - `docs/skills/development.md`
 - `docs/skills/authoring.md`
-- `apps/node/bundled-skills/clawperator-skill-author-by-recording/SKILL.md`
-- `apps/node/bundled-skills/clawperator-skill-author-by-agent-discovery/SKILL.md`
-- `apps/node/bundled-skills/clawperator-agent-orientation/SKILL.md`
+- `apps/node/bundled-skills/androperator-skill-author-by-recording/SKILL.md`
+- `apps/node/bundled-skills/androperator-skill-author-by-agent-discovery/SKILL.md`
+- `apps/node/bundled-skills/androperator-agent-orientation/SKILL.md`
 
 ## Suggested Next Task Prompt
 

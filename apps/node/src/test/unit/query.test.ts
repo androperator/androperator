@@ -14,7 +14,7 @@ const matcher = { resourceId: "row", ancestor: { role: "list" }, descendant: { t
 const cli = fileURLToPath(new URL("../../cli/index.js", import.meta.url));
 
 function runCli(args: string[]) {
-  const result = spawnSync(process.execPath, [cli, ...args], { encoding: "utf8", env: { ...process.env, CLAWPERATOR_NO_DAEMON: "1" } });
+  const result = spawnSync(process.execPath, [cli, ...args], { encoding: "utf8", env: { ...process.env, ANDROPERATOR_NO_DAEMON: "1" } });
   return { ...result, payload: JSON.parse(result.stdout) as { code?: string; message?: string; error?: { code?: string } } };
 }
 
@@ -76,13 +76,13 @@ describe("query and relational selector contracts", () => {
     let dispatched = false;
     const response = await cmdQuery({
       format: "json", matcher, visibility: "all", limit: 7,
-      deviceId: "test-device", operatorPackage: "com.clawperator.operator.dev", noDaemon: true,
+      deviceId: "test-device", operatorPackage: "com.androperator.operator.dev", noDaemon: true,
       runExecutionFn: async (input, options) => {
         const execution = validateExecution(input);
         dispatched = true;
         assert.deepEqual(execution.actions[0].params, { matcher, visibility: "all", limit: 7 });
         assert.equal(options?.deviceId, "test-device");
-        assert.equal(options?.operatorPackage, "com.clawperator.operator.dev");
+        assert.equal(options?.operatorPackage, "com.androperator.operator.dev");
         return { ok: true, deviceId: "test-device", terminalSource: "logcat", envelope: {
           commandId: execution.commandId, taskId: execution.taskId, status: "success",
           stepResults: [{ id: "query", actionType: "query_ui", success: true, data: { query } }],
@@ -112,7 +112,7 @@ describe("query and relational selector contracts", () => {
       ["--visibility", "all", "all"], ["--visibility", "all", "on_screen"],
     ]) {
       for (const globalFirst of [true, false]) {
-        const globals = ["--device", "non-existent", "--operator-package", "com.clawperator.operator.dev"];
+        const globals = ["--device", "non-existent", "--operator-package", "com.androperator.operator.dev"];
         const query = ["query", flag, first, flag, second];
         const result = runCli(globalFirst ? [...globals, ...query] : [...query, ...globals]);
         assert.equal(result.status, 1, result.stdout);
@@ -141,7 +141,7 @@ describe("empty matcher recovery guidance", () => {
     for (const command of ["query", "click"]) {
       for (const alias of ["--selector", "--matcher-json"]) {
         for (const globalFirst of [true, false]) {
-          const flags = ["--device", "non-existent", "--operator-package", "com.clawperator.operator.dev"];
+          const flags = ["--device", "non-existent", "--operator-package", "com.androperator.operator.dev"];
           const result = runCli(globalFirst ? [...flags, command, alias, "{}"] : [command, alias, "{}", ...flags]);
           assert.equal(result.status, 1);
           assert.equal(result.payload.code, "EXECUTION_VALIDATION_FAILED");

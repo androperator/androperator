@@ -1,6 +1,6 @@
 ---
 name: release-set-code-version-number
-description: Bump and locally commit the unreleased Clawperator code version without changing published-version docs.
+description: Bump and locally commit the unreleased Androperator code version without changing published-version docs.
 ---
 
 Use this skill to bump the repo's next unreleased code version without changing public release-facing docs or website content.
@@ -44,7 +44,7 @@ It intentionally does **not** update public release-facing docs and release-main
 - `docs/internal/release-procedure.md`
 - `sites/docs/**`
 - `sites/landing-clawperator/public/**`
-- `sites/landing-clawperator/public/install.sh`
+- `sites/androperator-public/install.sh`
 
 ## Mandatory Manual Audit
 

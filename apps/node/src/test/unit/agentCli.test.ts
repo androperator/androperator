@@ -11,7 +11,7 @@ import {
 
 describe("resolveExecutableOnPathForPlatform", () => {
   it("resolves Windows launcher extensions via PATHEXT", async () => {
-    const tempDir = await mkdtemp(join(tmpdir(), "clawperator-agent-cli-win-"));
+    const tempDir = await mkdtemp(join(tmpdir(), "androperator-agent-cli-win-"));
     const launcherPath = join(tempDir, "codex.cmd");
 
     try {
@@ -34,7 +34,7 @@ describe("resolveExecutableOnPathForPlatform", () => {
 
 describe("resolveAgentCliExecutable", () => {
   it("rejects absolute cliPath values", async () => {
-    const tempDir = await mkdtemp(join(tmpdir(), "clawperator-agent-cli-abs-"));
+    const tempDir = await mkdtemp(join(tmpdir(), "androperator-agent-cli-abs-"));
 
     try {
       const result = await resolveAgentCliExecutable(
@@ -50,7 +50,7 @@ describe("resolveAgentCliExecutable", () => {
   });
 
   it("rejects relative cliPath values that escape the skill directory", async () => {
-    const tempDir = await mkdtemp(join(tmpdir(), "clawperator-agent-cli-escape-"));
+    const tempDir = await mkdtemp(join(tmpdir(), "androperator-agent-cli-escape-"));
     const skillDir = join(tempDir, "skill");
 
     try {
@@ -68,7 +68,7 @@ describe("resolveAgentCliExecutable", () => {
   });
 
   it("rejects cliPath symlinks that resolve outside the skill directory", async () => {
-    const tempDir = await mkdtemp(join(tmpdir(), "clawperator-agent-cli-symlink-"));
+    const tempDir = await mkdtemp(join(tmpdir(), "androperator-agent-cli-symlink-"));
     const skillDir = join(tempDir, "skill");
     const externalDir = join(tempDir, "external");
 
@@ -93,10 +93,10 @@ describe("resolveAgentCliExecutable", () => {
 });
 
 describe("resolveConfiguredAgentCli", () => {
-  it("does not override a manifest-pinned cliPath with CLAWPERATOR_SKILL_AGENT_CLI", () => {
+  it("does not override a manifest-pinned cliPath with ANDROPERATOR_SKILL_AGENT_CLI", () => {
     const result = resolveConfiguredAgentCli(
       { cli: "codex", cliPath: "scripts/fake-agent" },
-      { ...process.env, CLAWPERATOR_SKILL_AGENT_CLI: "override-agent" }
+      { ...process.env, ANDROPERATOR_SKILL_AGENT_CLI: "override-agent" }
     );
 
     assert.ok(result.ok);

@@ -6,7 +6,7 @@ import type { RunExecutionResult } from "../../../domain/executions/runExecution
 const successResult: RunExecutionResult = {
   ok: true,
   deviceId: "device-1",
-  terminalSource: "clawperator_result",
+  terminalSource: "androperator_result",
   envelope: {
     commandId: "click-test",
     taskId: "click-test",

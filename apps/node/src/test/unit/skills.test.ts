@@ -7,8 +7,8 @@ import { basename, dirname, join, normalize } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import {
-  CLAWPERATOR_BIN_ENV_VAR,
-  CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR,
+  ANDROPERATOR_BIN_ENV_VAR,
+  ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR,
   DEFAULT_OPERATOR_PACKAGE,
   formatSkillBinCommand,
   resolveSkillBin,
@@ -29,8 +29,8 @@ import { validateAllSkills, validateSkill } from "../../domain/skills/validateSk
 import { validateExecution, validatePayloadSize } from "../../domain/executions/validateExecution.js";
 import { cmdSkillsRun, resolveInteractiveSkillTarget } from "../../cli/commands/skills.js";
 import type { SkillResult } from "../../contracts/skillResult.js";
-import { CLAWPERATOR_SKILL_RUN_ID_ENV_VAR } from "../../contracts/logging.js";
-import { createClawperatorLogger } from "../../adapters/logger.js";
+import { ANDROPERATOR_SKILL_RUN_ID_ENV_VAR } from "../../contracts/logging.js";
+import { createAndroperatorLogger } from "../../adapters/logger.js";
 import { ERROR_CODES } from "../../contracts/errors.js";
 import {
   SKILL_NOT_FOUND,
@@ -60,7 +60,7 @@ const TEST_AGENT_SKILL_RESULT = "com.test.agent-skill-result";
 const TEST_FIXTURE_CHUNKED_OUTPUT = "test-fixture-chunked-output";
 const TEST_FIXTURE_MIXED_STREAMS = "test-fixture-mixed-streams";
 const TEST_FIXTURE_SPLIT_WORD = "test-fixture-split-word";
-const ORIGINAL_REGISTRY_PATH = process.env.CLAWPERATOR_SKILLS_REGISTRY;
+const ORIGINAL_REGISTRY_PATH = process.env.ANDROPERATOR_SKILLS_REGISTRY;
 const ORIGINAL_STDERR_WRITE = process.stderr.write.bind(process.stderr);
 const VALID_RECORDING_EXPORT_JSON = `${JSON.stringify({
   exportVersion: 1,
@@ -68,7 +68,7 @@ const VALID_RECORDING_EXPORT_JSON = `${JSON.stringify({
     sessionId: "demo-session",
     schemaVersion: 1,
     startedAt: 1710000000000,
-    operatorPackage: "com.clawperator.operator.dev",
+    operatorPackage: "com.androperator.operator.dev",
   },
   snapshotMode: "omit",
   events: [],
@@ -87,7 +87,7 @@ const VALID_RECORDING_EXPORT_JSON = `${JSON.stringify({
 function makeSkillMarkdown(skillId: string, skillType = "replay"): string {
   return `---
 name: ${skillId}
-clawperator-skill-type: ${skillType}
+androperator-skill-type: ${skillType}
 description: |-
   Test fixture for ${skillId}
 ---
@@ -226,7 +226,7 @@ async function createTempValidationSkillRepo(options: {
   registrySkills?: Array<Record<string, unknown>>;
   generatedSkills?: Array<Record<string, unknown>>;
 }): Promise<{ root: string; registryPath: string; entry: Record<string, unknown>; cleanup: () => Promise<void> }> {
-  const root = await mkdtemp(join(tmpdir(), "clawperator-skill-guardrails-"));
+  const root = await mkdtemp(join(tmpdir(), "androperator-skill-guardrails-"));
   const skillsDir = join(root, "skills");
   const skillDir = join(skillsDir, options.skillId);
   const registryPath = join(skillsDir, "skills-registry.json");
@@ -270,30 +270,30 @@ async function createTempValidationSkillRepo(options: {
   };
 }
 
-const originalLogDir = process.env.CLAWPERATOR_LOG_DIR;
+const originalLogDir = process.env.ANDROPERATOR_LOG_DIR;
 let testLogDir: string;
 
 before(async () => {
-  testLogDir = await mkdtemp(join(tmpdir(), "clawperator-skills-test-logs-"));
-  process.env.CLAWPERATOR_LOG_DIR = testLogDir;
-  process.env.CLAWPERATOR_SKILLS_REGISTRY = TEST_REGISTRY_PATH;
+  testLogDir = await mkdtemp(join(tmpdir(), "local skill workspace-test-logs-"));
+  process.env.ANDROPERATOR_LOG_DIR = testLogDir;
+  process.env.ANDROPERATOR_SKILLS_REGISTRY = TEST_REGISTRY_PATH;
 });
 
 after(async () => {
-  if (originalLogDir === undefined) delete process.env.CLAWPERATOR_LOG_DIR;
-  else process.env.CLAWPERATOR_LOG_DIR = originalLogDir;
+  if (originalLogDir === undefined) delete process.env.ANDROPERATOR_LOG_DIR;
+  else process.env.ANDROPERATOR_LOG_DIR = originalLogDir;
   await rm(testLogDir, { recursive: true, force: true });
   if (ORIGINAL_REGISTRY_PATH === undefined) {
-    delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
   } else {
-    process.env.CLAWPERATOR_SKILLS_REGISTRY = ORIGINAL_REGISTRY_PATH;
+    process.env.ANDROPERATOR_SKILLS_REGISTRY = ORIGINAL_REGISTRY_PATH;
   }
 });
 
 afterEach(() => {
   process.stderr.write = ORIGINAL_STDERR_WRITE;
   process.exitCode = undefined;
-  process.env.CLAWPERATOR_SKILLS_REGISTRY = TEST_REGISTRY_PATH;
+  process.env.ANDROPERATOR_SKILLS_REGISTRY = TEST_REGISTRY_PATH;
 });
 
 function runCli(
@@ -304,15 +304,15 @@ function runCli(
   return (async () => {
     const baseEnv = options?.env ?? {
       ...process.env,
-      CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+      ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
     };
     const skillsRunIndex = args.findIndex((arg, index) => arg === "skills" && args[index + 1] === "run");
     const needsFakeAdb = skillsRunIndex >= 0
-      && !((baseEnv.PATH ?? "").includes("clawperator-fake-adb-"));
+      && !((baseEnv.PATH ?? "").includes("androperator-fake-adb-"));
     const fakeAdbDir = needsFakeAdb
       ? await createFakeAdb({
           installed: true,
-          operatorPackage: "com.clawperator.operator.dev",
+          operatorPackage: "com.androperator.operator.dev",
         })
       : undefined;
     const env = fakeAdbDir
@@ -400,7 +400,7 @@ async function createTempRegistryWithSkill(options: {
   skillFileRelativePath?: string;
   scriptRelativePath?: string;
 }): Promise<{ registryPath: string; cleanup: () => Promise<void> }> {
-  const root = await mkdtemp(join(tmpdir(), "clawperator-skill-result-source-"));
+  const root = await mkdtemp(join(tmpdir(), "androperator-skill-result-source-"));
   const skillDir = join(root, "skills", options.skillId);
   const scriptsDir = join(skillDir, "scripts");
   await mkdir(scriptsDir, { recursive: true });
@@ -472,7 +472,7 @@ async function createTempRegistryWithInlineScript(options: {
     verification: { kind: "node_text_matches"; matcher: string } | null;
   };
 }): Promise<{ registryPath: string; cleanup: () => Promise<void> }> {
-  const root = await mkdtemp(join(tmpdir(), "clawperator-inline-skill-"));
+  const root = await mkdtemp(join(tmpdir(), "androperator-inline-skill-"));
   const skillDir = join(root, "skills", options.skillId);
   const scriptsDir = join(skillDir, "scripts");
   await mkdir(scriptsDir, { recursive: true });
@@ -520,7 +520,7 @@ interface TempSearchSkillEntry {
 async function createTempRegistryWithEntries(
   entries: TempSearchSkillEntry[]
 ): Promise<{ registryPath: string; cleanup: () => Promise<void> }> {
-  const root = await mkdtemp(join(tmpdir(), "clawperator-search-registry-"));
+  const root = await mkdtemp(join(tmpdir(), "androperator-search-registry-"));
   const registryPath = join(root, "skills", "skills-registry.json");
   await mkdir(dirname(registryPath), { recursive: true });
   await writeFile(
@@ -599,7 +599,7 @@ function getLogPathForDir(logDir: string): string {
   const yyyy = String(now.getFullYear());
   const mm = String(now.getMonth() + 1).padStart(2, "0");
   const dd = String(now.getDate()).padStart(2, "0");
-  return join(logDir, `clawperator-${yyyy}-${mm}-${dd}.log`);
+  return join(logDir, `androperator-${yyyy}-${mm}-${dd}.log`);
 }
 
 function parseLogEvents(contents: string): Array<{ event?: string; skillId?: string; skillRunId?: string; logPath?: string; tailCommand?: string; stream?: string; message?: string; level?: string; exitCode?: number }> {
@@ -629,7 +629,7 @@ async function createFakeAdb(options: {
     userUnlocked: boolean;
   };
 }): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "clawperator-fake-adb-"));
+  const dir = await mkdtemp(join(tmpdir(), "androperator-fake-adb-"));
   const scriptPath = join(dir, "adb");
   const commandIdPath = join(dir, "doctor-command-id");
   const deviceSerial = options.deviceSerial ?? "device-123";
@@ -676,7 +676,7 @@ async function createFakeAdb(options: {
     "  done",
     `  if [ -s ${JSON.stringify(commandIdPath)} ]; then`,
     `    command_id=$(cat ${JSON.stringify(commandIdPath)})`,
-    `    printf '04-21 00:00:00.000 I TaskScopeDefault: [Clawperator-Result] {\"commandId\":\"%s\",\"taskId\":\"doctor-handshake\",\"status\":\"success\",\"stepResults\":[{\"id\":\"h1\",\"actionType\":\"doctor_ping\",\"success\":true,\"data\":{\"developer_options_enabled\":\"true\",\"usb_debugging_enabled\":\"true\",\"screen_on\":${JSON.stringify(String(interactiveState.screenOn))},\"device_locked\":${JSON.stringify(String(interactiveState.deviceLocked))},\"user_unlocked\":${JSON.stringify(String(interactiveState.userUnlocked))}}}],\"error\":null}\\n' \"$command_id\"`,
+    `    printf '04-21 00:00:00.000 I TaskScopeDefault: [Androperator-Result] {\"commandId\":\"%s\",\"taskId\":\"doctor-handshake\",\"status\":\"success\",\"stepResults\":[{\"id\":\"h1\",\"actionType\":\"doctor_ping\",\"success\":true,\"data\":{\"developer_options_enabled\":\"true\",\"usb_debugging_enabled\":\"true\",\"screen_on\":${JSON.stringify(String(interactiveState.screenOn))},\"device_locked\":${JSON.stringify(String(interactiveState.deviceLocked))},\"user_unlocked\":${JSON.stringify(String(interactiveState.userUnlocked))}}}],\"error\":null}\\n' \"$command_id\"`,
     "  fi",
     "  exit 0",
     "fi",
@@ -715,30 +715,30 @@ describe("listSkills", () => {
 });
 
 describe("loadRegistry", () => {
-  it("rejects a blank CLAWPERATOR_SKILLS_REGISTRY in getRegistryPath", () => {
-    const originalRegistry = process.env.CLAWPERATOR_SKILLS_REGISTRY;
+  it("rejects a blank ANDROPERATOR_SKILLS_REGISTRY in getRegistryPath", () => {
+    const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
     try {
-      process.env.CLAWPERATOR_SKILLS_REGISTRY = "   ";
+      process.env.ANDROPERATOR_SKILLS_REGISTRY = "   ";
       assert.throws(
         () => getRegistryPath(),
-        /CLAWPERATOR_SKILLS_REGISTRY is set but blank/
+        /ANDROPERATOR_SKILLS_REGISTRY is set but blank/
       );
     } finally {
       if (originalRegistry === undefined) {
-        delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
       } else {
-        process.env.CLAWPERATOR_SKILLS_REGISTRY = originalRegistry;
+        process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
       }
     }
   });
 
-  it("warns to stderr when CLAWPERATOR_SKILLS_REGISTRY is unset and the default path is missing", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-registry-unset-"));
-    const tempHome = await mkdtemp(join(tmpdir(), "clawperator-home-unset-"));
+  it("warns to stderr when ANDROPERATOR_SKILLS_REGISTRY is unset and the default path is missing", async () => {
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-unset-"));
+    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-unset-"));
     const appNodeDir = join(tempRoot, "apps", "node");
     const installedHomeRegistryPath = join(
       tempHome,
-      ".clawperator",
+      ".androperator",
       "skills",
       "skills",
       "skills-registry.json"
@@ -752,7 +752,7 @@ describe("loadRegistry", () => {
       const script = `
         import { loadRegistry } from ${JSON.stringify(moduleUrl)};
         process.chdir(${JSON.stringify(appNodeDir)});
-        delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
         try {
           await loadRegistry();
           console.log(JSON.stringify({ ok: true }));
@@ -772,19 +772,19 @@ describe("loadRegistry", () => {
         `Expected message to include installed registry path, got: ${parsed.message}`
       );
       assert.ok(
-        parsed.message?.includes("clawperator skills list"),
+        parsed.message?.includes("androperator skills list"),
         `Expected message to include next-step command, got: ${parsed.message}`
       );
       assert.ok(
-        child.stderr.includes("CLAWPERATOR_SKILLS_REGISTRY"),
-        `Expected stderr to mention CLAWPERATOR_SKILLS_REGISTRY, got: ${child.stderr}`
+        child.stderr.includes("ANDROPERATOR_SKILLS_REGISTRY"),
+        `Expected stderr to mention ANDROPERATOR_SKILLS_REGISTRY, got: ${child.stderr}`
       );
       assert.ok(
         child.stderr.includes(installedHomeRegistryPath),
         `Expected stderr to include installed registry path, got: ${child.stderr}`
       );
       assert.ok(
-        child.stderr.includes("clawperator skills list"),
+        child.stderr.includes("androperator skills list"),
         `Expected stderr to include next-step command, got: ${child.stderr}`
       );
     } finally {
@@ -793,15 +793,15 @@ describe("loadRegistry", () => {
     }
   });
 
-  it("writes the configured path to stderr when CLAWPERATOR_SKILLS_REGISTRY points to a missing file", async () => {
+  it("writes the configured path to stderr when ANDROPERATOR_SKILLS_REGISTRY points to a missing file", async () => {
     const moduleUrl = pathToFileURL(
       join(packageRoot, "dist", "adapters", "skills-repo", "localSkillsRegistry.js")
     ).href;
     const missingPath = "/tmp/does-not-exist/skills-registry.json";
-    const tempHome = await mkdtemp(join(tmpdir(), "clawperator-home-fallback-configured-"));
+    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-fallback-configured-"));
     const installedHomeRegistryPath = join(
       tempHome,
-      ".clawperator",
+      ".androperator",
       "skills",
       "skills",
       "skills-registry.json"
@@ -810,7 +810,7 @@ describe("loadRegistry", () => {
     await copyFile(TEST_REGISTRY_PATH, installedHomeRegistryPath);
     const script = `
       import { loadRegistry } from ${JSON.stringify(moduleUrl)};
-      process.env.CLAWPERATOR_SKILLS_REGISTRY = ${JSON.stringify(missingPath)};
+      process.env.ANDROPERATOR_SKILLS_REGISTRY = ${JSON.stringify(missingPath)};
       try {
         await loadRegistry();
         console.log(JSON.stringify({ ok: true }));
@@ -834,7 +834,7 @@ describe("loadRegistry", () => {
         `Expected message to include installed registry path, got: ${parsed.message}`
       );
       assert.ok(
-        parsed.message?.includes("clawperator skills list"),
+        parsed.message?.includes("androperator skills list"),
         `Expected message to include next-step command, got: ${parsed.message}`
       );
       assert.ok(
@@ -850,13 +850,13 @@ describe("loadRegistry", () => {
     }
   });
 
-  it("fails when CLAWPERATOR_SKILLS_REGISTRY is blank instead of falling back", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-registry-blank-env-"));
-    const tempHome = await mkdtemp(join(tmpdir(), "clawperator-home-blank-env-"));
+  it("fails when ANDROPERATOR_SKILLS_REGISTRY is blank instead of falling back", async () => {
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-blank-env-"));
+    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-blank-env-"));
     const appNodeDir = join(tempRoot, "apps", "node");
     const installedHomeRegistryPath = join(
       tempHome,
-      ".clawperator",
+      ".androperator",
       "skills",
       "skills",
       "skills-registry.json"
@@ -873,7 +873,7 @@ describe("loadRegistry", () => {
       const script = `
         import { loadRegistry } from ${JSON.stringify(moduleUrl)};
         process.chdir(${JSON.stringify(appNodeDir)});
-        process.env.CLAWPERATOR_SKILLS_REGISTRY = "   ";
+        process.env.ANDROPERATOR_SKILLS_REGISTRY = "   ";
         try {
           await loadRegistry();
           console.log(JSON.stringify({ ok: true }));
@@ -887,16 +887,16 @@ describe("loadRegistry", () => {
       assert.strictEqual(child.code, 0, child.stderr);
       const parsed = JSON.parse(child.stdout) as { ok: boolean; message?: string };
       assert.strictEqual(parsed.ok, false);
-      assert.match(parsed.message ?? "", /CLAWPERATOR_SKILLS_REGISTRY is set but blank/);
-      assert.match(child.stderr, /CLAWPERATOR_SKILLS_REGISTRY is set but blank/);
+      assert.match(parsed.message ?? "", /ANDROPERATOR_SKILLS_REGISTRY is set but blank/);
+      assert.match(child.stderr, /ANDROPERATOR_SKILLS_REGISTRY is set but blank/);
     } finally {
       await rm(tempRoot, { recursive: true, force: true });
       await rm(tempHome, { recursive: true, force: true });
     }
   });
 
-  it("uses an explicit registry path even when CLAWPERATOR_SKILLS_REGISTRY is blank", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-registry-explicit-wins-"));
+  it("uses an explicit registry path even when ANDROPERATOR_SKILLS_REGISTRY is blank", async () => {
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-explicit-wins-"));
     const explicitRegistryPath = join(tempRoot, "skills", "skills-registry.json");
 
     await mkdir(dirname(explicitRegistryPath), { recursive: true });
@@ -908,7 +908,7 @@ describe("loadRegistry", () => {
       ).href;
       const script = `
         import { loadRegistry } from ${JSON.stringify(moduleUrl)};
-        process.env.CLAWPERATOR_SKILLS_REGISTRY = "   ";
+        process.env.ANDROPERATOR_SKILLS_REGISTRY = "   ";
         const result = await loadRegistry(${JSON.stringify(explicitRegistryPath)});
         console.log(JSON.stringify({
           resolvedPath: result.resolvedPath,
@@ -932,7 +932,7 @@ describe("loadRegistry", () => {
   });
 
   it("trims explicit registry paths before reading them", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-registry-explicit-trim-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-explicit-trim-"));
     const explicitRegistryPath = join(tempRoot, "skills", "skills-registry.json");
 
     await mkdir(dirname(explicitRegistryPath), { recursive: true });
@@ -967,7 +967,7 @@ describe("loadRegistry", () => {
   });
 
   it("fails when the caller passes an explicit default registry path that does not exist", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-registry-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-"));
     const appNodeDir = join(tempRoot, "apps", "node");
     const fallbackDir = join(tempRoot, "skills");
     const fallbackPath = join(fallbackDir, "skills-registry.json");
@@ -983,7 +983,7 @@ describe("loadRegistry", () => {
       const script = `
         import { loadRegistry, getRegistryPath } from ${JSON.stringify(moduleUrl)};
         process.chdir(${JSON.stringify(appNodeDir)});
-        delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
         try {
           await loadRegistry(getRegistryPath());
           console.log(JSON.stringify({ ok: true }));
@@ -1004,12 +1004,12 @@ describe("loadRegistry", () => {
   });
 
   it("falls back to the installed home registry without warning when repo-local paths are missing", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-registry-home-"));
-    const tempHome = await mkdtemp(join(tmpdir(), "clawperator-home-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-home-"));
+    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-"));
     const appNodeDir = join(tempRoot, "apps", "node");
     const installedHomeRegistryPath = join(
       tempHome,
-      ".clawperator",
+      ".androperator",
       "skills",
       "skills",
       "skills-registry.json"
@@ -1026,7 +1026,7 @@ describe("loadRegistry", () => {
       const script = `
         import { loadRegistry } from ${JSON.stringify(moduleUrl)};
         process.chdir(${JSON.stringify(appNodeDir)});
-        delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
         const result = await loadRegistry();
         console.log(JSON.stringify({
           resolvedPath: result.resolvedPath,
@@ -1051,13 +1051,13 @@ describe("loadRegistry", () => {
   });
 
   it("keeps the configured env registry ahead of repo and installed-home fallbacks", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-registry-env-priority-"));
-    const tempHome = await mkdtemp(join(tmpdir(), "clawperator-home-priority-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-env-priority-"));
+    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-priority-"));
     const appNodeDir = join(tempRoot, "apps", "node");
     const repoFallbackPath = join(tempRoot, "skills", "skills-registry.json");
     const installedHomeRegistryPath = join(
       tempHome,
-      ".clawperator",
+      ".androperator",
       "skills",
       "skills",
       "skills-registry.json"
@@ -1076,7 +1076,7 @@ describe("loadRegistry", () => {
       const script = `
         import { loadRegistry } from ${JSON.stringify(moduleUrl)};
         process.chdir(${JSON.stringify(appNodeDir)});
-        process.env.CLAWPERATOR_SKILLS_REGISTRY = ${JSON.stringify(TEST_REGISTRY_PATH)};
+        process.env.ANDROPERATOR_SKILLS_REGISTRY = ${JSON.stringify(TEST_REGISTRY_PATH)};
         const result = await loadRegistry();
         console.log(JSON.stringify({
           resolvedPath: result.resolvedPath,
@@ -1097,13 +1097,13 @@ describe("loadRegistry", () => {
   });
 
   it("prefers the repo-relative fallback over the installed home registry when both exist", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-registry-repo-priority-"));
-    const tempHome = await mkdtemp(join(tmpdir(), "clawperator-home-repo-priority-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-repo-priority-"));
+    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-repo-priority-"));
     const appNodeDir = join(tempRoot, "apps", "node");
     const repoFallbackPath = join(tempRoot, "skills", "skills-registry.json");
     const installedHomeRegistryPath = join(
       tempHome,
-      ".clawperator",
+      ".androperator",
       "skills",
       "skills",
       "skills-registry.json"
@@ -1122,7 +1122,7 @@ describe("loadRegistry", () => {
       const script = `
         import { loadRegistry } from ${JSON.stringify(moduleUrl)};
         process.chdir(${JSON.stringify(appNodeDir)});
-        delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
         const result = await loadRegistry();
         console.log(JSON.stringify({
           resolvedPath: result.resolvedPath,
@@ -1143,13 +1143,13 @@ describe("loadRegistry", () => {
   });
 
   it("does not probe ../../skills outside the checkout when running from repo root", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-registry-root-cwd-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-root-cwd-"));
     const repoRootDir = join(tempRoot, "repo");
-    const tempHome = await mkdtemp(join(tmpdir(), "clawperator-home-root-cwd-"));
+    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-root-cwd-"));
     const ancestorRegistryPath = join(tempRoot, "skills", "skills-registry.json");
     const installedHomeRegistryPath = join(
       tempHome,
-      ".clawperator",
+      ".androperator",
       "skills",
       "skills",
       "skills-registry.json"
@@ -1168,7 +1168,7 @@ describe("loadRegistry", () => {
       const script = `
         import { loadRegistry } from ${JSON.stringify(moduleUrl)};
         process.chdir(${JSON.stringify(repoRootDir)});
-        delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
         const result = await loadRegistry();
         console.log(JSON.stringify({
           resolvedPath: result.resolvedPath,
@@ -1193,13 +1193,13 @@ describe("loadRegistry", () => {
   });
 
   it("does not hide broken default registries behind fallback probing", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-registry-broken-default-"));
-    const tempHome = await mkdtemp(join(tmpdir(), "clawperator-home-broken-default-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-broken-default-"));
+    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-broken-default-"));
     const appNodeDir = join(tempRoot, "apps", "node");
     const defaultRegistryPath = join(appNodeDir, "skills", "skills-registry.json");
     const installedHomeRegistryPath = join(
       tempHome,
-      ".clawperator",
+      ".androperator",
       "skills",
       "skills",
       "skills-registry.json"
@@ -1216,7 +1216,7 @@ describe("loadRegistry", () => {
       const script = `
         import { loadRegistry } from ${JSON.stringify(moduleUrl)};
         process.chdir(${JSON.stringify(appNodeDir)});
-        delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
         try {
           await loadRegistry();
           console.log(JSON.stringify({ ok: true }));
@@ -1239,8 +1239,8 @@ describe("loadRegistry", () => {
   });
 
   it("fails cleanly when the caller passes an explicit missing registry path and no fallbacks resolve", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-registry-explicit-missing-"));
-    const tempHome = await mkdtemp(join(tmpdir(), "clawperator-home-explicit-missing-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-explicit-missing-"));
+    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-explicit-missing-"));
     const appNodeDir = join(tempRoot, "apps", "node");
     const explicitMissingPath = join(tempRoot, "custom", "skills-registry.json");
 
@@ -1253,7 +1253,7 @@ describe("loadRegistry", () => {
       const script = `
         import { loadRegistry } from ${JSON.stringify(moduleUrl)};
         process.chdir(${JSON.stringify(appNodeDir)});
-        delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
         try {
           await loadRegistry(${JSON.stringify(explicitMissingPath)});
           console.log(JSON.stringify({ ok: true }));
@@ -1295,7 +1295,7 @@ describe("getSkill", () => {
 
 describe("validateSkill", () => {
   it("returns validation details for a known valid skill", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-validate-valid-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-validate-valid-"));
     const skillsDir = join(tempRoot, "skills");
     const skillDir = join(skillsDir, "com.test.valid");
     const registryPath = join(skillsDir, "skills-registry.json");
@@ -1330,7 +1330,7 @@ describe("validateSkill", () => {
     }
   });
 
-  it("rejects skills that omit clawperator-skill-type frontmatter", async () => {
+  it("rejects skills that omit androperator-skill-type frontmatter", async () => {
     const temp = await createTempValidationSkillRepo({ skillId: "com.test.missing-skill-type" });
 
     try {
@@ -1338,14 +1338,14 @@ describe("validateSkill", () => {
       const result = await validateSkill("com.test.missing-skill-type", temp.registryPath);
       assert.ok(!result.ok);
       assert.strictEqual(result.code, SKILL_VALIDATION_FAILED);
-      assert.match(result.message, /missing required clawperator-skill-type frontmatter/i);
-      assert.deepStrictEqual(result.details?.missingFields, ["clawperator-skill-type"]);
+      assert.match(result.message, /missing required androperator-skill-type frontmatter/i);
+      assert.deepStrictEqual(result.details?.missingFields, ["androperator-skill-type"]);
     } finally {
       await temp.cleanup();
     }
   });
 
-  it("rejects unrecognized clawperator-skill-type values", async () => {
+  it("rejects unrecognized androperator-skill-type values", async () => {
     const temp = await createTempValidationSkillRepo({
       skillId: "com.test.invalid-skill-type",
       skillType: "unknown",
@@ -1355,14 +1355,14 @@ describe("validateSkill", () => {
       const result = await validateSkill("com.test.invalid-skill-type", temp.registryPath);
       assert.ok(!result.ok);
       assert.strictEqual(result.code, SKILL_VALIDATION_FAILED);
-      assert.match(result.message, /unsupported clawperator-skill-type/i);
+      assert.match(result.message, /unsupported androperator-skill-type/i);
       assert.match(result.details?.reason ?? "", /unknown/);
     } finally {
       await temp.cleanup();
     }
   });
 
-  it("accepts a valid clawperator-skill-type of replay", async () => {
+  it("accepts a valid androperator-skill-type of replay", async () => {
     const temp = await createTempValidationSkillRepo({
       skillId: "com.test.replay-skill-type",
       skillType: "replay",
@@ -1376,7 +1376,7 @@ describe("validateSkill", () => {
     }
   });
 
-  it("accepts a valid clawperator-skill-type of orchestrated", async () => {
+  it("accepts a valid androperator-skill-type of orchestrated", async () => {
     const temp = await createTempValidationSkillRepo({
       skillId: "com.test.orchestrated-skill-type",
       skillType: "orchestrated",
@@ -1404,7 +1404,7 @@ describe("validateSkill", () => {
     }
   });
 
-  it("rejects non-allowlisted skills that declare clawperator-skill-type: script", async () => {
+  it("rejects non-allowlisted skills that declare androperator-skill-type: script", async () => {
     const temp = await createTempValidationSkillRepo({
       skillId: "com.test.script-skill-type",
       skillType: "script",
@@ -1414,7 +1414,7 @@ describe("validateSkill", () => {
       const result = await validateSkill("com.test.script-skill-type", temp.registryPath);
       assert.ok(!result.ok);
       assert.strictEqual(result.code, SKILL_VALIDATION_FAILED);
-      assert.match(result.message, /unsupported clawperator-skill-type/i);
+      assert.match(result.message, /unsupported androperator-skill-type/i);
       assert.match(result.details?.reason ?? "", /replay or orchestrated/i);
     } finally {
       await temp.cleanup();
@@ -1676,7 +1676,7 @@ describe("validateSkill", () => {
   });
 
   it("treats reordered equivalent keywords as matching metadata", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-validate-keyword-parity-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-validate-keyword-parity-"));
     const skillsDir = join(tempRoot, "skills");
     const skillDir = join(skillsDir, "com.test.keyword-parity");
     const registryPath = join(skillsDir, "skills-registry.json");
@@ -1717,7 +1717,7 @@ describe("validateSkill", () => {
   });
 
   it("still passes invalid artifact payloads without dry-run", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-validate-artifact-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-validate-artifact-"));
     const skillsDir = join(tempRoot, "skills");
     const skillDir = join(skillsDir, "com.test.artifact");
     const registryPath = join(skillsDir, "skills-registry.json");
@@ -1766,7 +1766,7 @@ describe("validateSkill", () => {
   });
 
   it("returns SKILL_VALIDATION_FAILED when a referenced file is missing", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-validate-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-validate-"));
     const skillsDir = join(tempRoot, "skills");
     const skillDir = join(skillsDir, "com.test.invalid");
     const registryPath = join(skillsDir, "skills-registry.json");
@@ -1800,7 +1800,7 @@ describe("validateSkill", () => {
   });
 
   it("rejects registry entries that omit the scripts array", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-validate-missing-scripts-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-validate-missing-scripts-"));
     const skillsDir = join(tempRoot, "skills");
     const skillDir = join(skillsDir, "com.test.missing-scripts");
     const registryPath = join(skillsDir, "skills-registry.json");
@@ -1843,7 +1843,7 @@ describe("validateSkill", () => {
   });
 
   it("rejects registry entries whose keywords are not a string array", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-validate-bad-registry-keywords-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-validate-bad-registry-keywords-"));
     const skillsDir = join(tempRoot, "skills");
     const skillDir = join(skillsDir, "com.test.bad-registry-keywords");
     const registryPath = join(skillsDir, "skills-registry.json");
@@ -1887,7 +1887,7 @@ describe("validateSkill", () => {
   });
 
   it("rejects skill.json keywords that are not a string array", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-validate-bad-manifest-keywords-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-validate-bad-manifest-keywords-"));
     const skillsDir = join(tempRoot, "skills");
     const skillDir = join(skillsDir, "com.test.bad-manifest-keywords");
     const registryPath = join(skillsDir, "skills-registry.json");
@@ -1931,7 +1931,7 @@ describe("validateSkill", () => {
   });
 
   it("returns SKILL_VALIDATION_FAILED when skill.json is malformed JSON", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-validate-bad-json-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-validate-bad-json-"));
     const skillsDir = join(tempRoot, "skills");
     const skillId = "com.test.invalid-skill-json";
     const skillDir = join(skillsDir, skillId);
@@ -1977,7 +1977,7 @@ describe("validateSkill", () => {
   });
 
   it("rejects path traversal in registry-relative skill metadata", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-validate-traversal-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-validate-traversal-"));
     const skillsDir = join(tempRoot, "skills");
     const registryPath = join(skillsDir, "skills-registry.json");
 
@@ -2085,7 +2085,7 @@ describe("skills validate dry-run", () => {
   });
 
   it("emits cli.validation when pretty-mode payload validation is skipped", async () => {
-    const tempLogDir = await mkdtemp(join(tmpdir(), "clawperator-validation-logs-"));
+    const tempLogDir = await mkdtemp(join(tmpdir(), "androperator-validation-logs-"));
     try {
       const { stdout, stderr, code } = await runCli([
         "skills",
@@ -2099,8 +2099,8 @@ describe("skills validate dry-run", () => {
       ], {
         env: {
           ...process.env,
-          CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
-          CLAWPERATOR_LOG_DIR: tempLogDir,
+          ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+          ANDROPERATOR_LOG_DIR: tempLogDir,
         },
       });
 
@@ -2118,7 +2118,7 @@ describe("skills validate dry-run", () => {
   });
 
   it("emits cli.validation in JSON mode when payload validation is skipped", async () => {
-    const tempLogDir = await mkdtemp(join(tmpdir(), "clawperator-validation-json-logs-"));
+    const tempLogDir = await mkdtemp(join(tmpdir(), "androperator-validation-json-logs-"));
     try {
       const { stdout, stderr, code } = await runCli([
         "skills",
@@ -2132,8 +2132,8 @@ describe("skills validate dry-run", () => {
       ], {
         env: {
           ...process.env,
-          CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
-          CLAWPERATOR_LOG_DIR: tempLogDir,
+          ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+          ANDROPERATOR_LOG_DIR: tempLogDir,
         },
       });
 
@@ -2151,8 +2151,8 @@ describe("skills validate dry-run", () => {
   });
 
   it("emits cli.validation for script-only skills in bulk dry-run validation", async () => {
-    const tempLogDir = await mkdtemp(join(tmpdir(), "clawperator-validate-all-json-logs-"));
-    const tempRegistryRoot = await mkdtemp(join(tmpdir(), "clawperator-validate-all-registry-"));
+    const tempLogDir = await mkdtemp(join(tmpdir(), "androperator-validate-all-json-logs-"));
+    const tempRegistryRoot = await mkdtemp(join(tmpdir(), "androperator-validate-all-registry-"));
     try {
       const tempRegistryDir = join(tempRegistryRoot, "skills");
       const tempSkillDir = join(tempRegistryDir, TEST_SKILL_SCRIPT_ONLY);
@@ -2194,8 +2194,8 @@ describe("skills validate dry-run", () => {
       ], {
         env: {
           ...process.env,
-          CLAWPERATOR_SKILLS_REGISTRY: join(tempRegistryDir, "skills-registry.json"),
-          CLAWPERATOR_LOG_DIR: tempLogDir,
+          ANDROPERATOR_SKILLS_REGISTRY: join(tempRegistryDir, "skills-registry.json"),
+          ANDROPERATOR_LOG_DIR: tempLogDir,
         },
       });
 
@@ -2252,7 +2252,7 @@ describe("skills validate dry-run", () => {
 
 describe("validateAllSkills", () => {
   it("returns a full success summary when every registry skill is valid", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-validate-all-valid-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-validate-all-valid-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     const alphaDir = join(registryDir, "com.example.alpha.capture");
@@ -2309,7 +2309,7 @@ describe("validateAllSkills", () => {
   });
 
   it("returns a summary of broken entries when one registry skill is invalid", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-validate-all-invalid-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-validate-all-invalid-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     const validDir = join(registryDir, "com.example.valid.capture");
@@ -2544,7 +2544,7 @@ describe("compileArtifact", () => {
 
 describe("scaffoldSkill", () => {
   it("generated scripts preserve child streams and failure status", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-scaffold-status-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-scaffold-status-"));
     try {
       const registryPath = join(tempRoot, "skills", "skills-registry.json");
       await mkdir(dirname(registryPath), { recursive: true });
@@ -2575,19 +2575,19 @@ childProcess.spawnSync = (command, args, options) => {
         { name: "json failure", source: 'process.stdout.write(\'{"ok":false}\\n\'); process.stderr.write("failure\\n"); process.exitCode = 7;', code: 7, stdout: '{"ok":false}\n', stderr: "failure\n" },
         { name: "text failure", source: 'process.stdout.write("not JSON"); process.stderr.write("diagnostic"); process.exitCode = 3;', code: 3, stdout: "not JSON", stderr: "diagnostic" },
         { name: "empty stdout", source: 'process.stderr.write("failure"); process.exitCode = 9;', code: 9, stdout: "", stderr: "failure" },
-        { name: "signal", source: 'require("node:fs").writeSync(1, "partial"); require("node:fs").writeSync(2, "diagnostic"); process.kill(process.pid, "SIGTERM");', code: 1, stdout: "partial", stderr: /diagnosticclawperator execution failed: terminated by signal SIGTERM\n$/ },
-        { name: "timeout", source: 'require("node:fs").writeSync(1, "partial"); require("node:fs").writeSync(2, "diagnostic"); setInterval(() => {}, 1000);', code: 1, stdout: "partial", stderr: /diagnosticclawperator execution failed: .*ETIMEDOUT\n$/ },
-        { name: "missing", source: "", code: 1, stdout: "", stderr: /clawperator execution failed: .*ENOENT\n$/ },
-        { name: "unusable", source: "", code: 1, stdout: "partial", stderr: "diagnosticclawperator execution failed: unusable child exit status\n" },
+        { name: "signal", source: 'require("node:fs").writeSync(1, "partial"); require("node:fs").writeSync(2, "diagnostic"); process.kill(process.pid, "SIGTERM");', code: 1, stdout: "partial", stderr: /diagnosticandroperator execution failed: terminated by signal SIGTERM\n$/ },
+        { name: "timeout", source: 'require("node:fs").writeSync(1, "partial"); require("node:fs").writeSync(2, "diagnostic"); setInterval(() => {}, 1000);', code: 1, stdout: "partial", stderr: /diagnosticandroperator execution failed: .*ETIMEDOUT\n$/ },
+        { name: "missing", source: "", code: 1, stdout: "", stderr: /androperator execution failed: .*ENOENT\n$/ },
+        { name: "unusable", source: "", code: 1, stdout: "partial", stderr: "diagnosticandroperator execution failed: unusable child exit status\n" },
       ];
       for (const scenario of cases) {
         await writeFile(fakeCliPath, scenario.source);
-        const executionResult = await runNodeFile(runJsPath, ["test-device", "com.clawperator.operator.dev"], {
+        const executionResult = await runNodeFile(runJsPath, ["test-device", "com.androperator.operator.dev"], {
           env: {
             ...process.env,
             NODE_OPTIONS: `--require="${preloadPath}"`,
             SCAFFOLD_CASE: scenario.name,
-            CLAWPERATOR_BIN: scenario.name === "missing" ? join(tempRoot, "missing") : fakeCliPath,
+            ANDROPERATOR_BIN: scenario.name === "missing" ? join(tempRoot, "missing") : fakeCliPath,
           },
         });
         assert.strictEqual(executionResult.code, scenario.code, scenario.name + executionResult.stderr);
@@ -2599,7 +2599,7 @@ childProcess.spawnSync = (command, args, options) => {
         }
       }
       const missingDevice = await runNodeFile(runJsPath, [], {
-        env: { ...process.env, CLAWPERATOR_BIN: fakeCliPath },
+        env: { ...process.env, ANDROPERATOR_BIN: fakeCliPath },
       });
       assert.strictEqual(missingDevice.code, 1);
       assert.strictEqual(missingDevice.stdout, "");
@@ -2610,7 +2610,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("creates a new skill folder and registry entry", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-scaffold-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-scaffold-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     await mkdir(registryDir, { recursive: true });
@@ -2651,12 +2651,12 @@ childProcess.spawnSync = (command, args, options) => {
       const skillMarkdown = await readFile(join(tempRoot, "skills", skillId, "SKILL.md"), "utf8");
       const runShStats = await stat(runShPath);
       assert.match(runShContent, /node "\$DIR\/run\.js" "\$@"/);
-      assert.match(runJsContent, /resolveClawperatorBin/);
+      assert.match(runJsContent, /resolveAndroperatorBin/);
       assert.match(runJsContent, /resolveOperatorPackage/);
-      assert.match(runJsContent, /getLocalClawperatorCliPath/);
+      assert.match(runJsContent, /getLocalAndroperatorCliPath/);
       assert.doesNotMatch(runJsContent, /\.\.\/\.\.\/utils\/common\.js/);
-      assert.doesNotMatch(runJsContent, /execFileSync\(\s*"clawperator"/);
-      assert.match(skillMarkdown, /clawperator-skill-type: replay/);
+      assert.doesNotMatch(runJsContent, /execFileSync\(\s*"androperator"/);
+      assert.match(skillMarkdown, /androperator-skill-type: replay/);
       assert.ok((runShStats.mode & 0o111) !== 0, `Expected run.sh to be executable, mode=${runShStats.mode.toString(8)}`);
 
       const skillJson = JSON.parse(await readFile(join(tempRoot, "skills", skillId, "skill.json"), "utf8"));
@@ -2670,8 +2670,8 @@ childProcess.spawnSync = (command, args, options) => {
     }
   });
 
-  it("scaffolded run.js preserves backslashes in quoted CLAWPERATOR_BIN command specs", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-scaffold-windows-bin-"));
+  it("scaffolded run.js preserves backslashes in quoted ANDROPERATOR_BIN command specs", async () => {
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-scaffold-windows-bin-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     await mkdir(registryDir, { recursive: true });
@@ -2684,7 +2684,7 @@ childProcess.spawnSync = (command, args, options) => {
 
       const runJsPath = join(tempRoot, "skills", skillId, "scripts", "run.js");
       const fakeNodePath = join(tempRoot, "C:\\Program Files\\nodejs\\node.exe");
-      const fakeCliPath = join(tempRoot, "C:\\clawperator apps\\node\\dist\\cli\\index.js");
+      const fakeCliPath = join(tempRoot, "C:\\androperator apps\\node\\dist\\cli\\index.js");
 
       await writeFile(fakeNodePath, `#!/bin/sh\nexec "${process.execPath}" "$@"\n`, "utf8");
       await chmod(fakeNodePath, 0o755);
@@ -2697,7 +2697,7 @@ childProcess.spawnSync = (command, args, options) => {
       const executionResult = await runNodeFile(runJsPath, ["device-123"], {
         env: {
           ...process.env,
-          CLAWPERATOR_BIN: `"${fakeNodePath}" "${fakeCliPath}"`,
+          ANDROPERATOR_BIN: `"${fakeNodePath}" "${fakeCliPath}"`,
         },
       });
 
@@ -2709,8 +2709,8 @@ childProcess.spawnSync = (command, args, options) => {
     }
   });
 
-  it("scaffolded run.js prefers a local build over the global clawperator binary when CLAWPERATOR_BIN is unset", async () => {
-    const outerRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-scaffold-local-cli-"));
+  it("scaffolded run.js prefers a local build over the global androperator binary when ANDROPERATOR_BIN is unset", async () => {
+    const outerRoot = await mkdtemp(join(tmpdir(), "androperator-skill-scaffold-local-cli-"));
     const tempRoot = join(outerRoot, "repo");
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
@@ -2734,7 +2734,7 @@ childProcess.spawnSync = (command, args, options) => {
       const executionResult = await runNodeFile(runJsPath, ["device-456"], {
         env: {
           ...process.env,
-          CLAWPERATOR_BIN: "",
+          ANDROPERATOR_BIN: "",
         },
       });
 
@@ -2747,7 +2747,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("uses a provided summary in skill.json and SKILL.md", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-scaffold-summary-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-scaffold-summary-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     await mkdir(registryDir, { recursive: true });
@@ -2774,7 +2774,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("uses the default summary when one is not provided", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-scaffold-default-summary-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-scaffold-default-summary-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     await mkdir(registryDir, { recursive: true });
@@ -2801,7 +2801,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("copies recording context verbatim when provided", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-scaffold-recording-context-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-scaffold-recording-context-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     const recordingContextPath = join(tempRoot, "recording-context.json");
@@ -2830,7 +2830,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("rejects blank recording context paths", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-scaffold-recording-context-blank-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-scaffold-recording-context-blank-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     await mkdir(registryDir, { recursive: true });
@@ -2846,7 +2846,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("rejects recording context files that are not recording export artifacts", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-scaffold-recording-context-invalid-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-scaffold-recording-context-invalid-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     const recordingContextPath = join(tempRoot, "not-a-recording-export.json");
@@ -2865,7 +2865,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("removes a partial scaffold when recording context copy fails", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-scaffold-recording-context-missing-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-scaffold-recording-context-missing-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     await mkdir(registryDir, { recursive: true });
@@ -2890,7 +2890,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("supports multi-line summaries without breaking YAML frontmatter", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-scaffold-multiline-summary-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-scaffold-multiline-summary-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     await mkdir(registryDir, { recursive: true });
@@ -2913,7 +2913,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("does not indent empty lines in YAML block scalars", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-scaffold-empty-lines-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-scaffold-empty-lines-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     await mkdir(registryDir, { recursive: true });
@@ -2936,7 +2936,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("treats null summary like an omitted summary", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-scaffold-null-summary-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-scaffold-null-summary-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     await mkdir(registryDir, { recursive: true });
@@ -2975,7 +2975,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("CLI skills new scaffolds a local skill into the configured registry", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-cli-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-cli-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     await mkdir(registryDir, { recursive: true });
@@ -2988,7 +2988,7 @@ childProcess.spawnSync = (command, args, options) => {
         {
           env: {
             ...process.env,
-            CLAWPERATOR_SKILLS_REGISTRY: registryPath,
+            ANDROPERATOR_SKILLS_REGISTRY: registryPath,
           },
         }
       );
@@ -3001,7 +3001,7 @@ childProcess.spawnSync = (command, args, options) => {
       assert.ok(parsed.files?.some((file) => file.endsWith("/scripts/run.sh")));
       assert.strictEqual(
         parsed.next,
-        "Edit `SKILL.md` and `scripts/run.js`, then run `clawperator skills validate <skill_id>`; if this repo uses generated indexes, rerun `scripts/generate_skill_indexes.sh` and `clawperator skills validate --all`"
+        "Edit `SKILL.md` and `scripts/run.js`, then run `androperator skills validate <skill_id>`; if this repo uses generated indexes, rerun `scripts/generate_skill_indexes.sh` and `androperator skills validate --all`"
       );
 
       const registryRaw = await readFile(registryPath, "utf8");
@@ -3015,7 +3015,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("CLI skills new copies recording context into the scaffolded skill", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-cli-recording-context-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-cli-recording-context-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     const recordingContextPath = join(tempRoot, "recording-context.json");
@@ -3040,7 +3040,7 @@ childProcess.spawnSync = (command, args, options) => {
         {
           env: {
             ...process.env,
-            CLAWPERATOR_SKILLS_REGISTRY: registryPath,
+            ANDROPERATOR_SKILLS_REGISTRY: registryPath,
           },
         }
       );
@@ -3060,7 +3060,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("CLI skills new rejects --recording-context when the value is another flag", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-cli-recording-context-missing-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-cli-recording-context-missing-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     await mkdir(registryDir, { recursive: true });
@@ -3073,7 +3073,7 @@ childProcess.spawnSync = (command, args, options) => {
         {
           env: {
             ...process.env,
-            CLAWPERATOR_SKILLS_REGISTRY: registryPath,
+            ANDROPERATOR_SKILLS_REGISTRY: registryPath,
           },
         }
       );
@@ -3092,7 +3092,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("CLI skills new rejects non-export recording context files", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-cli-recording-context-invalid-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-cli-recording-context-invalid-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     const recordingContextPath = join(tempRoot, "not-a-recording-export.json");
@@ -3115,7 +3115,7 @@ childProcess.spawnSync = (command, args, options) => {
         {
           env: {
             ...process.env,
-            CLAWPERATOR_SKILLS_REGISTRY: registryPath,
+            ANDROPERATOR_SKILLS_REGISTRY: registryPath,
           },
         }
       );
@@ -3130,7 +3130,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("CLI skills new accepts an escaped double-dash recording context path", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-cli-recording-context-double-dash-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-cli-recording-context-double-dash-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     const recordingContextPath = join(tempRoot, "--recording-context.export.json");
@@ -3154,7 +3154,7 @@ childProcess.spawnSync = (command, args, options) => {
         {
           env: {
             ...process.env,
-            CLAWPERATOR_SKILLS_REGISTRY: registryPath,
+            ANDROPERATOR_SKILLS_REGISTRY: registryPath,
           },
         }
       );
@@ -3168,7 +3168,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("CLI skills new accepts a dash-prefixed recording context path", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-cli-recording-context-dash-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-cli-recording-context-dash-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     const recordingContextPath = join(tempRoot, "-recording-context.json");
@@ -3193,7 +3193,7 @@ childProcess.spawnSync = (command, args, options) => {
         {
           env: {
             ...process.env,
-            CLAWPERATOR_SKILLS_REGISTRY: registryPath,
+            ANDROPERATOR_SKILLS_REGISTRY: registryPath,
           },
         }
       );
@@ -3213,7 +3213,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("CLI skills validate reports a valid scaffolded skill", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-validate-cli-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-validate-cli-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     await mkdir(registryDir, { recursive: true });
@@ -3224,7 +3224,7 @@ childProcess.spawnSync = (command, args, options) => {
       const createResult = await runCli(["skills", "new", skillId, "--output", "json"], {
         env: {
           ...process.env,
-          CLAWPERATOR_SKILLS_REGISTRY: registryPath,
+          ANDROPERATOR_SKILLS_REGISTRY: registryPath,
         },
       });
       assert.strictEqual(createResult.code, 0, createResult.stderr);
@@ -3232,7 +3232,7 @@ childProcess.spawnSync = (command, args, options) => {
       const validateResult = await runCli(["skills", "validate", skillId, "--output", "json"], {
         env: {
           ...process.env,
-          CLAWPERATOR_SKILLS_REGISTRY: registryPath,
+          ANDROPERATOR_SKILLS_REGISTRY: registryPath,
         },
       });
       assert.strictEqual(validateResult.code, 0, validateResult.stderr);
@@ -3249,7 +3249,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("CLI skills validate --all reports registry-wide success for scaffolded skills", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-validate-all-cli-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-validate-all-cli-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     await mkdir(registryDir, { recursive: true });
@@ -3261,7 +3261,7 @@ childProcess.spawnSync = (command, args, options) => {
       const createFirst = await runCli(["skills", "new", firstSkillId, "--output", "json"], {
         env: {
           ...process.env,
-          CLAWPERATOR_SKILLS_REGISTRY: registryPath,
+          ANDROPERATOR_SKILLS_REGISTRY: registryPath,
         },
       });
       assert.strictEqual(createFirst.code, 0, createFirst.stderr);
@@ -3269,7 +3269,7 @@ childProcess.spawnSync = (command, args, options) => {
       const createSecond = await runCli(["skills", "new", secondSkillId, "--output", "json"], {
         env: {
           ...process.env,
-          CLAWPERATOR_SKILLS_REGISTRY: registryPath,
+          ANDROPERATOR_SKILLS_REGISTRY: registryPath,
         },
       });
       assert.strictEqual(createSecond.code, 0, createSecond.stderr);
@@ -3277,7 +3277,7 @@ childProcess.spawnSync = (command, args, options) => {
       const validateResult = await runCli(["skills", "validate", "--all", "--output", "json"], {
         env: {
           ...process.env,
-          CLAWPERATOR_SKILLS_REGISTRY: registryPath,
+          ANDROPERATOR_SKILLS_REGISTRY: registryPath,
         },
       });
       assert.strictEqual(validateResult.code, 0, validateResult.stderr);
@@ -3296,7 +3296,7 @@ childProcess.spawnSync = (command, args, options) => {
   });
 
   it("CLI skills validate --all returns structured registry errors", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-validate-all-registry-error-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-validate-all-registry-error-"));
     const registryDir = join(tempRoot, "skills");
     const registryPath = join(registryDir, "skills-registry.json");
     await mkdir(registryDir, { recursive: true });
@@ -3306,7 +3306,7 @@ childProcess.spawnSync = (command, args, options) => {
       const validateResult = await runCli(["skills", "validate", "--all", "--output", "json"], {
         env: {
           ...process.env,
-          CLAWPERATOR_SKILLS_REGISTRY: registryPath,
+          ANDROPERATOR_SKILLS_REGISTRY: registryPath,
         },
       });
       assert.strictEqual(validateResult.code, 1, validateResult.stderr);
@@ -3529,7 +3529,7 @@ describe("skills for-app CLI", () => {
         {
           env: {
             ...process.env,
-            CLAWPERATOR_SKILLS_REGISTRY: temp.registryPath,
+            ANDROPERATOR_SKILLS_REGISTRY: temp.registryPath,
           },
         }
       );
@@ -3710,10 +3710,10 @@ describe("runSkill", () => {
       agentCli: "codex",
     });
     assert.strictEqual(result.skillResult.skillId, TEST_AGENT_SKILL_RESULT);
-    assert.ok(result.output.includes("[Clawperator-Skill-Result]"));
+    assert.ok(result.output.includes("[Androperator-Skill-Result]"));
   });
 
-  it("keeps agent source provenance pinned to skill.json even when CLAWPERATOR_SKILL_AGENT_CLI overrides execution", async () => {
+  it("keeps agent source provenance pinned to skill.json even when ANDROPERATOR_SKILL_AGENT_CLI overrides execution", async () => {
     const temp = await createTempRegistryWithSkill({
       skillId: "com.test.agent-source-trust",
       scriptSourcePath: join(
@@ -3754,7 +3754,7 @@ describe("runSkill", () => {
       ],
     });
 
-    const fakeAgentDir = await mkdtemp(join(tmpdir(), "clawperator-agent-source-trust-"));
+    const fakeAgentDir = await mkdtemp(join(tmpdir(), "androperator-agent-source-trust-"));
     const fakeAgentPath = join(fakeAgentDir, "override-agent");
     const fakeAgentSourcePath = join(
       packageRoot,
@@ -3781,7 +3781,7 @@ describe("runSkill", () => {
         temp.registryPath,
         undefined,
         {
-          CLAWPERATOR_SKILL_AGENT_CLI: "override-agent",
+          ANDROPERATOR_SKILL_AGENT_CLI: "override-agent",
           PATH: fakeAgentDir,
         }
       );
@@ -4182,7 +4182,7 @@ describe("runSkill", () => {
   });
 
   it("fails validation when an agent-driven skill does not declare scripts/run.js", async () => {
-    const root = await mkdtemp(join(tmpdir(), "clawperator-agent-missing-run-harness-"));
+    const root = await mkdtemp(join(tmpdir(), "androperator-agent-missing-run-harness-"));
     const skillId = "com.test.agent-missing-run-harness";
     const skillPath = `skills/${skillId}`;
     const skillDir = join(root, skillPath);
@@ -4289,7 +4289,7 @@ describe("runSkill", () => {
   });
 
   it("treats semantically identical contract objects as matching even when key order differs", async () => {
-    const root = await mkdtemp(join(tmpdir(), "clawperator-contract-order-"));
+    const root = await mkdtemp(join(tmpdir(), "androperator-contract-order-"));
     const skillId = "com.test.contract-order";
     const skillDir = join(root, "skills", skillId);
     const scriptsDir = join(skillDir, "scripts");
@@ -4382,7 +4382,7 @@ describe("runSkill", () => {
   });
 
   it("accepts backslash-separated orchestrated harness paths in registry metadata", async () => {
-    const root = await mkdtemp(join(tmpdir(), "clawperator-agent-windows-paths-"));
+    const root = await mkdtemp(join(tmpdir(), "androperator-agent-windows-paths-"));
     const skillId = "com.test.agent-windows-paths";
     const skillDir = join(root, "skills", skillId);
     const scriptsDir = join(skillDir, "scripts");
@@ -4469,7 +4469,7 @@ describe("runSkill", () => {
   });
 
   it("accepts mixed-separator parity between registry metadata and skill.json", async () => {
-    const root = await mkdtemp(join(tmpdir(), "clawperator-agent-mixed-paths-"));
+    const root = await mkdtemp(join(tmpdir(), "androperator-agent-mixed-paths-"));
     const skillId = "com.test.agent-mixed-paths";
     const skillDir = join(root, "skills", skillId);
     const scriptsDir = join(skillDir, "scripts");
@@ -4579,7 +4579,7 @@ describe("runSkill", () => {
       }),
     });
 
-    const fakeAgentDir = await mkdtemp(join(tmpdir(), "clawperator-agent-path-override-"));
+    const fakeAgentDir = await mkdtemp(join(tmpdir(), "androperator-agent-path-override-"));
     const fakeAgentPath = join(fakeAgentDir, "my-agent");
     const fakeAgentSourcePath = join(
       packageRoot,
@@ -4610,7 +4610,7 @@ describe("runSkill", () => {
           undefined,
           {
             PATH: fakeAgentDir,
-            CLAWPERATOR_SKILL_AGENT_CLI: "my-agent",
+            ANDROPERATOR_SKILL_AGENT_CLI: "my-agent",
             EXPECTED_SKILLS_REGISTRY: temp.registryPath,
             EXPECTED_SKILL_TIMEOUT_MS: "4321",
           }
@@ -4691,7 +4691,7 @@ describe("runSkill", () => {
     assert.ok(!result.ok);
     assert.strictEqual(result.code, SKILL_EXECUTION_FAILED);
     assert.strictEqual(result.exitCode, 9);
-    assert.ok(result.stdout?.includes("[Clawperator-Skill-Result]"));
+    assert.ok(result.stdout?.includes("[Androperator-Skill-Result]"));
     assert.ok(result.skillResult);
     assert.strictEqual(result.skillResult.status, "failed");
     assert.strictEqual(result.skillResult.source.kind, "script");
@@ -4825,7 +4825,7 @@ describe("runSkill", () => {
 
     assert.strictEqual(result.status, "indeterminate");
     assert.strictEqual(result.ok, null);
-    assert.ok(result.output.includes(` ${"[Clawperator-Skill-Result]"} `));
+    assert.ok(result.output.includes(` ${"[Androperator-Skill-Result]"} `));
     assert.strictEqual(result.skillResult, null);
     assert.strictEqual(result.code, "SKILL_VERIFICATION_INDETERMINATE");
   });
@@ -5035,7 +5035,7 @@ describe("runSkill", () => {
     const harnessPath = join(skillDir, "scripts", "run.js");
 
     try {
-      await writeFile(harnessPath, "#!/usr/bin/env node\nprocess.env.CLAWPERATOR_SKILL_AGENT_CLI_PATH ??= 'missing';\nconsole.log('legacy-looking harness');\n", "utf8");
+      await writeFile(harnessPath, "#!/usr/bin/env node\nprocess.env.ANDROPERATOR_SKILL_AGENT_CLI_PATH ??= 'missing';\nconsole.log('legacy-looking harness');\n", "utf8");
 
       const result = await runSkill("com.test.malformed-agent-manifest", [], temp.registryPath);
       assert.ok(!result.ok);
@@ -5301,7 +5301,7 @@ describe("runSkill", () => {
   });
 
   it("validateSkill rejects unsupported declared contract input schemas before execution", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-validate-unsupported-contract-schema-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-validate-unsupported-contract-schema-"));
     const skillsDir = join(tempRoot, "skills");
     const skillId = "com.test.unsupported-contract-schema";
     const skillDir = join(skillsDir, skillId);
@@ -5462,7 +5462,7 @@ describe("runSkill", () => {
   });
 
   it("binds trusted contract inputs in deterministic key order instead of object insertion order", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-contract-order-runtime-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-contract-order-runtime-"));
     const skillsDir = join(tempRoot, "skills");
     const skillId = "com.test.runtime-contract-order";
     const skillDir = join(skillsDir, skillId);
@@ -5471,7 +5471,7 @@ describe("runSkill", () => {
 
     const scriptContents = `#!/usr/bin/env node
 const [alpha = "", beta = ""] = process.argv.slice(2);
-console.log("[Clawperator-Skill-Result]");
+console.log("[Androperator-Skill-Result]");
 console.log(JSON.stringify({
   contractVersion: "1.0.0",
   result: null,
@@ -5561,7 +5561,7 @@ for (let index = 0; index < args.length; index += 1) {
     unitName = arg.slice("--unit-name=".length);
   }
 }
-console.log("[Clawperator-Skill-Result]");
+console.log("[Androperator-Skill-Result]");
 console.log(JSON.stringify({
   contractVersion: "1.0.0",
   result: null,
@@ -5628,7 +5628,7 @@ for (let index = 0; index < args.length; index += 1) {
     temperature = arg;
   }
 }
-console.log("[Clawperator-Skill-Result]");
+console.log("[Androperator-Skill-Result]");
 console.log(JSON.stringify({
   contractVersion: "1.0.0",
   result: null,
@@ -5689,7 +5689,7 @@ for (const arg of args) {
     unitName = arg.slice("--unit-name=".length);
   }
 }
-console.log("[Clawperator-Skill-Result]");
+console.log("[Androperator-Skill-Result]");
 console.log(JSON.stringify({
   contractVersion: "1.0.0",
   result: null,
@@ -5738,7 +5738,7 @@ console.log(JSON.stringify({
     const temp = await createTempRegistryWithInlineScript({
       skillId,
       scriptContents: `#!/usr/bin/env node
-console.log("[Clawperator-Skill-Result]");
+console.log("[Androperator-Skill-Result]");
 console.log(JSON.stringify({
   contractVersion: "1.0.0",
   result: null,
@@ -5786,7 +5786,7 @@ console.log(JSON.stringify({
     const temp = await createTempRegistryWithInlineScript({
       skillId,
       scriptContents: `#!/usr/bin/env node
-console.log("[Clawperator-Skill-Result]");
+console.log("[Androperator-Skill-Result]");
 console.log(JSON.stringify({
   contractVersion: "1.0.0",
   result: null,
@@ -5835,7 +5835,7 @@ console.log(JSON.stringify({
     const temp = await createTempRegistryWithInlineScript({
       skillId,
       scriptContents: `#!/usr/bin/env node
-console.log("[Clawperator-Skill-Result]");
+console.log("[Androperator-Skill-Result]");
 console.log(JSON.stringify({
   contractVersion: "1.0.0",
   result: null,
@@ -5883,7 +5883,7 @@ console.log(JSON.stringify({
     const temp = await createTempRegistryWithInlineScript({
       skillId,
       scriptContents: `#!/usr/bin/env node
-console.log("[Clawperator-Skill-Result]");
+console.log("[Androperator-Skill-Result]");
 console.log(JSON.stringify({
   contractVersion: "1.0.0",
   result: null,
@@ -5932,7 +5932,7 @@ console.log(JSON.stringify({
     const temp = await createTempRegistryWithInlineScript({
       skillId,
       scriptContents: `#!/usr/bin/env node
-console.log("[Clawperator-Skill-Result]");
+console.log("[Androperator-Skill-Result]");
 console.log(JSON.stringify({
   contractVersion: "1.0.0",
   result: null,
@@ -5979,7 +5979,7 @@ console.log(JSON.stringify({
     const temp = await createTempRegistryWithInlineScript({
       skillId,
       scriptContents: `#!/usr/bin/env node
-console.log("[Clawperator-Skill-Result]");
+console.log("[Androperator-Skill-Result]");
 console.log(JSON.stringify({
   contractVersion: "1.0.0",
   result: null,
@@ -6049,7 +6049,7 @@ for (let index = 0; index < args.length; index += 1) {
     unitName = arg.slice("--unit-name=".length);
   }
 }
-console.log("[Clawperator-Skill-Result]");
+console.log("[Androperator-Skill-Result]");
 console.log(JSON.stringify({
   contractVersion: "1.0.0",
   result: null,
@@ -6124,7 +6124,7 @@ for (let index = 0; index < args.length; index += 1) {
     continue;
   }
 }
-console.log("[Clawperator-Skill-Result]");
+console.log("[Androperator-Skill-Result]");
 console.log(JSON.stringify({
   contractVersion: "1.0.0",
   result: null,
@@ -6201,7 +6201,7 @@ for (let index = 0; index < args.length; index += 1) {
     continue;
   }
 }
-console.log("[Clawperator-Skill-Result]");
+console.log("[Androperator-Skill-Result]");
 console.log(JSON.stringify({
   contractVersion: "1.0.0",
   result: null,
@@ -6332,7 +6332,7 @@ console.log(JSON.stringify({
     ], {
       env: {
         ...process.env,
-        CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
         TEST_SKILL_MODE: "valid",
       },
     });
@@ -6369,7 +6369,7 @@ console.log(JSON.stringify({
     ], {
       env: {
         ...process.env,
-        CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
         TEST_SKILL_MODE: "legacy",
       },
     });
@@ -6408,7 +6408,7 @@ console.log(JSON.stringify({
 
     assert.ok(!result.ok);
     assert.strictEqual(result.code, SKILL_EXECUTION_TIMEOUT);
-    assert.ok(result.stdout?.includes("[Clawperator-Skill-Result]"));
+    assert.ok(result.stdout?.includes("[Androperator-Skill-Result]"));
     assert.strictEqual(result.skillResult, null);
   });
 
@@ -6496,7 +6496,7 @@ console.log(JSON.stringify({
   it("CLI skills run forwards --device exactly once on the real CLI path", async () => {
     const fakeAdbDir = await createFakeAdb({
       installed: true,
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
     });
     const { stdout, code } = await runCli([
       "skills",
@@ -6505,7 +6505,7 @@ console.log(JSON.stringify({
       "--device",
       "device-123",
       "--operator-package",
-      "com.clawperator.operator.dev",
+      "com.androperator.operator.dev",
       "--output",
       "json",
       "--",
@@ -6515,7 +6515,7 @@ console.log(JSON.stringify({
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
       },
     });
     assert.strictEqual(code, 0, stdout);
@@ -6528,10 +6528,10 @@ console.log(JSON.stringify({
     ]);
   });
 
-  it("CLI skills run keeps --device out of CLAWPERATOR_SKILL_INPUTS for agent-driven skills", async () => {
+  it("CLI skills run keeps --device out of ANDROPERATOR_SKILL_INPUTS for agent-driven skills", async () => {
     const fakeAdbDir = await createFakeAdb({
       installed: true,
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
     });
     const { stdout, code } = await runCli([
       "skills",
@@ -6540,7 +6540,7 @@ console.log(JSON.stringify({
       "--device",
       "device-123",
       "--operator-package",
-      "com.clawperator.operator.dev",
+      "com.androperator.operator.dev",
       "--output",
       "json",
       "--",
@@ -6550,7 +6550,7 @@ console.log(JSON.stringify({
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
         EXPECTED_DEVICE_ID: "device-123",
       },
     });
@@ -6615,7 +6615,7 @@ console.log(JSON.stringify({
     assert.strictEqual(code, 0, stdout);
     const parsed = JSON.parse(stdout) as { output?: string };
     assert.ok(parsed.output?.includes("TEST_OUTPUT:--help"));
-    assert.doesNotMatch(stdout, /clawperator skills install/);
+    assert.doesNotMatch(stdout, /androperator skills install/);
   });
 
   it("CLI skills run forwards --version after -- without triggering CLI version output", async () => {
@@ -6762,15 +6762,15 @@ console.log(JSON.stringify({
   it("CLI skills run keeps json output parseable without live skill output", async () => {
     const fakeAdbDir = await createFakeAdb({
       installed: true,
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
     });
     const { stdout, code } = await runCli([
-      "skills", "run", TEST_FIXTURE_CHUNKED_OUTPUT, "--operator-package", "com.clawperator.operator.dev", "--output", "json",
+      "skills", "run", TEST_FIXTURE_CHUNKED_OUTPUT, "--operator-package", "com.androperator.operator.dev", "--output", "json",
     ], {
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
       },
     });
     assert.strictEqual(code, 0, stdout);
@@ -6778,24 +6778,24 @@ console.log(JSON.stringify({
     assert.strictEqual(parsed.skillId, TEST_FIXTURE_CHUNKED_OUTPUT);
     assert.ok(parsed.output?.includes("chunk1"));
     assert.ok(parsed.output?.includes("chunk2"));
-    assert.ok(!stdout.includes("[Clawperator]"));
+    assert.ok(!stdout.includes("[Androperator]"));
   });
 
   it("CLI skills run routes the banner through the logger in pretty mode", async () => {
     const fakeAdbDir = await createFakeAdb({
       installed: true,
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
     });
-    const tempLogDir = await mkdtemp(join(tmpdir(), "clawperator-banner-logs-"));
+    const tempLogDir = await mkdtemp(join(tmpdir(), "androperator-banner-logs-"));
     const logPath = getLogPathForDir(tempLogDir);
     const { stdout, stderr, code } = await runCli([
-      "skills", "run", TEST_FIXTURE_CHUNKED_OUTPUT, "--operator-package", "com.clawperator.operator.dev", "--log-level", "debug", "--output", "pretty",
+      "skills", "run", TEST_FIXTURE_CHUNKED_OUTPUT, "--operator-package", "com.androperator.operator.dev", "--log-level", "debug", "--output", "pretty",
     ], {
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
-        CLAWPERATOR_LOG_DIR: tempLogDir,
+        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_LOG_DIR: tempLogDir,
       },
     });
     assert.strictEqual(code, 0, stdout);
@@ -6803,10 +6803,10 @@ console.log(JSON.stringify({
     assert.ok(stdout.includes("chunk1"), stdout);
     assert.ok(stdout.includes("chunk2"), stdout);
     const stderrLines = stderr.split(/\r?\n/).filter((line) => line.length > 0);
-    assert.ok(stderrLines[0]?.startsWith(`[Clawperator] v${version}  APK: OK (com.clawperator.operator.dev)`), stderrLines[0]);
+    assert.ok(stderrLines[0]?.startsWith(`[Androperator] v${version}  APK: OK (com.androperator.operator.dev)`), stderrLines[0]);
     assert.ok(stderrLines[0]?.includes(`Logs: ${logPath}`), stderrLines[0]);
     assert.ok(stderrLines[0]?.includes(`Hint: tail -f '${logPath}'`), stderrLines[0]);
-    assert.ok(stderrLines[0]?.includes("Docs: https://docs.clawperator.com/llms.txt"), stderrLines[0]);
+    assert.ok(stderrLines[0]?.includes("Docs: https://docs.androperator.com/llms.txt"), stderrLines[0]);
     const contents = await readFile(logPath, "utf8");
     const events = parseLogEvents(contents);
     const bannerEvent = events.find((event) => event.event === "cli.banner");
@@ -6818,16 +6818,16 @@ console.log(JSON.stringify({
   it("CLI skills run emits cli.banner in JSON mode", async () => {
     const fakeAdbDir = await createFakeAdb({
       installed: true,
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
     });
-    const tempLogDir = await mkdtemp(join(tmpdir(), "clawperator-banner-json-logs-"));
+    const tempLogDir = await mkdtemp(join(tmpdir(), "androperator-banner-json-logs-"));
     try {
       const { stdout, stderr, code } = await runCli([
         "skills",
         "run",
         TEST_FIXTURE_CHUNKED_OUTPUT,
         "--operator-package",
-        "com.clawperator.operator.dev",
+        "com.androperator.operator.dev",
         "--log-level",
         "debug",
         "--output",
@@ -6836,12 +6836,12 @@ console.log(JSON.stringify({
         env: {
           ...process.env,
           PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-          CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
-          CLAWPERATOR_LOG_DIR: tempLogDir,
+          ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+          ANDROPERATOR_LOG_DIR: tempLogDir,
         },
       });
       assert.strictEqual(code, 0, stdout);
-      assert.ok(!stderr.includes("[Clawperator]"), stderr);
+      assert.ok(!stderr.includes("[Androperator]"), stderr);
       const contents = await readFile(getLogPathForDir(tempLogDir), "utf8");
       const events = parseLogEvents(contents);
       const bannerEvent = events.find((event) => event.event === "cli.banner");
@@ -6853,26 +6853,26 @@ console.log(JSON.stringify({
     }
   });
 
-  it("CLI skills run banner reflects CLAWPERATOR_LOG_DIR overrides", async () => {
+  it("CLI skills run banner reflects ANDROPERATOR_LOG_DIR overrides", async () => {
     const fakeAdbDir = await createFakeAdb({
       installed: true,
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
     });
-    const tempLogDir = await mkdtemp(join(tmpdir(), "clawperator-logs-"));
+    const tempLogDir = await mkdtemp(join(tmpdir(), "androperator-logs-"));
     try {
       const now = new Date();
       const yyyy = String(now.getFullYear());
       const mm = String(now.getMonth() + 1).padStart(2, "0");
       const dd = String(now.getDate()).padStart(2, "0");
-      const expectedLogPath = join(tempLogDir, `clawperator-${yyyy}-${mm}-${dd}.log`);
+      const expectedLogPath = join(tempLogDir, `androperator-${yyyy}-${mm}-${dd}.log`);
       const { stdout, stderr, code } = await runCli([
-        "skills", "run", TEST_FIXTURE_CHUNKED_OUTPUT, "--operator-package", "com.clawperator.operator.dev", "--output", "pretty",
+        "skills", "run", TEST_FIXTURE_CHUNKED_OUTPUT, "--operator-package", "com.androperator.operator.dev", "--output", "pretty",
       ], {
         env: {
           ...process.env,
           PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-          CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
-          CLAWPERATOR_LOG_DIR: tempLogDir,
+          ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+          ANDROPERATOR_LOG_DIR: tempLogDir,
         },
       });
       assert.strictEqual(code, 0, stdout);
@@ -6887,66 +6887,66 @@ console.log(JSON.stringify({
   it("CLI skills run preserves variant mismatch details in the pretty banner", async () => {
     const fakeAdbDir = await createFakeAdb({
       installed: true,
-      operatorPackage: "com.clawperator.operator",
-      installedPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator",
+      installedPackage: "com.androperator.operator.dev",
     });
     const { stdout, stderr, code } = await runCli([
-      "skills", "run", TEST_FIXTURE_CHUNKED_OUTPUT, "--operator-package", "com.clawperator.operator", "--output", "pretty",
+      "skills", "run", TEST_FIXTURE_CHUNKED_OUTPUT, "--operator-package", "com.androperator.operator", "--output", "pretty",
     ], {
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
       },
     });
     assert.strictEqual(code, 0, stdout);
     const firstLine = stderr.split(/\r?\n/, 1)[0] ?? "";
     assert.match(firstLine, /Wrong Operator variant installed/);
-    assert.match(firstLine, /Expected com\.clawperator\.operator but found com\.clawperator\.operator\.dev/);
+    assert.match(firstLine, /Expected com\.androperator\.operator but found com\.androperator\.operator\.dev/);
     assert.match(firstLine, /APK: FAIL/);
   });
 
   it("CLI skills run preserves adb failure details in the pretty banner", async () => {
     const fakeAdbDir = await createFakeAdb({
       installed: false,
-      operatorPackage: "com.clawperator.operator",
+      operatorPackage: "com.androperator.operator",
       packageListCode: 1,
       packageListStderr: "adb: device offline",
     });
     const { stdout, stderr, code } = await runCli([
-      "skills", "run", TEST_FIXTURE_CHUNKED_OUTPUT, "--operator-package", "com.clawperator.operator", "--output", "pretty",
+      "skills", "run", TEST_FIXTURE_CHUNKED_OUTPUT, "--operator-package", "com.androperator.operator", "--output", "pretty",
     ], {
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
       },
     });
     assert.strictEqual(code, 0, stdout);
     const firstLine = stderr.split(/\r?\n/, 1)[0] ?? "";
     assert.match(firstLine, /Could not query installed packages on the device/);
     assert.match(firstLine, /adb: device offline/);
-    assert.ok(!firstLine.includes("MISSING - run `clawperator operator setup --apk <path>`"));
+    assert.ok(!firstLine.includes("MISSING - run `androperator operator setup --apk <path>`"));
   });
 
   it("CLI skills run suppresses the banner in json mode", async () => {
     const fakeAdbDir = await createFakeAdb({
       installed: true,
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
     });
     const { stdout, stderr, code } = await runCli([
-      "skills", "run", TEST_FIXTURE_CHUNKED_OUTPUT, "--operator-package", "com.clawperator.operator.dev", "--output", "json",
+      "skills", "run", TEST_FIXTURE_CHUNKED_OUTPUT, "--operator-package", "com.androperator.operator.dev", "--output", "json",
     ], {
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
       },
     });
     assert.strictEqual(code, 0, stdout);
     assert.doesNotThrow(() => JSON.parse(stdout));
-    assert.ok(!stdout.includes("[Clawperator]"));
-    assert.ok(!stderr.includes("[Clawperator]"));
+    assert.ok(!stdout.includes("[Androperator]"));
+    assert.ok(!stderr.includes("[Androperator]"));
   });
 });
 
@@ -6954,7 +6954,7 @@ describe("cmdSkillsRun preflight gate", () => {
   const passingApkPresence = {
     id: "readiness.apk.presence",
     status: "pass",
-    summary: "Operator APK (com.clawperator.operator.dev) is installed.",
+    summary: "Operator APK (com.androperator.operator.dev) is installed.",
   } as const;
   const allowInteractiveTarget = async () => ({
     ok: true,
@@ -6965,7 +6965,7 @@ describe("cmdSkillsRun preflight gate", () => {
   it("skips the interactive probe when operator readiness is not pass", async () => {
     let probeCalls = 0;
 
-    const result = await resolveInteractiveSkillTarget("com.clawperator.operator.dev", {
+    const result = await resolveInteractiveSkillTarget("com.androperator.operator.dev", {
       deviceId: "resolved-device-123",
       resolveDeviceImpl: async () => ({ deviceId: "resolved-device-123", serial: "resolved-device-123" }),
       checkApkPresenceImpl: async () => ({
@@ -6973,11 +6973,11 @@ describe("cmdSkillsRun preflight gate", () => {
         status: "fail",
         code: ERROR_CODES.OPERATOR_NOT_INSTALLED,
         summary: "Operator APK not installed.",
-        detail: "Package com.clawperator.operator.dev was not found on the device.",
+        detail: "Package com.androperator.operator.dev was not found on the device.",
         fix: {
           title: "Install Operator APK",
           platform: "any",
-          steps: [{ kind: "shell", value: "clawperator operator setup --apk /tmp/operator-debug.apk --device resolved-device-123 --operator-package com.clawperator.operator.dev" }],
+          steps: [{ kind: "shell", value: "androperator operator setup --apk /tmp/operator-debug.apk --device resolved-device-123 --operator-package com.androperator.operator.dev" }],
         },
       }),
       probeInteractiveStateImpl: async () => {
@@ -7004,7 +7004,7 @@ describe("cmdSkillsRun preflight gate", () => {
   });
 
   it("treats an awake but locked target as not interactive", async () => {
-    const result = await resolveInteractiveSkillTarget("com.clawperator.operator.dev", {
+    const result = await resolveInteractiveSkillTarget("com.androperator.operator.dev", {
       deviceId: "resolved-device-123",
       resolveDeviceImpl: async () => ({ deviceId: "resolved-device-123", serial: "resolved-device-123" }),
       checkApkPresenceImpl: async () => passingApkPresence,
@@ -7030,7 +7030,7 @@ describe("cmdSkillsRun preflight gate", () => {
   });
 
   it("normalizes thrown readiness preflight errors into a structured command error", async () => {
-    const result = await resolveInteractiveSkillTarget("com.clawperator.operator.dev", {
+    const result = await resolveInteractiveSkillTarget("com.androperator.operator.dev", {
       deviceId: "resolved-device-123",
       resolveDeviceImpl: async () => ({ deviceId: "resolved-device-123", serial: "resolved-device-123" }),
       checkApkPresenceImpl: async () => {
@@ -7050,7 +7050,7 @@ describe("cmdSkillsRun preflight gate", () => {
   });
 
   it("preserves non-interactive-preflight diagnostics from the shared readiness helper", async () => {
-    const result = await resolveInteractiveSkillTarget("com.clawperator.operator.dev", {
+    const result = await resolveInteractiveSkillTarget("com.androperator.operator.dev", {
       deviceId: "resolved-device-123",
       resolveDeviceImpl: async () => ({ deviceId: "resolved-device-123", serial: "resolved-device-123" }),
       checkApkPresenceImpl: async () => passingApkPresence,
@@ -7084,7 +7084,7 @@ describe("cmdSkillsRun preflight gate", () => {
   it("accepts a target when the shared readiness helper wakes the device", async () => {
     let readinessCalls = 0;
 
-    const result = await resolveInteractiveSkillTarget("com.clawperator.operator.dev", {
+    const result = await resolveInteractiveSkillTarget("com.androperator.operator.dev", {
       deviceId: "resolved-device-123",
       resolveDeviceImpl: async () => ({ deviceId: "resolved-device-123", serial: "resolved-device-123" }),
       checkApkPresenceImpl: async () => passingApkPresence,
@@ -7109,7 +7109,7 @@ describe("cmdSkillsRun preflight gate", () => {
   it("uses the configured adb path for wrapper preflight", async () => {
     const observedAdbPaths: string[] = [];
 
-    const result = await resolveInteractiveSkillTarget("com.clawperator.operator.dev", {
+    const result = await resolveInteractiveSkillTarget("com.androperator.operator.dev", {
       adbPath: "/custom/platform-tools/adb",
       deviceId: "resolved-device-123",
       resolveDeviceImpl: async (config) => {
@@ -7144,8 +7144,8 @@ describe("cmdSkillsRun preflight gate", () => {
 
   it("aborts invalid artifact skills before runSkill is called", async () => {
     let runCalls = 0;
-    const logDir = await mkdtemp(join(tmpdir(), "clawperator-pre-run-log-"));
-    const logger = createClawperatorLogger({ logDir, logLevel: "debug" });
+    const logDir = await mkdtemp(join(tmpdir(), "androperator-pre-run-log-"));
+    const logger = createAndroperatorLogger({ logDir, logLevel: "debug" });
     const fakeRunSkill = async () => {
       runCalls += 1;
       return {
@@ -7234,8 +7234,8 @@ describe("cmdSkillsRun preflight gate", () => {
 
   it("reuses ambient skillRunId for nested CLI skill runs", async () => {
     const parentSkillRunId = "skillrun_parent_cli_run";
-    const originalEnvValue = process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR];
-    process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR] = parentSkillRunId;
+    const originalEnvValue = process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
+    process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = parentSkillRunId;
     let observedSkillRunId: string | undefined;
     const fakeRunSkill: typeof runSkill = async (_skillId, _args, _registryPath, _timeoutMs, _env, callbacks) => {
       observedSkillRunId = callbacks?.skillRunId;
@@ -7269,21 +7269,21 @@ describe("cmdSkillsRun preflight gate", () => {
       assert.strictEqual(parsed.logs?.skillRunId, parentSkillRunId);
     } finally {
       if (originalEnvValue === undefined) {
-        delete process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR];
+        delete process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
       } else {
-        process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR] = originalEnvValue;
+        process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = originalEnvValue;
       }
     }
   });
 
   it("JSON mode omits duplicate top-level wrapper fields when skillResult is present", async () => {
-    const frameMarker = "[Clawperator-Skill-Result]";
+    const frameMarker = "[Androperator-Skill-Result]";
     const fakeRunSkill: typeof runSkill = async () => ({
       ok: true,
       status: "success",
       skillId: "com.test.framed-cli-json",
       skillRunId: "skillrun_test_json",
-      logPath: "/tmp/clawperator-test.log",
+      logPath: "/tmp/androperator-test.log",
       output: `progress\n${frameMarker}\n{}\n`,
       exitCode: 0,
       durationMs: 1,
@@ -7318,8 +7318,8 @@ describe("cmdSkillsRun preflight gate", () => {
     assert.strictEqual(parsed.output, undefined);
     assert.deepStrictEqual(parsed.logs, {
       skillRunId: "skillrun_test_json",
-      path: "/tmp/clawperator-test.log",
-      tailCommand: "tail -f '/tmp/clawperator-test.log'",
+      path: "/tmp/androperator-test.log",
+      tailCommand: "tail -f '/tmp/androperator-test.log'",
     });
   });
 
@@ -7559,7 +7559,7 @@ describe("cmdSkillsRun preflight gate", () => {
       ["--limit", "40"],
       undefined,
       undefined,
-      "com.clawperator.operator.dev",
+      "com.androperator.operator.dev",
       {
         format: "json",
         skipValidate: true,
@@ -7586,8 +7586,8 @@ describe("cmdSkillsRun preflight gate", () => {
 
     const parsed = JSON.parse(stdout) as { skillId?: string };
     assert.strictEqual(parsed.skillId, TEST_SKILL_VALID_ARTIFACT);
-    assert.strictEqual(observedEnv?.CLAWPERATOR_DEVICE_ID, undefined);
-    assert.strictEqual(observedEnv?.CLAWPERATOR_OPERATOR_PACKAGE, "com.clawperator.operator.dev");
+    assert.strictEqual(observedEnv?.ANDROPERATOR_DEVICE_ID, undefined);
+    assert.strictEqual(observedEnv?.ANDROPERATOR_OPERATOR_PACKAGE, "com.androperator.operator.dev");
   });
 
   it("passes forwarded skill args through unchanged in cmdSkillsRun", async () => {
@@ -7668,7 +7668,7 @@ describe("cmdSkillsRun preflight gate", () => {
     const child = await runNodeSnippet(script, {
       env: {
         ...process.env,
-        CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
       },
     });
     assert.strictEqual(child.code, 0, child.stderr);
@@ -7684,7 +7684,7 @@ describe("cmdSkillsRun preflight gate", () => {
   it("ignores pipe errors from live pretty-mode streaming", async () => {
     const fakeAdbDir = await createFakeAdb({
       installed: true,
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
     });
     const cmdModulePath = join(packageRoot, "dist", "cli", "commands", "skills.js");
     const script = `
@@ -7705,7 +7705,7 @@ describe("cmdSkillsRun preflight gate", () => {
         [],
         undefined,
         undefined,
-        ${JSON.stringify("com.clawperator.operator.dev")},
+        ${JSON.stringify("com.androperator.operator.dev")},
         {
           format: "pretty",
           skipValidate: true,
@@ -7732,7 +7732,7 @@ describe("cmdSkillsRun preflight gate", () => {
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
       },
     });
     assert.strictEqual(child.code, 0, child.stderr);
@@ -7782,62 +7782,62 @@ describe("cmdSkillsRun preflight gate", () => {
 
 
 describe("resolveSkillBin", () => {
-  const ORIGINAL_CLAWPERATOR_BIN = process.env[CLAWPERATOR_BIN_ENV_VAR];
+  const ORIGINAL_ANDROPERATOR_BIN = process.env[ANDROPERATOR_BIN_ENV_VAR];
 
   afterEach(() => {
-    if (ORIGINAL_CLAWPERATOR_BIN === undefined) {
-      delete process.env[CLAWPERATOR_BIN_ENV_VAR];
+    if (ORIGINAL_ANDROPERATOR_BIN === undefined) {
+      delete process.env[ANDROPERATOR_BIN_ENV_VAR];
     } else {
-      process.env[CLAWPERATOR_BIN_ENV_VAR] = ORIGINAL_CLAWPERATOR_BIN;
+      process.env[ANDROPERATOR_BIN_ENV_VAR] = ORIGINAL_ANDROPERATOR_BIN;
     }
   });
 
-  it("returns explicit CLAWPERATOR_BIN when set", () => {
-    process.env[CLAWPERATOR_BIN_ENV_VAR] = "/custom/path/to/clawperator";
+  it("returns explicit ANDROPERATOR_BIN when set", () => {
+    process.env[ANDROPERATOR_BIN_ENV_VAR] = "/custom/path/to/androperator";
     const result = resolveSkillBin();
-    assert.strictEqual(result.cmd, "/custom/path/to/clawperator");
+    assert.strictEqual(result.cmd, "/custom/path/to/androperator");
     assert.deepStrictEqual(result.args, []);
   });
 
-  it("prefers explicit CLAWPERATOR_BIN over sibling build", () => {
-    process.env[CLAWPERATOR_BIN_ENV_VAR] = "/explicit/clawperator";
+  it("prefers explicit ANDROPERATOR_BIN over sibling build", () => {
+    process.env[ANDROPERATOR_BIN_ENV_VAR] = "/explicit/androperator";
     const result = resolveSkillBin();
-    assert.strictEqual(result.cmd, "/explicit/clawperator");
+    assert.strictEqual(result.cmd, "/explicit/androperator");
     assert.deepStrictEqual(result.args, []);
   });
 
-  it("falls back to global clawperator when no env var and no sibling build", () => {
-    delete process.env[CLAWPERATOR_BIN_ENV_VAR];
+  it("falls back to global androperator when no env var and no sibling build", () => {
+    delete process.env[ANDROPERATOR_BIN_ENV_VAR];
     const result = resolveSkillBin();
     // When running in test environment, the sibling build may or may not exist
     // The function should return either the sibling build or global binary
-    assert.ok(result.cmd === "clawperator" || result.args.length === 1);
+    assert.ok(result.cmd === "androperator" || result.args.length === 1);
   });
 });
 
 describe("resolveSkillBinCommand", () => {
-  const ORIGINAL_CLAWPERATOR_BIN = process.env[CLAWPERATOR_BIN_ENV_VAR];
+  const ORIGINAL_ANDROPERATOR_BIN = process.env[ANDROPERATOR_BIN_ENV_VAR];
 
   afterEach(() => {
-    if (ORIGINAL_CLAWPERATOR_BIN === undefined) {
-      delete process.env[CLAWPERATOR_BIN_ENV_VAR];
+    if (ORIGINAL_ANDROPERATOR_BIN === undefined) {
+      delete process.env[ANDROPERATOR_BIN_ENV_VAR];
     } else {
-      process.env[CLAWPERATOR_BIN_ENV_VAR] = ORIGINAL_CLAWPERATOR_BIN;
+      process.env[ANDROPERATOR_BIN_ENV_VAR] = ORIGINAL_ANDROPERATOR_BIN;
     }
   });
 
-  it("returns explicit CLAWPERATOR_BIN when set", () => {
-    process.env[CLAWPERATOR_BIN_ENV_VAR] = "/custom/path/to/clawperator";
+  it("returns explicit ANDROPERATOR_BIN when set", () => {
+    process.env[ANDROPERATOR_BIN_ENV_VAR] = "/custom/path/to/androperator";
     const result = resolveSkillBinCommand();
-    assert.strictEqual(result, "/custom/path/to/clawperator");
+    assert.strictEqual(result, "/custom/path/to/androperator");
   });
 
   it("returns full command with args for sibling build", () => {
-    delete process.env[CLAWPERATOR_BIN_ENV_VAR];
+    delete process.env[ANDROPERATOR_BIN_ENV_VAR];
     const result = resolveSkillBinCommand();
     // When sibling build exists, should return "node "/path/to/cli/index.js""
-    // When it doesn't exist, should return "clawperator"
-    if (result !== "clawperator") {
+    // When it doesn't exist, should return "androperator"
+    if (result !== "androperator") {
       assert.ok(result.includes(" "), "Expected command with args for sibling build");
       assert.ok(result.startsWith(process.execPath), "Expected command to start with node executable");
     }
@@ -7847,70 +7847,70 @@ describe("resolveSkillBinCommand", () => {
     assert.strictEqual(
       formatSkillBinCommand({
         cmd: "C:\\Program Files\\nodejs\\node.exe",
-        args: ["C:\\clawperator apps\\node\\dist\\cli\\index.js"],
+        args: ["C:\\androperator apps\\node\\dist\\cli\\index.js"],
       }),
-      '"C:\\Program Files\\nodejs\\node.exe" "C:\\clawperator apps\\node\\dist\\cli\\index.js"'
+      '"C:\\Program Files\\nodejs\\node.exe" "C:\\androperator apps\\node\\dist\\cli\\index.js"'
     );
   });
 });
 
 describe("resolveOperatorPackage", () => {
-  const ORIGINAL_OPERATOR_PACKAGE = process.env[CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR];
+  const ORIGINAL_OPERATOR_PACKAGE = process.env[ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR];
 
   afterEach(() => {
     if (ORIGINAL_OPERATOR_PACKAGE === undefined) {
-      delete process.env[CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR];
+      delete process.env[ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR];
     } else {
-      process.env[CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR] = ORIGINAL_OPERATOR_PACKAGE;
+      process.env[ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR] = ORIGINAL_OPERATOR_PACKAGE;
     }
   });
 
-  it("returns CLAWPERATOR_OPERATOR_PACKAGE env var when set", () => {
-    process.env[CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR] = "com.clawperator.operator.dev";
+  it("returns ANDROPERATOR_OPERATOR_PACKAGE env var when set", () => {
+    process.env[ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR] = "com.androperator.operator.dev";
     const result = resolveOperatorPackage();
-    assert.strictEqual(result, "com.clawperator.operator.dev");
+    assert.strictEqual(result, "com.androperator.operator.dev");
   });
 
   it("returns default release package when env var is not set", () => {
-    delete process.env[CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR];
+    delete process.env[ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR];
     const result = resolveOperatorPackage();
     assert.strictEqual(result, DEFAULT_OPERATOR_PACKAGE);
   });
 
   it("returns default when env var is empty string", () => {
-    process.env[CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR] = "";
+    process.env[ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR] = "";
     const result = resolveOperatorPackage();
     assert.strictEqual(result, DEFAULT_OPERATOR_PACKAGE);
   });
 });
 
 describe("runSkill env vars", () => {
-  const ORIGINAL_BIN = process.env[CLAWPERATOR_BIN_ENV_VAR];
-  const ORIGINAL_OPERATOR_PACKAGE = process.env[CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR];
+  const ORIGINAL_BIN = process.env[ANDROPERATOR_BIN_ENV_VAR];
+  const ORIGINAL_OPERATOR_PACKAGE = process.env[ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR];
 
   afterEach(() => {
     if (ORIGINAL_BIN === undefined) {
-      delete process.env[CLAWPERATOR_BIN_ENV_VAR];
+      delete process.env[ANDROPERATOR_BIN_ENV_VAR];
     } else {
-      process.env[CLAWPERATOR_BIN_ENV_VAR] = ORIGINAL_BIN;
+      process.env[ANDROPERATOR_BIN_ENV_VAR] = ORIGINAL_BIN;
     }
     if (ORIGINAL_OPERATOR_PACKAGE === undefined) {
-      delete process.env[CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR];
+      delete process.env[ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR];
     } else {
-      process.env[CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR] = ORIGINAL_OPERATOR_PACKAGE;
+      process.env[ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR] = ORIGINAL_OPERATOR_PACKAGE;
     }
   });
 
-  it("injects CLAWPERATOR_BIN and CLAWPERATOR_OPERATOR_PACKAGE into skill env", async () => {
+  it("injects ANDROPERATOR_BIN and ANDROPERATOR_OPERATOR_PACKAGE into skill env", async () => {
     // Test that runSkill accepts and passes the env parameter correctly
     const customEnv = {
-      [CLAWPERATOR_BIN_ENV_VAR]: "/custom/bin/clawperator",
-      [CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR]: "com.test.package",
+      [ANDROPERATOR_BIN_ENV_VAR]: "/custom/bin/androperator",
+      [ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR]: "com.test.package",
     };
     const result = await runSkill("com.test.env-echo", [], undefined, undefined, customEnv);
     assert.ok(result.ok, `Expected runSkill to succeed: ${"message" in result ? result.message : ""}`);
-    assert.ok(result.output.includes("CLAWPERATOR_BIN:/custom/bin/clawperator"), `Expected CLAWPERATOR_BIN in output, got: ${result.output}`);
-    assert.ok(result.output.includes("CLAWPERATOR_OPERATOR_PACKAGE:com.test.package"), `Expected CLAWPERATOR_OPERATOR_PACKAGE in output, got: ${result.output}`);
+    assert.ok(result.output.includes("ANDROPERATOR_BIN:/custom/bin/androperator"), `Expected ANDROPERATOR_BIN in output, got: ${result.output}`);
+    assert.ok(result.output.includes("ANDROPERATOR_OPERATOR_PACKAGE:com.test.package"), `Expected ANDROPERATOR_OPERATOR_PACKAGE in output, got: ${result.output}`);
   });
 
   it("uses default values when env parameter is not provided", async () => {
@@ -7919,27 +7919,27 @@ describe("runSkill env vars", () => {
     const result = await runSkill("com.test.env-echo", []);
     assert.ok(result.ok, `Expected runSkill to succeed: ${"message" in result ? result.message : ""}`);
     // Without env parameter, these should be undefined (not injected by runSkill)
-    assert.ok(result.output.includes("CLAWPERATOR_BIN:undefined"), `Expected CLAWPERATOR_BIN to be undefined when not passed, got: ${result.output}`);
-    assert.ok(result.output.includes("CLAWPERATOR_OPERATOR_PACKAGE:undefined"), `Expected CLAWPERATOR_OPERATOR_PACKAGE to be undefined when not passed, got: ${result.output}`);
+    assert.ok(result.output.includes("ANDROPERATOR_BIN:undefined"), `Expected ANDROPERATOR_BIN to be undefined when not passed, got: ${result.output}`);
+    assert.ok(result.output.includes("ANDROPERATOR_OPERATOR_PACKAGE:undefined"), `Expected ANDROPERATOR_OPERATOR_PACKAGE to be undefined when not passed, got: ${result.output}`);
   });
 
-  it("clears inherited CLAWPERATOR_DEVICE_ID when env explicitly omits device selection", async () => {
-    const originalDeviceId = process.env.CLAWPERATOR_DEVICE_ID;
-    process.env.CLAWPERATOR_DEVICE_ID = "ambient-device-123";
+  it("clears inherited ANDROPERATOR_DEVICE_ID when env explicitly omits device selection", async () => {
+    const originalDeviceId = process.env.ANDROPERATOR_DEVICE_ID;
+    process.env.ANDROPERATOR_DEVICE_ID = "ambient-device-123";
 
     try {
       const result = await runSkill("com.test.env-echo", [], undefined, undefined, {
-        CLAWPERATOR_BIN: "/custom/bin/clawperator",
-        CLAWPERATOR_OPERATOR_PACKAGE: "com.test.package",
-        CLAWPERATOR_DEVICE_ID: undefined,
+        ANDROPERATOR_BIN: "/custom/bin/androperator",
+        ANDROPERATOR_OPERATOR_PACKAGE: "com.test.package",
+        ANDROPERATOR_DEVICE_ID: undefined,
       });
       assert.ok(result.ok, `Expected runSkill to succeed: ${"message" in result ? result.message : ""}`);
-      assert.ok(result.output.includes("CLAWPERATOR_DEVICE_ID:undefined"), `Expected inherited device id to be cleared, got: ${result.output}`);
+      assert.ok(result.output.includes("ANDROPERATOR_DEVICE_ID:undefined"), `Expected inherited device id to be cleared, got: ${result.output}`);
     } finally {
       if (originalDeviceId === undefined) {
-        delete process.env.CLAWPERATOR_DEVICE_ID;
+        delete process.env.ANDROPERATOR_DEVICE_ID;
       } else {
-        process.env.CLAWPERATOR_DEVICE_ID = originalDeviceId;
+        process.env.ANDROPERATOR_DEVICE_ID = originalDeviceId;
       }
     }
   });
@@ -7951,7 +7951,7 @@ describe("runSkill env vars", () => {
       undefined,
       undefined,
       {
-        CLAWPERATOR_DEVICE_ID: "device-123",
+        ANDROPERATOR_DEVICE_ID: "device-123",
         EXPECTED_DEVICE_ID: "device-123",
       }
     );
@@ -7963,44 +7963,44 @@ describe("runSkill env vars", () => {
 });
 
 describe("CLI skills run env vars", () => {
-  const ORIGINAL_BIN = process.env[CLAWPERATOR_BIN_ENV_VAR];
-  const ORIGINAL_OPERATOR_PACKAGE = process.env[CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR];
+  const ORIGINAL_BIN = process.env[ANDROPERATOR_BIN_ENV_VAR];
+  const ORIGINAL_OPERATOR_PACKAGE = process.env[ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR];
 
   afterEach(() => {
     if (ORIGINAL_BIN === undefined) {
-      delete process.env[CLAWPERATOR_BIN_ENV_VAR];
+      delete process.env[ANDROPERATOR_BIN_ENV_VAR];
     } else {
-      process.env[CLAWPERATOR_BIN_ENV_VAR] = ORIGINAL_BIN;
+      process.env[ANDROPERATOR_BIN_ENV_VAR] = ORIGINAL_BIN;
     }
     if (ORIGINAL_OPERATOR_PACKAGE === undefined) {
-      delete process.env[CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR];
+      delete process.env[ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR];
     } else {
-      process.env[CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR] = ORIGINAL_OPERATOR_PACKAGE;
+      process.env[ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR] = ORIGINAL_OPERATOR_PACKAGE;
     }
   });
 
-  it("CLI skills run passes CLAWPERATOR_OPERATOR_PACKAGE via --operator-package flag", async () => {
+  it("CLI skills run passes ANDROPERATOR_OPERATOR_PACKAGE via --operator-package flag", async () => {
     const { stdout, code } = await runCli([
-      "skills", "run", "com.test.env-echo", "--operator-package", "com.clawperator.operator.dev", "--output", "json",
+      "skills", "run", "com.test.env-echo", "--operator-package", "com.androperator.operator.dev", "--output", "json",
     ]);
     assert.strictEqual(code, 0, stdout);
     const parsed = JSON.parse(stdout) as { output?: string };
-    assert.ok(parsed.output?.includes("CLAWPERATOR_OPERATOR_PACKAGE:com.clawperator.operator.dev"), `Expected dev package in output, got: ${parsed.output}`);
+    assert.ok(parsed.output?.includes("ANDROPERATOR_OPERATOR_PACKAGE:com.androperator.operator.dev"), `Expected dev package in output, got: ${parsed.output}`);
   });
 
-  it("CLI skills run uses CLAWPERATOR_OPERATOR_PACKAGE env var when flag is not provided", async () => {
+  it("CLI skills run uses ANDROPERATOR_OPERATOR_PACKAGE env var when flag is not provided", async () => {
     const { stdout, code } = await runCli(
       ["skills", "run", "com.test.env-echo", "--output", "json"],
       {
         env: {
           ...process.env,
-          CLAWPERATOR_OPERATOR_PACKAGE: "com.custom.operator.package",
+          ANDROPERATOR_OPERATOR_PACKAGE: "com.custom.operator.package",
         },
       }
     );
     assert.strictEqual(code, 0, stdout);
     const parsed = JSON.parse(stdout) as { output?: string };
-    assert.ok(parsed.output?.includes("CLAWPERATOR_OPERATOR_PACKAGE:com.custom.operator.package"), `Expected custom package in output, got: ${parsed.output}`);
+    assert.ok(parsed.output?.includes("ANDROPERATOR_OPERATOR_PACKAGE:com.custom.operator.package"), `Expected custom package in output, got: ${parsed.output}`);
   });
 
   it("CLI skills run --operator-package flag takes precedence over env var", async () => {
@@ -8009,13 +8009,13 @@ describe("CLI skills run env vars", () => {
       {
         env: {
           ...process.env,
-          CLAWPERATOR_OPERATOR_PACKAGE: "env.package.value",
+          ANDROPERATOR_OPERATOR_PACKAGE: "env.package.value",
         },
       }
     );
     assert.strictEqual(code, 0, stdout);
     const parsed = JSON.parse(stdout) as { output?: string };
-    assert.ok(parsed.output?.includes("CLAWPERATOR_OPERATOR_PACKAGE:flag.package.value"), `Expected flag value in output, got: ${parsed.output}`);
+    assert.ok(parsed.output?.includes("ANDROPERATOR_OPERATOR_PACKAGE:flag.package.value"), `Expected flag value in output, got: ${parsed.output}`);
     assert.ok(!parsed.output?.includes("env.package.value"), `Should not contain env value, got: ${parsed.output}`);
   });
 });
@@ -8024,7 +8024,7 @@ describe("CLI skills run streaming", () => {
   it("prints the banner first and then streams incremental skill output in pretty mode", async () => {
     const fakeAdbDir = await createFakeAdb({
       installed: true,
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
     });
     const cliPath = join(packageRoot, "dist", "cli", "index.js");
     const stdoutChunks: string[] = [];
@@ -8036,7 +8036,7 @@ describe("CLI skills run streaming", () => {
       "run",
       TEST_FIXTURE_CHUNKED_OUTPUT,
       "--operator-package",
-      "com.clawperator.operator.dev",
+      "com.androperator.operator.dev",
       "--output",
       "pretty",
     ], {
@@ -8044,7 +8044,7 @@ describe("CLI skills run streaming", () => {
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
       },
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -8061,7 +8061,7 @@ describe("CLI skills run streaming", () => {
     });
 
     assert.strictEqual(code, 0, `stderr: ${stderrChunks.join("")}`);
-    assert.ok(stderrChunks[0]?.startsWith("[Clawperator]"), stderrChunks[0]);
+    assert.ok(stderrChunks[0]?.startsWith("[Androperator]"), stderrChunks[0]);
     assert.ok(
       stdoutChunks.some((chunk, index) =>
         chunk.includes("chunk1")
@@ -8075,7 +8075,7 @@ describe("CLI skills run streaming", () => {
   it("hides terminal SkillResult frames from pretty-mode stdout while keeping human output", async () => {
     const fakeAdbDir = await createFakeAdb({
       installed: true,
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
     });
     const cliPath = join(packageRoot, "dist", "cli", "index.js");
     let stdout = "";
@@ -8087,7 +8087,7 @@ describe("CLI skills run streaming", () => {
       "run",
       TEST_SKILL_RESULT,
       "--operator-package",
-      "com.clawperator.operator.dev",
+      "com.androperator.operator.dev",
       "--output",
       "pretty",
       "--",
@@ -8097,7 +8097,7 @@ describe("CLI skills run streaming", () => {
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        CLAWPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
         TEST_SKILL_MODE: "valid",
       },
       stdio: ["ignore", "pipe", "pipe"],
@@ -8115,11 +8115,11 @@ describe("CLI skills run streaming", () => {
     });
 
     assert.strictEqual(code, 0, `stderr: ${stderr}`);
-    assert.ok(stderr.startsWith("[Clawperator]"), stderr);
+    assert.ok(stderr.startsWith("[Androperator]"), stderr);
     assert.ok(stdout.includes("progress:before-frame"), stdout);
     assert.ok(stdout.indexOf("progress:before-frame") < stdout.indexOf("\"skillResult\""), stdout);
     assert.ok(stdout.includes("\"skillResult\""), stdout);
-    assert.ok(!stdout.includes("[Clawperator-Skill-Result]"), stdout);
+    assert.ok(!stdout.includes("[Androperator-Skill-Result]"), stdout);
   });
 });
 
@@ -8128,7 +8128,7 @@ describe("runSkill logging", () => {
   const originalProcessKill = process.kill;
 
   beforeEach(async () => {
-    tempRoot = await mkdtemp(join(tmpdir(), "clawperator-skill-log-"));
+    tempRoot = await mkdtemp(join(tmpdir(), "androperator-skill-log-"));
   });
 
   afterEach(async () => {
@@ -8137,7 +8137,7 @@ describe("runSkill logging", () => {
   });
 
   it("logs stdout and stderr chunks with skillId while preserving onOutput", async () => {
-    const logger = createClawperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "debug" });
+    const logger = createAndroperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "debug" });
     const chunks: Array<{ chunk: string; stream: "stdout" | "stderr" }> = [];
 
     const result = await runSkill(TEST_FIXTURE_MIXED_STREAMS, [], undefined, undefined, undefined, {
@@ -8188,16 +8188,16 @@ describe("runSkill logging", () => {
       skillId: "com.test",
       skillResult: null,
       skillRunId: "skillrun_test",
-      logPath: `/tmp/clawperator logs/owner's "daily".log`,
+      logPath: `/tmp/androperator logs/owner's "daily".log`,
     });
 
-    assert.strictEqual(logs.tailCommand, `tail -f '/tmp/clawperator logs/owner'"'"'s "daily".log'`);
+    assert.strictEqual(logs.tailCommand, `tail -f '/tmp/androperator logs/owner'"'"'s "daily".log'`);
   });
 
   it("omits logPath metadata when file logging disables on the first write", async () => {
     const blockedLogDir = join(tempRoot, "not-a-directory");
     await writeFile(blockedLogDir, "not a directory", "utf8");
-    const logger = createClawperatorLogger({ logDir: blockedLogDir, logLevel: "debug" });
+    const logger = createAndroperatorLogger({ logDir: blockedLogDir, logLevel: "debug" });
 
     const result = await runSkill(TEST_FIXTURE_MIXED_STREAMS, [], undefined, undefined, undefined, {
       logger,
@@ -8221,10 +8221,10 @@ describe("runSkill logging", () => {
       },
       status(): import("../../contracts/logging.js").LoggingStatus {
         return disabled ? { status: "write_failed", code: "LOGGING_WRITE_FAILED" }
-          : { status: "available", logPath: "/tmp/clawperator-later-disabled.log" };
+          : { status: "available", logPath: "/tmp/androperator-later-disabled.log" };
       },
       logPath() {
-        return disabled ? undefined : "/tmp/clawperator-later-disabled.log";
+        return disabled ? undefined : "/tmp/androperator-later-disabled.log";
       },
     };
 
@@ -8237,8 +8237,8 @@ describe("runSkill logging", () => {
   });
 
   it("logs start and complete without leaking sentinel args", async () => {
-    const sentinel = "CLAWPERATOR_TEST_SENTINEL_X9Z";
-    const logger = createClawperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "debug" });
+    const sentinel = "ANDROPERATOR_TEST_SENTINEL_X9Z";
+    const logger = createAndroperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "debug" });
 
     const result = await runSkill("com.test.env-echo", [sentinel], undefined, undefined, undefined, {
       logger,
@@ -8259,7 +8259,7 @@ describe("runSkill logging", () => {
   });
 
   it("logs start and timeout but not complete when the skill times out", async () => {
-    const logger = createClawperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
+    const logger = createAndroperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
 
     const result = await runSkill("com.test.partial-timeout", [], undefined, 150, undefined, {
       logger,
@@ -8279,7 +8279,7 @@ describe("runSkill logging", () => {
   });
 
   it("logs a failure event when the skill exits non-zero", async () => {
-    const logger = createClawperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
+    const logger = createAndroperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
 
     const result = await runSkill("com.test.fail", [], undefined, undefined, undefined, {
       logger,
@@ -8301,7 +8301,7 @@ describe("runSkill logging", () => {
   });
 
   it("logs when detached process-group signaling falls back to direct child termination", async () => {
-    const logger = createClawperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "debug" });
+    const logger = createAndroperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "debug" });
     process.kill = ((pid: number | bigint, signal?: number | NodeJS.Signals) => {
       if (typeof pid === "number" && pid < 0) {
         throw new Error("process-group kill unavailable");
@@ -8326,10 +8326,10 @@ describe("runSkill logging", () => {
 
   it("inherits skillRunId from process.env for nested CLI invocations", async () => {
     const parentSkillRunId = "skillrun_parent_test_inherited";
-    const originalEnvValue = process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR];
-    process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR] = parentSkillRunId;
+    const originalEnvValue = process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
+    process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = parentSkillRunId;
     try {
-      const logger = createClawperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "debug" });
+      const logger = createAndroperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "debug" });
       const result = await runSkill(TEST_FIXTURE_MIXED_STREAMS, [], undefined, undefined, undefined, { logger });
 
       assert.ok(result.ok, `Expected runSkill to succeed: ${"message" in result ? result.message : ""}`);
@@ -8345,18 +8345,18 @@ describe("runSkill logging", () => {
       assert.strictEqual(completeLine?.skillRunId, parentSkillRunId);
     } finally {
       if (originalEnvValue === undefined) {
-        delete process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR];
+        delete process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
       } else {
-        process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR] = originalEnvValue;
+        process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = originalEnvValue;
       }
     }
   });
 
   it("generates a fresh skillRunId when inherited environment value is blank", async () => {
-    const originalEnvValue = process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR];
-    process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR] = "   ";
+    const originalEnvValue = process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
+    process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = "   ";
     try {
-      const logger = createClawperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "debug" });
+      const logger = createAndroperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "debug" });
       const result = await runSkill(TEST_FIXTURE_MIXED_STREAMS, [], undefined, undefined, undefined, { logger });
 
       assert.ok(result.ok, `Expected runSkill to succeed: ${"message" in result ? result.message : ""}`);
@@ -8369,9 +8369,9 @@ describe("runSkill logging", () => {
       assert.strictEqual(logLocationLine?.skillRunId, result.skillRunId);
     } finally {
       if (originalEnvValue === undefined) {
-        delete process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR];
+        delete process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
       } else {
-        process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR] = originalEnvValue;
+        process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = originalEnvValue;
       }
     }
   });

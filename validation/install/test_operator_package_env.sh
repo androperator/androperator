@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 
 REPO_ROOT="$(pwd)"
-INSTALL_SCRIPT="$REPO_ROOT/sites/landing-clawperator/public/install.sh"
+INSTALL_SCRIPT="$REPO_ROOT/sites/androperator-public/install.sh"
 
 assert_equals() {
     local expected="$1"
@@ -17,7 +17,7 @@ assert_equals() {
 }
 
 read_install_defaults() {
-    CLAWPERATOR_OPERATOR_PACKAGE="$1" bash -c '
+    ANDROPERATOR_OPERATOR_PACKAGE="$1" bash -c '
         set -euo pipefail
         source "$1" >/dev/null 2>&1
         printf "%s\n%s\n" "$DEFAULT_OPERATOR_PACKAGE" "$APK_FILE_BASENAME"
@@ -38,8 +38,8 @@ assert_install_defaults() {
     assert_equals "$expected_basename" "$resolved_basename" "APK_FILE_BASENAME"
 }
 
-assert_install_defaults "" "com.clawperator.operator" "operator.apk"
-assert_install_defaults "   " "com.clawperator.operator" "operator.apk"
-assert_install_defaults "com.clawperator.operator.dev" "com.clawperator.operator.dev" "operator-debug.apk"
+assert_install_defaults "" "com.androperator.operator" "operator.apk"
+assert_install_defaults "   " "com.androperator.operator" "operator.apk"
+assert_install_defaults "com.androperator.operator.dev" "com.androperator.operator.dev" "operator-debug.apk"
 
 echo "=== install.sh operator package normalization passed ==="

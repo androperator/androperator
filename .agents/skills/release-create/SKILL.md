@@ -1,6 +1,6 @@
 ---
 name: release-create
-description: Create a Clawperator release from a committed version by validating and pushing its release tag.
+description: Create an Androperator release from a committed version by validating and pushing its release tag.
 ---
 
 Use this skill after the release code version has already been committed to the repository. Keep code-version bumping separate.

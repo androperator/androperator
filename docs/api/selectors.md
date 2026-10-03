@@ -111,7 +111,7 @@ cannot select an otherwise visible container during an action. Structural
 ancestors remain available when resolving within a selected container.
 
 ```bash
-clawperator query --matcher-json '{"resourceId":"row","ancestor":{"role":"list"},"descendant":{"textEquals":"Display"}}'
+androperator query --matcher-json '{"resourceId":"row","ancestor":{"role":"list"},"descendant":{"textEquals":"Display"}}'
 ```
 
 Queries report every match and its state, including empty-label controls. Existing
@@ -187,8 +187,8 @@ have the same observation-only meaning as `query_ui`. Strict failures retain
 preceding results and the failed step and stop subsequent actions in the execution.
 
 ```bash
-clawperator click --text "Open" --strict --container-json '{"resourceId":"row","descendant":{"textEquals":"Example"}}'
-clawperator read --role switch --all --strict --container-id "panel"
+androperator click --text "Open" --strict --container-json '{"resourceId":"row","descendant":{"textEquals":"Example"}}'
+androperator read --role switch --all --strict --container-id "panel"
 ```
 
 Use matching Node and Operator builds from v0.10 or later before adopting these
@@ -248,7 +248,7 @@ Container selectors follow the same pattern:
 The parser resolves shorthand flags into the same `NodeMatcher` object used by raw JSON. For example:
 
 ```bash
-clawperator wait --text "Done" --role button
+androperator wait --text "Done" --role button
 ```
 
 becomes the matcher:
@@ -335,13 +335,13 @@ Validation examples:
 Valid:
 
 ```bash
-clawperator read --text "Price" --container-id "android:id/list"
+androperator read --text "Price" --container-id "android:id/list"
 ```
 
 Invalid:
 
 ```bash
-clawperator read --text "Price" --selector '{"textEquals":"Price"}'
+androperator read --text "Price" --selector '{"textEquals":"Price"}'
 ```
 
 Why invalid:
@@ -384,7 +384,7 @@ Required-vs-optional behavior is decided by the command after parsing:
 Example:
 
 ```bash
-clawperator type "hello world" --role textfield
+androperator type "hello world" --role textfield
 ```
 
 ### `read-value`
@@ -442,7 +442,7 @@ If no container selector is provided:
 Example:
 
 ```bash
-clawperator scroll-until --text "About phone" --container-id "android:id/list"
+androperator scroll-until --text "About phone" --container-id "android:id/list"
 ```
 
 becomes:
@@ -489,23 +489,23 @@ Navigation target:
 ## CLI Examples
 
 ```bash
-clawperator click --text "Wi-Fi"
+androperator click --text "Wi-Fi"
 ```
 
 ```bash
-clawperator read --selector '{"resourceId":"android:id/title"}'
+androperator read --selector '{"resourceId":"android:id/title"}'
 ```
 
 ```bash
-clawperator wait --text-contains "Done" --timeout 10000
+androperator wait --text-contains "Done" --timeout 10000
 ```
 
 ```bash
-clawperator scroll-until --text "About phone" --container-id "android:id/list"
+androperator scroll-until --text "About phone" --container-id "android:id/list"
 ```
 
 ```bash
-clawperator read-value --label "Battery"
+androperator read-value --label "Battery"
 ```
 
 ## Related Pages

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# This integration test script validates that the Clawperator CLI
+# This integration test script validates that the Androperator CLI
 # accurately detects integration/host issues like missing adb, no devices,
 # or no APK installed. It uses both PATH poisoning and a fake adb script.
 
@@ -25,9 +25,9 @@ ln -s "$(which cp)" "$TMP_BIN/cp"
 
 # Run doctor from source with poisoned path
 export PATH="$TMP_BIN"
-export CLAWPERATOR_LOG_DIR="$TMP_DIR/logs"
-export CLAWPERATOR_SKILLS_REGISTRY="$TMP_DIR/skills-registry.json"
-node -e 'require("node:fs").writeFileSync(process.argv[1], JSON.stringify({schemaVersion:"1.0",skills:[]}))' "$CLAWPERATOR_SKILLS_REGISTRY"
+export ANDROPERATOR_LOG_DIR="$TMP_DIR/logs"
+export ANDROPERATOR_SKILLS_REGISTRY="$TMP_DIR/skills-registry.json"
+node -e 'require("node:fs").writeFileSync(process.argv[1], JSON.stringify({schemaVersion:"1.0",skills:[]}))' "$ANDROPERATOR_SKILLS_REGISTRY"
 
 set +e
 node "$REPO_ROOT/apps/node/dist/cli/index.js" doctor > "$TMP_DIR/out1.json"
@@ -168,7 +168,7 @@ else
   exit 1
 fi
 
-if grep -q "https://downloads.clawperator.com/operator/v${CLI_VERSION}/operator-v${CLI_VERSION}.apk" "$TMP_DIR/out5.json"; then
+if grep -q "https://downloads.androperator.com/operator/v${CLI_VERSION}/operator-v${CLI_VERSION}.apk" "$TMP_DIR/out5.json"; then
   echo "[Success] versioned APK remediation URL emitted."
 else
   echo "[Error] versioned APK remediation URL missing from output."
@@ -188,9 +188,9 @@ echo "=== Scenario 6: VARIANT_MISMATCH (Fake ADB) ==="
 export FAKE_ADB_SCENARIO="VARIANT_MISMATCH"
 for placement in before after; do
   if [ "$placement" = before ]; then
-    arguments=(--device test-device-1 --operator-package com.clawperator.operator doctor --check-only)
+    arguments=(--device test-device-1 --operator-package com.androperator.operator doctor --check-only)
   else
-    arguments=(doctor --check-only --device test-device-1 --operator-package com.clawperator.operator)
+    arguments=(doctor --check-only --device test-device-1 --operator-package com.androperator.operator)
   fi
   set +e
   node "$REPO_ROOT/apps/node/dist/cli/index.js" "${arguments[@]}" > "$TMP_DIR/mismatch-$placement.json"
@@ -205,7 +205,7 @@ for placement in before after; do
     const report = require(process.argv[1]);
     assert.equal(report.ok, false);
     assert.equal(report.criticalOk, false);
-    assert.equal(report.operatorPackage, "com.clawperator.operator");
+    assert.equal(report.operatorPackage, "com.androperator.operator");
     assert.ok(report.checks.some(c => c.code === "OPERATOR_VARIANT_MISMATCH" && c.status === "fail"));
     assert.ok(!report.checks.some(c => c.id === "readiness.handshake"));
     assert.ok(report.skippedChecks.some(c => c.id === "readiness.handshake" && c.blockedBy.includes("readiness.apk.presence")));

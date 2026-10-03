@@ -29,7 +29,7 @@ function buildRecordingAlreadyInProgressHint(options: {
   const deviceArg = options.deviceId ?? "<device_serial>";
   const operatorPackageArg = options.operatorPackage ?? "<package>";
   const sessionIdArg = options.sessionId ?? "<session_id>";
-  return `Run 'clawperator recording stop --session-id ${sessionIdArg} --device ${deviceArg} --operator-package ${operatorPackageArg}' before starting a new recording.`;
+  return `Run 'androperator recording stop --session-id ${sessionIdArg} --device ${deviceArg} --operator-package ${operatorPackageArg}' before starting a new recording.`;
 }
 
 function addRecordingAlreadyInProgressHintToEnvelope(
@@ -71,21 +71,21 @@ export async function cmdRecordStart(options: {
     const execution = buildStartRecordingExecution(options.sessionId);
     const result = await (deps.runExecutionImpl ?? runExecution)(execution, {
       deviceId: options.deviceId,
-      operatorPackage: options.operatorPackage ?? process.env.CLAWPERATOR_OPERATOR_PACKAGE,
+      operatorPackage: options.operatorPackage ?? process.env.ANDROPERATOR_OPERATOR_PACKAGE,
       warn: message => process.stderr.write(message),
       logger: options.logger,
     });
     if (result.ok) {
       addRecordingAlreadyInProgressHintToEnvelope(result.envelope, {
         deviceId: result.deviceId ?? options.deviceId,
-        operatorPackage: options.operatorPackage ?? process.env.CLAWPERATOR_OPERATOR_PACKAGE,
+        operatorPackage: options.operatorPackage ?? process.env.ANDROPERATOR_OPERATOR_PACKAGE,
       });
       return formatSuccess(
         {
           envelope: result.envelope,
           deviceId: result.deviceId,
           terminalSource: result.terminalSource,
-          isCanonicalTerminal: result.terminalSource === "clawperator_result",
+          isCanonicalTerminal: result.terminalSource === "androperator_result",
         },
         options
       );
@@ -107,7 +107,7 @@ export async function cmdRecordStop(options: {
     const execution = buildStopRecordingExecution(options.sessionId);
     const result = await runExecution(execution, {
       deviceId: options.deviceId,
-      operatorPackage: options.operatorPackage ?? process.env.CLAWPERATOR_OPERATOR_PACKAGE,
+      operatorPackage: options.operatorPackage ?? process.env.ANDROPERATOR_OPERATOR_PACKAGE,
       warn: message => process.stderr.write(message),
       logger: options.logger,
     });
@@ -117,7 +117,7 @@ export async function cmdRecordStop(options: {
           envelope: result.envelope,
           deviceId: result.deviceId,
           terminalSource: result.terminalSource,
-          isCanonicalTerminal: result.terminalSource === "clawperator_result",
+          isCanonicalTerminal: result.terminalSource === "androperator_result",
         },
         options
       );
@@ -140,7 +140,7 @@ export async function cmdRecordPull(options: {
     const config = getDefaultRuntimeConfig({
       logger: options.logger,
       deviceId: options.deviceId,
-      operatorPackage: options.operatorPackage ?? process.env.CLAWPERATOR_OPERATOR_PACKAGE,
+      operatorPackage: options.operatorPackage ?? process.env.ANDROPERATOR_OPERATOR_PACKAGE,
     });
 
     const { localPath, sessionId } = await pullRecording(config, {

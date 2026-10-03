@@ -36,11 +36,11 @@ This task should not begin until the recording functionality is complete enough 
 
 Primary findings:
 
-- [findings.md](~/src/clawperator/tasks/android/system-gesture-detection/findings.md)
+- [findings.md](~/src/androperator/tasks/android/system-gesture-detection/findings.md)
 
 Supporting artifacts:
 
-- raw recordings stored outside the repo under `~/src/clawperator-dumps/recordings/`
+- raw recordings stored outside the repo under `~/src/androperator-dumps/recordings/`
 
 Representative current surfaces:
 

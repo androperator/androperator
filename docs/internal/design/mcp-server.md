@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Capture the durable design decisions behind the first-party Clawperator MCP server so future contributors can extend it without reintroducing stdout corruption, transport drift, or MCP-only contract forks.
+Capture the durable design decisions behind the first-party Androperator MCP server so future contributors can extend it without reintroducing stdout corruption, transport drift, or MCP-only contract forks.
 
 ## Sources
 
@@ -109,4 +109,4 @@ Durable caveats for future contributors:
 - the smoke flow opens Android Settings because it is stable across physical devices and emulators
 - the script discovers visible text from the live snapshot before issuing the selector-driven read; this is more robust than hardcoding one OEM-specific label
 - when multiple devices are connected, explicit `deviceId` selection matters even in MCP flows
-- use `com.clawperator.operator.dev` for branch-local verification unless the task is explicitly validating the release APK
+- use `com.androperator.operator.dev` for branch-local verification unless the task is explicitly validating the release APK

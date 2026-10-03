@@ -9,8 +9,8 @@ describe("buildServeSkillRunOptions", () => {
 
     assert.deepStrictEqual(result.scriptArgs, ["40", "--dry-run"]);
     assert.deepStrictEqual(result.skillEnv, {
-      CLAWPERATOR_OPERATOR_PACKAGE: "com.test.operator",
-      CLAWPERATOR_DEVICE_ID: "device-123",
+      ANDROPERATOR_OPERATOR_PACKAGE: "com.test.operator",
+      ANDROPERATOR_DEVICE_ID: "device-123",
     });
   });
 
@@ -19,8 +19,8 @@ describe("buildServeSkillRunOptions", () => {
 
     assert.deepStrictEqual(result.scriptArgs, ["40"]);
     assert.deepStrictEqual(result.skillEnv, {
-      CLAWPERATOR_DEVICE_ID: undefined,
-      CLAWPERATOR_OPERATOR_PACKAGE: "com.test.operator",
+      ANDROPERATOR_DEVICE_ID: undefined,
+      ANDROPERATOR_OPERATOR_PACKAGE: "com.test.operator",
     });
   });
 
@@ -29,8 +29,8 @@ describe("buildServeSkillRunOptions", () => {
 
     assert.deepStrictEqual(result.scriptArgs, ["40"]);
     assert.deepStrictEqual(result.skillEnv, {
-      CLAWPERATOR_OPERATOR_PACKAGE: "com.test.operator",
-      CLAWPERATOR_DEVICE_ID: "",
+      ANDROPERATOR_OPERATOR_PACKAGE: "com.test.operator",
+      ANDROPERATOR_DEVICE_ID: "",
     });
   });
 });

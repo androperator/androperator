@@ -8,7 +8,7 @@ export function buildOnScreenLogExecution(
   return {
     commandId: `on-screen-log-${operation}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     taskId: `cli-on-screen-log-${operation}`,
-    source: "clawperator-cli",
+    source: "androperator-cli",
     timeoutMs,
     expectedFormat: "android-ui-automator",
     actions: [{

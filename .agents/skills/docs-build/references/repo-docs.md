@@ -1,4 +1,4 @@
-# Clawperator docs build reference
+# Androperator docs build reference
 
 ## Canonical sources
 
@@ -15,9 +15,7 @@
   - Source from `docs/`
 - CLI/API reference, commands, flags, contracts, result shapes:
   - Source from `apps/node/`
-- Skills repo (`../clawperator-skills/docs/`):
-  - Contains only pointer docs linking to `https://docs.clawperator.com/skills/`
-  - Canonical skills documentation is authored in `docs/skills/` in this repo
+- Local skill workspaces require no companion repository; canonical skill docs live in `docs/skills/`.
 
 ## Public docs build contract
 

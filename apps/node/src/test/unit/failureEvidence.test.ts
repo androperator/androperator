@@ -8,7 +8,7 @@ import { formatRunExecutionResultForCli } from "../../cli/output.js";
 import { parseDaemonRunExecutionResult } from "../../cli/daemonProxy.js";
 import { buildExecutionToolFailureResult, buildExecutionSuccessPayload } from "../../mcp/tools/common.js";
 import { buildMcpSuccessResult } from "../../mcp/errors.js";
-import { clawperatorEvents, CLAWPERATOR_EVENT_TYPES } from "../../domain/observe/events.js";
+import { androperatorEvents, ANDROPERATOR_EVENT_TYPES } from "../../domain/observe/events.js";
 import { FakeProcessRunner } from "./fakes/FakeProcessRunner.js";
 import { executionRunner } from "./fakes/executionResultRunner.js";
 import type { Execution } from "../../contracts/execution.js";
@@ -48,7 +48,7 @@ it("retained readiness timeout survives cached readiness, CLI, daemon, MCP and e
   process.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" });
   let event: unknown;
   const listener = (value: { result: unknown }) => { event = value.result; };
-  clawperatorEvents.once(CLAWPERATOR_EVENT_TYPES.EXECUTION, listener);
+  androperatorEvents.once(ANDROPERATOR_EVENT_TYPES.EXECUTION, listener);
   const result = await runExecution({ ...execution, actions: [{ id: "close", type: "close_app", params: { applicationId: "com.example.app" } }, ...execution.actions] }, {
     ...options, runner: process,
     probeInteractiveStateFn: config => probeInteractiveState(config, async (_config, probe, broadcast) => {
@@ -80,7 +80,7 @@ for (const acknowledged of [true, false]) it(`retains successful readiness probe
     ensureInteractiveAutomationReadyFn: config => ensureInteractiveAutomationReady(config, {
       probeInteractiveStateFn: cfg => probeInteractiveState(cfg, async (_config, probe, broadcast) => {
         await broadcast!(() => {});
-        return { ok: true, terminalSource: "clawperator_result", envelope: { commandId: probe.commandId, taskId: "doctor-handshake", status: "success", error: null, stepResults: [{ id: "h1", actionType: "doctor_ping", success: true, data: { screen_on: "true", device_locked: "false", user_unlocked: "true" } }] } };
+        return { ok: true, terminalSource: "androperator_result", envelope: { commandId: probe.commandId, taskId: "doctor-handshake", status: "success", error: null, stepResults: [{ id: "h1", actionType: "doctor_ping", success: true, data: { screen_on: "true", device_locked: "false", user_unlocked: "true" } }] } };
       }),
     }),
   });
@@ -146,7 +146,7 @@ it("snapshot presentation errors preserve correlation through the CLI", async ()
   const { cmdObserveSnapshot } = await import("../../cli/commands/observe.js");
   const output = JSON.parse(await cmdObserveSnapshot({ format: "json", compact: true,
     tryDaemonExecutionFn: async () => null,
-    runExecutionFn: async () => ({ ok: true, deviceId: "test-device", terminalSource: "clawperator_result", envelope: {
+    runExecutionFn: async () => ({ ok: true, deviceId: "test-device", terminalSource: "androperator_result", envelope: {
       commandId: "presentation-command", taskId: "presentation-task", status: "success", stepResults: [
         { id: "snap", actionType: "snapshot", success: true, data: { text: "<hierarchy><invalid/></hierarchy>" } },
       ],
@@ -167,7 +167,7 @@ it("a correlated terminal result proves dispatch even before broadcast acknowled
   process.spawn = (() => logcat) as FakeProcessRunner["spawn"];
   const envelope: ResultEnvelope = { commandId: execution.commandId, taskId: execution.taskId, status: "success", error: null, stepResults: [{ id: "snap", actionType: "snapshot_ui", success: true, data: {} }] };
   process.queueResult({ code: 0, stdout: "", stderr: "" }, async () => {
-    logcat.stdout.emit("data", Buffer.from(`D/Result: [Clawperator-Result] ${JSON.stringify(envelope)}\n`));
+    logcat.stdout.emit("data", Buffer.from(`D/Result: [Androperator-Result] ${JSON.stringify(envelope)}\n`));
     await new Promise(resolve => setTimeout(resolve, 30));
   });
   const result = await runExecution(execution, { ...options, runner: process, ensureInteractiveAutomationReadyFn: ready });
@@ -192,7 +192,7 @@ it("late broadcast acknowledgement cannot rewind screenshot post-processing evid
     stepResults: [{ id: "screen", actionType: "take_screenshot", success: true, data: {} }],
   };
   process.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" }, async () => {
-    logcat.stdout.emit("data", Buffer.from(`D/Result: [Clawperator-Result] ${JSON.stringify(envelope)}\n`));
+    logcat.stdout.emit("data", Buffer.from(`D/Result: [Androperator-Result] ${JSON.stringify(envelope)}\n`));
     await captureStarted;
   });
   const logger: import("../../adapters/logger.js").Logger = {

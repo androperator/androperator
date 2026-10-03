@@ -92,7 +92,7 @@ def render_llms_full(
     nav_entries: list[tuple[str, list[tuple[str, str]]]],
 ) -> str:
     lines: list[str] = [
-        "# Clawperator Documentation",
+        "# Androperator Documentation",
         "",
         "Compiled from the MkDocs navigation tree and assembled docs staging directory.",
         "",
@@ -122,7 +122,7 @@ def main() -> int:
     output_paths = [
         docs_dir / "site" / "llms-full.txt",
         docs_dir / "static" / "llms-full.txt",
-        root / "sites" / "landing-clawperator" / "public" / "llms-full.txt",
+        root / "sites" / "androperator-public" / "llms-full.txt",
     ]
 
     nav_entries = load_nav_entries(mkdocs_path)

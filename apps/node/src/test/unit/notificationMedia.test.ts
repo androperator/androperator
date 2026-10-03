@@ -67,7 +67,7 @@ it("dispatches each service read/control and mixed lists without interactive rea
       runner.queueResult({ code: 0, stdout: "0", stderr: "" });
       runner.queueResult({ code: 0, stdout: "RUNNING_UNLOCKED", stderr: "" });
       runner.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" }, () => {
-        setTimeout(() => { stream.stdout.emit("data", Buffer.from(`[Clawperator-Result] ${JSON.stringify(envelope)}\n`)); }, 5);
+        setTimeout(() => { stream.stdout.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify(envelope)}\n`)); }, 5);
       });
       if (cache !== "cold") {
         const now = Date.now();

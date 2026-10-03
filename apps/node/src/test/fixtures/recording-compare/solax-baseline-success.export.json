@@ -4,7 +4,7 @@
     "sessionId": "solax-set-discharge-to-limit-20260410-135211",
     "schemaVersion": 1,
     "startedAt": 1775793131923,
-    "operatorPackage": "com.clawperator.operator.dev"
+    "operatorPackage": "com.androperator.operator.dev"
   },
   "snapshotMode": "omit",
   "events": [

@@ -2,8 +2,8 @@
 
 ## Before You Start
 
-This page assumes a working Clawperator installation: CLI installed, device
-connected, Operator APK installed, and `clawperator doctor` returning
+This page assumes a working Androperator installation: CLI installed, device
+connected, Operator APK installed, and `androperator doctor` returning
 `"criticalOk": true`.
 
 If you have not reached that state yet, complete [Setup](setup.md) first.
@@ -17,7 +17,7 @@ execution.
 
 ## The Automation Loop
 
-Clawperator is a deterministic actuator. The agent reasons and decides; Clawperator
+Androperator is a deterministic actuator. The agent reasons and decides; Androperator
 executes and returns structured data. Every automation follows the same three-step
 loop:
 
@@ -33,7 +33,7 @@ Repeat until the task is done.
 
 **Targeting rule:** do not guess selectors. If the next action needs a target,
 take a fresh `snapshot`, derive the selector from the current hierarchy, and
-then act. A guessed label failing is not a Clawperator bug - it means the
+then act. A guessed label failing is not an Androperator bug - it means the
 target was not proven from the current screen state.
 
 ---
@@ -44,7 +44,7 @@ The canonical observation action is `snapshot`. Run it with the built-in
 `snapshot` command:
 
 ```bash
-clawperator snapshot --device <device_serial>
+androperator snapshot --device <device_serial>
 ```
 
 On success, the result envelope contains the XML hierarchy in
@@ -120,7 +120,7 @@ For example, in a Settings hierarchy the "Connections" row appears as:
 </node>
 ```
 
-To tap this row, target the child title text. Clawperator will resolve the
+To tap this row, target the child title text. Androperator will resolve the
 nearest `clickable` ancestor if the matched node is not itself clickable.
 
 Selector to use:
@@ -138,8 +138,8 @@ See [Selectors](api/selectors.md) for the full `NodeMatcher` contract.
 
 ## Step 3: Act
 
-Send an execution payload via `clawperator exec`. The payload lists one
-or more actions in sequence. Clawperator dispatches them in order and returns a
+Send an execution payload via `androperator exec`. The payload lists one
+or more actions in sequence. Androperator dispatches them in order and returns a
 single result envelope.
 
 Example - click the "Connections" row, wait for navigation, then take a snapshot:
@@ -182,7 +182,7 @@ Example - click the "Connections" row, wait for navigation, then take a snapshot
 Save this as `payload.json` and run:
 
 ```bash
-clawperator exec --device <device_serial> payload.json
+androperator exec --device <device_serial> payload.json
 ```
 
 Success conditions:
@@ -204,7 +204,7 @@ A complete agent sequence for reading the Android version:
 ### 1. Pre-flight
 
 ```bash
-clawperator doctor --device <device_serial>
+androperator doctor --device <device_serial>
 # Require: "criticalOk": true
 ```
 

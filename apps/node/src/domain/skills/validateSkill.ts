@@ -179,7 +179,7 @@ function readSkillTypeFrontmatter(rawSkillFile: string): string | undefined {
     return undefined;
   }
 
-  const match = frontmatter.match(/^clawperator-skill-type:\s*([^\r\n#]+?)\s*(?:#.*)?$/m);
+  const match = frontmatter.match(/^androperator-skill-type:\s*([^\r\n#]+?)\s*(?:#.*)?$/m);
   if (!match) {
     return undefined;
   }
@@ -198,11 +198,11 @@ function validateSkillTypeFrontmatter(
     return {
       ok: false,
       code: SKILL_VALIDATION_FAILED,
-      message: `Skill ${skill.id} is missing required clawperator-skill-type frontmatter`,
+      message: `Skill ${skill.id} is missing required androperator-skill-type frontmatter`,
       details: {
         path: skillFilePath,
-        missingFields: ["clawperator-skill-type"],
-        reason: "SKILL.md frontmatter must declare clawperator-skill-type: replay or orchestrated.",
+        missingFields: ["androperator-skill-type"],
+        reason: "SKILL.md frontmatter must declare androperator-skill-type: replay or orchestrated.",
       },
     };
   }
@@ -219,10 +219,10 @@ function validateSkillTypeFrontmatter(
   return {
     ok: false,
     code: SKILL_VALIDATION_FAILED,
-    message: `Skill ${skill.id} has an unsupported clawperator-skill-type frontmatter value`,
+    message: `Skill ${skill.id} has an unsupported androperator-skill-type frontmatter value`,
     details: {
       path: skillFilePath,
-      reason: `Expected clawperator-skill-type to be replay or orchestrated; found ${JSON.stringify(skillType)}.`,
+      reason: `Expected androperator-skill-type to be replay or orchestrated; found ${JSON.stringify(skillType)}.`,
     },
   };
 }

@@ -24,14 +24,14 @@ function assertSafeAppId(id) {
 
 function parseArgs(argv) {
   const options = {
-    device: process.env.CLAWPERATOR_MEASURE_DEVICE,
-    outDir: process.env.CLAWPERATOR_MEASURE_OUT_DIR,
-    cli: process.env.CLAWPERATOR_MEASURE_CLI ?? "apps/node/dist/cli/index.js",
-    operatorPackage: process.env.CLAWPERATOR_MEASURE_OPERATOR_PACKAGE ?? "com.clawperator.operator",
-    warmups: Number(process.env.CLAWPERATOR_MEASURE_WARMUPS ?? 3),
-    measured: Number(process.env.CLAWPERATOR_MEASURE_CALLS ?? 10),
+    device: process.env.ANDROPERATOR_MEASURE_DEVICE,
+    outDir: process.env.ANDROPERATOR_MEASURE_OUT_DIR,
+    cli: process.env.ANDROPERATOR_MEASURE_CLI ?? "apps/node/dist/cli/index.js",
+    operatorPackage: process.env.ANDROPERATOR_MEASURE_OPERATOR_PACKAGE ?? "com.androperator.operator",
+    warmups: Number(process.env.ANDROPERATOR_MEASURE_WARMUPS ?? 3),
+    measured: Number(process.env.ANDROPERATOR_MEASURE_CALLS ?? 10),
     apps: defaultApps,
-    keepRawLogs: process.env.CLAWPERATOR_MEASURE_KEEP_RAW_LOGS === "1",
+    keepRawLogs: process.env.ANDROPERATOR_MEASURE_KEEP_RAW_LOGS === "1",
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -56,10 +56,10 @@ function parseArgs(argv) {
       console.log(`Usage: node .agents/skills/test-io-speeds/scripts/measure-snapshot-latency.mjs [options]
 
 Options:
-  --device <serial>              adb device serial, required unless CLAWPERATOR_MEASURE_DEVICE is set
-  --operator-package <package>   Operator package, default com.clawperator.operator
+  --device <serial>              adb device serial, required unless ANDROPERATOR_MEASURE_DEVICE is set
+  --operator-package <package>   Operator package, default com.androperator.operator
   --cli <path>                   branch-local CLI path, default apps/node/dist/cli/index.js
-  --out-dir <path>               output directory, default ~/.clawperator/timings/YYYY-MM-DD/<device>
+  --out-dir <path>               output directory, default ~/.androperator/timings/YYYY-MM-DD/<device>
   --warmups <n>                  warmup calls per app, default 3
   --measured <n>                 measured calls per app, default 10
   --apps-file <path>             JSON array of app specs
@@ -78,7 +78,7 @@ Optional app spec fields:
   }
 
   if (typeof options.device !== "string" || options.device.trim() === "") {
-    throw new Error("--device <serial> is required unless CLAWPERATOR_MEASURE_DEVICE is set");
+    throw new Error("--device <serial> is required unless ANDROPERATOR_MEASURE_DEVICE is set");
   }
   if (!Number.isInteger(options.warmups) || options.warmups < 0) throw new Error("--warmups must be a non-negative integer");
   if (!Number.isInteger(options.measured) || options.measured < 1) throw new Error("--measured must be a positive integer");
@@ -97,7 +97,7 @@ Optional app spec fields:
     }
   }
   const outDir = options.outDir
-    ?? join(homedir(), ".clawperator", "timings", new Date().toISOString().slice(0, 10), sanitizePathSegment(options.device));
+    ?? join(homedir(), ".androperator", "timings", new Date().toISOString().slice(0, 10), sanitizePathSegment(options.device));
   return {
     ...options,
     outDir: isAbsolute(outDir) ? outDir : join(repo, outDir),
@@ -134,8 +134,8 @@ function runAppLifecycleCommand(command, app, logDir) {
     "--format", "json",
   ], {
     env: {
-      CLAWPERATOR_LOG_DIR: logDir,
-      CLAWPERATOR_LOG_LEVEL: "debug",
+      ANDROPERATOR_LOG_DIR: logDir,
+      ANDROPERATOR_LOG_LEVEL: "debug",
     },
   });
   const parsed = JSON.parse(stdout);
@@ -161,8 +161,8 @@ function openApp(app, logDir) {
     "--format", "json",
   ], {
     env: {
-      CLAWPERATOR_LOG_DIR: logDir,
-      CLAWPERATOR_LOG_LEVEL: "debug",
+      ANDROPERATOR_LOG_DIR: logDir,
+      ANDROPERATOR_LOG_LEVEL: "debug",
     },
   });
   const parsed = JSON.parse(stdout);
@@ -199,8 +199,8 @@ function snapshot(logDir, app) {
         "--format", "json",
       ], {
         env: {
-          CLAWPERATOR_LOG_DIR: logDir,
-          CLAWPERATOR_LOG_LEVEL: "debug",
+          ANDROPERATOR_LOG_DIR: logDir,
+          ANDROPERATOR_LOG_LEVEL: "debug",
         },
       });
       wallMs = performance.now() - start;
@@ -302,7 +302,7 @@ function parseLogcatTimeMs(line) {
 function parseHostLogs(logDir, commandId) {
   const events = {};
   if (!existsSync(logDir)) return events;
-  const files = readdirSync(logDir).filter(file => /^clawperator-\d{4}-\d{2}-\d{2}\.log$/.test(file));
+  const files = readdirSync(logDir).filter(file => /^androperator-\d{4}-\d{2}-\d{2}\.log$/.test(file));
   for (const file of files) {
     for (const line of readFileSync(join(logDir, file), "utf8").trim().split("\n")) {
       if (!line.includes(commandId)) continue;
@@ -329,12 +329,12 @@ function parseLogcat(logcat, commandId) {
   const stageLine = lines.find(line => line.includes("stage-success") && line.includes("id=logUiTree"));
   const stageElapsedMatch = stageLine?.match(/elapsed_ms=([0-9]+)/);
   return {
-    androidStartMs: findTime("[Clawperator-Command] start"),
+    androidStartMs: findTime("[Androperator-Command] start"),
     stageStartMs: findTime("stage-start"),
     hierarchyMarkerMs: findTime("[TaskScope] UI Hierarchy"),
     timingLogMs: parseLogcatTimeMs(timingLine ?? ""),
     stageSuccessMs: parseLogcatTimeMs(stageLine ?? ""),
-    androidEnvelopeMs: findTime("[Clawperator-Result]"),
+    androidEnvelopeMs: findTime("[Androperator-Result]"),
     stageElapsedMs: stageElapsedMatch ? Number(stageElapsedMatch[1]) : undefined,
     ...timing,
   };
@@ -358,13 +358,13 @@ for (const app of apps) {
   mkdirSync(logDir, { recursive: true });
 
   run("node", [cli, "daemon", "stop", "--device", device, "--operator-package", operatorPackage, "--format", "json"], {
-    env: { CLAWPERATOR_LOG_DIR: logDir, CLAWPERATOR_LOG_LEVEL: "debug" },
+    env: { ANDROPERATOR_LOG_DIR: logDir, ANDROPERATOR_LOG_LEVEL: "debug" },
   });
   run("node", [cli, "daemon", "start", "--device", device, "--operator-package", operatorPackage, "--format", "json"], {
-    env: { CLAWPERATOR_LOG_DIR: logDir, CLAWPERATOR_LOG_LEVEL: "debug" },
+    env: { ANDROPERATOR_LOG_DIR: logDir, ANDROPERATOR_LOG_LEVEL: "debug" },
   });
   const daemonStatus = JSON.parse(run("node", [cli, "daemon", "status", "--device", device, "--operator-package", operatorPackage, "--format", "json"], {
-    env: { CLAWPERATOR_LOG_DIR: logDir, CLAWPERATOR_LOG_LEVEL: "debug" },
+    env: { ANDROPERATOR_LOG_DIR: logDir, ANDROPERATOR_LOG_LEVEL: "debug" },
   }));
   const socketPath = daemonStatus.daemon?.socketPath;
   if (typeof socketPath !== "string" || socketPath.length === 0) {

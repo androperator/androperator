@@ -2,7 +2,7 @@
 
 ## Scope
 
-Clawperator currently ships one product version across:
+Androperator currently ships one product version across:
 
 - the Node API / CLI package in `apps/node`
 - the Android operator APK in `apps/android/app`
@@ -41,22 +41,27 @@ For every tagged release, GitHub Actions should:
 
 ### Android signing
 
+The workflow maps the existing signing secrets to `ANDROPERATOR_ANDROID_*`
+environment variables, retaining the same signing key:
+
 - `CLAWPERATOR_ANDROID_KEYSTORE_BASE64`
 - `CLAWPERATOR_ANDROID_KEYSTORE_PASSWORD`
 - `CLAWPERATOR_ANDROID_KEY_ALIAS`
 - `CLAWPERATOR_ANDROID_KEY_PASSWORD`
 
+These stored secret names are a deployment exception until credentials are renamed.
+
 ### Cloudflare R2
 
-- `CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID`
-- `CLAWPERATOR_CLOUDFLARE_ACCESS_KEY_ID`
-- `CLAWPERATOR_CLOUDFLARE_SECRET_ACCESS_KEY`
-- `CLAWPERATOR_CLOUDFLARE_R2_BUCKET`
-- `CLAWPERATOR_CLOUDFLARE_DOWNLOADS_BASE_URL`
+- `ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID`
+- `ANDROPERATOR_CLOUDFLARE_ACCESS_KEY_ID`
+- `ANDROPERATOR_CLOUDFLARE_SECRET_ACCESS_KEY`
+- `ANDROPERATOR_CLOUDFLARE_R2_BUCKET`
+- `ANDROPERATOR_CLOUDFLARE_DOWNLOADS_BASE_URL`
 
 ### npm publishing
 
-- npm Trusted Publisher configured for `clawperator/clawperator`
+- npm Trusted Publisher configured for `androperator/androperator`
 - workflow filename on npm must exactly match `publish-npm.yml`
 
 ## Versioning Rules
@@ -70,15 +75,15 @@ For every tagged release, GitHub Actions should:
 
 Expected public structure:
 
-- `https://downloads.clawperator.com/operator/latest.json`
-- `https://downloads.clawperator.com/operator/vX.Y.Z/operator-vX.Y.Z.apk`
-- `https://downloads.clawperator.com/operator/vX.Y.Z/operator-vX.Y.Z.apk.sha256`
+- `https://downloads.androperator.com/operator/latest.json`
+- `https://downloads.androperator.com/operator/vX.Y.Z/operator-vX.Y.Z.apk`
+- `https://downloads.androperator.com/operator/vX.Y.Z/operator-vX.Y.Z.apk.sha256`
 
 Expected stable UX:
 
-- `https://clawperator.com/operator.apk` redirects to the current stable immutable APK
-- `https://clawperator.com/install.sh` bootstraps host prerequisites, installs the CLI, and delegates post-bootstrap behavior to `clawperator install`
-- `clawperator install` uses release metadata from `latest.json` when operator remediation needs the current stable APK
+- `https://androperator.com/operator.apk` redirects to the current stable immutable APK
+- `https://androperator.com/install.sh` bootstraps host prerequisites, installs the CLI, and delegates post-bootstrap behavior to `androperator install`
+- `androperator install` uses release metadata from `latest.json` when operator remediation needs the current stable APK
 - Public install guidance should not point users at GitHub Releases for the primary install path
 
 ## Release Checklist
@@ -161,13 +166,13 @@ git push origin v0.1.0
 
 After the workflows finish, verify:
 
-- GitHub Release exists at `https://github.com/clawperator/clawperator/releases`
-- npm package version exists at `https://www.npmjs.com/package/clawperator`
-- stable metadata file exists at `https://downloads.clawperator.com/operator/latest.json`
+- GitHub Release exists at `https://github.com/androperator/androperator/releases`
+- npm package version exists at `https://www.npmjs.com/package/androperator`
+- stable metadata file exists at `https://downloads.androperator.com/operator/latest.json`
 - APK URL in metadata resolves
 - checksum file matches the APK
-- `curl -fsSL https://clawperator.com/install.sh | bash` bootstraps the CLI and reaches the delegated `clawperator install` flow
-- `clawperator install` downloads and verifies the current stable APK when operator remediation needs setup
+- `curl -fsSL https://androperator.com/install.sh | bash` bootstraps the CLI and reaches the delegated `androperator install` flow
+- `androperator install` downloads and verifies the current stable APK when operator remediation needs setup
 
 ## Rollback
 
@@ -177,7 +182,7 @@ Rollback means:
 
 1. Point `latest.json` back to the last known good stable release
 2. Purge metadata cache if required
-3. Re-verify `https://clawperator.com/operator.apk`
+3. Re-verify `https://androperator.com/operator.apk`
 
 ## Notes
 

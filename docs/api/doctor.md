@@ -5,7 +5,7 @@ see [scoped selection walkthrough](scoped-selection.md).
 
 ## Purpose
 
-Define the `clawperator doctor` report contract, the exact check sequence, critical-versus-advisory behavior, exit-code rules, and the remediation fields an agent can execute directly.
+Define the `androperator doctor` report contract, the exact check sequence, critical-versus-advisory behavior, exit-code rules, and the remediation fields an agent can execute directly.
 
 ## Sources
 
@@ -18,7 +18,7 @@ Define the `clawperator doctor` report contract, the exact check sequence, criti
 ## Command
 
 ```bash
-clawperator doctor [--device <serial>] [--operator-package <pkg>] [--fix] [--full] [--check-only]
+androperator doctor [--device <serial>] [--operator-package <pkg>] [--fix] [--full] [--check-only]
 ```
 
 Flags:
@@ -35,7 +35,7 @@ Flags:
 
 Defaults:
 
-- without `--operator-package`, doctor uses `process.env.CLAWPERATOR_OPERATOR_PACKAGE` when it is non-blank, otherwise the runtime default package
+- without `--operator-package`, doctor uses `process.env.ANDROPERATOR_OPERATOR_PACKAGE` when it is non-blank, otherwise the runtime default package
 - without `--device`, doctor tries discovery first and may auto-resolve one connected device
 - without `--full`, doctor skips Java/build/install/launch/smoke checks
 - without `--fix`, doctor reports remediation steps but does not run them
@@ -134,7 +134,7 @@ Excerpt; advisory checks are omitted.
   "ok": true,
   "criticalOk": true,
   "deviceId": "<device_serial>",
-  "operatorPackage": "com.clawperator.operator.dev",
+  "operatorPackage": "com.androperator.operator.dev",
   "checks": [
     {
       "id": "host.node.version",
@@ -175,7 +175,7 @@ Excerpt; advisory checks are omitted.
     {
       "id": "readiness.apk.presence",
       "status": "pass",
-      "summary": "Operator APK (com.clawperator.operator.dev) is installed."
+      "summary": "Operator APK (com.androperator.operator.dev) is installed."
     },
     {
       "id": "readiness.version.compatibility",
@@ -185,7 +185,7 @@ Excerpt; advisory checks are omitted.
         "cliVersion": "0.1.0",
         "apkVersion": "0.1.0",
         "apkVersionCode": 1,
-        "operatorPackage": "com.clawperator.operator.dev"
+        "operatorPackage": "com.androperator.operator.dev"
       }
     },
     {
@@ -207,8 +207,8 @@ Excerpt; advisory checks are omitted.
   ],
   "skippedChecks": [],
   "nextActions": [
-    "Docs: https://docs.clawperator.com/getting-started/first-time-setup/",
-    "Try: clawperator snapshot --device <device_serial>"
+    "Docs: https://docs.androperator.com/getting-started/first-time-setup/",
+    "Try: androperator snapshot --device <device_serial>"
   ]
 }
 ```
@@ -226,7 +226,7 @@ Success conditions:
   "ok": false,
   "criticalOk": false,
   "deviceId": "<device_serial>",
-  "operatorPackage": "com.clawperator.operator.dev",
+  "operatorPackage": "com.androperator.operator.dev",
   "checks": [
     {
       "id": "readiness.device.interactive",
@@ -462,8 +462,8 @@ Meaning:
 Recovery:
 
 - connect a device or boot an emulator
-- rerun `clawperator devices`
-- rerun `clawperator doctor`
+- rerun `androperator devices`
+- rerun `androperator doctor`
 
 ### `DEVICE_UNAUTHORIZED`
 
@@ -501,7 +501,7 @@ Meaning:
 Recovery:
 
 - if using release APKs, install the exact version doctor points to
-- run the generated `clawperator operator setup --apk ...` command from `nextActions`
+- run the generated `androperator operator setup --apk ...` command from `nextActions`
 
 ### `OPERATOR_VARIANT_MISMATCH`
 
@@ -518,12 +518,12 @@ Recovery:
 
 Meaning:
 
-- handshake broadcast was sent, but no `[Clawperator-Result]` envelope arrived within 7000ms
+- handshake broadcast was sent, but no `[Androperator-Result]` envelope arrived within 7000ms
 
 Recovery:
 
-- run `clawperator grant-device-permissions --device <serial> [--operator-package <pkg>]`
-- rerun `clawperator snapshot --device <serial> [--operator-package <pkg>] --timeout 5000 --verbose`
+- run `androperator grant-device-permissions --device <serial> [--operator-package <pkg>]`
+- rerun `androperator snapshot --device <serial> [--operator-package <pkg>] --timeout 5000 --verbose`
 - verify accessibility service is enabled
 
 ### `DEVICE_ACCESSIBILITY_NOT_RUNNING`
@@ -534,7 +534,7 @@ Meaning:
 
 Recovery:
 
-- run `clawperator grant-device-permissions ...`
+- run `androperator grant-device-permissions ...`
 - follow `deviceGuidance.screen == "Accessibility Settings"`
 - rerun doctor
 
@@ -555,7 +555,7 @@ Recovery:
 - wake the device if `screenOn == false`
 - unlock the device if `deviceLocked == true`
 - complete the post-boot unlock if `userUnlocked == false`
-- rerun `clawperator doctor` and require:
+- rerun `androperator doctor` and require:
   - exit code `0`
   - `criticalOk == true`
   - `readiness.device.interactive.status == "pass"`
@@ -564,7 +564,7 @@ Recovery:
 
 Recommended doctor loop:
 
-1. Run `clawperator doctor [--device <serial>] [--operator-package <pkg>]`.
+1. Run `androperator doctor [--device <serial>] [--operator-package <pkg>]`.
 2. Require exit code `0` and `criticalOk == true` before treating the environment as ready.
 3. If `criticalOk == false`, iterate through `checks[]` in order and inspect the first non-passing required check and `skippedChecks`.
 4. If `fix.steps[].kind == "shell"` and you trust the environment, either execute them yourself or rerun doctor with `--fix`.
@@ -582,7 +582,7 @@ Recommended doctor loop:
 
 ## Background observation readiness
 
-Use `clawperator doctor --capability background-observation` to verify notification
+Use `androperator doctor --capability background-observation` to verify notification
 and media queries without waking the display, dismissing keyguard, requiring
 accessibility, clearing logs or launching an app. The selected capability appears
 in JSON output. Failure returns a nonzero exit; an empty successful query is ready.

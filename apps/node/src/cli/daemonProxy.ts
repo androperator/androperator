@@ -4,7 +4,7 @@ import { isAbsolute } from "node:path";
 import { ERROR_CODES } from "../contracts/errors.js";
 import type { RunExecutionResult } from "../domain/executions/runExecution.js";
 import type { ResultEnvelope } from "../contracts/result.js";
-import { CLAWPERATOR_SKILL_RUN_ID_ENV_VAR, normalizeSkillRunId } from "../contracts/logging.js";
+import { ANDROPERATOR_SKILL_RUN_ID_ENV_VAR, normalizeSkillRunId } from "../contracts/logging.js";
 import { resolveOperatorPackageForRequest } from "../domain/config/resolveOperatorPackage.js";
 import { getDaemonSocketPath, isDaemonRunning, spawnDaemonRun, stopDaemon, withDaemonLock } from "../domain/daemon/lifecycle.js";
 import { getCliBuildIdentity, getCliVersion, type CliBuildIdentity } from "../domain/version/compatibility.js";
@@ -275,7 +275,7 @@ async function ensureDaemonReady(
     return true;
   }
   if (action === "unowned" || action === "replace") {
-    process.stderr.write(`[clawperator] daemon unavailable after ${timeoutMs}ms; running direct for this call\n`);
+    process.stderr.write(`[androperator] daemon unavailable after ${timeoutMs}ms; running direct for this call\n`);
     return false;
   }
 
@@ -294,7 +294,7 @@ async function ensureDaemonReady(
     await delay(pollIntervalMs);
   }
 
-  process.stderr.write(`[clawperator] daemon unavailable after ${timeoutMs}ms; running direct for this call\n`);
+  process.stderr.write(`[androperator] daemon unavailable after ${timeoutMs}ms; running direct for this call\n`);
   return false;
 }
 
@@ -315,7 +315,7 @@ function proxyLostResult(error: unknown, execution: unknown, startedAt: string):
 }
 
 function getInheritedSkillRunId(): string | undefined {
-  return normalizeSkillRunId(process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR]);
+  return normalizeSkillRunId(process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR]);
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -351,7 +351,7 @@ export function parseDaemonRunExecutionResult(raw: string): RunExecutionResult {
   if (parsed.ok === true) {
     if (
       typeof parsed.deviceId !== "string" ||
-      parsed.terminalSource !== "clawperator_result" ||
+      parsed.terminalSource !== "androperator_result" ||
       !isResultEnvelope(parsed.envelope)
     ) {
       throw new Error("Daemon returned an invalid successful execution result");
@@ -372,7 +372,7 @@ export async function tryDaemonExecution(
   options: DaemonProxyOptions,
   deps: DaemonProxyDeps = {}
 ): Promise<RunExecutionResult | null> {
-  if (process.env.CLAWPERATOR_NO_DAEMON === "1" || options.noDaemon || process.platform === "win32") {
+  if (process.env.ANDROPERATOR_NO_DAEMON === "1" || options.noDaemon || process.platform === "win32") {
     return null;
   }
   if (hasCallerRelativeScreenshotPath(execution)) {

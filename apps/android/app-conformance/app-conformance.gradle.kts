@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "clawperator.conformance"
+    namespace = "androperator.conformance"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.clawperator.conformance"
+        applicationId = "com.androperator.conformance"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

@@ -9,8 +9,8 @@ import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-OPERATOR = 'com.clawperator.operator.dev'
-FIXTURE = 'com.clawperator.fixture.media'
+OPERATOR = 'com.androperator.operator.dev'
+FIXTURE = 'com.androperator.fixture.media'
 
 
 def main():
@@ -34,7 +34,7 @@ def main():
         return json.loads(value.get('envelope', value)['stepResults'][0]['data']['payload'])
 
     def shade():
-        # SystemUI's own state is independent of Clawperator's accessibility path.
+        # SystemUI's own state is independent of Androperator's accessibility path.
         result = adb('dumpsys', 'activity', 'service', 'com.android.systemui/.SystemUIService')
         assert 'mExpandedVisible=true' in result, 'Notification shade is not expanded'
         return result
@@ -71,12 +71,12 @@ def main():
             cases.extend([[mutation], [read, mutation], [mutation, read], [*controls, mutation], [mutation, *controls]])
         for actions in cases:
             command_id = 'ingress-' + str(uuid.uuid4())
-            command = {'commandId': command_id, 'taskId': 'ingress-proof', 'source': 'clawperator', 'expectedFormat': 'android-ui-automator', 'timeoutMs': 3000, 'actions': actions}
-            adb('am', 'broadcast', '-a', 'app.clawperator.operator.ACTION_AGENT_COMMAND', '-p', OPERATOR, '--es', 'payload', json.dumps(command), '--receiver-foreground')
+            command = {'commandId': command_id, 'taskId': 'ingress-proof', 'source': 'androperator', 'expectedFormat': 'android-ui-automator', 'timeoutMs': 3000, 'actions': actions}
+            adb('am', 'broadcast', '-a', 'app.androperator.operator.ACTION_AGENT_COMMAND', '-p', OPERATOR, '--es', 'payload', json.dumps(command), '--receiver-foreground')
             deadline = time.monotonic() + 10
             while True:
                 logs = adb('logcat', '-d', '-v', 'raw')
-                matches = [line.split('[Clawperator-Result] ', 1)[1] for line in logs.splitlines() if '[Clawperator-Result] ' in line and command_id in line]
+                matches = [line.split('[Androperator-Result] ', 1)[1] for line in logs.splitlines() if '[Androperator-Result] ' in line and command_id in line]
                 if matches:
                     break
                 assert time.monotonic() < deadline, 'No correlated Android ingress result'

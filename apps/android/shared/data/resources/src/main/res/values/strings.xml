@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">Clawperator</string>
+    <string name="app_name">Androperator</string>
 
-    <string name="accessibility_service_toast">Enable access for Clawperator</string>
+    <string name="accessibility_service_toast">Enable access for Androperator</string>
     <string name="accessibility_service_summary">Accessibility access is required to interact with other apps to run your tasks.</string>
 </resources>

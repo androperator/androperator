@@ -4,14 +4,14 @@ import { runNotificationMedia, decodeNotificationMediaPayload } from '../../apps
 import { startServer } from '../../apps/node/dist/cli/commands/serve.js';
 const [deviceId, sessionId, output] = process.argv.slice(2);
 if (!deviceId || !sessionId || !output) throw new Error('Usage: http-helper-observe.mjs <device> <session> <output.json>');
-const operatorPackage = 'com.clawperator.operator.dev';
+const operatorPackage = 'com.androperator.operator.dev';
 const typed = await runNotificationMedia('observe_media', { mediaSessionId: sessionId, durationMs: 1000 }, { deviceId, operatorPackage });
 assert.equal(typed.result.ok, true);
 assert.equal(typed.payload.deviceState.screenOn, false);
 assert.equal(typed.payload.newPlayerReportCount, 0);
 assert.deepEqual(typed.payload.samples, []);
 const execution = { commandId: 'http-observation-proof', taskId: 'http-observation-proof', source: 'validation', expectedFormat: 'android-ui-automator', timeoutMs: 10000, actions: [
-  { id: 'notifications', type: 'list_notifications', params: { applicationId: "com.clawperator.fixture.media" } },
+  { id: 'notifications', type: 'list_notifications', params: { applicationId: "com.androperator.fixture.media" } },
   { id: 'sessions', type: 'list_media_sessions' },
   { id: 'status', type: 'get_media_status', params: { mediaSessionId: sessionId } },
   { id: 'observe', type: 'observe_media', params: { mediaSessionId: sessionId, durationMs: 1000 } },

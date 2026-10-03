@@ -68,7 +68,7 @@ it("swipe preserves the envelope and forbids post-dispatch daemon fallback", asy
       assert.deepEqual(execution.actions[0].params, params);
       assert.equal(execution.timeoutMs, 5000);
       assert.equal(options.allowPostDispatchFallback, false);
-      return { ok: true, deviceId: "test-device", terminalSource: "clawperator_result", envelope: {
+      return { ok: true, deviceId: "test-device", terminalSource: "androperator_result", envelope: {
         commandId: execution.commandId, taskId: execution.taskId, status: "success",
         stepResults: [{ id: "swipe", actionType: "swipe", success: true, data: { dispatch_accepted: "true" } }], error: null,
       } };

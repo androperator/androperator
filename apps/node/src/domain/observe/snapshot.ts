@@ -10,7 +10,7 @@ export function buildSnapshotExecution(options?: { timeoutMs?: number }): Execut
   return {
     commandId,
     taskId: commandId,
-    source: "clawperator-observe",
+    source: "androperator-observe",
     expectedFormat: "android-ui-automator",
     timeoutMs: options?.timeoutMs ?? 30_000,
     actions: [

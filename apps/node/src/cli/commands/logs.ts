@@ -1,5 +1,5 @@
 /**
- * Tail the Clawperator log file.
+ * Tail the Androperator log file.
  * Dumps existing content then streams new lines as they arrive.
  */
 import { createReadStream, existsSync, watchFile, unwatchFile, statSync } from "node:fs";
@@ -13,8 +13,8 @@ import { expandHomePath, formatLogPath } from "../../contracts/logging.js";
 function resolveLogPath(logDir?: string): string {
   const configuredDir =
     logDir?.trim() ||
-    process.env.CLAWPERATOR_LOG_DIR?.trim() ||
-    "~/.clawperator/logs";
+    process.env.ANDROPERATOR_LOG_DIR?.trim() ||
+    "~/.androperator/logs";
   const resolvedDir = resolve(expandHomePath(configuredDir));
   return formatLogPath(resolvedDir);
 }
@@ -111,7 +111,7 @@ async function dumpAndStreamContent(logPath: string): Promise<void> {
     });
 
     stream.on("error", (err) => {
-      process.stderr.write(`[clawperator] Error reading log: ${String(err)}\n`);
+      process.stderr.write(`[androperator] Error reading log: ${String(err)}\n`);
       // Still mark as complete so streaming can continue
       initialDumpComplete = true;
     });
@@ -132,6 +132,6 @@ function emitLogRange(logPath: string, start: number, end: number): void {
   });
 
   stream.on("error", (err) => {
-    process.stderr.write(`[clawperator] Error reading log: ${String(err)}\n`);
+    process.stderr.write(`[androperator] Error reading log: ${String(err)}\n`);
   });
 }

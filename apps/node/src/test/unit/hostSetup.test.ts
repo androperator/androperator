@@ -10,7 +10,7 @@ const ENV_KEYS = [
   "HOME",
   "CODEX_HOME",
   "ADB_PATH",
-  "CLAWPERATOR_SKILLS_REGISTRY",
+  "ANDROPERATOR_SKILLS_REGISTRY",
   "SKILLS_REGISTRY_PATH",
 ] as const;
 
@@ -30,12 +30,12 @@ afterEach(async () => {
 });
 
 async function makeTempHome(): Promise<string> {
-  return mkdtemp(join(tmpdir(), "clawperator-host-setup-"));
+  return mkdtemp(join(tmpdir(), "androperator-host-setup-"));
 }
 
 async function writeRuntimeRegistry(homeDir: string): Promise<string> {
-  const registryPath = join(homeDir, ".clawperator", "skills", "skills", "skills-registry.json");
-  await mkdir(join(homeDir, ".clawperator", "skills", "skills"), { recursive: true });
+  const registryPath = join(homeDir, ".androperator", "skills", "skills", "skills-registry.json");
+  await mkdir(join(homeDir, ".androperator", "skills", "skills"), { recursive: true });
   await writeFile(
     registryPath,
     `${JSON.stringify({
@@ -63,7 +63,7 @@ async function writeRuntimeRegistry(homeDir: string): Promise<string> {
 }
 
 async function writeBundledSkill(homeDir: string, skillName: string): Promise<void> {
-  const skillDir = join(homeDir, ".clawperator", "bundled-skills", skillName);
+  const skillDir = join(homeDir, ".androperator", "bundled-skills", skillName);
   await mkdir(skillDir, { recursive: true });
   await writeFile(join(skillDir, "SKILL.md"), `# ${skillName}\n`, "utf8");
 }
@@ -77,11 +77,11 @@ describe("setupHost", () => {
         env: { HOME: homeDir },
         installedAt: "2026-04-23T10:11:12Z",
         cliVersion: "1.2.3",
-        cliJsPath: "/opt/clawperator/dist/cli/index.js",
+        cliJsPath: "/opt/androperator/dist/cli/index.js",
         processExecPath: "/usr/local/bin/node",
       });
 
-      const installStatePath = join(homeDir, ".clawperator", "install-state.json");
+      const installStatePath = join(homeDir, ".androperator", "install-state.json");
       const parsed = JSON.parse(await readFile(installStatePath, "utf8"));
 
       assert.deepStrictEqual(parsed, {
@@ -105,11 +105,11 @@ describe("setupHost", () => {
         env: { HOME: homeDir, CODEX_HOME: join(homeDir, ".codex") },
         installedAt: "2026-04-23T10:11:12Z",
         adbPath: "/opt/android/platform-tools/adb",
-        cliJsPath: "/opt/clawperator/dist/cli/index.js",
+        cliJsPath: "/opt/androperator/dist/cli/index.js",
         processExecPath: "/usr/local/bin/node",
       });
 
-      const snippetPath = join(homeDir, ".clawperator", "mcp-config-snippet.json");
+      const snippetPath = join(homeDir, ".androperator", "mcp-config-snippet.json");
       const parsed = JSON.parse(await readFile(snippetPath, "utf8"));
 
       assert.deepStrictEqual(Object.keys(parsed), [
@@ -119,11 +119,11 @@ describe("setupHost", () => {
         "genericStdioConsumer",
       ]);
       assert.strictEqual(parsed.claudeDesktop.mergeKey, "mcpServers");
-      assert.match(parsed.codex.entryToml, /\[mcp_servers\.clawperator\]/);
-      assert.match(parsed.codex.entryToml, /\[mcp_servers\.clawperator\.env\]/);
+      assert.match(parsed.codex.entryToml, /\[mcp_servers\.androperator\]/);
+      assert.match(parsed.codex.entryToml, /\[mcp_servers\.androperator\.env\]/);
       assert.strictEqual(parsed.genericStdioConsumer.server.serverName, undefined);
       assert.deepStrictEqual(parsed.genericStdioConsumer.server.args, [
-        "/opt/clawperator/dist/cli/index.js",
+        "/opt/androperator/dist/cli/index.js",
         "mcp",
         "serve",
       ]);
@@ -138,20 +138,20 @@ describe("setupHost", () => {
 
     try {
       const registryPath = await writeRuntimeRegistry(homeDir);
-      await writeBundledSkill(homeDir, "clawperator-agent-orientation");
-      await writeBundledSkill(homeDir, "clawperator-upgrade");
-      await writeBundledSkill(homeDir, "clawperator-skill-author-by-agent-discovery");
-      await writeBundledSkill(homeDir, "clawperator-skill-author-by-recording");
-      await writeFile(join(homeDir, ".clawperator", "bundled-skills", "version.txt"), "0.7.4\n", "utf8");
+      await writeBundledSkill(homeDir, "androperator-agent-orientation");
+      await writeBundledSkill(homeDir, "androperator-upgrade");
+      await writeBundledSkill(homeDir, "androperator-skill-author-by-agent-discovery");
+      await writeBundledSkill(homeDir, "androperator-skill-author-by-recording");
+      await writeFile(join(homeDir, ".androperator", "bundled-skills", "version.txt"), "0.7.4\n", "utf8");
 
       await setupHost({
-        env: { HOME: homeDir, CLAWPERATOR_SKILLS_REGISTRY: registryPath },
+        env: { HOME: homeDir, ANDROPERATOR_SKILLS_REGISTRY: registryPath },
         installedAt: "2026-04-23T10:11:12Z",
-        cliJsPath: "/opt/clawperator/dist/cli/index.js",
+        cliJsPath: "/opt/androperator/dist/cli/index.js",
         processExecPath: "/usr/local/bin/node",
       });
 
-      const guidePath = join(homeDir, ".clawperator", "AGENTS.md");
+      const guidePath = join(homeDir, ".androperator", "AGENTS.md");
       const guide = await readFile(guidePath, "utf8");
 
       assert.match(guide, /## Runtime Skills/);
@@ -159,9 +159,9 @@ describe("setupHost", () => {
       assert.match(guide, /### Application/);
       assert.match(guide, /com\.example\.weather/);
       assert.match(guide, /com\.example\.weather\.check-status/);
-      assert.match(guide, /clawperator skills run com\.example\.weather\.check-status --city-name <city_name>/);
-      assert.match(guide, /npm install -g clawperator@latest/);
-      assert.match(guide, /clawperator install/);
+      assert.match(guide, /androperator skills run com\.example\.weather\.check-status --city-name <city_name>/);
+      assert.match(guide, /npm install -g androperator@latest/);
+      assert.match(guide, /androperator install/);
       assert.match(guide, /install\.sh` as recovery-only fallback/);
       assert.match(guide, /Recommended first-run flow:/);
     } finally {
@@ -176,18 +176,18 @@ describe("setupHost", () => {
       await setupHost({
         env: {
           HOME: homeDir,
-          CLAWPERATOR_BIN_PATH: "/usr/local/bin/clawperator",
+          ANDROPERATOR_BIN_PATH: "/usr/local/bin/androperator",
         },
         installedAt: "2026-04-23T10:11:12Z",
         cliJsPath: null,
         processExecPath: "/usr/local/bin/node",
       });
 
-      const snippetPath = join(homeDir, ".clawperator", "mcp-config-snippet.json");
+      const snippetPath = join(homeDir, ".androperator", "mcp-config-snippet.json");
       const parsed = JSON.parse(await readFile(snippetPath, "utf8"));
 
-      assert.strictEqual(parsed.claudeDesktop.entry.clawperator.command, "/usr/local/bin/clawperator");
-      assert.deepStrictEqual(parsed.claudeDesktop.entry.clawperator.args, ["mcp", "serve"]);
+      assert.strictEqual(parsed.claudeDesktop.entry.androperator.command, "/usr/local/bin/androperator");
+      assert.deepStrictEqual(parsed.claudeDesktop.entry.androperator.args, ["mcp", "serve"]);
       assert.match(parsed.notes[2], /npm shell wrapper/);
     } finally {
       await rm(homeDir, { recursive: true, force: true });
@@ -207,9 +207,9 @@ describe("setupHost", () => {
           "",
           "Intro text",
           "",
-          "<!-- CLAWPERATOR_SHARED_AGENT_BRIDGE:START -->",
+          "<!-- ANDROPERATOR_SHARED_AGENT_BRIDGE:START -->",
           "outdated bridge",
-          "<!-- CLAWPERATOR_SHARED_AGENT_BRIDGE:END -->",
+          "<!-- ANDROPERATOR_SHARED_AGENT_BRIDGE:END -->",
           "",
           "Footer text",
           "",
@@ -220,22 +220,22 @@ describe("setupHost", () => {
       const first = await setupHost({
         env: { HOME: homeDir },
         installedAt: "2026-04-23T10:11:12Z",
-        cliJsPath: "/opt/clawperator/dist/cli/index.js",
+        cliJsPath: "/opt/androperator/dist/cli/index.js",
         processExecPath: "/usr/local/bin/node",
       });
       const second = await setupHost({
         env: { HOME: homeDir },
         installedAt: "2026-04-23T10:11:12Z",
-        cliJsPath: "/opt/clawperator/dist/cli/index.js",
+        cliJsPath: "/opt/androperator/dist/cli/index.js",
         processExecPath: "/usr/local/bin/node",
       });
 
       const bridge = await readFile(sharedAgentsPath, "utf8");
       assert.match(bridge, /# Shared Guide/);
       assert.match(bridge, /Footer text/);
-      assert.strictEqual((bridge.match(/CLAWPERATOR_SHARED_AGENT_BRIDGE:START/g) ?? []).length, 1);
-      assert.strictEqual((bridge.match(/CLAWPERATOR_SHARED_AGENT_BRIDGE:END/g) ?? []).length, 1);
-      assert.match(bridge, /Clawperator runtime skills stay in the `clawperator` CLI surface\./);
+      assert.strictEqual((bridge.match(/ANDROPERATOR_SHARED_AGENT_BRIDGE:START/g) ?? []).length, 1);
+      assert.strictEqual((bridge.match(/ANDROPERATOR_SHARED_AGENT_BRIDGE:END/g) ?? []).length, 1);
+      assert.match(bridge, /Androperator runtime skills stay in the `androperator` CLI surface\./);
 
       const firstBridge = first.artifacts.find((artifact) => artifact.artifact === "sharedAgentBridge");
       const secondBridge = second.artifacts.find((artifact) => artifact.artifact === "sharedAgentBridge");
@@ -258,7 +258,7 @@ describe("setupHost", () => {
       const result = await setupHost({
         env: { HOME: homeDir },
         installedAt: "2026-04-23T10:11:12Z",
-        cliJsPath: "/opt/clawperator/dist/cli/index.js",
+        cliJsPath: "/opt/androperator/dist/cli/index.js",
         processExecPath: "/usr/local/bin/node",
       });
 
@@ -286,7 +286,7 @@ describe("cmdHostSetup", () => {
 
     try {
       process.env.HOME = homeDir;
-      delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+      delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
       delete process.env.SKILLS_REGISTRY_PATH;
       delete process.env.ADB_PATH;
       process.env.CODEX_HOME = join(homeDir, ".codex");
@@ -332,7 +332,7 @@ describe("cmdHostSetup", () => {
 
     try {
       process.env.HOME = homeDir;
-      delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+      delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
       delete process.env.SKILLS_REGISTRY_PATH;
       delete process.env.ADB_PATH;
       delete process.env.CODEX_HOME;
@@ -363,7 +363,7 @@ describe("cmdHostSetup", () => {
 
     try {
       process.env.HOME = homeDir;
-      delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+      delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
       delete process.env.SKILLS_REGISTRY_PATH;
       delete process.env.ADB_PATH;
       delete process.env.CODEX_HOME;

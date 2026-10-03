@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims to follow Semantic Versioning.
 
+## [1.0.0] - Unreleased
+
+### Breaking changes
+
+- Rename the product, npm package and CLI to Androperator. Use `ANDROPERATOR_*`,
+  `~/.androperator/`, `com.androperator.operator` and `.dev`, Kotlin packages
+  `androperator.*`, and the `[Androperator-Result]` envelope together.
+- Initialize local skill workspaces instead of downloading a companion skills
+  catalog. Git-ref catalog synchronization is no longer supported.
+
+### Changes
+
+- Adopt the new Android headset logo and prepare new release/download surfaces.
+- Remove Firebase and remote task-status reporting while retaining local crash
+  logs, logcat and structured task-status evidence.
+- Preserve the former landing site and historical releases. See
+  [migration guidance](docs/migration-to-androperator.md) before upgrading.
+
 ## [0.12.5] - 2026-09-28
 
 This release adds coordinate drag gestures across the CLI, named MCP tools, raw executions, and the Android Operator.

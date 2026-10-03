@@ -6,7 +6,7 @@ export function buildSwipeExecution(params: SwipeParams, timeoutMs = 30000): Exe
   return {
     commandId,
     taskId: commandId,
-    source: "clawperator-action",
+    source: "androperator-action",
     expectedFormat: "android-ui-automator",
     timeoutMs,
     actions: [{ id: "swipe", type: "swipe", params }],

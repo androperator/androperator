@@ -35,7 +35,7 @@ export function formatRunExecutionResultForCli(
         envelope: result.envelope,
         deviceId: result.deviceId,
         terminalSource: result.terminalSource,
-        isCanonicalTerminal: result.terminalSource === "clawperator_result",
+        isCanonicalTerminal: result.terminalSource === "androperator_result",
       },
       options
     );

@@ -40,7 +40,7 @@ for (let index = 0; index < args.length; index += 1) {
 
 const skillId = cliSkillId || process.env.TEST_SKILL_ID || "com.test.skill-result";
 mode = process.env.TEST_SKILL_MODE || mode;
-const prefix = "[Clawperator-Skill-Result]";
+const prefix = "[Androperator-Skill-Result]";
 
 const basePayload = {
   contractVersion: "1.0.0",

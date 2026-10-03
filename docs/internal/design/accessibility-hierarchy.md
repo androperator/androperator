@@ -10,13 +10,13 @@ See [query failure behavior](../../api/actions.md#action-query-ui).
 Both Operator variants declare `android:isAccessibilityTool="true"` in the
 shared service configuration. Android defines
 [`isAccessibilityTool`](https://developer.android.com/reference/android/accessibilityservice/AccessibilityServiceInfo#attr_android:isAccessibilityTool)
-as identifying services used to assist users with disabilities. Clawperator uses
+as identifying services used to assist users with disabilities. Androperator uses
 this declaration for access to sensitive hierarchies and is distributed outside
 Google Play.
 
 Android 15's [AccessibilityInteractionController](https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-15.0.0_r1/core/java/android/view/AccessibilityInteractionController.java)
 returns null from `getRootView()` when the root is sensitive and the request is
-not from an accessibility tool. This filtering occurs before Clawperator matching
+not from an accessibility tool. This filtering occurs before Androperator matching
 or serialization. Selecting another window or clearing the accessibility cache
 does not provide the requested application's hierarchy.
 

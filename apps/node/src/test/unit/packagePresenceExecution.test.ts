@@ -7,10 +7,10 @@ import type { ChildProcess } from "node:child_process";
 import { NodeProcessRunner } from "../../adapters/android-bridge/processRunner.js";
 import { startServer } from "../../cli/commands/serve.js";
 import { runExecution, type RunExecutionResult } from "../../domain/executions/runExecution.js";
-import { createClawperatorLogger } from "../../adapters/logger.js";
+import { createAndroperatorLogger } from "../../adapters/logger.js";
 
-const primary = "com.clawperator.operator.dev";
-const alternate = "com.clawperator.operator";
+const primary = "com.androperator.operator.dev";
+const alternate = "com.androperator.operator";
 const cases = [
   { name: "primary query failure", mode: "primary", code: "DEVICE_SHELL_UNAVAILABLE", queried: primary },
   { name: "alternate query failure", mode: "alternate", code: "DEVICE_SHELL_UNAVAILABLE", queried: alternate },
@@ -47,7 +47,7 @@ else if (args.includes("packages")) {
 } else { console.error("unexpected adb call"); process.exit(99); }
 `, { mode: 0o755 });
     process.env.PATH = `${dir}:${previousPath}`;
-    const logger = createClawperatorLogger({ logDir: dir, outputFormat: "json" });
+    const logger = createAndroperatorLogger({ logDir: dir, outputFormat: "json" });
     let server: Awaited<ReturnType<typeof startServer>> | undefined;
     try {
       const execution = {
@@ -98,7 +98,7 @@ else if (args.includes("packages")) {
           assert.doesNotMatch(result.error.message, /is not installed|operator setup/);
         }
         if (scenario.mode === "variant") {
-          assert.match(JSON.stringify(details.fix), /--operator-package com.clawperator.operator/);
+          assert.match(JSON.stringify(details.fix), /--operator-package com.androperator.operator/);
         }
         const events = (await readFile(logger.logPath()!, "utf8")).trim().split("\n").map(line => JSON.parse(line));
         const event = events.find(event => event.commandId === details.commandId && event.event.startsWith("preflight.apk."));

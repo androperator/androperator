@@ -5,7 +5,7 @@ Created: 2026-03-12
 ## Goal
 
 Add a repo-local workflow that lets an agent use Cloudflare Browser Rendering
-to audit `https://clawperator.com` and `https://docs.clawperator.com` for SEO
+to audit `https://androperator.com` and `https://docs.androperator.com` for SEO
 and Generative Engine Optimization (GEO) readiness.
 
 The output should answer the real product question:
@@ -23,7 +23,7 @@ should not replace it.
 
 ## Constraints and principles
 
-- Treat Clawperator as intentionally public and maximally crawlable.
+- Treat Androperator as intentionally public and maximally crawlable.
 - Prefer deterministic, inspectable REST calls over opaque automation first.
 - Start with Cloudflare Browser Rendering REST `/crawl`.
 - Keep secrets out of the repo and out of committed task logs.
@@ -50,15 +50,15 @@ Create or confirm:
 Use local environment variables, not committed files:
 
 ```sh
-export CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID="<account_id>"
-export CLAWPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN="<api_token>"
+export ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID="<account_id>"
+export ANDROPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN="<api_token>"
 ```
 
 Optional local convenience variables:
 
 ```sh
-export GEO_LANDING_BASE_URL="https://clawperator.com"
-export GEO_DOCS_BASE_URL="https://docs.clawperator.com"
+export GEO_LANDING_BASE_URL="https://androperator.com"
+export GEO_DOCS_BASE_URL="https://docs.androperator.com"
 ```
 
 ### What must not be committed
@@ -75,11 +75,11 @@ First test a minimal crawl creation request:
 
 ```sh
 curl -X POST \
-  "https://api.cloudflare.com/client/v4/accounts/${CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID}/browser-rendering/crawl" \
-  -H "Authorization: Bearer ${CLAWPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN}" \
+  "https://api.cloudflare.com/client/v4/accounts/${ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID}/browser-rendering/crawl" \
+  -H "Authorization: Bearer ${ANDROPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{
-    "url": "https://clawperator.com",
+    "url": "https://androperator.com",
     "limit": 1,
     "depth": 1,
     "formats": ["markdown"],
@@ -97,8 +97,8 @@ Then poll the created job:
 
 ```sh
 curl -X GET \
-  "https://api.cloudflare.com/client/v4/accounts/${CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID}/browser-rendering/crawl/<job_id>?limit=1" \
-  -H "Authorization: Bearer ${CLAWPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN}"
+  "https://api.cloudflare.com/client/v4/accounts/${ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID}/browser-rendering/crawl/<job_id>?limit=1" \
+  -H "Authorization: Bearer ${ANDROPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN}"
 ```
 
 Expected result:
@@ -185,8 +185,8 @@ Suggested location:
 
 Suggested helper behavior:
 
-- read `CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID`
-- read `CLAWPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN`
+- read `ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID`
+- read `ANDROPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN`
 - create crawl jobs
 - poll for completion
 - paginate through results when a cursor is returned
@@ -237,18 +237,18 @@ Required logic:
 
 Critical URLs should include at minimum:
 
-- `https://clawperator.com/robots.txt`
-- `https://clawperator.com/llms.txt`
-- `https://clawperator.com/llms-full.txt`
-- `https://clawperator.com/index.md`
-- `https://clawperator.com/agents`
-- `https://clawperator.com/sitemap.xml`
-- `https://docs.clawperator.com/robots.txt`
-- `https://docs.clawperator.com/llms.txt`
-- `https://docs.clawperator.com/llms-full.txt`
-- `https://docs.clawperator.com/sitemap.xml`
-- `https://docs.clawperator.com/ai-agents/node-api-for-agents/`
-- `https://docs.clawperator.com/reference/cli-reference/`
+- `https://androperator.com/robots.txt`
+- `https://androperator.com/llms.txt`
+- `https://androperator.com/llms-full.txt`
+- `https://androperator.com/index.md`
+- `https://androperator.com/agents`
+- `https://androperator.com/sitemap.xml`
+- `https://docs.androperator.com/robots.txt`
+- `https://docs.androperator.com/llms.txt`
+- `https://docs.androperator.com/llms-full.txt`
+- `https://docs.androperator.com/sitemap.xml`
+- `https://docs.androperator.com/ai-agents/node-api-for-agents/`
+- `https://docs.androperator.com/reference/cli-reference/`
 
 Severity examples:
 

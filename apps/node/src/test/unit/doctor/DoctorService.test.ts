@@ -7,7 +7,7 @@ import { DoctorService } from "../../../domain/doctor/DoctorService.js";
 import { getDefaultRuntimeConfig } from "../../../adapters/android-bridge/runtimeConfig.js";
 import { FakeProcessRunner as BaseFakeProcessRunner } from "../fakes/FakeProcessRunner.js";
 import { ERROR_CODES } from "../../../contracts/errors.js";
-import { createClawperatorLogger } from "../../../adapters/logger.js";
+import { createAndroperatorLogger } from "../../../adapters/logger.js";
 import { getCliVersion } from "../../../domain/version/compatibility.js";
 
 // Existing readiness fixtures assume optional video tooling is healthy.
@@ -33,11 +33,11 @@ describe("DoctorService", () => {
 
   beforeEach(async () => {
     originalPath = process.env.PATH;
-    originalLogDir = process.env.CLAWPERATOR_LOG_DIR;
-    originalRegistryPath = process.env.CLAWPERATOR_SKILLS_REGISTRY;
-    fakeAgentCliDir = await mkdtemp(join(tmpdir(), "clawperator-doctor-agent-cli-"));
-    fakeRegistryDir = await mkdtemp(join(tmpdir(), "clawperator-doctor-registry-"));
-    process.env.CLAWPERATOR_LOG_DIR = join(fakeRegistryDir, "logs");
+    originalLogDir = process.env.ANDROPERATOR_LOG_DIR;
+    originalRegistryPath = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+    fakeAgentCliDir = await mkdtemp(join(tmpdir(), "androperator-doctor-agent-cli-"));
+    fakeRegistryDir = await mkdtemp(join(tmpdir(), "androperator-doctor-registry-"));
+    process.env.ANDROPERATOR_LOG_DIR = join(fakeRegistryDir, "logs");
     const fakeAgentPath = join(fakeAgentCliDir, "codex");
     const registryPath = join(fakeRegistryDir, "skills", "skills-registry.json");
     await mkdir(join(fakeRegistryDir, "skills"), { recursive: true });
@@ -47,12 +47,12 @@ describe("DoctorService", () => {
     await writeFile(registryPath, `${JSON.stringify({ schemaVersion: "1.0", generatedAt: "2026-04-16T00:00:00Z", skills: [] }, null, 2)}\n`, "utf8");
     await chmod(fakeAgentPath, 0o755);
     process.env.PATH = `${fakeAgentCliDir}${delimiter}${originalPath ?? ""}`;
-    process.env.CLAWPERATOR_SKILLS_REGISTRY = registryPath;
+    process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
   });
 
   afterEach(async () => {
-    if (originalLogDir === undefined) delete process.env.CLAWPERATOR_LOG_DIR;
-    else process.env.CLAWPERATOR_LOG_DIR = originalLogDir;
+    if (originalLogDir === undefined) delete process.env.ANDROPERATOR_LOG_DIR;
+    else process.env.ANDROPERATOR_LOG_DIR = originalLogDir;
     await rm(fakeAgentCliDir, { recursive: true, force: true });
     await rm(fakeRegistryDir, { recursive: true, force: true });
     if (originalPath === undefined) {
@@ -61,15 +61,15 @@ describe("DoctorService", () => {
       process.env.PATH = originalPath;
     }
     if (originalRegistryPath === undefined) {
-      delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+      delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
     } else {
-      process.env.CLAWPERATOR_SKILLS_REGISTRY = originalRegistryPath;
+      process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistryPath;
     }
   });
 
   it("treats missing APK as a critical failure and skips the handshake", async () => {
     const runner = new FakeProcessRunner();
-    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.clawperator.operator.dev" }), fakeRegistryDir);
+    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.androperator.operator.dev" }), fakeRegistryDir);
 
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
@@ -97,14 +97,14 @@ describe("DoctorService", () => {
 
     assert.ok(!report.checks.some(check => check.id === "readiness.handshake"));
     assert.deepStrictEqual(report.nextActions, [
-      "If you do not already have a matching local debug APK at ~/.clawperator/downloads/operator-debug.apk, rebuild the debug app from the same checkout before rerunning setup.",
-      "clawperator operator setup --apk ~/.clawperator/downloads/operator-debug.apk --device test-device-1 --operator-package com.clawperator.operator.dev",
+      "If you do not already have a matching local debug APK at ~/.androperator/downloads/operator-debug.apk, rebuild the debug app from the same checkout before rerunning setup.",
+      "androperator operator setup --apk ~/.androperator/downloads/operator-debug.apk --device test-device-1 --operator-package com.androperator.operator.dev",
     ]);
   });
 
   it("fails when the installed APK is version-incompatible and skips the handshake", async () => {
     const runner = new FakeProcessRunner();
-    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.clawperator.operator.dev" }), fakeRegistryDir);
+    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.androperator.operator.dev" }), fakeRegistryDir);
 
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
@@ -114,8 +114,8 @@ describe("DoctorService", () => {
     runner.queueResult({ code: 0, stdout: "33\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Physical size: 1080x2400\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Physical density: 420\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
     runner.queueResult({
       code: 0,
       stdout: "    versionCode=200000 minSdk=21 targetSdk=35\n    versionName=0.1.4-d\n",
@@ -138,7 +138,7 @@ describe("DoctorService", () => {
 
   it("still reports the orchestrated agent CLI advisory when adb server startup fails", async () => {
     const runner = new FakeProcessRunner();
-    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.clawperator.operator.dev" }), fakeRegistryDir);
+    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.androperator.operator.dev" }), fakeRegistryDir);
 
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
@@ -162,7 +162,7 @@ describe("DoctorService", () => {
 
   it("fails clearly when the installed APK version cannot be read", async () => {
     const runner = new FakeProcessRunner();
-    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.clawperator.operator.dev" }), fakeRegistryDir);
+    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.androperator.operator.dev" }), fakeRegistryDir);
 
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
@@ -172,9 +172,9 @@ describe("DoctorService", () => {
     runner.queueResult({ code: 0, stdout: "33\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Physical size: 1080x2400\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Physical density: 420\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "Package [com.clawperator.operator.dev]\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "Package [com.androperator.operator.dev]\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" });
 
@@ -227,7 +227,7 @@ describe("DoctorService", () => {
 
   it("fails when the release package is requested but only debug is installed", async () => {
     const runner = new FakeProcessRunner();
-    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.clawperator.operator" }), fakeRegistryDir);
+    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.androperator.operator" }), fakeRegistryDir);
 
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
@@ -237,8 +237,8 @@ describe("DoctorService", () => {
     runner.queueResult({ code: 0, stdout: "33\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Physical size: 1080x2400\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Physical density: 420\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" });
 
@@ -246,7 +246,7 @@ describe("DoctorService", () => {
 
     assert.strictEqual(report.criticalOk, false);
     assert.strictEqual(report.ok, false);
-    assert.strictEqual(report.operatorPackage, "com.clawperator.operator");
+    assert.strictEqual(report.operatorPackage, "com.androperator.operator");
     assert.ok(report.skippedChecks?.some(check => check.id === "readiness.handshake" && check.blockedBy.includes("readiness.apk.presence")));
     const apkPresence = report.checks.find(check => check.id === "readiness.apk.presence");
     assert.ok(apkPresence);
@@ -258,7 +258,7 @@ describe("DoctorService", () => {
 
   it("treats package query failures as critical and skips the handshake", async () => {
     const runner = new FakeProcessRunner();
-    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.clawperator.operator.dev" }), fakeRegistryDir);
+    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.androperator.operator.dev" }), fakeRegistryDir);
 
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
@@ -286,7 +286,7 @@ describe("DoctorService", () => {
 
   it("lists the shell download step before the setup command", async () => {
     const runner = new FakeProcessRunner();
-    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.clawperator.operator" }), fakeRegistryDir);
+    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.androperator.operator" }), fakeRegistryDir);
 
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
@@ -306,14 +306,14 @@ describe("DoctorService", () => {
     const apkPresence = report.checks.find(check => check.id === "readiness.apk.presence");
     assert.ok(apkPresence);
     assert.deepStrictEqual(apkPresence.fix?.steps.map(step => step.value), [
-      "clawperator operator download",
-      "clawperator operator setup --apk ~/.clawperator/downloads/operator.apk --device test-device-1",
+      "androperator operator download",
+      "androperator operator setup --apk ~/.androperator/downloads/operator.apk --device test-device-1",
     ]);
   });
 
   it("runs operator download before operator setup during doctor autofix", async () => {
     const runner = new FakeProcessRunner();
-    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.clawperator.operator" }), fakeRegistryDir);
+    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.androperator.operator" }), fakeRegistryDir);
 
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
@@ -335,14 +335,14 @@ describe("DoctorService", () => {
 
     const shellCalls = runner.calls.filter(call => call.command === "bash").map(call => call.args[1]);
     assert.deepStrictEqual(shellCalls, [
-      "clawperator operator download",
-      "clawperator operator setup --apk ~/.clawperator/downloads/operator.apk --device test-device-1",
+      "androperator operator download",
+      "androperator operator setup --apk ~/.androperator/downloads/operator.apk --device test-device-1",
     ]);
   });
 
   it("marks non-interactive devices critical and skips smoke", async () => {
     const runner = new FakeProcessRunner();
-    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.clawperator.operator.dev" }), fakeRegistryDir);
+    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.androperator.operator.dev" }), fakeRegistryDir);
     let smokeCalled = false;
 
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
@@ -357,8 +357,8 @@ describe("DoctorService", () => {
     runner.queueResult({ code: 0, stdout: "33\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Physical size: 1080x2400\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Physical density: 420\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
     runner.queueResult({
       code: 0,
       stdout: `    versionCode=606060 minSdk=21 targetSdk=35\n    versionName=${getCliVersion()}-d\n`,
@@ -412,7 +412,7 @@ describe("DoctorService", () => {
 
   it("reuses handshake interactive evidence instead of re-probing device state", async () => {
     const runner = new FakeProcessRunner();
-    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.clawperator.operator.dev" }), fakeRegistryDir);
+    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.androperator.operator.dev" }), fakeRegistryDir);
     let interactiveCheckCalls = 0;
 
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
@@ -423,8 +423,8 @@ describe("DoctorService", () => {
     runner.queueResult({ code: 0, stdout: "33\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Physical size: 1080x2400\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Physical density: 420\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
     runner.queueResult({
       code: 0,
       stdout: `    versionCode=606060 minSdk=21 targetSdk=35\n    versionName=${getCliVersion()}-d\n`,
@@ -468,7 +468,7 @@ describe("DoctorService", () => {
 
   it("falls back to the dedicated interactive check when handshake evidence is unavailable", async () => {
     const runner = new FakeProcessRunner();
-    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.clawperator.operator.dev" }), fakeRegistryDir);
+    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.androperator.operator.dev" }), fakeRegistryDir);
     let interactiveCheckCalls = 0;
 
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
@@ -479,8 +479,8 @@ describe("DoctorService", () => {
     runner.queueResult({ code: 0, stdout: "33\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Physical size: 1080x2400\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Physical density: 420\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
     runner.queueResult({
       code: 0,
       stdout: `    versionCode=606060 minSdk=21 targetSdk=35\n    versionName=${getCliVersion()}-d\n`,
@@ -522,9 +522,9 @@ describe("DoctorService logging", () => {
   let originalPath: string | undefined;
 
   beforeEach(async () => {
-    tempRoot = await mkdtemp(join(tmpdir(), "clawperator-doctor-log-"));
+    tempRoot = await mkdtemp(join(tmpdir(), "androperator-doctor-log-"));
     originalPath = process.env.PATH;
-    fakeAgentCliDir = await mkdtemp(join(tmpdir(), "clawperator-doctor-log-agent-cli-"));
+    fakeAgentCliDir = await mkdtemp(join(tmpdir(), "androperator-doctor-log-agent-cli-"));
     const fakeAgentPath = join(fakeAgentCliDir, "codex");
     await writeFile(fakeAgentPath, "#!/bin/sh\nexit 0\n", "utf8");
     await chmod(fakeAgentPath, 0o755);
@@ -543,8 +543,8 @@ describe("DoctorService logging", () => {
 
   it("logs one doctor.check entry per check", async () => {
     const runner = new FakeProcessRunner();
-    const logger = createClawperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
-    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.clawperator.operator.dev" }), tempRoot);
+    const logger = createAndroperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
+    const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.androperator.operator.dev" }), tempRoot);
 
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
     runner.queueResult({ code: 0, stdout: "Android Debug Bridge version 1.0.41", stderr: "" });
@@ -598,7 +598,7 @@ it("background diagnostics use only host checks and service reads, preserving de
         const payload = { schemaVersion: 1, observedElapsedMs: 100, deviceState: { screenOn: false, deviceLocked: true, userUnlocked: true }, total: 0, truncated: false, [type === "list_notifications" ? "notifications" : "sessions"]: [] };
         const envelope = { commandId: execution.commandId, taskId: execution.taskId, status: denied ? "failed" : "success", error: denied ? "denied" : null,
           stepResults: [{ id: "a1", actionType: type, success: !denied, data: denied ? { errorCode: "NOTIFICATION_ACCESS_DENIED", error: "denied" } : { payload: JSON.stringify(payload) } }] };
-        setTimeout(() => stream.stdout.emit("data", Buffer.from(`[Clawperator-Result] ${JSON.stringify(envelope)}\n`)), 5);
+        setTimeout(() => stream.stdout.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify(envelope)}\n`)), 5);
         stdout = "Broadcast completed: result=0";
       } else throw new Error(`Forbidden diagnostic command: ${text}`);
       return { code: 0, stdout, stderr: "" };

@@ -1,6 +1,6 @@
 ---
 name: test-io-speeds
-description: Measure Clawperator snapshot and daemon latency for selected Android devices and app screens.
+description: Measure Androperator snapshot and daemon latency for selected Android devices and app screens.
 ---
 
 # Test I/O Speeds
@@ -13,7 +13,7 @@ built Operator APK, and explicit device selection.
 Ask for or infer these inputs:
 
 - target device serial, after running `adb devices -l`
-- Operator variant, usually release package `com.clawperator.operator`
+- Operator variant, usually release package `com.androperator.operator`
 - app list, each with:
   - `id`
   - `name`
@@ -22,7 +22,7 @@ Ask for or infer these inputs:
     another foreground package during launch
   - optional screen-prep notes to perform manually before measurement
 - output directory for local artifacts, defaulting to
-  `~/.clawperator/timings/YYYY-MM-DD/<device_serial>`
+  `~/.androperator/timings/YYYY-MM-DD/<device_serial>`
 
 Use the requested devices. For a requested emulator-versus-physical comparison,
 run the timing set on both with the emulator as baseline. For a single-device
@@ -39,7 +39,7 @@ For other requested apps, resolve `id`, `name`, and `packageName` from the
 request and device. Ask only if the target is ambiguous. Pass the list with
 `--apps-file` or `--apps-json`; app IDs must be safe filename segments.
 
-The harness first closes each target app through branch-local Clawperator
+The harness first closes each target app through branch-local Androperator
 `close <package>`, then opens it through `open <package>`. Do not hardcode
 Android activity names in the default app set; let the device resolve the
 launch activity from a clean app start.
@@ -73,7 +73,7 @@ launch activity from a clean app start.
 
    ```bash
    adb -s <device_serial> install apps/android/app/build/outputs/apk/release/app-release.apk
-   ./scripts/clawperator_grant_android_permissions.sh --release --serial <device_serial>
+   ./scripts/androperator_grant_android_permissions.sh --release --serial <device_serial>
    ```
 
    If signature mismatch blocks install, uninstall only the target Operator
@@ -92,7 +92,7 @@ launch activity from a clean app start.
    ```bash
    node .agents/skills/test-io-speeds/scripts/measure-snapshot-latency.mjs \
      --device <device_serial> \
-     --operator-package com.clawperator.operator \
+     --operator-package com.androperator.operator \
      --warmups 3 \
      --measured 10
    ```
@@ -121,7 +121,7 @@ For each app, the harness writes:
 - `<app-id>-direct-daemon.json`
 
 By default, these files are written under
-`~/.clawperator/timings/YYYY-MM-DD/<device_serial>`. Pass `--out-dir <path>`
+`~/.androperator/timings/YYYY-MM-DD/<device_serial>`. Pass `--out-dir <path>`
 only when the caller explicitly wants another local artifact directory.
 
 The normal mode removes raw host logs after extracting summary timing. Passing

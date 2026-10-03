@@ -7,9 +7,9 @@ import json
 from typing import Any
 
 
-ANSWER_PATTERN = re.compile(r"^CLAWPERATOR_EVAL_ANSWER:\s*(\S.*?)\s*$", re.MULTILINE)
+ANSWER_PATTERN = re.compile(r"^ANDROPERATOR_EVAL_ANSWER:\s*(\S.*?)\s*$", re.MULTILINE)
 _WRAPPED_ANSWER_PATTERN = re.compile(
-    r"^CLAWPERATOR_(?:\s*\n\s*)EVAL_ANSWER:\s*(\S.*?)\s*$",
+    r"^ANDROPERATOR_(?:\s*\n\s*)EVAL_ANSWER:\s*(\S.*?)\s*$",
     re.MULTILINE,
 )
 _ANSI_PATTERN = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
@@ -235,7 +235,7 @@ def _require_safe_path_list_field(payload: dict[str, Any], field: str, errors: l
             errors.append(f"unsafe path in {field}[{index}]")
 
 
-def validate_skill(skill_json: str, clawperator_cmd: list[str], operator_package: str) -> tuple[bool, list[str]]:
+def validate_skill(skill_json: str, androperator_cmd: list[str], operator_package: str) -> tuple[bool, list[str]]:
     errors: list[str] = []
     try:
         payload = json.loads(skill_json)

@@ -2,7 +2,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { chmodSync, closeSync, mkdirSync, openSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import { CLAWPERATOR_SKILL_RUN_ID_ENV_VAR } from "../../contracts/logging.js";
+import { ANDROPERATOR_SKILL_RUN_ID_ENV_VAR } from "../../contracts/logging.js";
 
 export interface DaemonPathsOptions {
   baseDir?: string;
@@ -171,7 +171,7 @@ export function sanitizeDaemonKey(rawDeviceId: string | undefined): string {
 }
 
 export function getDaemonDir(options?: DaemonPathsOptions): string {
-  const dir = options?.baseDir ?? join(homedir(), ".clawperator", "daemon");
+  const dir = options?.baseDir ?? join(homedir(), ".androperator", "daemon");
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   const stats = statSync(dir);
   if (!stats.isDirectory()) {
@@ -269,7 +269,7 @@ export async function stopDaemon(
 
     if (!isDaemonProcess(metadata, controller)) {
       // Do not unlink a socket belonging to an unverified process, including
-      // a reused PID or another Clawperator checkout.
+      // a reused PID or another Androperator checkout.
       removeDaemonPidMetadata(rawDeviceId, metadata, options);
       return "not_running";
     }
@@ -316,7 +316,7 @@ export function spawnDaemonRun(
     // Strip skill run correlation so the long-lived daemon does not inherit a
     // stale skillRunId from the skill script that triggered this start.
     const daemonEnv = { ...process.env };
-    delete daemonEnv[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR];
+    delete daemonEnv[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
 
     const child = spawn(process.execPath, args, {
       detached: true,

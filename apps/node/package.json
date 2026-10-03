@@ -1,16 +1,16 @@
 {
-  "name": "clawperator",
-  "version": "0.12.6",
-  "description": "Clawperator Node API - reliable Android execution for LLM agents",
+  "name": "androperator",
+  "version": "1.0.0",
+  "description": "Androperator Node API - reliable Android execution for LLM agents",
   "type": "module",
   "main": "dist/cli/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/clawperator/clawperator.git",
+    "url": "https://github.com/androperator/androperator.git",
     "directory": "apps/node"
   },
-  "homepage": "https://clawperator.com",
-  "bugs": "https://github.com/clawperator/clawperator/issues",
+  "homepage": "https://androperator.com",
+  "bugs": "https://github.com/androperator/androperator/issues",
   "bin": "dist/cli/index.js",
   "publishConfig": {
     "access": "public",
@@ -35,7 +35,7 @@
     "lint": "eslint src --ext .ts"
   },
   "keywords": [
-    "clawperator",
+    "androperator",
     "openclaw",
     "android",
     "automation",

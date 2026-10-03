@@ -7,8 +7,8 @@ Author: Claude (Opus 4.7)
 
 - repo-local internal skills under `.agents/skills/`
 - the four packaged public skills:
-  - `clawperator-agent-orientation`
-  - `clawperator-upgrade`
+  - `androperator-agent-orientation`
+  - `androperator-upgrade`
   - `skill-author-by-agent-discovery`
   - `skill-author-by-recording`
 
@@ -27,16 +27,16 @@ Goals:
    **symlinks** into `.agents/skills/`, flipped to hydrated copies only during
    `npm pack`. The cleanup is not deduplication - it is choosing where the
    real files live.
-3. Both `skill-author-by-*` ids should be prefixed with `clawperator-`.
+3. Both `skill-author-by-*` ids should be prefixed with `androperator-`.
 4. The frontmatter on all four should be tightened so these read unambiguously
-   as first-party Clawperator artifacts.
+   as first-party Androperator artifacts.
 5. **Decision: rename `agent-skills` to `bundled-skills` everywhere it
    surfaces** (CLI noun, on-disk package dir, install dir, doctor check id,
    env var, docs), as a **clean break with no backwards-compat layer**.
    `agent-skills` violates three of the Node API design principles. Full
    reasoning in
    [Finding 4](#finding-4-agent-skills-is-the-wrong-external-name-rename-to-bundled-skills).
-   A stronger option (fold under `clawperator skills`) was considered and
+   A stronger option (fold under `androperator skills`) was considered and
    deferred because the scope is too invasive for the current round.
 6. **No aliases, env-var fallbacks, or dual install-path support.** The
    pre-alpha stage of the project is the right moment to take a clean-break
@@ -63,10 +63,10 @@ directories. `apps/node/agent-skills/` contains four **symlinks** pointing
 back at those sources:
 
 ```
-apps/node/agent-skills/clawperator-agent-orientation ->
-  ../../../.agents/skills/clawperator-agent-orientation
-apps/node/agent-skills/clawperator-upgrade ->
-  ../../../.agents/skills/clawperator-upgrade
+apps/node/agent-skills/androperator-agent-orientation ->
+  ../../../.agents/skills/androperator-agent-orientation
+apps/node/agent-skills/androperator-upgrade ->
+  ../../../.agents/skills/androperator-upgrade
 apps/node/agent-skills/skill-author-by-agent-discovery ->
   ../../../.agents/skills/skill-author-by-agent-discovery
 apps/node/agent-skills/skill-author-by-recording ->
@@ -95,9 +95,9 @@ Both stories can't both be primary. Pick one and retire the other.
 
 The install contract itself is healthy and unambiguous:
 
-- installer calls `clawperator agent-skills install`
-  ([install.sh:563](../../../../sites/landing-clawperator/public/install.sh))
-- target dir on the user's machine is `~/.clawperator/agent-skills/`
+- installer calls `androperator agent-skills install`
+  ([install.sh:563](../../../../sites/androperator-public/install.sh))
+- target dir on the user's machine is `~/.androperator/agent-skills/`
 - symlinks are fanned out into `~/.claude/skills/`, `~/.codex/skills/`, and
   `~/.agents/skills/`
 - doctor validates the installed state under `host.agent-skills.staleness`
@@ -134,7 +134,7 @@ staging area fed by symlinks. Reasons, ranked:
 
 A top-level `agent-skills/` at repo root was considered. It is defensible,
 but it adds a third skill tree at the repo root alongside `.agents/skills/`
-and the sibling `../clawperator-skills` repo. Three skill roots at the same
+and the sibling `<workspace>` repo. Three skill roots at the same
 visual level will invite future confusion. `apps/node/bundled-skills/` has
 the advantage of being unambiguously owned by one package.
 
@@ -143,33 +143,33 @@ add a short README at the repo root that points at
 `apps/node/bundled-skills/` and explains the three skill categories. That
 addresses the discoverability concern without adding a third directory.
 
-### Finding 3: Prefix both `skill-author-by-*` ids with `clawperator-`
+### Finding 3: Prefix both `skill-author-by-*` ids with `androperator-`
 
 The asymmetry in the current set -
 
-- `clawperator-agent-orientation`
-- `clawperator-upgrade`
+- `androperator-agent-orientation`
+- `androperator-upgrade`
 - `skill-author-by-agent-discovery`        <- unbranded
 - `skill-author-by-recording`              <- unbranded
 
 - is visible to any agent listing `~/.claude/skills/`. On a machine with
-dozens of unrelated skills, two of Clawperator's four look like generic
+dozens of unrelated skills, two of Androperator's four look like generic
 "skill author" tooling that could have come from anywhere.
 
 Proposed final ids:
 
-- `clawperator-agent-orientation`        (no change)
-- `clawperator-upgrade`                  (no change)
-- `clawperator-skill-author-by-agent-discovery`
-- `clawperator-skill-author-by-recording`
+- `androperator-agent-orientation`        (no change)
+- `androperator-upgrade`                  (no change)
+- `androperator-skill-author-by-agent-discovery`
+- `androperator-skill-author-by-recording`
 
-Do **not** shorten to `clawperator-skill-discovery` or `clawperator-record`.
+Do **not** shorten to `androperator-skill-discovery` or `androperator-record`.
 The full phrase preserves the conceptual pairing ("author by X") and keeps
 the ids self-documenting.
 
 Note on migration: the skill ids are also referenced in docs and install-time
 generated agent guides (see
-[install.sh:1131](../../../../sites/landing-clawperator/public/install.sh) and
+[install.sh:1131](../../../../sites/androperator-public/install.sh) and
 [docs/skills/authoring.md:115](../../../../docs/skills/authoring.md)). These
 need to be updated in lockstep.
 
@@ -180,8 +180,8 @@ Measured against
 `agent-skills` fails three principles on the external CLI surface:
 
 1. **Guessability (Principle 1).** An agent that read one sentence about
-   Clawperator would never type `clawperator agent-skills`. It would type
-   `clawperator skills install`, hit the *runtime* skills namespace, and be
+   Androperator would never type `androperator agent-skills`. It would type
+   `androperator skills install`, hit the *runtime* skills namespace, and be
    wrong on the first attempt. The docs already have to write
    "Agent-skills are separate from runtime skills"
    ([docs/host-agents.md:70](../../../../docs/host-agents.md)) - that
@@ -190,7 +190,7 @@ Measured against
    *discovery mechanism* (the generic `~/.agents/skills/` fan-out directory),
    not the product identity. The name tells an agent how we deliver, not what
    the thing is. Principle 10 says external names should describe what the
-   agent wants, not how Clawperator arranges itself internally.
+   agent wants, not how Androperator arranges itself internally.
 3. **Familiar vocabulary (Principle 3).** Nothing in Playwright, adb, gh, or
    npm trains an agent to reach for "agent-skills." The term is meta
    ("skills for agents, used by an agent") in a way no other CLI the agent
@@ -208,23 +208,23 @@ Candidate replacement terms, ranked:
 | first-party skills | Industry-standard | A bit jargon-y for docs |
 | host-helper skills | Matches "host agent" vocabulary | Obscure; "helper" is soft |
 | host skills | Short | Overloaded with "host agent" / "host OS" |
-| operator skills | Evokes Clawperator | Collides with the operator APK concept |
+| operator skills | Evokes Androperator | Collides with the operator APK concept |
 
 **Decision: `bundled-skills`.** It says the thing, matches the
 "bundled-dependencies" pattern agents already know from npm, and does not
-fight any existing Clawperator vocabulary.
+fight any existing Androperator vocabulary.
 
-#### Alternative considered and deferred: fold under `clawperator skills`
+#### Alternative considered and deferred: fold under `androperator skills`
 
 The strongest move against the "two skill namespaces" problem is to unify:
-one `clawperator skills` namespace, with a `--type bundled|runtime` dimension
+one `androperator skills` namespace, with a `--type bundled|runtime` dimension
 where the distinction matters. An agent trying to install *anything*
 skill-shaped would land on the right command first try. That is what
 Principle 1 actually points at.
 
 This option was surfaced in the EM verdict and explicitly deferred because:
 
-- `clawperator skills install` today means "install the runtime-skill
+- `androperator skills install` today means "install the runtime-skill
   registry from the sibling repo." Folding in bundled changes that semantics
   and every consumer of it (install.sh, doctor, docs, tests).
 - The conflation risk needs dedicated thinking - the two categories have
@@ -235,7 +235,7 @@ This option was surfaced in the EM verdict and explicitly deferred because:
   frontmatter right. Command-surface unification is a separate project with
   its own migration and its own doctor-check renames.
 
-**Position for a future round:** revisit `clawperator skills` unification
+**Position for a future round:** revisit `androperator skills` unification
 after `bundled-skills` has landed and stabilized. If it still looks right
 then, do it as a deliberate breaking-release project with alias support.
 
@@ -243,11 +243,11 @@ then, do it as a deliberate breaking-release project with alias support.
 
 Rename everywhere the external surface uses the term:
 
-- CLI noun: `clawperator agent-skills` -> `clawperator bundled-skills`
+- CLI noun: `androperator agent-skills` -> `androperator bundled-skills`
 - package dir: `apps/node/agent-skills/` -> `apps/node/bundled-skills/`
-- install dir: `~/.clawperator/agent-skills/` -> `~/.clawperator/bundled-skills/`
+- install dir: `~/.androperator/agent-skills/` -> `~/.androperator/bundled-skills/`
 - doctor check id: `host.agent-skills.staleness` -> `host.bundled-skills.staleness`
-- env var: `CLAWPERATOR_AGENT_SKILLS` -> `CLAWPERATOR_BUNDLED_SKILLS`
+- env var: `ANDROPERATOR_AGENT_SKILLS` -> `ANDROPERATOR_BUNDLED_SKILLS`
 - docs vocabulary: "agent-skills" -> "bundled skills"
 - user-facing CLI strings: the `Agent-skills installed.` / `Agent-skills
   updated.` messages in the JSON envelope and the plain-text fallback flip
@@ -261,7 +261,7 @@ Rename everywhere the external surface uses the term:
 No backwards-compatibility layer is added. The task is a clean break:
 
 - the CLI does not register `agent-skills` as an alias
-- no env-var fallback is honored for `CLAWPERATOR_AGENT_SKILLS`
+- no env-var fallback is honored for `ANDROPERATOR_AGENT_SKILLS`
 - there is no migration that accepts the old install dir and moves it
 - the old doctor check id is removed, not soft-deprecated
 
@@ -286,13 +286,13 @@ Minimal ownership additions that do not require schema changes:
 
 ```yaml
 ---
-name: clawperator-skill-author-by-recording
-description: Clawperator first-party bundled skill. Create or update a Clawperator skill from a fresh phone recording. ...
+name: androperator-skill-author-by-recording
+description: Androperator first-party bundled skill. Create or update an Androperator skill from a fresh phone recording. ...
 ---
 ```
 
-The key is in the `description`: lead with **"Clawperator first-party
-bundled skill"** (or "Clawperator bundled skill"). This is the text agent
+The key is in the `description`: lead with **"Androperator first-party
+bundled skill"** (or "Androperator bundled skill"). This is the text agent
 loaders surface in skill listings, so it is where attribution pays off most.
 
 Only add new frontmatter keys (`owner`, `surface`, `distribution`) if the
@@ -300,7 +300,7 @@ skill loader either consumes them or demonstrably tolerates them without
 warnings. Do not introduce new keys speculatively.
 
 Also fix the body: the first paragraph of each SKILL.md should open with a
-sentence that names Clawperator explicitly. Three of the four already do -
+sentence that names Androperator explicitly. Three of the four already do -
 `skill-author-by-agent-discovery` is the weakest on this front.
 
 ## Naming Decision Matrix
@@ -310,12 +310,12 @@ Pulling the naming questions into one view:
 | Question | Current | Decision |
 |---|---|---|
 | Where do the 4 real files live? | `.agents/skills/` (symlinked into `apps/node/agent-skills/`) | `apps/node/bundled-skills/` only; remove symlinks |
-| Skill ids | two have `clawperator-` prefix, two do not | all four prefixed with `clawperator-` |
+| Skill ids | two have `androperator-` prefix, two do not | all four prefixed with `androperator-` |
 | Product category label (in docs) | "agent-skills" | "bundled skills" |
-| CLI noun | `clawperator agent-skills` | `clawperator bundled-skills` (no alias) |
-| Install directory | `~/.clawperator/agent-skills/` | `~/.clawperator/bundled-skills/` (no migration shim) |
+| CLI noun | `androperator agent-skills` | `androperator bundled-skills` (no alias) |
+| Install directory | `~/.androperator/agent-skills/` | `~/.androperator/bundled-skills/` (no migration shim) |
 | Doctor check id | `host.agent-skills.staleness` | `host.bundled-skills.staleness` (old id removed) |
-| Env var | `CLAWPERATOR_AGENT_SKILLS` | `CLAWPERATOR_BUNDLED_SKILLS` (no fallback) |
+| Env var | `ANDROPERATOR_AGENT_SKILLS` | `ANDROPERATOR_BUNDLED_SKILLS` (no fallback) |
 | Stable error code | `ERROR_CODES.AGENT_SKILLS_STALE` | unchanged - the literal is a documented contract |
 
 Rationale for doing the CLI/install-dir rename in this round instead of
@@ -325,7 +325,7 @@ That mismatch is exactly the kind of implementation-detail leak Principle 10
 warns against, and users would see two different names for one thing. Rename
 the whole surface in one pass and drop the old noun cleanly.
 
-Rationale for doing the rename without aliases or fallbacks: Clawperator is
+Rationale for doing the rename without aliases or fallbacks: Androperator is
 still pre-alpha. The installed-user footprint is small enough that a clean
 break costs less than the alias code and the docs caveats a transition
 period would require. Accepting `agent-skills` as a silent synonym for one
@@ -353,8 +353,8 @@ Phase 1 - physical relocation and de-symlinking:
 Phase 2 - skill id prefixes and frontmatter:
 
 1. Rename directories:
-   - `skill-author-by-agent-discovery` -> `clawperator-skill-author-by-agent-discovery`
-   - `skill-author-by-recording` -> `clawperator-skill-author-by-recording`
+   - `skill-author-by-agent-discovery` -> `androperator-skill-author-by-agent-discovery`
+   - `skill-author-by-recording` -> `androperator-skill-author-by-recording`
 2. Update the `name:` frontmatter field in each renamed SKILL.md.
 3. Update every reference in the repo to the old two names:
    - `install.sh` (generated agent guide block near line 1131)
@@ -363,21 +363,21 @@ Phase 2 - skill id prefixes and frontmatter:
    - any internal design docs
    - validation harnesses under `validation/install/`
 4. Update the four skill descriptions to open with
-   "Clawperator first-party bundled skill."
+   "Androperator first-party bundled skill."
 5. Tighten the first paragraph of `skill-author-by-agent-discovery`'s body to
-   name Clawperator explicitly.
+   name Androperator explicitly.
 
 Phase 3 - external surface rename `agent-skills` -> `bundled-skills`:
 
 1. Rename the CLI command group. The new primary name is
-   `clawperator bundled-skills`. Do not register `agent-skills` as an alias
-   in the CLI parser. `clawperator agent-skills --help` should exit with
+   `androperator bundled-skills`. Do not register `agent-skills` as an alias
+   in the CLI parser. `androperator agent-skills --help` should exit with
    the standard unknown-command error, not a deprecation hint.
 2. Rename the install directory target:
-   `~/.clawperator/agent-skills/` -> `~/.clawperator/bundled-skills/`.
+   `~/.androperator/agent-skills/` -> `~/.androperator/bundled-skills/`.
    Do not add migration or fallback code that inspects the old path.
-3. Rename the env var `CLAWPERATOR_AGENT_SKILLS` ->
-   `CLAWPERATOR_BUNDLED_SKILLS`. Do not honor the old name as a fallback.
+3. Rename the env var `ANDROPERATOR_AGENT_SKILLS` ->
+   `ANDROPERATOR_BUNDLED_SKILLS`. Do not honor the old name as a fallback.
 4. Rename the doctor check id
    `host.agent-skills.staleness` -> `host.bundled-skills.staleness` and
    update the fix text to use the new command noun. Keep the stable error
@@ -418,24 +418,24 @@ disagree - which is worse than the current situation.
    references these skill names in help output. Check during Phase 2 and
    again during Phase 3.
 3. **Install-time generated agent guide.** The text that install.sh writes
-   into `~/.clawperator/agent-guide.md` names these four skills and their
+   into `~/.androperator/agent-guide.md` names these four skills and their
    roles. Update in the same PR that renames them, otherwise users on
    the old and new names will both exist in the wild briefly.
 4. **Sibling skills repo independence.** This migration does not touch
-   `../clawperator-skills`. That repo stays as the runtime app skills home.
+   `<workspace>`. That repo stays as the runtime app skills home.
    Worth a one-line note in the bundled-skills docs reaffirming the split.
 5. **Evals and validation scripts.** `evals/specs/android-version/prompt-skill.md`
    and `validation/install/README.md` both reference the agent-skills term.
    They should follow the same terminology as the docs.
 6. **No backwards-compat safety net.** Because this task does not keep
    aliases, env-var fallbacks, or install-dir migration logic, any user
-   still on an older CLI that points at `~/.clawperator/agent-skills/` will
+   still on an older CLI that points at `~/.androperator/agent-skills/` will
    need to re-run the new `bundled-skills install` flow. That is an
    accepted cost of pre-alpha status. Release notes should call the break
    out explicitly so agents and users do not silently sit on stale
    `agent-skills` trees after upgrading.
 7. **External tooling pinning to the old install path.** Scan
-   `../clawperator-skills`, `clawperator.com` install materials, and any
+   `<workspace>`, `androperator.com` install materials, and any
    Codex or Claude skill registries before merging Phase 3, so the rename
    lands coherently on the first release that ships it.
 8. **Docs API reference page.** `docs/api/doctor.md` references both
@@ -454,9 +454,9 @@ Committed moves for this round:
 
 1. Move real files to `apps/node/bundled-skills/`; retire the symlinks and
    the pack script.
-2. Prefix the two unprefixed skill ids with `clawperator-`.
+2. Prefix the two unprefixed skill ids with `androperator-`.
 3. Rewrite the four descriptions to open with
-   "Clawperator first-party bundled skill."
+   "Androperator first-party bundled skill."
 4. Rename the external surface from `agent-skills` to `bundled-skills`
    everywhere it shows up (CLI, install dir, env var, doctor check, user
    messages, docs) as a clean break with no alias, env-var fallback, or
@@ -466,5 +466,5 @@ Committed moves for this round:
 Deferred for a future, scoped round:
 
 - Fold `bundled-skills` and the runtime `skills` namespaces into a single
-  `clawperator skills` group with a type dimension. Revisit once the rename
+  `androperator skills` group with a type dimension. Revisit once the rename
   above has stabilized.

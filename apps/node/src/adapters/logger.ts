@@ -1,11 +1,11 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import {
-  CLAWPERATOR_SKILL_RUN_ID_ENV_VAR,
+  ANDROPERATOR_SKILL_RUN_ID_ENV_VAR,
   type LogEvent,
   type LoggingStatus,
   type LogLevel,
-  type ClawperatorLogger,
+  type AndroperatorLogger,
   LEVEL_ORDER,
   resolveRoutingRule,
   DEFAULT_ROUTING_RULES,
@@ -15,14 +15,14 @@ import {
 } from "../contracts/logging.js";
 
 // Re-export contract types for consumers
-export type { LogEvent, LogLevel, ClawperatorLogger };
+export type { LogEvent, LogLevel, AndroperatorLogger };
 
 /**
- * Logger is a type alias for ClawperatorLogger. Kept as a convenience export
+ * Logger is a type alias for AndroperatorLogger. Kept as a convenience export
  * so existing call sites do not need a mass rename. New code should prefer
- * importing ClawperatorLogger from contracts/logging.ts.
+ * importing AndroperatorLogger from contracts/logging.ts.
  */
-export type Logger = ClawperatorLogger;
+export type Logger = AndroperatorLogger;
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -59,7 +59,7 @@ function mergeDefinedContext(
 // Unified logger factory
 // ---------------------------------------------------------------------------
 
-export interface CreateClawperatorLoggerOptions {
+export interface CreateAndroperatorLoggerOptions {
   logDir?: string;
   logLevel?: string;
   outputFormat?: "json" | "pretty";
@@ -67,16 +67,16 @@ export interface CreateClawperatorLoggerOptions {
   fileLogging?: boolean;
 }
 
-const loggerDirectories = new WeakMap<ClawperatorLogger, string>();
+const loggerDirectories = new WeakMap<AndroperatorLogger, string>();
 
 export function resolveLogDestination(logDir?: string, date = new Date()): { logDir: string; logPath: string } {
-  const configuredDir = logDir?.trim() || process.env.CLAWPERATOR_LOG_DIR?.trim() || "~/.clawperator/logs";
+  const configuredDir = logDir?.trim() || process.env.ANDROPERATOR_LOG_DIR?.trim() || "~/.androperator/logs";
   const resolvedDir = resolve(expandHomePath(configuredDir));
   return { logDir: resolvedDir, logPath: formatLogPath(resolvedDir, date) };
 }
 
 /** Retain the attempted destination even after the logger disables its file sink. */
-export function getLoggerDestination(logger?: ClawperatorLogger): { logDir: string; logPath: string } {
+export function getLoggerDestination(logger?: AndroperatorLogger): { logDir: string; logPath: string } {
   const directory = logger === undefined ? undefined : loggerDirectories.get(logger);
   if (directory !== undefined) return resolveLogDestination(directory);
   const logPath = logger?.logPath();
@@ -84,15 +84,15 @@ export function getLoggerDestination(logger?: ClawperatorLogger): { logDir: stri
 }
 
 /**
- * Create a unified Clawperator logger with file and terminal routing.
+ * Create a unified Androperator logger with file and terminal routing.
  *
- * File destination: NDJSON lines at `~/.clawperator/logs/clawperator-YYYY-MM-DD.log`.
+ * File destination: NDJSON lines at `~/.androperator/logs/androperator-YYYY-MM-DD.log`.
  * Terminal destination: selected events written to stderr in pretty mode, suppressed in JSON mode.
  * Fail-open: if the log directory is unavailable, one stderr warning then file logging disabled.
  */
-export function createClawperatorLogger(options?: CreateClawperatorLoggerOptions): ClawperatorLogger {
+export function createAndroperatorLogger(options?: CreateAndroperatorLoggerOptions): AndroperatorLogger {
   const { logDir } = resolveLogDestination(options?.logDir);
-  const threshold = normalizeLogLevel(options?.logLevel ?? process.env.CLAWPERATOR_LOG_LEVEL);
+  const threshold = normalizeLogLevel(options?.logLevel ?? process.env.ANDROPERATOR_LOG_LEVEL);
   const outputFormat = options?.outputFormat ?? "json";
   const state = { warned: false, fileDisabled: false, persistedPath: undefined as string | undefined };
 
@@ -112,8 +112,8 @@ export function createClawperatorLogger(options?: CreateClawperatorLoggerOptions
     } catch (error) {
       const message =
         error instanceof Error
-          ? `[clawperator] WARN: logging disabled after write failure for ${path}: ${error.message}\n`
-          : `[clawperator] WARN: logging disabled after write failure for ${path}\n`;
+          ? `[androperator] WARN: logging disabled after write failure for ${path}: ${error.message}\n`
+          : `[androperator] WARN: logging disabled after write failure for ${path}\n`;
       warnOnce(state, message);
       state.fileDisabled = true;
     }
@@ -123,7 +123,7 @@ export function createClawperatorLogger(options?: CreateClawperatorLoggerOptions
     process.stderr.write(`${event.message}\n`);
   }
 
-  function buildLogger(defaultContext?: Partial<LogEvent>): ClawperatorLogger {
+  function buildLogger(defaultContext?: Partial<LogEvent>): AndroperatorLogger {
     function emitEvent(event: LogEvent): void {
       // Merge child context into event. Explicit event fields take precedence.
       const merged = mergeDefinedContext(defaultContext, event) as LogEvent;
@@ -145,10 +145,10 @@ export function createClawperatorLogger(options?: CreateClawperatorLoggerOptions
       }
     }
 
-    const logger: ClawperatorLogger = {
+    const logger: AndroperatorLogger = {
       emit: emitEvent,
 
-      child(childContext: Partial<LogEvent>): ClawperatorLogger {
+      child(childContext: Partial<LogEvent>): AndroperatorLogger {
         const mergedContext = mergeDefinedContext(defaultContext, childContext);
         return buildLogger(mergedContext);
       },
@@ -172,10 +172,10 @@ export function createClawperatorLogger(options?: CreateClawperatorLoggerOptions
 
   const inheritedSkillRunId = options?.inheritSkillRunId === false
     ? undefined
-    : normalizeSkillRunId(process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR]);
+    : normalizeSkillRunId(process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR]);
   return buildLogger(inheritedSkillRunId !== undefined ? { skillRunId: inheritedSkillRunId } : undefined);
 }
 
-export function getLoggingStatus(logger?: ClawperatorLogger): LoggingStatus {
+export function getLoggingStatus(logger?: AndroperatorLogger): LoggingStatus {
   return logger === undefined ? { status: "disabled" } : logger.status();
 }

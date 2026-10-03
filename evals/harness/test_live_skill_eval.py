@@ -105,7 +105,7 @@ def test_classify_run_marks_skill_timeout():
         result_payload=None,
         skill_capture=live_skill_eval.CommandCapture(
             name="skill-run",
-            command=["clawperator", "skills", "run"],
+            command=["androperator", "skills", "run"],
             returncode=124,
             timed_out=True,
             stdout_path="run-01/commands/skill-run.stdout.txt",
@@ -126,7 +126,7 @@ def test_render_summary_markdown_lists_runs():
         "eval_id": live_skill_eval.SOLAX_COLD_START_EVAL_ID,
         "batch_id": "batch-1",
         "device_serial": "device-123",
-        "operator_package": "com.clawperator.operator.dev",
+        "operator_package": "com.androperator.operator.dev",
         "skills_registry": "/tmp/skills-registry.json",
         "runs_requested": 2,
         "aggregate_status": "failed",
@@ -172,7 +172,7 @@ def test_render_summary_markdown_lists_runs():
 
 
 def test_sanitize_json_value_redacts_device_and_repo_paths(tmp_path):
-    skills_registry = tmp_path / "clawperator-skills" / "skills" / "skills-registry.json"
+    skills_registry = tmp_path / "local skill workspace" / "skills" / "skills-registry.json"
     skills_registry.parent.mkdir(parents=True)
     replacements = live_skill_eval._artifact_replacements("device-123", skills_registry)
     payload = {
@@ -184,8 +184,8 @@ def test_sanitize_json_value_redacts_device_and_repo_paths(tmp_path):
     sanitized = live_skill_eval._sanitize_json_value(payload, replacements)
 
     assert sanitized["device"] == "<device_serial>"
-    assert sanitized["registry"] == "/<local_user>/src/clawperator-skills/skills/skills-registry.json"
-    assert sanitized["repo"] == "/<local_user>/src/clawperator"
+    assert sanitized["registry"] == "/<local_user>/src/local skill workspace/skills/skills-registry.json"
+    assert sanitized["repo"] == "/<local_user>/src/androperator"
 
 
 def test_artifact_replacements_skip_root_like_skills_repo_prefix(tmp_path):
@@ -200,28 +200,28 @@ def test_artifact_replacements_skip_root_like_skills_repo_prefix(tmp_path):
 
     sanitized = live_skill_eval._sanitize_json_value(payload, replacements)
 
-    assert sanitized["registry"] == "/<local_user>/src/clawperator-skills/skills/skills-registry.json"
+    assert sanitized["registry"] == "/<local_user>/src/local skill workspace/skills/skills-registry.json"
     assert sanitized["other_path"] == "/tmp/example/path.json"
 
 
-def test_clawperator_env_forwards_skill_debugging_overrides(monkeypatch):
+def test_androperator_env_forwards_skill_debugging_overrides(monkeypatch):
     monkeypatch.setenv("PATH", "/usr/bin")
     monkeypatch.setenv("HOME", "/tmp/home")
-    monkeypatch.setenv("CLAWPERATOR_SKILL_RETAIN_LOGS", "1")
-    monkeypatch.setenv("CLAWPERATOR_SKILL_LOG_DIR", "/tmp/skill-logs")
-    monkeypatch.setenv("CLAWPERATOR_SKILL_AGENT_TIMEOUT_MS", "120000")
+    monkeypatch.setenv("ANDROPERATOR_SKILL_RETAIN_LOGS", "1")
+    monkeypatch.setenv("ANDROPERATOR_SKILL_LOG_DIR", "/tmp/skill-logs")
+    monkeypatch.setenv("ANDROPERATOR_SKILL_AGENT_TIMEOUT_MS", "120000")
 
-    env = live_skill_eval._clawperator_env()
+    env = live_skill_eval._androperator_env()
 
-    assert env["CLAWPERATOR_SKILL_RETAIN_LOGS"] == "1"
-    assert env["CLAWPERATOR_SKILL_LOG_DIR"] == "/tmp/skill-logs"
-    assert env["CLAWPERATOR_SKILL_AGENT_TIMEOUT_MS"] == "120000"
+    assert env["ANDROPERATOR_SKILL_RETAIN_LOGS"] == "1"
+    assert env["ANDROPERATOR_SKILL_LOG_DIR"] == "/tmp/skill-logs"
+    assert env["ANDROPERATOR_SKILL_AGENT_TIMEOUT_MS"] == "120000"
 
 
 def test_run_and_capture_records_timeout(tmp_path, monkeypatch):
     def fake_run(*args, **kwargs):
         exc = subprocess.TimeoutExpired(
-            cmd=["clawperator", "skills", "run"],
+            cmd=["androperator", "skills", "run"],
             timeout=kwargs["timeout"],
             output='{"partial":true}\n',
             stderr="still waiting",
@@ -232,7 +232,7 @@ def test_run_and_capture_records_timeout(tmp_path, monkeypatch):
     monkeypatch.setattr(live_skill_eval.subprocess, "run", fake_run)
 
     capture, payload, stdout, stderr = live_skill_eval._run_and_capture(
-        command=["clawperator", "skills", "run"],
+        command=["androperator", "skills", "run"],
         run_dir=tmp_path,
         name="skill-run",
         env={"PATH": "/usr/bin", "HOME": "/tmp"},
@@ -277,9 +277,9 @@ def test_normalization_sequence_uses_bounded_timeout(tmp_path, monkeypatch):
 
     result = live_skill_eval._normalization_sequence(
         run_dir=tmp_path,
-        clawperator_cmd=["clawperator"],
+        androperator_cmd=["androperator"],
         device_serial="device-123",
-        operator_package="com.clawperator.operator.dev",
+        operator_package="com.androperator.operator.dev",
         stage_prefix="before-probe",
         replacements=[],
     )
@@ -321,9 +321,9 @@ def test_probe_observed_value_uses_bounded_timeout(tmp_path, monkeypatch):
 
     result = live_skill_eval._probe_observed_value(
         run_dir=tmp_path,
-        clawperator_cmd=["clawperator"],
+        androperator_cmd=["androperator"],
         device_serial="device-123",
-        operator_package="com.clawperator.operator.dev",
+        operator_package="com.androperator.operator.dev",
         stage_prefix="probe",
         replacements=[],
     )
@@ -364,7 +364,7 @@ def test_run_eval_dispatches_solax_eval(monkeypatch, tmp_path):
             "--device",
             "device-123",
             "--operator-package",
-            "com.clawperator.operator.dev",
+            "com.androperator.operator.dev",
             "--runs",
             "2",
             "--skills-registry",
@@ -378,7 +378,7 @@ def test_run_eval_dispatches_solax_eval(monkeypatch, tmp_path):
     assert calls["device_serial"] == "device-123"
     assert calls["runs"] == 2
     assert calls["runtime"] == "local-dev"
-    assert calls["operator_package"] == "com.clawperator.operator.dev"
+    assert calls["operator_package"] == "com.androperator.operator.dev"
 
 
 def test_run_eval_rejects_operator_package_for_android_version():
@@ -389,7 +389,7 @@ def test_run_eval_rejects_operator_package_for_android_version():
             [
                 "android-version",
                 "--operator-package",
-                "com.clawperator.operator.dev",
+                "com.androperator.operator.dev",
             ]
         )
     except SystemExit as exc:

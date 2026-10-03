@@ -5,11 +5,11 @@ import { dirname, join, resolve } from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { expandHomePath } from "../../contracts/logging.js";
-import { ERROR_CODES, type ClawperatorError } from "../../contracts/errors.js";
+import { ERROR_CODES, type AndroperatorError } from "../../contracts/errors.js";
 import { getOperatorPackageApkPath } from "./compatibility.js";
 
-const DEFAULT_METADATA_URL = "https://downloads.clawperator.com/operator/latest.json";
-const RELEASE_OPERATOR_PACKAGE = "com.clawperator.operator";
+const DEFAULT_METADATA_URL = "https://downloads.androperator.com/operator/latest.json";
+const RELEASE_OPERATOR_PACKAGE = "com.androperator.operator";
 const SHA256_HEX_REGEX = /^[a-f0-9]{64}$/i;
 
 interface OperatorApkMetadata {
@@ -36,7 +36,7 @@ export interface OperatorDownloadResult {
 }
 
 function getResolvedOperatorPackage(operatorPackage?: string): string {
-  const candidate = operatorPackage ?? process.env.CLAWPERATOR_OPERATOR_PACKAGE;
+  const candidate = operatorPackage ?? process.env.ANDROPERATOR_OPERATOR_PACKAGE;
   if (typeof candidate === "string") {
     const trimmed = candidate.trim();
     if (trimmed.length > 0) {
@@ -48,11 +48,11 @@ function getResolvedOperatorPackage(operatorPackage?: string): string {
 }
 
 function buildDownloadError(
-  code: ClawperatorError["code"],
+  code: AndroperatorError["code"],
   message: string,
   details?: Record<string, unknown>,
   hint?: string,
-): ClawperatorError {
+): AndroperatorError {
   return {
     code,
     message,
@@ -219,18 +219,18 @@ export async function downloadOperatorApk(
         operatorPackage,
         localPath: getOperatorPackageApkPath(operatorPackage),
       },
-      `Use a matching local debug APK and run clawperator operator setup --apk ${getOperatorPackageApkPath(operatorPackage)} --operator-package ${operatorPackage}.`,
+      `Use a matching local debug APK and run androperator operator setup --apk ${getOperatorPackageApkPath(operatorPackage)} --operator-package ${operatorPackage}.`,
     );
   }
 
-  const metadataUrl = options.metadataUrl ?? process.env.CLAWPERATOR_APK_METADATA_URL ?? DEFAULT_METADATA_URL;
+  const metadataUrl = options.metadataUrl ?? process.env.ANDROPERATOR_APK_METADATA_URL ?? DEFAULT_METADATA_URL;
   const metadata = parseMetadata(await fetchText(metadataUrl), metadataUrl);
   const checksumSource = metadata.sha256?.trim() ? "inline" : "external";
   const expectedSha256 = checksumSource === "inline"
     ? parseExpectedSha256(metadata.sha256 ?? "", metadataUrl)
     : parseExpectedSha256(await fetchText(metadata.sha256_url), metadata.sha256_url);
   const localPath = resolve(expandHomePath(getOperatorPackageApkPath(operatorPackage)));
-  const tempPath = join(dirname(localPath), `.clawperator-operator-download.${process.pid}.${Date.now()}.tmp`);
+  const tempPath = join(dirname(localPath), `.androperator-operator-download.${process.pid}.${Date.now()}.tmp`);
   try {
     await mkdir(dirname(localPath), { recursive: true });
   } catch (error) {
@@ -243,7 +243,7 @@ export async function downloadOperatorApk(
         localPath,
         cause: String(error),
       },
-      "Ensure the download directory is writable, then re-run clawperator operator download.",
+      "Ensure the download directory is writable, then re-run androperator operator download.",
     );
   }
 
@@ -263,7 +263,7 @@ export async function downloadOperatorApk(
           apkUrl: metadata.apk_url,
           sha256Url: metadata.sha256_url,
         },
-        "Re-run clawperator operator download to fetch a fresh verified copy.",
+        "Re-run androperator operator download to fetch a fresh verified copy.",
       );
     }
 
@@ -281,7 +281,7 @@ export async function downloadOperatorApk(
           localPath,
           cause: String(error),
         },
-        "Ensure the download directory is writable, then re-run clawperator operator download.",
+        "Ensure the download directory is writable, then re-run androperator operator download.",
       );
     }
   } finally {

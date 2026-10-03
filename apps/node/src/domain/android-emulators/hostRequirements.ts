@@ -1,6 +1,6 @@
 import { isAndroidSdkToolAvailable, type AndroidSdkTool } from "../../adapters/android-sdk/hostToolClient.js";
 import type { RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
-import { ERROR_CODES, type ClawperatorError } from "../../contracts/errors.js";
+import { ERROR_CODES, type AndroperatorError } from "../../contracts/errors.js";
 
 export interface HostToolAvailability {
   tool: AndroidSdkTool;
@@ -30,7 +30,7 @@ export async function assertRequiredEmulatorTools(
     return;
   }
 
-  const error: ClawperatorError = {
+  const error: AndroperatorError = {
     code: ERROR_CODES.ANDROID_SDK_TOOL_MISSING,
     message: `Required Android SDK tools are missing: ${missing.join(", ")}`,
     details: { missingTools: missing },

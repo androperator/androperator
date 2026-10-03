@@ -1,15 +1,15 @@
 You are an autonomous agent with access to a connected Android device via the
-Clawperator CLI. Your task is to determine the Android version running on the
+Androperator CLI. Your task is to determine the Android version running on the
 device and return it as your final answer.
 
 Environment:
-- Clawperator command: $CLAWPERATOR_CMD
-- Operator package: $CLAWPERATOR_OPERATOR_PACKAGE
+- Androperator command: $ANDROPERATOR_CMD
+- Operator package: $ANDROPERATOR_OPERATOR_PACKAGE
 - Target device serial: $DEVICE_SERIAL
-- Clawperator documentation: $DOCS_URL
+- Androperator documentation: $DOCS_URL
 
 Instructions:
-1. Open Android Settings using the Clawperator CLI. The Android Settings
+1. Open Android Settings using the Androperator CLI. The Android Settings
    app package name is: com.android.settings
 2. Navigate within Settings to find the Android version. It is typically
    found under "About phone" or "About device".
@@ -24,7 +24,7 @@ Instructions:
    5. Repeat until the Android version is known.
 4. When you have determined the Android version, output exactly this line:
 
-   CLAWPERATOR_EVAL_ANSWER: <version>
+   ANDROPERATOR_EVAL_ANSWER: <version>
 
    where <version> is the numeric version string only (e.g. "15" or "14",
    not "Android 15"). You may revise your answer by outputting the line
@@ -32,7 +32,7 @@ Instructions:
 
 5. If you cannot determine the version within your allowed attempts, output:
 
-   CLAWPERATOR_EVAL_ANSWER: unknown
+   ANDROPERATOR_EVAL_ANSWER: unknown
 
 6. Once you know the Android version, print the answer line immediately before
    you begin any recording, skill scaffolding, or self-test work. Do not hold
@@ -43,7 +43,7 @@ Instructions:
 After determining the Android version, do not stop at the answer line alone.
 For Pack A, you must attempt the discovery-to-proving route and either:
 
-- emit a reusable Clawperator skill package, or
+- emit a reusable Androperator skill package, or
 - truthfully conclude that the route cannot complete yet and omit the skill
   markers only after you have shown the blocking evidence in the transcript
 
@@ -55,20 +55,20 @@ discovery-to-proving route first:
 2. If runtime-skill discovery returns no relevant match, inspect the installed
    authoring-workflow front doors with:
 
-   `clawperator bundled-skills list`
+   `androperator bundled-skills list`
 
-3. For this benchmark, `clawperator-skill-author-by-agent-discovery` is the required
+3. For this benchmark, `androperator-skill-author-by-agent-discovery` is the required
    discovery front door. It should decide whether to hand off to
-   `clawperator-skill-author-by-recording` to prove a reusable authored skill for this
+   `androperator-skill-author-by-recording` to prove a reusable authored skill for this
    device family.
 4. Do not bypass discovery by inventing a direct wrapper skill or a universal
    cross-device Settings skill.
 5. Before you omit the skill markers, you must show the route attempt in the
    transcript:
    - runtime-skill discovery command(s)
-   - `clawperator bundled-skills list`
+   - `androperator bundled-skills list`
    - the discovery decision and why it blocked or handed off
-6. If `clawperator-skill-author-by-agent-discovery` is unavailable, incomplete, or cannot
+6. If `androperator-skill-author-by-agent-discovery` is unavailable, incomplete, or cannot
    truthfully finish the route yet, still return the Android version answer but
    omit the skill markers entirely after recording the blocking reason.
 
@@ -80,8 +80,8 @@ Use this exact evaluation posture:
 - Do not use web search for this benchmark. The local files and CLI surface are
   sufficient.
 - If you need local guidance, open only these files:
-  - `apps/node/bundled-skills/clawperator-skill-author-by-agent-discovery/SKILL.md`
-  - `apps/node/bundled-skills/clawperator-skill-author-by-recording/SKILL.md`
+  - `apps/node/bundled-skills/androperator-skill-author-by-agent-discovery/SKILL.md`
+  - `apps/node/bundled-skills/androperator-skill-author-by-recording/SKILL.md`
   - `apps/node/src/contracts/skillResult.ts`
   - `apps/node/src/test/fixtures/skills/com.test.skill-result/scripts/emit_skill_result.js`
 - Do not run `--help` on commands unless a command actually fails and you are
@@ -89,7 +89,7 @@ Use this exact evaluation posture:
 - Do not print or inspect full snapshot XML, full recording exports, or full
   scaffold files when a targeted command or direct overwrite will do.
 - When you need snapshot evidence, use a filtered command shape such as:
-  `$CLAWPERATOR_CMD snapshot --device $DEVICE_SERIAL --operator-package $CLAWPERATOR_OPERATOR_PACKAGE | jq -r '.envelope.stepResults[0].data.text' | rg ...`
+  `$ANDROPERATOR_CMD snapshot --device $DEVICE_SERIAL --operator-package $ANDROPERATOR_OPERATOR_PACKAGE | jq -r '.envelope.stepResults[0].data.text' | rg ...`
   so the transcript only includes the relevant rows.
 - After `open com.android.settings`, wait briefly before the first snapshot.
   A short `sleep` is cheaper than recovering from a launcher snapshot.
@@ -98,24 +98,24 @@ Use this exact evaluation posture:
 - Use one bounded discovery pass, one proving pass, and one self-test pass.
 - Because this eval runs in a local shell agent context, do not wait for a
   human after `recording start`. Start recording, perform the Settings flow
-  yourself with Clawperator commands, then stop, pull, and export.
+  yourself with Androperator commands, then stop, pull, and export.
 - For this benchmark, the truthful proving target is a target-specific replay
   skill created from one recording-derived scaffold unless discovery uncovers a
   concrete reason replay would be untruthful.
 - Use a device-family-specific skill id:
   - emulator / AOSP: `com.android.settings.read-android-version-aosp-replay`
   - Samsung: `com.android.settings.read-android-version-samsung-replay`
-- After recording export, use `clawperator skills new <skill_id> --recording-context <export_json>`,
+- After recording export, use `androperator skills new <skill_id> --recording-context <export_json>`,
   patch the scaffold into a truthful Settings/About-device replay skill, run
-  `clawperator skills validate <skill_id>`, then run one
-  `clawperator skills run <skill_id> --device $DEVICE_SERIAL --operator-package $CLAWPERATOR_OPERATOR_PACKAGE`
+  `androperator skills validate <skill_id>`, then run one
+  `androperator skills run <skill_id> --device $DEVICE_SERIAL --operator-package $ANDROPERATOR_OPERATOR_PACKAGE`
   self-test.
 - After `skills new`, overwrite the scaffold directly instead of reading it
   line by line.
 - Fastest truthful path for this benchmark: overwrite `SKILL.md` and
   `scripts/run.js`, keep `scripts/run.sh` as the thin delegate, and leave the
   scaffolded `skill.json` unchanged unless you also update the matching entry
-  in `~/.clawperator/skills/skills/skills-registry.json`.
+  in `~/.androperator/skills/skills/skills-registry.json`.
 - Use the already-proven minimal replay shape instead of inventing a richer
   wrapper. Keep the generated helper functions at the top of `scripts/run.js`,
   then replace everything from `const [, , deviceId, operatorPackageArg] =
@@ -140,7 +140,7 @@ Use this exact evaluation posture:
   ```md
   ---
   name: <skill_id>
-  clawperator-skill-type: replay
+  androperator-skill-type: replay
   description: |-
     Open Android Settings on a <device_family> device, navigate to <route_note>,
     and read the Android version.
@@ -155,15 +155,15 @@ Use this exact evaluation posture:
   - opens the known result row
   - captures a fresh snapshot on the destination screen
   - extracts the numeric Android version from the `Android version` row
-  - emits `CLAWPERATOR_EVAL_ANSWER: <version>` followed by one terminal
-    `[Clawperator-Skill-Result]` frame
+  - emits `ANDROPERATOR_EVAL_ANSWER: <version>` followed by one terminal
+    `[Androperator-Skill-Result]` frame
 
   ## Output
 
   On success, the script prints:
 
   ```text
-  CLAWPERATOR_EVAL_ANSWER: <version>
+  ANDROPERATOR_EVAL_ANSWER: <version>
   ```
 
   ## Caveats
@@ -197,12 +197,12 @@ Use this exact evaluation posture:
     }
   }
 
-  function runClawperatorJson(commandArgs, options = {}) {
+  function runAndroperatorJson(commandArgs, options = {}) {
     const allowFailure = options.allowFailure === true;
     try {
       const stdout = execFileSync(
-        resolvedClawperatorBin.cmd,
-        [...resolvedClawperatorBin.args, ...commandArgs],
+        resolvedAndroperatorBin.cmd,
+        [...resolvedAndroperatorBin.args, ...commandArgs],
         {
           encoding: "utf8",
           timeout: 120000,
@@ -226,7 +226,7 @@ Use this exact evaluation posture:
           json: parsed,
         };
       }
-      const message = stderr || stdout || err?.message || "clawperator command failed";
+      const message = stderr || stdout || err?.message || "androperator command failed";
       throw new Error(message);
     }
   }
@@ -265,17 +265,17 @@ Use this exact evaluation posture:
   }
 
   const operatorPackage = resolveOperatorPackage(operatorPackageArg);
-  const resolvedClawperatorBin = resolveClawperatorBin();
+  const resolvedAndroperatorBin = resolveAndroperatorBin();
   const skillId = "<skill_id>";
   const searchQuery = "<search_query>";
   const resultCoordinateX = "<result_x>";
   const resultCoordinateY = "<result_y>";
   const routeNote = "<route_note>";
-  const skillResultFramePrefix = "[Clawperator-Skill-Result]";
+  const skillResultFramePrefix = "[Androperator-Skill-Result]";
   const skillResultContractVersion = "1.0.0";
 
   async function main() {
-    runClawperatorJson([
+    runAndroperatorJson([
       "close",
       "--app",
       "com.android.settings",
@@ -285,7 +285,7 @@ Use this exact evaluation posture:
       operatorPackage,
     ]);
 
-    runClawperatorJson([
+    runAndroperatorJson([
       "open",
       "com.android.settings",
       "--device",
@@ -296,7 +296,7 @@ Use this exact evaluation posture:
 
     await sleep(2000);
 
-    runClawperatorJson([
+    runAndroperatorJson([
       "click",
       "--text",
       "Search settings",
@@ -306,7 +306,7 @@ Use this exact evaluation posture:
       operatorPackage,
     ], { allowFailure: true });
 
-    runClawperatorJson([
+    runAndroperatorJson([
       "type",
       searchQuery,
       "--role",
@@ -317,7 +317,7 @@ Use this exact evaluation posture:
       operatorPackage,
     ]);
 
-    runClawperatorJson([
+    runAndroperatorJson([
       "click",
       "--coordinate",
       resultCoordinateX,
@@ -330,7 +330,7 @@ Use this exact evaluation posture:
 
     await sleep(1500);
 
-    let snapshotResponse = runClawperatorJson([
+    let snapshotResponse = runAndroperatorJson([
       "snapshot",
       "--device",
       deviceId,
@@ -341,7 +341,7 @@ Use this exact evaluation posture:
 
     if (!version) {
       await sleep(1500);
-      snapshotResponse = runClawperatorJson([
+      snapshotResponse = runAndroperatorJson([
         "snapshot",
         "--device",
         deviceId,
@@ -355,7 +355,7 @@ Use this exact evaluation posture:
       throw new Error("Could not extract Android version from the " + routeNote + " snapshot.");
     }
 
-    console.log("CLAWPERATOR_EVAL_ANSWER: " + version);
+    console.log("ANDROPERATOR_EVAL_ANSWER: " + version);
     console.log(skillResultFramePrefix);
     console.log(JSON.stringify({
       contractVersion: skillResultContractVersion,
@@ -394,7 +394,7 @@ Use this exact evaluation posture:
         },
         observed: {
           kind: "text",
-          text: "CLAWPERATOR_EVAL_ANSWER: " + version,
+          text: "ANDROPERATOR_EVAL_ANSWER: " + version,
         },
         note: "<terminal_note>",
       },
@@ -413,30 +413,30 @@ Use this exact evaluation posture:
 
 - If you do change `skill.json`, sync the matching registry entry before
   running `skills validate`, or validation will fail on metadata mismatch.
-- `SKILL.md` frontmatter must include `clawperator-skill-type: replay`.
+- `SKILL.md` frontmatter must include `androperator-skill-type: replay`.
 - Do not inspect `recording-context.json` after scaffolding. The recorded
   export already served its purpose once the scaffold exists.
 - For the AOSP emulator route, use this fixed proving path:
-  - `$CLAWPERATOR_CMD close --app com.android.settings --device $DEVICE_SERIAL --operator-package $CLAWPERATOR_OPERATOR_PACKAGE`
-  - `$CLAWPERATOR_CMD open com.android.settings --device $DEVICE_SERIAL --operator-package $CLAWPERATOR_OPERATOR_PACKAGE`
+  - `$ANDROPERATOR_CMD close --app com.android.settings --device $DEVICE_SERIAL --operator-package $ANDROPERATOR_OPERATOR_PACKAGE`
+  - `$ANDROPERATOR_CMD open com.android.settings --device $DEVICE_SERIAL --operator-package $ANDROPERATOR_OPERATOR_PACKAGE`
   - `sleep 2`
-  - `$CLAWPERATOR_CMD click --text "Search settings" --device $DEVICE_SERIAL --operator-package $CLAWPERATOR_OPERATOR_PACKAGE`
-  - `$CLAWPERATOR_CMD type "About emulated device" --role textfield --device $DEVICE_SERIAL --operator-package $CLAWPERATOR_OPERATOR_PACKAGE`
-  - `$CLAWPERATOR_CMD click --coordinate 300 420 --device $DEVICE_SERIAL --operator-package $CLAWPERATOR_OPERATOR_PACKAGE`
+  - `$ANDROPERATOR_CMD click --text "Search settings" --device $DEVICE_SERIAL --operator-package $ANDROPERATOR_OPERATOR_PACKAGE`
+  - `$ANDROPERATOR_CMD type "About emulated device" --role textfield --device $DEVICE_SERIAL --operator-package $ANDROPERATOR_OPERATOR_PACKAGE`
+  - `$ANDROPERATOR_CMD click --coordinate 300 420 --device $DEVICE_SERIAL --operator-package $ANDROPERATOR_OPERATOR_PACKAGE`
   - extract the version from a filtered fresh snapshot on the About screen
 - For the Samsung route, use this fixed proving path:
-  - `$CLAWPERATOR_CMD close --app com.android.settings --device $DEVICE_SERIAL --operator-package $CLAWPERATOR_OPERATOR_PACKAGE`
-  - `$CLAWPERATOR_CMD open com.android.settings --device $DEVICE_SERIAL --operator-package $CLAWPERATOR_OPERATOR_PACKAGE`
+  - `$ANDROPERATOR_CMD close --app com.android.settings --device $DEVICE_SERIAL --operator-package $ANDROPERATOR_OPERATOR_PACKAGE`
+  - `$ANDROPERATOR_CMD open com.android.settings --device $DEVICE_SERIAL --operator-package $ANDROPERATOR_OPERATOR_PACKAGE`
   - `sleep 2`
-  - `$CLAWPERATOR_CMD click --text "Search settings" --device $DEVICE_SERIAL --operator-package $CLAWPERATOR_OPERATOR_PACKAGE`
-  - `$CLAWPERATOR_CMD type "Android version" --role textfield --device $DEVICE_SERIAL --operator-package $CLAWPERATOR_OPERATOR_PACKAGE`
-  - `$CLAWPERATOR_CMD click --coordinate 300 690 --device $DEVICE_SERIAL --operator-package $CLAWPERATOR_OPERATOR_PACKAGE`
+  - `$ANDROPERATOR_CMD click --text "Search settings" --device $DEVICE_SERIAL --operator-package $ANDROPERATOR_OPERATOR_PACKAGE`
+  - `$ANDROPERATOR_CMD type "Android version" --role textfield --device $DEVICE_SERIAL --operator-package $ANDROPERATOR_OPERATOR_PACKAGE`
+  - `$ANDROPERATOR_CMD click --coordinate 300 690 --device $DEVICE_SERIAL --operator-package $ANDROPERATOR_OPERATOR_PACKAGE`
   - click the known result row under `Software information`
   - extract the version from a filtered fresh snapshot on the Software
     information screen
 - Do not rely on `read-value --label "Android version"` for this benchmark.
-- In the replay script, print `CLAWPERATOR_EVAL_ANSWER: <version>` before the
-  terminal `[Clawperator-Skill-Result]` frame, and make the framed JSON the
+- In the replay script, print `ANDROPERATOR_EVAL_ANSWER: <version>` before the
+  terminal `[Androperator-Skill-Result]` frame, and make the framed JSON the
   final non-empty stdout content.
 - Keep the authored skill target-specific. Do not emit one universal Settings
   skill for all OEMs.
@@ -445,11 +445,11 @@ Use this exact evaluation posture:
 
 If you do emit a skill, output it between these exact markers:
 
-CLAWPERATOR_SKILL_START
+ANDROPERATOR_SKILL_START
 <skill JSON here>
-CLAWPERATOR_SKILL_END
+ANDROPERATOR_SKILL_END
 
-The JSON object must be valid UTF-8 JSON and must satisfy the Clawperator
+The JSON object must be valid UTF-8 JSON and must satisfy the Androperator
 skill registry contract. At minimum, it must include these top-level fields:
 
 - `id`
@@ -485,26 +485,26 @@ sure the authored skill emits a valid `SkillResult`.
 
 The authored skill's runtime output must include the line:
 
-CLAWPERATOR_EVAL_ANSWER: <version>
+ANDROPERATOR_EVAL_ANSWER: <version>
 
 Use the numeric Android version only as the `<version>` value.
 
 If you cannot produce a valid authored skill package through the required
 discovery route, omit the markers entirely.
 
-Do not end the run immediately after printing `CLAWPERATOR_EVAL_ANSWER`.
+Do not end the run immediately after printing `ANDROPERATOR_EVAL_ANSWER`.
 Continue until the Pack A route has either emitted a valid skill package or
 produced a truthful blocked-route conclusion in the transcript.
 
 Constraints:
-- Use only Clawperator commands for device interaction. Do not use adb
+- Use only Androperator commands for device interaction. Do not use adb
   shell commands or any other method to read the version.
-- Execute Clawperator commands exactly as shell commands using the provided
+- Execute Androperator commands exactly as shell commands using the provided
   base command. Do not reinterpret or rewrite the command structure.
 - Reference the public documentation at $DOCS_URL as the baseline. If the
   current run exposes repo-local docs and source, you may inspect them too.
-- Use $CLAWPERATOR_CMD as the command to invoke Clawperator
-  (e.g. `node /home/user/repo/apps/node/dist/cli/index.js` or `clawperator`).
-- Pass --device $DEVICE_SERIAL on every Clawperator command.
-- Pass --operator-package $CLAWPERATOR_OPERATOR_PACKAGE on every
-  Clawperator command.
+- Use $ANDROPERATOR_CMD as the command to invoke Androperator
+  (e.g. `node /home/user/repo/apps/node/dist/cli/index.js` or `androperator`).
+- Pass --device $DEVICE_SERIAL on every Androperator command.
+- Pass --operator-package $ANDROPERATOR_OPERATOR_PACKAGE on every
+  Androperator command.

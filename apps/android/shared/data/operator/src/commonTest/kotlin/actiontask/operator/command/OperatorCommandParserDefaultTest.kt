@@ -1,4 +1,4 @@
-package clawperator.operator.command
+package androperator.operator.command
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

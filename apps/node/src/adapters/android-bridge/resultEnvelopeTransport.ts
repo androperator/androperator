@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { RESULT_ENVELOPE_PREFIX } from "../../contracts/result.js";
 
-const CHUNK_PREFIX = "[Clawperator-Result-Chunk]";
+const CHUNK_PREFIX = "[Androperator-Result-Chunk]";
 const MAX_ENVELOPE_BYTES = 64 * 1024 * 1024;
 
 interface Chunk {

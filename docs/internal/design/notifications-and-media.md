@@ -264,7 +264,7 @@ API 26, so assuming 60000 would misclassify a valid seek as out of range.
 
 N2 feature acceptance is complete locally. Live API 21 listener binding, reads and
 pause/play remain an explicit V1 follow-up; API 26/36 evidence and offline tests
-do not waive it. Release-package validation with com.clawperator.operator,
+do not waive it. Release-package validation with com.androperator.operator,
 release notes, transport-release gates, publication and version follow-up remain
 owned by the v0.11 release plan. This batch used the development package only.
 

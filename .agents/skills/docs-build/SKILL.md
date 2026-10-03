@@ -1,6 +1,6 @@
 ---
 name: docs-build
-description: Build or regenerate the Clawperator docs site and llms-full.txt from canonical sources.
+description: Build or regenerate the Androperator docs site and llms-full.txt from canonical sources.
 ---
 
 # Docs Build

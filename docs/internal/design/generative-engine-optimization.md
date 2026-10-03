@@ -1,17 +1,17 @@
 # Generative Engine Optimization
 
-This document defines the durable publishing rules that make Clawperator easy
+This document defines the durable publishing rules that make Androperator easy
 for LLM agents, crawlers, and retrieval systems to discover and ingest.
 
 The goal is simple:
 
-- a human should be able to discover Clawperator from the homepage and docs
+- a human should be able to discover Androperator from the homepage and docs
 - an agent should be able to discover the same technical truth without JS
   execution, brittle scraping, or guessing hidden routes
 
 ## Why this matters
 
-Clawperator is an agent-facing product. If crawlers cannot reliably fetch the
+Androperator is an agent-facing product. If crawlers cannot reliably fetch the
 public surface, then the product description and technical contracts are harder
 for agents to learn, summarize, and recommend accurately.
 
@@ -21,28 +21,28 @@ This is publishing infrastructure, not marketing garnish.
 
 ### Human-facing entrypoints
 
-- `https://clawperator.com/`
-- `https://clawperator.com/agents`
-- `https://docs.clawperator.com/`
+- `https://androperator.com/`
+- `https://androperator.com/agents`
+- `https://docs.androperator.com/`
 
 ### Machine-facing entrypoints
 
-- `https://clawperator.com/index.md`
-- `https://clawperator.com/llms.txt`
-- `https://clawperator.com/llms-full.txt`
-- `https://docs.clawperator.com/llms.txt`
-- `https://clawperator.com/sitemap.xml`
-- `https://docs.clawperator.com/sitemap.xml`
+- `https://androperator.com/index.md`
+- `https://androperator.com/llms.txt`
+- `https://androperator.com/llms-full.txt`
+- `https://docs.androperator.com/llms.txt`
+- `https://androperator.com/sitemap.xml`
+- `https://docs.androperator.com/sitemap.xml`
 
 ### Canonical technical source
 
 The docs site is the canonical source for technical behavior:
 
-- `https://docs.clawperator.com/`
-- `https://docs.clawperator.com/api/overview/`
-- `https://docs.clawperator.com/design/operator-llm-playbook/`
-- `https://docs.clawperator.com/reference/cli-reference/`
-- `https://docs.clawperator.com/reference/api-overview/`
+- `https://docs.androperator.com/`
+- `https://docs.androperator.com/api/overview/`
+- `https://docs.androperator.com/design/operator-llm-playbook/`
+- `https://docs.androperator.com/reference/cli-reference/`
+- `https://docs.androperator.com/reference/api-overview/`
 
 The landing site should route agents toward these pages, not duplicate them.
 
@@ -74,7 +74,7 @@ Machine-facing pages and files should follow these rules:
 
 - use absolute URLs
 - keep copy factual and compact
-- state clearly that Clawperator is an actuator, not a planner
+- state clearly that Androperator is an actuator, not a planner
 - state clearly that the docs site is the canonical technical source
 - prefer stable route names over trendy naming
 
@@ -100,9 +100,9 @@ The root host must advertise the docs host through sitemap plumbing.
 
 Current model:
 
-- root sitemap index on `clawperator.com`
+- root sitemap index on `androperator.com`
 - landing sitemap for landing routes
-- docs sitemap on `docs.clawperator.com`
+- docs sitemap on `docs.androperator.com`
 
 ### `llms.txt`
 
@@ -147,7 +147,7 @@ Agents often land on GitHub before they land on the website.
 
 `README.md` should therefore:
 
-- define Clawperator clearly in the first paragraph
+- define Androperator clearly in the first paragraph
 - link to the Node API guide
 - link to the Operator LLM playbook
 - link to `llms.txt`
@@ -160,18 +160,18 @@ Treat GitHub as part of GEO, not as an unrelated channel.
 After changes to any of these surfaces, verify live behavior with plain fetches:
 
 ```sh
-curl -I https://clawperator.com/robots.txt
-curl -I https://clawperator.com/llms.txt
-curl -I https://clawperator.com/llms-full.txt
-curl -I https://clawperator.com/index.md
-curl -I https://clawperator.com/agents
-curl -I https://clawperator.com/sitemap.xml
+curl -I https://androperator.com/robots.txt
+curl -I https://androperator.com/llms.txt
+curl -I https://androperator.com/llms-full.txt
+curl -I https://androperator.com/index.md
+curl -I https://androperator.com/agents
+curl -I https://androperator.com/sitemap.xml
 
-curl -I https://docs.clawperator.com/robots.txt
-curl -I https://docs.clawperator.com/llms.txt
-curl -I https://docs.clawperator.com/sitemap.xml
-curl -I https://docs.clawperator.com/api/overview/
-curl -I https://docs.clawperator.com/reference/cli-reference/
+curl -I https://docs.androperator.com/robots.txt
+curl -I https://docs.androperator.com/llms.txt
+curl -I https://docs.androperator.com/sitemap.xml
+curl -I https://docs.androperator.com/api/overview/
+curl -I https://docs.androperator.com/reference/cli-reference/
 ```
 
 Also verify:
@@ -200,8 +200,8 @@ python3 .agents/skills/geo-crawl-browser-rendering/scripts/browser_rendering_geo
 Required environment variables:
 
 ```sh
-export CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID="<account_id>"
-export CLAWPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN="<api_token>"
+export ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID="<account_id>"
+export ANDROPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN="<api_token>"
 ```
 
 This helper uses Browser Rendering REST APIs to:
@@ -211,14 +211,14 @@ This helper uses Browser Rendering REST APIs to:
 - inspect extracted links for landing and docs entrypoints
 - separate Cloudflare API blockers from site-behavior findings
 - isolate landing-host sitemap crawl coverage via
-  `https://clawperator.com/landing-sitemap.xml`
+  `https://androperator.com/landing-sitemap.xml`
 
 Current implementation note:
 
 - Browser Rendering rate limits may constrain how much of the audit can be
   completed in one run
 - Browser Rendering crawl jobs may not be readable immediately after creation
-- observed behavior with both Clawperator URLs and Cloudflare's own docs URLs:
+- observed behavior with both Androperator URLs and Cloudflare's own docs URLs:
   - `POST /crawl` succeeds immediately
   - early `GET /crawl/<job_id>` calls can return `404 Crawl job not found`
   - the same job can become readable several seconds later
@@ -229,7 +229,7 @@ Current implementation note:
 - for the landing host, `source: "sitemaps"` against the root host can produce
   misleading `skipped` and `cancelled` records because the root sitemap index
   also advertises the docs host
-- use `https://clawperator.com/landing-sitemap.xml` when the goal is to audit
+- use `https://androperator.com/landing-sitemap.xml` when the goal is to audit
   landing-surface sitemap coverage specifically
 
 ## Cloudflare caveat

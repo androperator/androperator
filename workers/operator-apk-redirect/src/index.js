@@ -43,15 +43,15 @@ export default {
       return methodNotAllowed();
     }
 
-    if (!env.CLAWPERATOR_APK_METADATA_URL) {
-      return jsonError(500, "Missing CLAWPERATOR_APK_METADATA_URL");
+    if (!env.ANDROPERATOR_APK_METADATA_URL) {
+      return jsonError(500, "Missing ANDROPERATOR_APK_METADATA_URL");
     }
 
     let metadataUrl;
     try {
-      metadataUrl = new URL(env.CLAWPERATOR_APK_METADATA_URL);
+      metadataUrl = new URL(env.ANDROPERATOR_APK_METADATA_URL);
     } catch {
-      return jsonError(500, "CLAWPERATOR_APK_METADATA_URL is invalid");
+      return jsonError(500, "ANDROPERATOR_APK_METADATA_URL is invalid");
     }
 
     let metadataResponse;

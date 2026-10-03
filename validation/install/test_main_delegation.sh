@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 
 REPO_ROOT="$(pwd)"
-INSTALL_SCRIPT="$REPO_ROOT/sites/landing-clawperator/public/install.sh"
+INSTALL_SCRIPT="$REPO_ROOT/sites/androperator-public/install.sh"
 SYSTEM_PATH_BASE="$(dirname "$(command -v node)"):/usr/bin:/bin:/usr/sbin:/sbin"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
@@ -55,49 +55,49 @@ assert_exit_code() {
     fi
 }
 
-setup_mock_clawperator() {
+setup_mock_androperator() {
     local mock_dir="$1"
     local scenario="$2"
     local log_file="$3"
 
     mkdir -p "$mock_dir"
-    cat > "$mock_dir/clawperator" <<EOF
+    cat > "$mock_dir/androperator" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 printf '%s\n' "\$*" >> "$log_file"
 
 case "$scenario:\$*" in
-  success:install\ --output\ pretty\ --operator-package\ com.clawperator.operator)
+  success:install\ --output\ pretty\ --operator-package\ com.androperator.operator)
     cat <<'OUT'
-Clawperator install: OK
+Androperator install: OK
 Install complete.
 OUT
     exit 0
     ;;
-  warn:install\ --output\ pretty\ --operator-package\ com.clawperator.operator.dev)
+  warn:install\ --output\ pretty\ --operator-package\ com.androperator.operator.dev)
     cat <<'OUT'
-Clawperator install: WARN
+Androperator install: WARN
 Install completed with warnings: multiple connected devices are ready; future commands must use --device.
 Follow-up:
-- Verify one device explicitly with: clawperator doctor --device <device_id> --output pretty --operator-package com.clawperator.operator.dev
+- Verify one device explicitly with: androperator doctor --device <device_id> --output pretty --operator-package com.androperator.operator.dev
 OUT
     exit 0
     ;;
-  fail:install\ --output\ pretty\ --operator-package\ com.clawperator.operator)
+  fail:install\ --output\ pretty\ --operator-package\ com.androperator.operator)
     cat <<'OUT'
-Clawperator install: FAILED
+Androperator install: FAILED
 Host install completed, but some connected devices still need remediation.
 Follow-up:
-- Rerun remediation after resolving device issues: clawperator operator remediate --operator-package com.clawperator.operator
+- Rerun remediation after resolving device issues: androperator operator remediate --operator-package com.androperator.operator
 OUT
     exit 1
     ;;
 esac
 
-printf '%s\n' "unexpected mock clawperator invocation: \$*" >&2
+printf '%s\n' "unexpected mock androperator invocation: \$*" >&2
 exit 99
 EOF
-    chmod +x "$mock_dir/clawperator"
+    chmod +x "$mock_dir/androperator"
 }
 
 run_main_case() {
@@ -114,14 +114,14 @@ run_main_case() {
     local keep_err_trap="${11:-0}"
     local mock_dir="$TMP_DIR/mock-$label"
 
-    setup_mock_clawperator "$mock_dir" "$scenario" "$cli_log_file"
+    setup_mock_androperator "$mock_dir" "$scenario" "$cli_log_file"
     : > "$cli_log_file"
     : > "$trace_file"
 
     if [ -n "$operator_package" ]; then
-        export CLAWPERATOR_OPERATOR_PACKAGE="$operator_package"
+        export ANDROPERATOR_OPERATOR_PACKAGE="$operator_package"
     else
-        unset CLAWPERATOR_OPERATOR_PACKAGE
+        unset ANDROPERATOR_OPERATOR_PACKAGE
     fi
 
     HOME="$TMP_DIR/home-$label" \
@@ -156,13 +156,13 @@ run_main_case() {
         check_git() { maybe_fail check_git; }
         install_cli() {
             trace install_cli "$TRACE_FILE"
-            export CLAWPERATOR_BIN_PATH="$MOCK_CLAWPERATOR_BIN"
+            export ANDROPERATOR_BIN_PATH="$MOCK_ANDROPERATOR_BIN"
             return "$INSTALL_CLI_STATUS"
         }
         show_star_hint() { trace show_star_hint "$TRACE_FILE"; return 0; }
 
         export TRACE_FILE="$2"
-        export MOCK_CLAWPERATOR_BIN="$3"
+        export MOCK_ANDROPERATOR_BIN="$3"
         export FAIL_CHECK="${4:-}"
         export INSTALL_CLI_STATUS="$5"
 
@@ -172,7 +172,7 @@ run_main_case() {
         set -e
 
         printf "%s\n" "$status"
-    ' _ "$INSTALL_SCRIPT" "$trace_file" "$mock_dir/clawperator" "$failing_check" "$install_cli_status" "$stdout_file" "$stderr_file" "$keep_err_trap" > "$TMP_DIR/$label.status"
+    ' _ "$INSTALL_SCRIPT" "$trace_file" "$mock_dir/androperator" "$failing_check" "$install_cli_status" "$stdout_file" "$stderr_file" "$keep_err_trap" > "$TMP_DIR/$label.status"
 
     local actual_exit
     actual_exit="$(cat "$TMP_DIR/$label.status")"
@@ -192,7 +192,7 @@ run_stdin_entrypoint_case() {
     printf '%s\n' "$actual_exit" > "$status_file"
 }
 
-echo "=== Scenario 1: main delegates successful post-bootstrap flow to clawperator install ==="
+echo "=== Scenario 1: main delegates successful post-bootstrap flow to androperator install ==="
 SUCCESS_STDOUT="$TMP_DIR/main-success.stdout"
 SUCCESS_STDERR="$TMP_DIR/main-success.stderr"
 SUCCESS_TRACE="$TMP_DIR/main-success.trace"
@@ -206,16 +206,16 @@ run_main_case \
     "$SUCCESS_TRACE" \
     "$SUCCESS_CLI_LOG"
 
-assert_contains "$SUCCESS_STDOUT" "Clawperator install: OK" "main-success stdout"
+assert_contains "$SUCCESS_STDOUT" "Androperator install: OK" "main-success stdout"
 assert_contains "$SUCCESS_STDOUT" "Install complete." "main-success stdout"
-assert_contains "$SUCCESS_STDOUT" "Activate Clawperator in your current terminal:" "main-success stdout"
+assert_contains "$SUCCESS_STDOUT" "Activate Androperator in your current terminal:" "main-success stdout"
 assert_contains "$SUCCESS_STDOUT" "source ~/.bash_profile" "main-success stdout"
 assert_contains "$SUCCESS_STDOUT" "Docs: " "main-success stdout"
 assert_contains "$SUCCESS_TRACE" "validate_os" "main-success trace"
 assert_contains "$SUCCESS_TRACE" "check_git" "main-success trace"
 assert_contains "$SUCCESS_TRACE" "install_cli" "main-success trace"
 assert_contains "$SUCCESS_TRACE" "show_star_hint" "main-success trace"
-assert_contains "$SUCCESS_CLI_LOG" "install --output pretty --operator-package com.clawperator.operator" "main-success cli log"
+assert_contains "$SUCCESS_CLI_LOG" "install --output pretty --operator-package com.androperator.operator" "main-success cli log"
 assert_equals "" "$(cat "$SUCCESS_STDERR")" "main-success stderr"
 
 echo "=== Scenario 2: warning output still passes through and keeps activation guidance ==="
@@ -231,12 +231,12 @@ run_main_case \
     "$WARN_STDERR" \
     "$WARN_TRACE" \
     "$WARN_CLI_LOG" \
-    "com.clawperator.operator.dev"
+    "com.androperator.operator.dev"
 
-assert_contains "$WARN_STDOUT" "Clawperator install: WARN" "main-warn stdout"
-assert_contains "$WARN_STDOUT" "Verify one device explicitly with: clawperator doctor --device <device_id> --output pretty --operator-package com.clawperator.operator.dev" "main-warn stdout"
-assert_contains "$WARN_STDOUT" "Activate Clawperator in your current terminal:" "main-warn stdout"
-assert_contains "$WARN_CLI_LOG" "install --output pretty --operator-package com.clawperator.operator.dev" "main-warn cli log"
+assert_contains "$WARN_STDOUT" "Androperator install: WARN" "main-warn stdout"
+assert_contains "$WARN_STDOUT" "Verify one device explicitly with: androperator doctor --device <device_id> --output pretty --operator-package com.androperator.operator.dev" "main-warn stdout"
+assert_contains "$WARN_STDOUT" "Activate Androperator in your current terminal:" "main-warn stdout"
+assert_contains "$WARN_CLI_LOG" "install --output pretty --operator-package com.androperator.operator.dev" "main-warn cli log"
 assert_equals "" "$(cat "$WARN_STDERR")" "main-warn stderr"
 
 echo "=== Scenario 3: failed delegated install propagates exit code and top-level messaging ==="
@@ -257,12 +257,12 @@ run_main_case \
     0 \
     1
 
-assert_contains "$FAIL_STDOUT" "Clawperator install: FAILED" "main-fail stdout"
-assert_contains "$FAIL_STDOUT" "Rerun remediation after resolving device issues: clawperator operator remediate --operator-package com.clawperator.operator" "main-fail stdout"
-assert_not_contains "$FAIL_STDOUT" "Activate Clawperator in your current terminal:" "main-fail stdout"
+assert_contains "$FAIL_STDOUT" "Androperator install: FAILED" "main-fail stdout"
+assert_contains "$FAIL_STDOUT" "Rerun remediation after resolving device issues: androperator operator remediate --operator-package com.androperator.operator" "main-fail stdout"
+assert_not_contains "$FAIL_STDOUT" "Activate Androperator in your current terminal:" "main-fail stdout"
 assert_not_contains "$FAIL_STDOUT" "Installation failed" "main-fail stdout"
-assert_not_contains "$FAIL_STDOUT" "https://clawperator.com/install.sh" "main-fail stdout"
-assert_contains "$FAIL_CLI_LOG" "install --output pretty --operator-package com.clawperator.operator" "main-fail cli log"
+assert_not_contains "$FAIL_STDOUT" "https://androperator.com/install.sh" "main-fail stdout"
+assert_contains "$FAIL_CLI_LOG" "install --output pretty --operator-package com.androperator.operator" "main-fail cli log"
 assert_equals "" "$(cat "$FAIL_STDERR")" "main-fail stderr"
 
 echo "=== Scenario 4: bootstrap failures stop before install_cli delegation ==="

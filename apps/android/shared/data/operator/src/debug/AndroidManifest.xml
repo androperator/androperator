@@ -3,13 +3,13 @@
     <application>
         <!-- Debug-only fixture used by validation/on-screen-logs/run_overlay_mechanism_proof.sh. -->
         <activity
-            android:name="clawperator.operator.debug.OnScreenLogProofActivity"
+            android:name="androperator.operator.debug.OnScreenLogProofActivity"
             android:excludeFromRecents="true"
             android:exported="true"
             android:permission="android.permission.DUMP"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity
-            android:name="clawperator.operator.debug.ForegroundObservationProofActivity"
+            android:name="androperator.operator.debug.ForegroundObservationProofActivity"
             android:excludeFromRecents="true"
             android:exported="true"
             android:permission="android.permission.DUMP"

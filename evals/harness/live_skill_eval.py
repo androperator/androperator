@@ -26,7 +26,7 @@ SOLAX_COLD_START_EVAL_ID = "solax-orchestrated-cold-start"
 SOLAX_APP_ID = "com.solaxcloud.starter"
 SOLAX_SKILL_ID = "com.solaxcloud.starter.set-discharge-to-limit-orchestrated"
 DEFAULT_TARGET_VALUES = (35, 40, 45)
-DEFAULT_SKILLS_REGISTRY = REPO_ROOT.parent / "clawperator-skills" / "skills" / "skills-registry.json"
+DEFAULT_SKILLS_REGISTRY = Path.home() / ".androperator" / "skills" / "skills" / "skills-registry.json"
 SKILL_RUN_TIMEOUT_S = 180
 NORMALIZATION_TIMEOUT_S = 45
 PROBE_STEP_TIMEOUT_S = 60
@@ -139,7 +139,7 @@ def _run_and_capture(
     return capture, parsed_payload, stdout, stderr
 
 
-def _clawperator_env() -> dict[str, str]:
+def _androperator_env() -> dict[str, str]:
     env = {
         "PATH": os.environ["PATH"],
         "HOME": os.environ["HOME"],
@@ -147,10 +147,10 @@ def _clawperator_env() -> dict[str, str]:
         "LC_ALL": os.environ.get("LC_ALL", "C.UTF-8"),
     }
     for key in [
-        "CLAWPERATOR_SKILL_RETAIN_LOGS",
-        "CLAWPERATOR_SKILL_LOG_DIR",
-        "CLAWPERATOR_SKILL_DEBUG",
-        "CLAWPERATOR_SKILL_AGENT_TIMEOUT_MS",
+        "ANDROPERATOR_SKILL_RETAIN_LOGS",
+        "ANDROPERATOR_SKILL_LOG_DIR",
+        "ANDROPERATOR_SKILL_DEBUG",
+        "ANDROPERATOR_SKILL_AGENT_TIMEOUT_MS",
     ]:
         if key in os.environ:
             env[key] = os.environ[key]
@@ -268,18 +268,18 @@ def _build_solax_probe_execution(run_label: str) -> dict[str, Any]:
 def _normalization_sequence(
     *,
     run_dir: Path,
-    clawperator_cmd: list[str],
+    androperator_cmd: list[str],
     device_serial: str,
     operator_package: str,
     stage_prefix: str,
     replacements: list[tuple[str, str]],
 ) -> dict[str, Any]:
-    env = _clawperator_env()
+    env = _androperator_env()
     records: list[dict[str, Any]] = []
 
     def run_json(name: str, args: list[str]) -> dict[str, Any]:
         capture, payload, _, _ = _run_and_capture(
-            command=[*clawperator_cmd, *args],
+            command=[*androperator_cmd, *args],
             run_dir=run_dir,
             name=f"{stage_prefix}-{name}",
             env=env,
@@ -337,18 +337,18 @@ def _normalization_sequence(
 def _probe_observed_value(
     *,
     run_dir: Path,
-    clawperator_cmd: list[str],
+    androperator_cmd: list[str],
     device_serial: str,
     operator_package: str,
     stage_prefix: str,
     replacements: list[tuple[str, str]],
 ) -> dict[str, Any]:
-    env = _clawperator_env()
+    env = _androperator_env()
     records: list[dict[str, Any]] = []
 
     def run_json(name: str, args: list[str]) -> dict[str, Any] | None:
         capture, payload, _, _ = _run_and_capture(
-            command=[*clawperator_cmd, *args],
+            command=[*androperator_cmd, *args],
             run_dir=run_dir,
             name=f"{stage_prefix}-{name}",
             env=env,
@@ -580,14 +580,14 @@ def _initial_summary(*, batch_id: str, device_serial: str, operator_package: str
 def _artifact_replacements(device_serial: str, skills_registry: Path) -> list[tuple[str, str]]:
     replacements: list[tuple[str, str]] = [
         (device_serial, "<device_serial>"),
-        (str(skills_registry), "/<local_user>/src/clawperator-skills/skills/skills-registry.json"),
-        (str(REPO_ROOT), "/<local_user>/src/clawperator"),
+        (str(skills_registry), "/<local_user>/src/local skill workspace/skills/skills-registry.json"),
+        (str(REPO_ROOT), "/<local_user>/src/androperator"),
     ]
     skills_repo_root = skills_registry.parent.parent
     skills_repo_root_str = str(skills_repo_root)
     non_anchor_parts = [part for part in skills_repo_root.parts if part not in (skills_repo_root.anchor, "")]
     if skills_repo_root.is_absolute() and skills_repo_root_str != skills_repo_root.anchor and len(non_anchor_parts) > 2:
-        replacements.append((skills_repo_root_str, "/<local_user>/src/clawperator-skills"))
+        replacements.append((skills_repo_root_str, "/<local_user>/src/local skill workspace"))
     return replacements
 
 
@@ -628,7 +628,7 @@ def run_solax_orchestrated_cold_start_eval(
         "operator_package": inputs.operator_package,
         "requested_operator_package": inputs.requested_operator_package,
         "skills_registry": str(skills_registry),
-        "clawperator_cmd": inputs.clawperator_cmd,
+        "androperator_cmd": inputs.androperator_cmd,
         "target_values": list(DEFAULT_TARGET_VALUES),
         "runs": runs,
     }
@@ -646,8 +646,8 @@ def run_solax_orchestrated_cold_start_eval(
     )
 
     skill_env = {
-        **_clawperator_env(),
-        "CLAWPERATOR_SKILLS_REGISTRY": str(skills_registry),
+        **_androperator_env(),
+        "ANDROPERATOR_SKILLS_REGISTRY": str(skills_registry),
     }
 
     for run_index in range(1, runs + 1):
@@ -657,7 +657,7 @@ def run_solax_orchestrated_cold_start_eval(
 
         normalization_before_probe = _normalization_sequence(
             run_dir=run_dir,
-            clawperator_cmd=inputs.clawperator_cmd,
+            androperator_cmd=inputs.androperator_cmd,
             device_serial=inputs.device_serial,
             operator_package=inputs.operator_package,
             stage_prefix="before-probe",
@@ -665,7 +665,7 @@ def run_solax_orchestrated_cold_start_eval(
         )
         probe = _probe_observed_value(
             run_dir=run_dir,
-            clawperator_cmd=inputs.clawperator_cmd,
+            androperator_cmd=inputs.androperator_cmd,
             device_serial=inputs.device_serial,
             operator_package=inputs.operator_package,
             stage_prefix="probe",
@@ -673,7 +673,7 @@ def run_solax_orchestrated_cold_start_eval(
         )
         normalization_before_skill = _normalization_sequence(
             run_dir=run_dir,
-            clawperator_cmd=inputs.clawperator_cmd,
+            androperator_cmd=inputs.androperator_cmd,
             device_serial=inputs.device_serial,
             operator_package=inputs.operator_package,
             stage_prefix="before-skill",
@@ -686,7 +686,7 @@ def run_solax_orchestrated_cold_start_eval(
         if target_percent is not None and normalization_before_skill["outside_app_proven"]:
             skill_capture, result_payload, _, _ = _run_and_capture(
                 command=[
-                    *inputs.clawperator_cmd,
+                    *inputs.androperator_cmd,
                     "skills",
                     "run",
                     SOLAX_SKILL_ID,

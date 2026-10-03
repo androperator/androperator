@@ -1,6 +1,6 @@
 # Version Compatibility
 
-**Current release: [0.12.5](https://github.com/clawperator/clawperator/releases/tag/v0.12.5)**
+**Androperator 1.0.0 is being prepared for release.**
 
 *This is the latest published release. Download URLs below reference this version. See [Docs Home](../index.md) for the unreleased code version.*
 
@@ -60,7 +60,7 @@ Passing doctor example:
     "cliVersion": "0.1.0",
     "apkVersion": "0.1.0",
     "apkVersionCode": 1,
-    "operatorPackage": "com.clawperator.operator.dev"
+    "operatorPackage": "com.androperator.operator.dev"
   }
 }
 ```
@@ -77,15 +77,15 @@ Failing doctor example:
   "evidence": {
     "cliVersion": "0.1.1",
     "apkVersion": "0.1.0",
-    "operatorPackage": "com.clawperator.operator"
+    "operatorPackage": "com.androperator.operator"
   }
 }
 ```
 
-Direct CLI compatibility checks use `clawperator version --check-compat` and return a top-level probe result:
+Direct CLI compatibility checks use `androperator version --check-compat` and return a top-level probe result:
 
 ```bash
-clawperator version --check-compat --device <device_serial> --operator-package com.clawperator.operator.dev
+androperator version --check-compat --device <device_serial> --operator-package com.androperator.operator.dev
 ```
 
 Compatible response:
@@ -95,7 +95,7 @@ Compatible response:
   "cliVersion": "0.1.0",
   "apkVersion": "0.1.0",
   "apkVersionCode": 1,
-  "operatorPackage": "com.clawperator.operator.dev",
+  "operatorPackage": "com.androperator.operator.dev",
   "compatible": true
 }
 ```
@@ -107,18 +107,18 @@ Incompatible response:
   "cliVersion": "0.1.1",
   "apkVersion": "0.1.0",
   "apkVersionCode": 1,
-  "operatorPackage": "com.clawperator.operator",
+  "operatorPackage": "com.androperator.operator",
   "compatible": false,
   "error": {
     "code": "VERSION_INCOMPATIBLE",
     "message": "CLI 0.1.1 is not compatible with installed APK 0.1.0.",
-    "hint": "Clawperator requires the exact same version between the CLI and APK, ignoring only the debug suffix."
+    "hint": "Androperator requires the exact same version between the CLI and APK, ignoring only the debug suffix."
   },
   "remediation": [
-    "Download the matching APK: https://downloads.clawperator.com/operator/v0.12.5/operator-v0.12.5.apk",
-    "Download the checksum: https://downloads.clawperator.com/operator/v0.12.5/operator-v0.12.5.apk.sha256",
-    "Verify the checksum: sha256sum -c operator-v0.12.5.apk.sha256",
-    "Install the matching APK: clawperator operator setup --apk operator-v0.12.5.apk --device <device_id>",
+    "Download the matching APK: https://downloads.androperator.com/operator/v1.0.0/operator-v1.0.0.apk",
+    "Download the checksum: https://downloads.androperator.com/operator/v1.0.0/operator-v1.0.0.apk.sha256",
+    "Verify the checksum: sha256sum -c operator-v1.0.0.apk.sha256",
+    "Install the matching APK: androperator operator setup --apk operator-v1.0.0.apk --device <device_id>",
     "If you are using the release package, the versioned download above is the exact APK to install."
   ]
 }
@@ -146,8 +146,8 @@ Important consequences:
 Use both surfaces when diagnosing version state:
 
 ```bash
-clawperator version --check-compat --device <device_serial> --operator-package <package>
-clawperator doctor --device <device_serial> --operator-package <package>
+androperator version --check-compat --device <device_serial> --operator-package <package>
+androperator doctor --device <device_serial> --operator-package <package>
 ```
 
 Check:
@@ -213,13 +213,13 @@ Release install path:
 
 - download the version-matched APK URL generated from the CLI version
 - download the matching sha256 URL
-- install with `clawperator operator setup --apk ...`
-- if you are targeting `com.clawperator.operator.dev`, include `--operator-package com.clawperator.operator.dev` on local install commands that need to target the debug package explicitly
+- install with `androperator operator setup --apk ...`
+- if you are targeting `com.androperator.operator.dev`, include `--operator-package com.androperator.operator.dev` on local install commands that need to target the debug package explicitly
 
 The generated release URLs are exact:
 
-- download: `https://downloads.clawperator.com/operator/v<version>/operator-v<version>.apk`
-- checksum: `https://downloads.clawperator.com/operator/v<version>/operator-v<version>.apk.sha256`
+- download: `https://downloads.androperator.com/operator/v<version>/operator-v<version>.apk`
+- checksum: `https://downloads.androperator.com/operator/v<version>/operator-v<version>.apk.sha256`
 
 ### When the wrong variant is installed
 
@@ -255,14 +255,14 @@ Concrete failure shapes:
 If `APK_VERSION_UNREADABLE` or `APK_VERSION_INVALID` occurs:
 
 - reinstall the Operator APK
-- rerun `clawperator doctor`
+- rerun `androperator doctor`
 
 Concrete failure shapes:
 
 ```json
 {
   "code": "APK_VERSION_UNREADABLE",
-  "message": "Could not find version metadata for com.clawperator.operator.dev in dumpsys output."
+  "message": "Could not find version metadata for com.androperator.operator.dev in dumpsys output."
 }
 ```
 
@@ -277,9 +277,9 @@ Concrete failure shapes:
 
 If `DEVICE_SHELL_UNAVAILABLE` occurs:
 
-- verify the device is still connected and authorized in `clawperator devices`
+- verify the device is still connected and authorized in `androperator devices`
 - confirm adb shell works directly with `adb -s <device_serial> shell true`
-- rerun `clawperator doctor --device <device_serial> --operator-package <package>`
+- rerun `androperator doctor --device <device_serial> --operator-package <package>`
 
 This code blocks compatibility probing before version metadata can be read from the device.
 
@@ -288,7 +288,7 @@ This code blocks compatibility probing before version metadata can be read from 
 Treat compatibility as healthy only when:
 
 - `readiness.version.compatibility.status == "pass"`
-- or `clawperator version --check-compat` shows `compatible: true`
+- or `androperator version --check-compat` shows `compatible: true`
 
 Do not infer compatibility from app presence alone.
 

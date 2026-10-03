@@ -40,8 +40,8 @@ if [[ -z "$device" || -z "$output_dir" || "$output_dir" != /* ]]; then
 fi
 
 adb_cmd=(adb -s "$device")
-proof_component="com.clawperator.operator.dev/clawperator.operator.debug.OnScreenLogProofActivity"
-service_component="com.clawperator.operator.dev/clawperator.operator.accessibilityservice.OperatorAccessibilityService"
+proof_component="com.androperator.operator.dev/androperator.operator.debug.OnScreenLogProofActivity"
+service_component="com.androperator.operator.dev/androperator.operator.accessibilityservice.OperatorAccessibilityService"
 remote_video="/sdcard/on-screen-log-overlay-proof.mp4"
 
 "${adb_cmd[@]}" get-state >/dev/null

@@ -1,7 +1,7 @@
 [project]
-name = "clawperator-evals"
+name = "androperator-evals"
 version = "0.0.0"
-description = "Portable eval harness for Clawperator"
+description = "Portable eval harness for Androperator"
 requires-python = ">=3.11"
 dependencies = []
 

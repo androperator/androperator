@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "clawperator.uitree"
+    namespace = "androperator.uitree"
     compileSdk = 35
 
     defaultConfig {

@@ -1,6 +1,6 @@
 import { rmSync, writeFileSync } from "node:fs";
 import { buildMcpErrorResult } from "../../mcp/errors.js";
-import { createClawperatorLogger } from "../../adapters/logger.js";
+import { createAndroperatorLogger } from "../../adapters/logger.js";
 import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -181,7 +181,7 @@ describe("unusable device readiness evidence", () => {
           await broadcast!(() => {});
           const screenOn = scenario === "wakes_locked" && probeIds.length > 1;
           return {
-            ok: true, terminalSource: "clawperator_result",
+            ok: true, terminalSource: "androperator_result",
             envelope: {
               commandId: options.commandId, taskId: "doctor-handshake", status: "success", error: null,
               stepResults: [{ id: "h1", actionType: "doctor_ping", success: true,
@@ -282,7 +282,7 @@ describe("logging preserves primary execution outcomes", () => {
         const logDir = join(root, "logs");
         if (writeFails === true) await writeFile(logDir, "not a directory");
         const failedLogging = writeFails === true || (writeFails === "diagnostic" && malformed);
-        const logger = createClawperatorLogger({ logDir });
+        const logger = createAndroperatorLogger({ logDir });
         const envelope: ResultEnvelope = { commandId: "requested", taskId: "task", status: "success", error: null, stepResults: [{ id: "snap", actionType: "snapshot", success: true, data: {} }] };
         const result = await runExecution({ commandId: "requested", taskId: "task", source: "test", expectedFormat: "android-ui-automator", timeoutMs: 1000, actions: [{ id: "snap", type: "snapshot" }] }, {
           deviceId: "test-device", operatorPackage: "com.test.operator",

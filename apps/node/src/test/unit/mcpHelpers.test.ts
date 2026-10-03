@@ -219,12 +219,12 @@ describe("executionToolOptionsSchema", () => {
   it("trims deviceId and operatorPackage at the MCP boundary", () => {
     const parsed = executionToolOptionsSchema.parse({
       deviceId: " emulator-5554 ",
-      operatorPackage: " com.clawperator.operator.dev ",
+      operatorPackage: " com.androperator.operator.dev ",
     });
 
     assert.deepStrictEqual(parsed, {
       deviceId: "emulator-5554",
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
     });
   });
 
@@ -613,7 +613,7 @@ describe("MCP transport redaction", () => {
         ],
       },
       details: {
-        logPath: "/tmp/clawperator.log",
+        logPath: "/tmp/androperator.log",
       },
       safe: "still-ok",
     });
@@ -643,7 +643,7 @@ describe("MCP transport redaction", () => {
       code: "TIMEOUT",
       message: "timed out",
       details: {
-        logPath: "/tmp/clawperator.log",
+        logPath: "/tmp/androperator.log",
         stdout: "secret",
         nested: {
           filePath: "/tmp/owned.txt",

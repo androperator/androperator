@@ -39,7 +39,7 @@ def test_rescore_run_writes_result_rescored_without_overwriting_result(tmp_path)
             "ground_truth_android_version": "15",
         },
     }
-    transcript = "CLAWPERATOR_EVAL_ANSWER: 15\n"
+    transcript = "ANDROPERATOR_EVAL_ANSWER: 15\n"
 
     _write_json(run_dir / "config.json", config)
     _write_json(run_dir / "result.json", result)
@@ -76,7 +76,7 @@ def test_rescore_cli_accepts_only_run_id(tmp_path, capsys):
             "environment": {"ground_truth_android_version": "15"},
         },
     )
-    (run_dir / "transcript.txt").write_text("CLAWPERATOR_EVAL_ANSWER: 15\n", encoding="utf-8")
+    (run_dir / "transcript.txt").write_text("ANDROPERATOR_EVAL_ANSWER: 15\n", encoding="utf-8")
 
     exit_code = main(["android-version", "--rescore", run_dir.name, "--runs-dir", str(runs_dir)])
 
@@ -147,9 +147,9 @@ def test_rescore_preserves_skill_generation_gate(tmp_path):
             "spec": {"prompt_file": "prompt-skill.md"},
             "environment": {
                 "ground_truth_android_version": "15",
-                "clawperator_cmd": ["node", "/repo/apps/node/dist/cli/index.js"],
-                "runtime_clawperator_cmd": ["node", "/repo/apps/node/dist/cli/index.js"],
-                "operator_package": "com.clawperator.operator.dev",
+                "androperator_cmd": ["node", "/repo/apps/node/dist/cli/index.js"],
+                "runtime_androperator_cmd": ["node", "/repo/apps/node/dist/cli/index.js"],
+                "operator_package": "com.androperator.operator.dev",
             },
         },
     )
@@ -187,8 +187,8 @@ def test_rescore_preserves_skill_generation_gate(tmp_path):
         },
     )
     (run_dir / "transcript.txt").write_text(
-        '{"type":"item.completed","item":{"type":"command_execution","command":"clawperator bundled-skills list"}}\n'
-        "CLAWPERATOR_EVAL_ANSWER: 15\n",
+        '{"type":"item.completed","item":{"type":"command_execution","command":"androperator bundled-skills list"}}\n'
+        "ANDROPERATOR_EVAL_ANSWER: 15\n",
         encoding="utf-8",
     )
 
@@ -211,9 +211,9 @@ def test_rescore_rebuilds_skill_generation_gate_when_skill_score_is_missing(tmp_
             "spec": {"prompt_file": "prompt-skill.md"},
             "environment": {
                 "ground_truth_android_version": "15",
-                "clawperator_cmd": ["node", "/repo/apps/node/dist/cli/index.js"],
-                "runtime_clawperator_cmd": ["node", "/repo/apps/node/dist/cli/index.js"],
-                "operator_package": "com.clawperator.operator.dev",
+                "androperator_cmd": ["node", "/repo/apps/node/dist/cli/index.js"],
+                "runtime_androperator_cmd": ["node", "/repo/apps/node/dist/cli/index.js"],
+                "operator_package": "com.androperator.operator.dev",
             },
         },
     )
@@ -240,7 +240,7 @@ def test_rescore_rebuilds_skill_generation_gate_when_skill_score_is_missing(tmp_
         },
     )
     (run_dir / "transcript.txt").write_text(
-        "CLAWPERATOR_EVAL_ANSWER: 15\n",
+        "ANDROPERATOR_EVAL_ANSWER: 15\n",
         encoding="utf-8",
     )
 
@@ -259,7 +259,7 @@ def test_rescore_rejects_missing_outcome_or_metrics(tmp_path):
 
     _write_json(run_dir / "config.json", {"environment": {"ground_truth_android_version": "15"}})
     _write_json(run_dir / "result.json", {"run_id": run_dir.name, "environment": {"ground_truth_android_version": "15"}})
-    (run_dir / "transcript.txt").write_text("CLAWPERATOR_EVAL_ANSWER: 15\n", encoding="utf-8")
+    (run_dir / "transcript.txt").write_text("ANDROPERATOR_EVAL_ANSWER: 15\n", encoding="utf-8")
 
     with pytest.raises(SystemExit, match="missing or non-object outcome"):
         _rescore_run(runs_dir, run_dir.name)
@@ -286,7 +286,7 @@ def test_rescore_rejects_missing_metrics(tmp_path):
             "environment": {"ground_truth_android_version": "15"},
         },
     )
-    (run_dir / "transcript.txt").write_text("CLAWPERATOR_EVAL_ANSWER: 15\n", encoding="utf-8")
+    (run_dir / "transcript.txt").write_text("ANDROPERATOR_EVAL_ANSWER: 15\n", encoding="utf-8")
 
     with pytest.raises(SystemExit, match="missing or non-object metrics"):
         _rescore_run(runs_dir, run_dir.name)

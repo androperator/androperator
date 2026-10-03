@@ -205,7 +205,7 @@ def main():
     args = parser.parse_args()
     args.out = args.out.resolve()
     args.out.mkdir(parents=True, exist_ok=True)
-    lock = open(Path(tempfile.gettempdir()) / ('clawperator-device-' + hashlib.sha256(args.device.encode()).hexdigest() + '.lock'), 'w')
+    lock = open(Path(tempfile.gettempdir()) / ('androperator-device-' + hashlib.sha256(args.device.encode()).hexdigest() + '.lock'), 'w')
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     count = 0
     stage = 'prerequisites'

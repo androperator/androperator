@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 android = '{http://schemas.android.com/apk/res/android}'
 activities = ET.parse(sys.argv[1]).getroot().findall('application/activity')
 activity = next(item for item in activities if item.get(android + 'name') ==
-                'clawperator.operator.debug.OnScreenLogProofActivity')
+                'androperator.operator.debug.OnScreenLogProofActivity')
 assert activity.get(android + 'exported') == 'true', 'ADB proof activity must remain exported'
 assert activity.get(android + 'permission') == 'android.permission.DUMP', \
     'Overlay proof activity must require the same privileged ingress permission'

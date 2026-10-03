@@ -7,7 +7,7 @@ export interface ParsedTerminal {
 }
 
 /**
- * Parse result envelope: [Clawperator-Result] only (canonical envelope).
+ * Parse result envelope: [Androperator-Result] only (canonical envelope).
  * Returns envelope, null if not an envelope, or 'malformed' if prefix exists but JSON is invalid.
  */
 export function parseResultEnvelope(line: string, commandId: string): ResultEnvelope | 'malformed' | null {
@@ -25,13 +25,13 @@ export function parseResultEnvelope(line: string, commandId: string): ResultEnve
 }
 
 /**
- * Parse terminal result: [Clawperator-Result] only (canonical envelope).
+ * Parse terminal result: [Androperator-Result] only (canonical envelope).
  * Returns envelope plus terminalSource for observability.
  */
 export function parseTerminalEnvelope(line: string, commandId: string): ParsedTerminal | 'malformed' | null {
   const envelope = parseResultEnvelope(line, commandId);
   if (typeof envelope === 'object' && envelope !== null) {
-    return { envelope, terminalSource: "clawperator_result" };
+    return { envelope, terminalSource: "androperator_result" };
   }
   return envelope;
 }

@@ -4,7 +4,7 @@ import { basename, join } from "node:path";
 import { runAdb } from "../../adapters/android-bridge/adbClient.js";
 import type { RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 import { runAndroidSdkTool } from "../../adapters/android-sdk/hostToolClient.js";
-import { type ClawperatorError, ERROR_CODES } from "../../contracts/errors.js";
+import { type AndroperatorError, ERROR_CODES } from "../../contracts/errors.js";
 import {
   ADB_REGISTRATION_TIMEOUT_MS,
   BOOT_POLL_INTERVAL_MS,
@@ -19,10 +19,10 @@ import { getAvdRoot, inspectConfiguredAvd } from "./configuredAvds.js";
 import { isEmulatorBooted, resolveRunningEmulatorByName } from "./runningEmulators.js";
 
 function buildError(
-  code: ClawperatorError["code"],
+  code: AndroperatorError["code"],
   message: string,
   details?: Record<string, unknown>
-): ClawperatorError {
+): AndroperatorError {
   return { code, message, details };
 }
 

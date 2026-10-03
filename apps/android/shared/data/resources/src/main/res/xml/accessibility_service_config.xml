@@ -11,5 +11,5 @@
     android:canRetrieveWindowContent="true"
     android:canPerformGestures="true"
     android:canRequestFilterKeyEvents="true"
-    android:settingsActivity="clawperator.activity.MainActivity"
+    android:settingsActivity="androperator.activity.MainActivity"
   />

@@ -30,7 +30,7 @@ export interface OperatorInstallResult {
 export type { PermissionGrantResult } from "./grantPermissions.js";
 
 /**
- * Install the Clawperator Operator APK and bring the device to a ready state.
+ * Install the Androperator Operator APK and bring the device to a ready state.
  *
  * Steps:
  *   1. Validate apkPath exists on the local filesystem.

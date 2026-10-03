@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Define the smallest end-to-end contract an agent needs to use Clawperator correctly: the execution payload, the CLI success wrapper, the `[Clawperator-Result]` envelope, and the exact fields to branch on.
+Define the smallest end-to-end contract an agent needs to use Androperator correctly: the execution payload, the CLI success wrapper, the `[Androperator-Result]` envelope, and the exact fields to branch on.
 
-## What Clawperator Is
+## What Androperator Is
 
-Clawperator is a deterministic Android actuator. The agent is the planner. Clawperator accepts an explicit execution payload, validates it, resolves one target device and Operator package, dispatches the actions, and returns a structured result.
+Androperator is a deterministic Android actuator. The agent is the planner. Androperator accepts an explicit execution payload, validates it, resolves one target device and Operator package, dispatches the actions, and returns a structured result.
 
 This page is intentionally narrow:
 
@@ -18,7 +18,7 @@ This page is intentionally narrow:
 
 ## Surface Terminology
 
-Clawperator exposes several public surfaces. Use the precise surface name when
+Androperator exposes several public surfaces. Use the precise surface name when
 you document, call, or parse behavior:
 
 | Surface | What it is | Canonical owner |
@@ -27,11 +27,11 @@ you document, call, or parse behavior:
 | CLI subcommand | A nested shell command such as `skills run`, `recording export`, or `emulator provision`. | The subsystem page, such as [Skills CLI](../skills/cli.md) or [Recording](recording.md). |
 | Execution action | A JSON action inside `ExecutionInput.actions[]`, such as `click` or `open_app`. | [Actions](actions.md). |
 | Node contract | A TypeScript-backed data shape accepted or returned by the Node package. | This page for execution payload and [result envelope](#result-envelope); feature pages for narrower contracts. |
-| Serve endpoint | An HTTP or SSE route exposed by `clawperator serve`, such as `POST /execute`. | [Serve API](serve.md). |
-| MCP tool | A stdio MCP tool exposed by `clawperator mcp serve`, such as `snapshot` or `execute`. | [MCP Server](mcp.md). |
+| Serve endpoint | An HTTP or SSE route exposed by `androperator serve`, such as `POST /execute`. | [Serve API](serve.md). |
+| MCP tool | A stdio MCP tool exposed by `androperator mcp serve`, such as `snapshot` or `execute`. | [MCP Server](mcp.md). |
 | Selector | A `NodeMatcher` object or CLI selector flags used to find UI nodes. | [Selectors](selectors.md). |
 | Error code | A stable Node-side code from `apps/node/src/contracts/errors.ts`, or a documented feature-specific code. | [Errors](errors.md) for Node codes; feature pages for feature-specific codes. |
-| Result envelope | The `[Clawperator-Result]` terminal envelope emitted by the Operator and wrapped by Node. | [Result Envelope](#result-envelope). |
+| Result envelope | The `[Androperator-Result]` terminal envelope emitted by the Operator and wrapped by Node. | [Result Envelope](#result-envelope). |
 
 ## CLI Output Format
 
@@ -79,7 +79,7 @@ Top-level execution fields:
 | --- | --- | --- |
 | `commandId` | `string` | Caller-generated correlation id for the whole run. |
 | `taskId` | `string` | Caller-generated task id. |
-| `source` | `string` | Caller label, such as `serve-api` or `clawperator-action`. |
+| `source` | `string` | Caller label, such as `serve-api` or `androperator-action`. |
 | `expectedFormat` | `"android-ui-automator"` | Required constant. |
 | `timeoutMs` | `number` | Execution-level timeout for the whole payload. Current Node limits require `1000 <= timeoutMs <= 120000`. |
 | `actions` | `ExecutionAction[]` | Ordered action list. |
@@ -146,7 +146,7 @@ parameter aliases for those actions. For raw matcher-field aliases such as
 Verification pattern:
 
 ```bash
-clawperator exec --validate-only --payload '{"command_id":"cmd-001","task_id":"task-001","source":"docs","expected_format":"android-ui-automator","timeout_ms":30000,"actions":[{"id":"snap-1","type":"snapshot"}]}'
+androperator exec --validate-only --payload '{"command_id":"cmd-001","task_id":"task-001","source":"docs","expected_format":"android-ui-automator","timeout_ms":30000,"actions":[{"id":"snap-1","type":"snapshot"}]}'
 ```
 
 Success condition:
@@ -159,7 +159,7 @@ Success condition:
 - `execution.timeoutMs == 30000`
 - `execution.actions[0].type == "snapshot"`
 
-CLI payload-source aliases accepted by `clawperator exec`:
+CLI payload-source aliases accepted by `androperator exec`:
 
 - `--payload` is canonical
 - `--execution`, `--input`, and `--file` are accepted aliases for the same argument
@@ -180,7 +180,7 @@ If validation fails on limits, shorten the action list, split a large workflow i
 
 Authoritative source: `apps/node/src/contracts/result.ts`
 
-The Android runtime emits a `[Clawperator-Result]` envelope. The Node CLI wraps that envelope in a top-level success object for most device commands:
+The Android runtime emits a `[Androperator-Result]` envelope. The Node CLI wraps that envelope in a top-level success object for most device commands:
 
 ```json
 {
@@ -201,7 +201,7 @@ The Android runtime emits a `[Clawperator-Result]` envelope. The Node CLI wraps 
     "error": null
   },
   "deviceId": "<device_serial>",
-  "terminalSource": "clawperator_result",
+  "terminalSource": "androperator_result",
   "isCanonicalTerminal": true
 }
 ```
@@ -266,7 +266,7 @@ Failure wrapper example from the CLI:
 }
 ```
 
-Non-runtime success wrappers from `clawperator exec`:
+Non-runtime success wrappers from `androperator exec`:
 
 ```json
 {
@@ -306,12 +306,12 @@ Use the wrapper shape that matches the surface you called:
 
 | Surface | Success shape | Result-envelope rule |
 | --- | --- | --- |
-| CLI device execution command | `{ "envelope": ..., "deviceId": "...", "terminalSource": "clawperator_result", "isCanonicalTerminal": true }` | Read `envelope` with the [result-envelope](#result-envelope) rules. |
-| `clawperator exec --validate-only` | `{ "ok": true, "validated": true, "execution": ... }` | Pre-dispatch only; no result envelope exists. |
-| `clawperator exec --dry-run` | `{ "ok": true, "dryRun": true, "plan": ... }` | Pre-dispatch only; no result envelope exists. |
+| CLI device execution command | `{ "envelope": ..., "deviceId": "...", "terminalSource": "androperator_result", "isCanonicalTerminal": true }` | Read `envelope` with the [result-envelope](#result-envelope) rules. |
+| `androperator exec --validate-only` | `{ "ok": true, "validated": true, "execution": ... }` | Pre-dispatch only; no result envelope exists. |
+| `androperator exec --dry-run` | `{ "ok": true, "dryRun": true, "plan": ... }` | Pre-dispatch only; no result envelope exists. |
 | Serve execution endpoint | `{ "ok": true, "deviceId": "...", "terminalSource": "...", "envelope": ... }` | Read `envelope` with the same [result-envelope](#result-envelope) rules. |
 | MCP execution-backed tool | Tool-specific `structuredContent` containing action output and usually `envelope`. | When present, read `envelope` with the same [result-envelope](#result-envelope) rules. |
-| Skills CLI command | Skill wrapper JSON with `skillResult`, `durationMs`, or feature-specific error fields. | Not a `[Clawperator-Result]` envelope unless a skill chooses to expose one in its own result. |
+| Skills CLI command | Skill wrapper JSON with `skillResult`, `durationMs`, or feature-specific error fields. | Not a `[Androperator-Result]` envelope unless a skill chooses to expose one in its own result. |
 
 `isCanonicalTerminal` is a CLI wrapper field. HTTP serve execution responses do not include it.
 
@@ -331,7 +331,7 @@ Exact machine-checkable success condition for most CLI device commands:
 - top-level JSON contains `envelope`
 - `envelope.status == "success"`
 - every `envelope.stepResults[i].success == true`
-- `terminalSource == "clawperator_result"`
+- `terminalSource == "androperator_result"`
 - `isCanonicalTerminal == true`
 
 ## How `status` and `stepResults` Relate
@@ -354,7 +354,7 @@ Exact machine-checkable success condition for most CLI device commands:
 1. Agent constructs an execution payload with stable `commandId`, `taskId`, and ordered `actions`.
 2. Node validates the payload size and action schema before any adb dispatch.
 3. Node resolves one target device and one Operator package.
-4. Node sends the payload to Android and waits for a `[Clawperator-Result]` envelope.
+4. Node sends the payload to Android and waits for a `[Androperator-Result]` envelope.
 5. Node post-processes known cases such as snapshot extraction, screenshot capture, settle warnings, and `close_app` normalization.
 6. CLI commands return a JSON wrapper containing the envelope, `deviceId`, `terminalSource`, and `isCanonicalTerminal`.
 
@@ -363,7 +363,7 @@ Exact machine-checkable success condition for most CLI device commands:
 Command:
 
 ```bash
-clawperator snapshot --device <device_serial>
+androperator snapshot --device <device_serial>
 ```
 
 Success output shape:
@@ -387,7 +387,7 @@ Success output shape:
     "error": null
   },
   "deviceId": "<device_serial>",
-  "terminalSource": "clawperator_result",
+  "terminalSource": "androperator_result",
   "isCanonicalTerminal": true
 }
 ```

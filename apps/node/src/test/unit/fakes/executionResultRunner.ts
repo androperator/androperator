@@ -13,7 +13,7 @@ export function executionRunner(envelope: ResultEnvelope, snapshotXml?: string, 
   runner.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" }, () => {
     setTimeout(() => {
       if (snapshotXml !== undefined) logcat.stdout.emit("data", Buffer.from(`D/TaskScope: [TaskScope] UI Hierarchy [commandId=${envelope.commandId}]: ${snapshotXml}` + "\n"));
-      logcat.stdout.emit("data", Buffer.from(`D/Result: [Clawperator-Result] ${JSON.stringify(envelope)}\n`));
+      logcat.stdout.emit("data", Buffer.from(`D/Result: [Androperator-Result] ${JSON.stringify(envelope)}\n`));
     }, 1);
   });
   runner.spawn = ((_command, args) => {

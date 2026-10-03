@@ -158,7 +158,7 @@ function hasStructurallyValidActionParams(actionType: string, params: unknown): 
 }
 
 // NOTE: "doctor_ping" is intentionally excluded. It is an internal diagnostic action
-// used only by `clawperator doctor`, which bypasses validateExecution and dispatches
+// used only by `androperator doctor`, which bypasses validateExecution and dispatches
 // directly via broadcastAgentCommand. It is not part of the public agent-facing API.
 const supportedTypes = [
   "list_notifications", "list_media_sessions", "get_media_status", "observe_media", "media_pause", "media_play", "dismiss_notification", "invoke_notification_action", "media_seek",

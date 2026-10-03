@@ -75,7 +75,7 @@ claim being authored.
 | Execution validation | `apps/node/src/domain/executions/validateExecution.ts` |
 | Execution runtime | `apps/node/src/domain/executions/runExecution.ts` |
 | Snapshot extraction | `apps/node/src/domain/executions/snapshotHelper.ts` |
-| Environment variables | Grep `process.env.CLAWPERATOR` across `apps/node/src/` |
+| Environment variables | Grep `process.env.ANDROPERATOR` across `apps/node/src/` |
 | Runtime config | `apps/node/src/adapters/android-bridge/runtimeConfig.ts` |
 | Navigation builders | `apps/node/src/domain/actions/waitForNav.ts`, `openApp.ts`, `openUri.ts` |
 | Recording format | `apps/node/src/domain/recording/recordingEventTypes.ts` |
@@ -91,7 +91,7 @@ claim being authored.
 | Version compatibility | `apps/node/src/domain/version/compatibility.ts` |
 | Doctor checks | `apps/node/src/domain/doctor/checks/` |
 | Serve endpoints | `apps/node/src/cli/commands/serve.ts` |
-| Install script | `sites/landing-clawperator/public/install.sh` |
+| Install script | `sites/androperator-public/install.sh` |
 
 
 ## Terminology
@@ -102,7 +102,7 @@ claim being authored.
 - Use "selector" except for the specific `NodeMatcher` type.
 - Prefer primary flags `--device` and `--timeout`.
 - Use the current flat CLI syntax, such as `snapshot` and `click --text`.
-- Write Clawperator in full and use regular hyphens, not em dashes.
+- Write Androperator in full and use regular hyphens, not em dashes.
 
 ## Completion
 

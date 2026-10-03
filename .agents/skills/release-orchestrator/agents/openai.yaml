@@ -1,4 +1,4 @@
 interface:
   display_name: "Release Orchestrator"
-  short_description: "Run the full Clawperator release flow"
-  default_prompt: "Use $release-orchestrator to run the full Clawperator release flow end to end, keeping versions in the 0.x.y series."
+  short_description: "Run the full Androperator release flow"
+  default_prompt: "Use $release-orchestrator to run the full Androperator release flow end to end, keeping versions in the 0.x.y series."

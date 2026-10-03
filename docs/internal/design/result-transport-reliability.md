@@ -90,10 +90,10 @@ To inspect the same stages on a prepared, explicitly selected target:
 adb -s <device_serial> shell setprop log.tag.ClawpSnapshotTiming DEBUG
 node apps/node/dist/cli/index.js snapshot \
   --compact --max-nodes 200 --max-text-chars 1200 --no-daemon \
-  --device <device_serial> --operator-package com.clawperator.operator.dev
+  --device <device_serial> --operator-package com.androperator.operator.dev
 node apps/node/dist/cli/index.js evidence capture \
   --timeout 5000 --output-dir /tmp/new-snapshot-budget-bundle --no-daemon \
-  --device <device_serial> --operator-package com.clawperator.operator.dev
+  --device <device_serial> --operator-package com.androperator.operator.dev
 adb -s <device_serial> logcat -d -v time -s ClawpSnapshotTiming:I
 adb -s <device_serial> shell setprop log.tag.ClawpSnapshotTiming INFO
 ```
@@ -737,7 +737,7 @@ an immutable settlement-time snapshot, while late lifecycle log events may
 show the subsequent exit and pipe closure. No deadline or dispatch behavior is
 changed, and no uncertain execution is replayed.
 
-Android emits `[Clawperator-Publication]` followed by a single JSON object with
+Android emits `[Androperator-Publication]` followed by a single JSON object with
 `commandId`, `taskId`, `event`, `byteLength`, `recordCount`, `chunkCount`,
 `writtenRecords`, and monotonic `elapsedMs`. Events are `started`,
 `writes_completed`, or `write_failed`. A small unchunked result has one record

@@ -90,7 +90,7 @@ export const ERROR_CODES = {
   ON_SCREEN_LOG_RENDER_TIMEOUT: "ON_SCREEN_LOG_RENDER_TIMEOUT",
 
   // Doctor & Host
-  /** Daily log destination cannot be opened. Recovery: set CLAWPERATOR_LOG_DIR to a writable directory; advisory only. */
+  /** Daily log destination cannot be opened. Recovery: set ANDROPERATOR_LOG_DIR to a writable directory; advisory only. */
   LOG_DIRECTORY_UNWRITABLE: "LOG_DIRECTORY_UNWRITABLE",
   NODE_TOO_OLD: "NODE_TOO_OLD",
   ADB_SERVER_FAILED: "ADB_SERVER_FAILED",
@@ -163,7 +163,7 @@ export const ERROR_CODES = {
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
 
-export interface ClawperatorError {
+export interface AndroperatorError {
   code: ErrorCode;
   message: string;
   hint?: string;
@@ -191,14 +191,14 @@ export interface BroadcastDiagnostics {
   operatorPackage?: string;
 }
 
-export function isClawperatorError(e: unknown): e is ClawperatorError {
+export function isAndroperatorError(e: unknown): e is AndroperatorError {
   return (
     typeof e === "object" &&
     e !== null &&
     "code" in e &&
-    typeof (e as ClawperatorError).code === "string" &&
+    typeof (e as AndroperatorError).code === "string" &&
     "message" in e &&
-    typeof (e as ClawperatorError).message === "string"
+    typeof (e as AndroperatorError).message === "string"
   );
 }
 

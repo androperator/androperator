@@ -3,10 +3,10 @@ import assert from "node:assert";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { createClawperatorLogger, getLoggerDestination } from "../../adapters/logger.js";
-import { CLAWPERATOR_SKILL_RUN_ID_ENV_VAR, type LogEvent } from "../../contracts/logging.js";
+import { createAndroperatorLogger, getLoggerDestination } from "../../adapters/logger.js";
+import { ANDROPERATOR_SKILL_RUN_ID_ENV_VAR, type LogEvent } from "../../contracts/logging.js";
 
-describe("createClawperatorLogger", () => {
+describe("createAndroperatorLogger", () => {
   let tempRoot: string;
   let originalStderrWrite: typeof process.stderr.write;
   let originalLogDir: string | undefined;
@@ -15,37 +15,37 @@ describe("createClawperatorLogger", () => {
   const stderrLines: string[] = [];
 
   beforeEach(async () => {
-    tempRoot = await mkdtemp(join(tmpdir(), "clawperator-unified-logger-"));
+    tempRoot = await mkdtemp(join(tmpdir(), "androperator-unified-logger-"));
     originalStderrWrite = process.stderr.write.bind(process.stderr);
-    originalLogDir = process.env.CLAWPERATOR_LOG_DIR;
-    originalLogLevel = process.env.CLAWPERATOR_LOG_LEVEL;
-    originalSkillRunId = process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR];
+    originalLogDir = process.env.ANDROPERATOR_LOG_DIR;
+    originalLogLevel = process.env.ANDROPERATOR_LOG_LEVEL;
+    originalSkillRunId = process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
     stderrLines.length = 0;
     process.stderr.write = ((chunk: unknown) => {
       stderrLines.push(String(chunk));
       return true;
     }) as typeof process.stderr.write;
-    delete process.env.CLAWPERATOR_LOG_DIR;
-    delete process.env.CLAWPERATOR_LOG_LEVEL;
-    delete process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR];
+    delete process.env.ANDROPERATOR_LOG_DIR;
+    delete process.env.ANDROPERATOR_LOG_LEVEL;
+    delete process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
   });
 
   afterEach(async () => {
     process.stderr.write = originalStderrWrite;
     if (originalLogDir === undefined) {
-      delete process.env.CLAWPERATOR_LOG_DIR;
+      delete process.env.ANDROPERATOR_LOG_DIR;
     } else {
-      process.env.CLAWPERATOR_LOG_DIR = originalLogDir;
+      process.env.ANDROPERATOR_LOG_DIR = originalLogDir;
     }
     if (originalLogLevel === undefined) {
-      delete process.env.CLAWPERATOR_LOG_LEVEL;
+      delete process.env.ANDROPERATOR_LOG_LEVEL;
     } else {
-      process.env.CLAWPERATOR_LOG_LEVEL = originalLogLevel;
+      process.env.ANDROPERATOR_LOG_LEVEL = originalLogLevel;
     }
     if (originalSkillRunId === undefined) {
-      delete process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR];
+      delete process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
     } else {
-      process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR] = originalSkillRunId;
+      process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = originalSkillRunId;
     }
     await rm(tempRoot, { recursive: true, force: true });
   });
@@ -61,7 +61,7 @@ describe("createClawperatorLogger", () => {
   }
 
   async function readLogLines(logDir: string): Promise<LogEvent[]> {
-    const logger = createClawperatorLogger({ logDir, logLevel: "debug" });
+    const logger = createAndroperatorLogger({ logDir, logLevel: "debug" });
     const path = getLoggerDestination(logger).logPath;
     try {
       const contents = await readFile(path, "utf8");
@@ -82,7 +82,7 @@ describe("createClawperatorLogger", () => {
   describe("file routing", () => {
     it("writes events at or above threshold to file", async () => {
       const logDir = join(tempRoot, "logs");
-      const logger = createClawperatorLogger({ logDir, logLevel: "info" });
+      const logger = createAndroperatorLogger({ logDir, logLevel: "info" });
 
       logger.emit(makeEvent({ level: "info", event: "test.info" }));
       logger.emit(makeEvent({ level: "warn", event: "test.warn" }));
@@ -98,7 +98,7 @@ describe("createClawperatorLogger", () => {
 
     it("does not write events below threshold to file", async () => {
       const logDir = join(tempRoot, "logs");
-      const logger = createClawperatorLogger({ logDir, logLevel: "warn" });
+      const logger = createAndroperatorLogger({ logDir, logLevel: "warn" });
 
       logger.emit(makeEvent({ level: "debug", event: "test.debug" }));
       logger.emit(makeEvent({ level: "info", event: "test.info" }));
@@ -111,7 +111,7 @@ describe("createClawperatorLogger", () => {
 
     it("writes skills.run.output to file only, not terminal", async () => {
       const logDir = join(tempRoot, "logs");
-      const logger = createClawperatorLogger({
+      const logger = createAndroperatorLogger({
         logDir,
         logLevel: "debug",
         outputFormat: "pretty",
@@ -135,7 +135,7 @@ describe("createClawperatorLogger", () => {
 
     it("writes serve.* events to file only", async () => {
       const logDir = join(tempRoot, "logs");
-      const logger = createClawperatorLogger({
+      const logger = createAndroperatorLogger({
         logDir,
         logLevel: "debug",
         outputFormat: "pretty",
@@ -163,7 +163,7 @@ describe("createClawperatorLogger", () => {
   describe("terminal routing", () => {
     it("writes cli.banner to stderr in pretty mode", async () => {
       const logDir = join(tempRoot, "logs");
-      const logger = createClawperatorLogger({
+      const logger = createAndroperatorLogger({
         logDir,
         logLevel: "debug",
         outputFormat: "pretty",
@@ -173,19 +173,19 @@ describe("createClawperatorLogger", () => {
         makeEvent({
           level: "debug",
           event: "cli.banner",
-          message: "[Clawperator] v0.1.0  APK: OK",
+          message: "[Androperator] v0.1.0  APK: OK",
         })
       );
 
       const terminalOutput = stderrLines.filter((l) =>
-        l.includes("[Clawperator] v0.1.0")
+        l.includes("[Androperator] v0.1.0")
       );
       assert.strictEqual(terminalOutput.length, 1);
     });
 
     it("does NOT write cli.banner to stderr in JSON mode", async () => {
       const logDir = join(tempRoot, "logs");
-      const logger = createClawperatorLogger({
+      const logger = createAndroperatorLogger({
         logDir,
         logLevel: "debug",
         outputFormat: "json",
@@ -195,12 +195,12 @@ describe("createClawperatorLogger", () => {
         makeEvent({
           level: "debug",
           event: "cli.banner",
-          message: "[Clawperator] v0.1.0  APK: OK",
+          message: "[Androperator] v0.1.0  APK: OK",
         })
       );
 
       const terminalOutput = stderrLines.filter((l) =>
-        l.includes("[Clawperator] v0.1.0")
+        l.includes("[Androperator] v0.1.0")
       );
       assert.strictEqual(terminalOutput.length, 0);
       // But it should still go to file
@@ -211,7 +211,7 @@ describe("createClawperatorLogger", () => {
 
     it("does NOT write doctor.check to stderr (cmdDoctor renders its own report)", async () => {
       const logDir = join(tempRoot, "logs");
-      const logger = createClawperatorLogger({
+      const logger = createAndroperatorLogger({
         logDir,
         logLevel: "debug",
         outputFormat: "pretty",
@@ -244,7 +244,7 @@ describe("createClawperatorLogger", () => {
   describe("child() context", () => {
     it("merges default context into emitted events", async () => {
       const logDir = join(tempRoot, "logs");
-      const logger = createClawperatorLogger({ logDir, logLevel: "debug" });
+      const logger = createAndroperatorLogger({ logDir, logLevel: "debug" });
 
       const child = logger.child({
         commandId: "cmd-123",
@@ -264,7 +264,7 @@ describe("createClawperatorLogger", () => {
 
     it("explicit event fields override child context", async () => {
       const logDir = join(tempRoot, "logs");
-      const logger = createClawperatorLogger({ logDir, logLevel: "debug" });
+      const logger = createAndroperatorLogger({ logDir, logLevel: "debug" });
 
       const child = logger.child({ deviceId: "default-device" });
       child.emit(
@@ -282,8 +282,8 @@ describe("createClawperatorLogger", () => {
 
     it("inherits skillRunId from the process environment", async () => {
       const logDir = join(tempRoot, "logs");
-      process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR] = "skillrun_test_123";
-      const logger = createClawperatorLogger({ logDir, logLevel: "debug" });
+      process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = "skillrun_test_123";
+      const logger = createAndroperatorLogger({ logDir, logLevel: "debug" });
 
       logger.emit(makeEvent({ event: "test.inherited-skill-run" }));
 
@@ -294,8 +294,8 @@ describe("createClawperatorLogger", () => {
 
     it("can opt out of inherited skillRunId for long-lived daemon processes", async () => {
       const logDir = join(tempRoot, "logs");
-      process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR] = "skillrun_test_123";
-      const logger = createClawperatorLogger({ logDir, logLevel: "debug", inheritSkillRunId: false });
+      process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = "skillrun_test_123";
+      const logger = createAndroperatorLogger({ logDir, logLevel: "debug", inheritSkillRunId: false });
 
       logger.emit(makeEvent({ event: "test.no-inherited-skill-run" }));
 
@@ -306,7 +306,7 @@ describe("createClawperatorLogger", () => {
 
     it("does not mutate parent logger context", async () => {
       const logDir = join(tempRoot, "logs");
-      const logger = createClawperatorLogger({ logDir, logLevel: "debug" });
+      const logger = createAndroperatorLogger({ logDir, logLevel: "debug" });
 
       const child = logger.child({ commandId: "child-cmd" });
       child.emit(makeEvent({ event: "test.child-emit" }));
@@ -320,7 +320,7 @@ describe("createClawperatorLogger", () => {
 
     it("supports nested child() calls with accumulating context", async () => {
       const logDir = join(tempRoot, "logs");
-      const logger = createClawperatorLogger({ logDir, logLevel: "debug" });
+      const logger = createAndroperatorLogger({ logDir, logLevel: "debug" });
 
       const child1 = logger.child({ commandId: "cmd-1" });
       const child2 = child1.child({ skillId: "test-skill" });
@@ -342,7 +342,7 @@ describe("createClawperatorLogger", () => {
       const logDir = join(tempRoot, "blocked");
       await writeFile(logDir, "not a directory", "utf8");
 
-      const logger = createClawperatorLogger({
+      const logger = createAndroperatorLogger({
         logDir,
         logLevel: "debug",
         outputFormat: "pretty",
@@ -374,13 +374,13 @@ describe("createClawperatorLogger", () => {
   describe("logPath()", () => {
     it("returns daily log path when file logging is active", () => {
       const logDir = join(tempRoot, "logs");
-      const logger = createClawperatorLogger({ logDir });
+      const logger = createAndroperatorLogger({ logDir });
 
       assert.equal(logger.logPath(), undefined);
       logger.emit(makeEvent());
       const path = logger.logPath();
       assert.ok(path);
-      assert.match(path, /clawperator-\d{4}-\d{2}-\d{2}\.log$/);
+      assert.match(path, /androperator-\d{4}-\d{2}-\d{2}\.log$/);
       assert.ok(path.startsWith(logDir));
     });
 
@@ -388,7 +388,7 @@ describe("createClawperatorLogger", () => {
       const logDir = join(tempRoot, "blocked");
       await writeFile(logDir, "not a directory", "utf8");
 
-      const logger = createClawperatorLogger({ logDir, logLevel: "debug" });
+      const logger = createAndroperatorLogger({ logDir, logLevel: "debug" });
       logger.emit(makeEvent()); // triggers fail-open
 
       assert.strictEqual(logger.logPath(), undefined);
@@ -402,7 +402,7 @@ describe("createClawperatorLogger", () => {
   describe("NDJSON format", () => {
     it("writes valid JSON with all LogEvent fields", async () => {
       const logDir = join(tempRoot, "logs");
-      const logger = createClawperatorLogger({ logDir, logLevel: "debug" });
+      const logger = createAndroperatorLogger({ logDir, logLevel: "debug" });
 
       logger.emit({
         ts: "2026-03-27T12:00:00.000Z",
@@ -438,7 +438,7 @@ describe("createClawperatorLogger", () => {
 
     it("preserves append-only behavior across multiple emits", async () => {
       const logDir = join(tempRoot, "logs");
-      const logger = createClawperatorLogger({ logDir, logLevel: "debug" });
+      const logger = createAndroperatorLogger({ logDir, logLevel: "debug" });
 
       logger.emit(makeEvent({ event: "test.first" }));
       logger.emit(makeEvent({ event: "test.second" }));
@@ -465,7 +465,7 @@ describe("createClawperatorLogger", () => {
   describe("default routing (file only)", () => {
     it("lifecycle events go to file but not terminal", async () => {
       const logDir = join(tempRoot, "logs");
-      const logger = createClawperatorLogger({
+      const logger = createAndroperatorLogger({
         logDir,
         logLevel: "debug",
         outputFormat: "pretty",

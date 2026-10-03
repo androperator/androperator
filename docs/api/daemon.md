@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define the lifecycle contract for the Clawperator background daemon. The daemon is a long-running Node process that binds the same Express app used by `clawperator serve` to a Unix domain socket instead of a TCP port.
+Define the lifecycle contract for the Androperator background daemon. The daemon is a long-running Node process that binds the same Express app used by `androperator serve` to a Unix domain socket instead of a TCP port.
 
 The daemon also handles transparent proxying for `exec`, `snapshot`, `screenshot`, and the flat action commands such as `open`, `click`, `type`, `read`, `wait`, `press`, `back`, `close`, `sleep`, `scroll`, `scroll-until`, `wait-for-nav`, and `read-value`.
 
@@ -23,16 +23,16 @@ All daemon lifecycle commands return JSON on stdout by default. `--output pretty
 
 | Command | Purpose | Success status values |
 | --- | --- | --- |
-| `clawperator daemon start [--device <id>] [--operator-package <package>]` | Spawn `daemon run` as a detached background process and wait for `/ping`. | `started`, `already_running` |
-| `clawperator daemon stop [--device <id>]` | Send `SIGTERM` to a verified managed PID and remove its PID/socket files. | `stopped`, `not_running` |
-| `clawperator daemon status [--device <id>]` | Check `/ping`, read metadata, call `/version`, and report state. | `running`, `not_running`, `unowned` |
-| `clawperator daemon restart [--device <id>] [--operator-package <package>]` | Stop, then start. | `started`, `already_running` |
+| `androperator daemon start [--device <id>] [--operator-package <package>]` | Spawn `daemon run` as a detached background process and wait for `/ping`. | `started`, `already_running` |
+| `androperator daemon stop [--device <id>]` | Send `SIGTERM` to a verified managed PID and remove its PID/socket files. | `stopped`, `not_running` |
+| `androperator daemon status [--device <id>]` | Check `/ping`, read metadata, call `/version`, and report state. | `running`, `not_running`, `unowned` |
+| `androperator daemon restart [--device <id>] [--operator-package <package>]` | Stop, then start. | `started`, `already_running` |
 
 Internal command:
 
 | Command | Public support |
 | --- | --- |
-| `clawperator daemon run` | Internal foreground server process. It is registered so `daemon start` can spawn it, but it is intentionally omitted from help output. |
+| `androperator daemon run` | Internal foreground server process. It is registered so `daemon start` can spawn it, but it is intentionally omitted from help output. |
 
 ## Device Key And Paths
 
@@ -52,10 +52,10 @@ Path formulas from `apps/node/src/domain/daemon/lifecycle.ts`:
 
 | File | Formula |
 | --- | --- |
-| socket | `~/.clawperator/daemon/daemon-<daemon_key>.sock` |
-| PID metadata | `~/.clawperator/daemon/daemon-<daemon_key>.pid` |
-| log | `~/.clawperator/daemon/daemon-<daemon_key>.log` |
-| lifecycle lock | `~/.clawperator/daemon/daemon-<daemon_key>.lock` |
+| socket | `~/.androperator/daemon/daemon-<daemon_key>.sock` |
+| PID metadata | `~/.androperator/daemon/daemon-<daemon_key>.pid` |
+| log | `~/.androperator/daemon/daemon-<daemon_key>.log` |
+| lifecycle lock | `~/.androperator/daemon/daemon-<daemon_key>.lock` |
 
 The daemon directory is created with mode `0700`. The PID metadata file is JSON:
 
@@ -64,7 +64,7 @@ The daemon directory is created with mode `0700`. The PID metadata file is JSON:
   "pid": 12345,
   "startedAt": 1777176000000,
   "daemonKey": "id-ZW11bGF0b3ItNTU1NA",
-  "cliEntryPath": "/Users/<local_user>/src/clawperator/apps/node/dist/cli/index.js",
+  "cliEntryPath": "/Users/<local_user>/src/androperator/apps/node/dist/cli/index.js",
   "rawDeviceId": "emulator-5554"
 }
 ```
@@ -84,7 +84,7 @@ Started:
   "ok": true,
   "daemon": {
     "status": "started",
-    "socketPath": "/Users/<local_user>/.clawperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock"
+    "socketPath": "/Users/<local_user>/.androperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock"
   }
 }
 ```
@@ -96,7 +96,7 @@ Already running:
   "ok": true,
   "daemon": {
     "status": "already_running",
-    "socketPath": "/Users/<local_user>/.clawperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock"
+    "socketPath": "/Users/<local_user>/.androperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock"
   }
 }
 ```
@@ -113,12 +113,12 @@ Running:
     "pid": 12345,
     "version": "0.7.9",
     "buildIdentity": {
-      "entryPath": "/Users/<local_user>/src/clawperator/apps/node/dist/cli/index.js",
+      "entryPath": "/Users/<local_user>/src/androperator/apps/node/dist/cli/index.js",
       "mtimeMs": 1777176000000,
       "size": 12345
     },
     "uptimeSeconds": 4,
-    "socketPath": "/Users/<local_user>/.clawperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock"
+    "socketPath": "/Users/<local_user>/.androperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock"
   }
 }
 ```
@@ -130,7 +130,7 @@ Not running:
   "ok": true,
   "daemon": {
     "status": "not_running",
-    "socketPath": "/Users/<local_user>/.clawperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock"
+    "socketPath": "/Users/<local_user>/.androperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock"
   }
 }
 ```
@@ -142,7 +142,7 @@ Unowned responding socket:
   "ok": true,
   "daemon": {
     "status": "unowned",
-    "socketPath": "/Users/<local_user>/.clawperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock"
+    "socketPath": "/Users/<local_user>/.androperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock"
   }
 }
 ```
@@ -156,7 +156,7 @@ Stopped:
   "ok": true,
   "daemon": {
     "status": "stopped",
-    "socketPath": "/Users/<local_user>/.clawperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock"
+    "socketPath": "/Users/<local_user>/.androperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock"
   }
 }
 ```
@@ -168,7 +168,7 @@ Stop when not running:
   "ok": true,
   "daemon": {
     "status": "not_running",
-    "socketPath": "/Users/<local_user>/.clawperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock"
+    "socketPath": "/Users/<local_user>/.androperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock"
   }
 }
 ```
@@ -181,7 +181,7 @@ The daemon exposes `GET /version` on its Unix socket and returns:
 {
   "version": "0.7.9",
   "buildIdentity": {
-    "entryPath": "/Users/<local_user>/src/clawperator/apps/node/dist/cli/index.js",
+    "entryPath": "/Users/<local_user>/src/androperator/apps/node/dist/cli/index.js",
     "mtimeMs": 1777176000000,
     "size": 12345
   }
@@ -198,9 +198,9 @@ Daemon proxying is active for:
 
 | CLI command | Proxied endpoint | Post-dispatch fallback |
 | --- | --- | --- |
-| `clawperator exec <json-or-file>` | `POST /execute` on the daemon socket | no |
-| `clawperator snapshot` | synthetic `snapshot` payload sent to `POST /execute` | yes |
-| `clawperator screenshot` | synthetic `take_screenshot` payload sent to `POST /execute` | no |
+| `androperator exec <json-or-file>` | `POST /execute` on the daemon socket | no |
+| `androperator snapshot` | synthetic `snapshot` payload sent to `POST /execute` | yes |
+| `androperator screenshot` | synthetic `take_screenshot` payload sent to `POST /execute` | no |
 | Flat action commands such as `open`, `click`, `type`, `read`, `wait`, `press`, `back`, `close`, `sleep`, `scroll`, `scroll-until`, `wait-for-nav`, and `read-value` | action payload sent to `POST /execute` | no |
 
 Dry-run and validation-only `exec` modes do not need the daemon because they do not dispatch to Android.
@@ -209,7 +209,7 @@ If an execution contains `take_screenshot` with a caller-relative `params.path`,
 
 Proxy selection rules:
 
-1. If `--no-daemon` or `CLAWPERATOR_NO_DAEMON=1` is set, the command runs direct.
+1. If `--no-daemon` or `ANDROPERATOR_NO_DAEMON=1` is set, the command runs direct.
 2. If the execution includes `take_screenshot` with a relative output path, the command runs direct.
 3. If the platform is Windows, the command runs direct because this task uses Unix domain sockets only.
 4. If the socket is missing, the proxy serializes daemon startup with the lifecycle lock, spawns `daemon run`, polls `/ping` every `100` ms, and waits up to `3000` ms.
@@ -222,8 +222,8 @@ Proxy selection rules:
 The proxy sends the caller's effective Operator package in the request body. Precedence is:
 
 1. explicit `--operator-package`
-2. nonblank `CLAWPERATOR_OPERATOR_PACKAGE`
-3. `com.clawperator.operator`
+2. nonblank `ANDROPERATOR_OPERATOR_PACKAGE`
+3. `com.androperator.operator`
 
 This preserves caller behavior even when an already-running daemon was started with a different environment.
 
@@ -232,25 +232,25 @@ This preserves caller behavior even when an already-running daemon was started w
 Global placement:
 
 ```bash
-clawperator --no-daemon snapshot --device emulator-5554
+androperator --no-daemon snapshot --device emulator-5554
 ```
 
 Command-local placement:
 
 ```bash
-clawperator snapshot --no-daemon --device emulator-5554
+androperator snapshot --no-daemon --device emulator-5554
 ```
 
 Environment:
 
 ```bash
-CLAWPERATOR_NO_DAEMON=1 clawperator snapshot --device emulator-5554
+ANDROPERATOR_NO_DAEMON=1 androperator snapshot --device emulator-5554
 ```
 
 Success condition for an opt-out verification:
 
 - the command returns the same CLI JSON shape as normal direct execution
-- `clawperator daemon status --device emulator-5554` is unchanged by the opt-out command
+- `androperator daemon status --device emulator-5554` is unchanged by the opt-out command
 
 ## Dispatch Boundary
 
@@ -283,7 +283,7 @@ Fallback policy:
 
 | Failure | Output code | Exit code | Recovery |
 | --- | --- | --- | --- |
-| `daemon start` spawns `daemon run` but `/ping` does not become reachable within `3000` ms | `DAEMON_START_FAILED` | `1` | Inspect `~/.clawperator/daemon/daemon-<daemon_key>.log`, then retry `clawperator daemon start --device <id>`. |
+| `daemon start` spawns `daemon run` but `/ping` does not become reachable within `3000` ms | `DAEMON_START_FAILED` | `1` | Inspect `~/.androperator/daemon/daemon-<daemon_key>.log`, then retry `androperator daemon start --device <id>`. |
 | `daemon start` cannot spawn the background process | `DAEMON_START_FAILED` | `1` | Verify the branch-local CLI entrypoint exists and retry from the same checkout. |
 | `daemon stop` cannot signal or clean up the process | `DAEMON_STOP_FAILED` | `1` | Inspect the PID metadata file and socket path, stop the process manually if needed, then retry `daemon stop`. |
 | `daemon status` reports `unowned` | none | `0` | A responding socket is present but is not verified as this managed daemon. Do not delete its socket or signal its process; inspect its owner or use the checkout that started it. |
@@ -296,7 +296,7 @@ Top-level daemon failures use the same CLI error shape as other Node-side failur
   "code": "DAEMON_START_FAILED",
   "message": "Daemon did not become ready within 3000ms.",
   "details": {
-    "socketPath": "/Users/<local_user>/.clawperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock",
+    "socketPath": "/Users/<local_user>/.androperator/daemon/daemon-id-ZW11bGF0b3ItNTU1NA.sock",
     "timeoutMs": 3000
   }
 }
@@ -307,10 +307,10 @@ Top-level daemon failures use the same CLI error shape as other Node-side failur
 Use the installed CLI when validating daemon behavior:
 
 ```bash
-clawperator daemon start --device emulator-5554
-clawperator daemon status --device emulator-5554
-clawperator daemon stop --device emulator-5554
-clawperator daemon status --device emulator-5554
+androperator daemon start --device emulator-5554
+androperator daemon status --device emulator-5554
+androperator daemon stop --device emulator-5554
+androperator daemon status --device emulator-5554
 ```
 
 Success conditions:
@@ -323,7 +323,7 @@ Success conditions:
 Verify the internal command is hidden from help:
 
 ```bash
-clawperator --help | grep "daemon run"
+androperator --help | grep "daemon run"
 ```
 
 Success condition: no matches.

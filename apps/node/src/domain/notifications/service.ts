@@ -6,7 +6,7 @@ import { runExecution, type RunExecutionOptions } from "../executions/runExecuti
 import { validateExecution } from "../executions/validateExecution.js";
 
 export function buildNotificationMediaExecution(type: NotificationMediaAction, params: ActionParams = {}, timeoutMs = type === "observe_media" ? (params.durationMs ?? 0) + 10000 : 30000): Execution {
-  return validateExecution({ commandId: `service-${randomUUID()}`, taskId: `service-${type}`, source: "clawperator", expectedFormat: "android-ui-automator", timeoutMs, actions: [{ id: "a1", type, params }] });
+  return validateExecution({ commandId: `service-${randomUUID()}`, taskId: `service-${type}`, source: "androperator", expectedFormat: "android-ui-automator", timeoutMs, actions: [{ id: "a1", type, params }] });
 }
 const sessionSchema = z.object({
   mediaSessionId: z.string(), applicationId: z.string(), state: z.string(),

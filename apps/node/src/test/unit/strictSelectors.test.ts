@@ -52,9 +52,9 @@ it("container JSON normalizes aliases validates relationships and rejects missin
 it("every CLI action accepts strict scoped selectors with global device options on either side", () => {
   for (const command of [["click", "--id", "target"], ["type", "value", "--id", "target"], ["read", "--id", "target"], ["wait", "--id", "target"], ["scroll", "down"], ["scroll-until", "down", "--id", "target"], ["scroll-and-click", "down", "--id", "target"]]) {
     for (const prefix of [true, false]) {
-      const global = ["--device", "nonexistent-strict-test-device", "--operator-package", "com.clawperator.operator.dev"];
+      const global = ["--device", "nonexistent-strict-test-device", "--operator-package", "com.androperator.operator.dev"];
       const args = [...(prefix ? global : []), ...command, "--strict", "--container-json", JSON.stringify(container), ...(!prefix ? global : [])];
-      const result = spawnSync(process.execPath, [cli, ...args], { encoding: "utf8", env: { ...process.env, CLAWPERATOR_NO_DAEMON: "1" } });
+      const result = spawnSync(process.execPath, [cli, ...args], { encoding: "utf8", env: { ...process.env, ANDROPERATOR_NO_DAEMON: "1" } });
       assert.notEqual(result.status, 0);
       assert.equal(JSON.parse(result.stdout).code, "DEVICE_NOT_FOUND", result.stdout);
     }

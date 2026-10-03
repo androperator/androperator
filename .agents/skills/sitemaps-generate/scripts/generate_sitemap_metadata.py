@@ -14,8 +14,8 @@ SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
 NS = {"sm": SITEMAP_NS}
 ET.register_namespace("", SITEMAP_NS)
 
-LANDING_BASE_URL = "https://clawperator.com"
-DOCS_BASE_URL = "https://docs.clawperator.com"
+LANDING_BASE_URL = "https://clawperator.com"  # Preserved legacy landing surface.
+DOCS_BASE_URL = "https://docs.androperator.com"
 
 
 def parse_args():
@@ -84,10 +84,6 @@ def has_local_changes(git_root, git_path):
 
 
 def resolve_git_target(repo_root, relative_path):
-    path = Path(relative_path)
-    if relative_path.startswith("../clawperator-skills/"):
-        skills_root = (repo_root / ".." / "clawperator-skills").resolve()
-        return skills_root, str(path.relative_to("../clawperator-skills"))
     return repo_root, relative_path
 
 
@@ -138,7 +134,7 @@ def landing_manifest():
             "loc": f"{LANDING_BASE_URL}/install.sh",
             "priority": "0.8",
             "sources": [
-                "sites/landing-clawperator/public/install.sh",
+                "sites/androperator-public/install.sh",
             ],
         },
         {
@@ -204,7 +200,7 @@ def generate_landing_sitemaps(repo_root):
     index_root = ET.Element(f"{{{SITEMAP_NS}}}sitemapindex")
     for loc, lastmod in [
         (f"{LANDING_BASE_URL}/landing-sitemap.xml", landing_lastmod),
-        (f"{DOCS_BASE_URL}/sitemap.xml", docs_lastmod),
+        ("https://docs.clawperator.com/sitemap.xml", docs_lastmod),
     ]:
         sitemap_node = ET.SubElement(index_root, f"{{{SITEMAP_NS}}}sitemap")
         ET.SubElement(sitemap_node, f"{{{SITEMAP_NS}}}loc").text = loc

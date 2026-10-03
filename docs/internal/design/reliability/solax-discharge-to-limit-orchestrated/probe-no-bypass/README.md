@@ -5,7 +5,7 @@ Bucket: C
 ## Purpose
 
 Probe whether the current orchestrated Solax skill depends on the hidden
-`CLAWPERATOR_SKILL_AGENT_ALLOW_BYPASS` toggle before editing
+`ANDROPERATOR_SKILL_AGENT_ALLOW_BYPASS` toggle before editing
 `scripts/run.js`.
 
 ## Historical Trace
@@ -18,8 +18,8 @@ successful live run was bypass-free. The live probe remained required.
 
 - codex version: see [codex-version.txt](./codex-version.txt)
 - codex sandbox flags: see [codex-sandbox-flags.txt](./codex-sandbox-flags.txt)
-- branch-local Clawperator CLI: `/<local_user>/src/clawperator/apps/node/dist/cli/index.js`
-- skills registry: `/<local_user>/src/clawperator-skills/skills/skills-registry.json`
+- branch-local Androperator CLI: `/<local_user>/src/androperator/apps/node/dist/cli/index.js`
+- skills registry: `/<local_user>/src/local skill workspace/skills/skills-registry.json`
 
 ## Device Baseline
 
@@ -27,7 +27,7 @@ successful live run was bypass-free. The live probe remained required.
 - device model: `SM_S901E`
 - Android version: `16`
 - SolaX Cloud version: `7.2.0`
-- operator package: `com.clawperator.operator.dev`
+- operator package: `com.androperator.operator.dev`
 - pre-run foreground state: launcher recents screen, SolaX app force-closed
 - pre-run persisted discharge row evidence: the immediately preceding replay control attempt still read `Discharge to 40%` before its post-save timeout, so the probe baseline used current persisted state `40%` instead of claiming a synthetic `100%` reset that did not actually complete
 
@@ -36,22 +36,22 @@ successful live run was bypass-free. The live probe remained required.
 Probe attempts used this command shape, with the bypass explicitly unset:
 
 ```bash
-env -u CLAWPERATOR_SKILL_AGENT_ALLOW_BYPASS \
-  CLAWPERATOR_SKILLS_REGISTRY=/<local_user>/src/clawperator-skills/skills/skills-registry.json \
-  node /<local_user>/src/clawperator/apps/node/dist/cli/index.js skills run \
+env -u ANDROPERATOR_SKILL_AGENT_ALLOW_BYPASS \
+  ANDROPERATOR_SKILLS_REGISTRY=/<local_user>/src/local skill workspace/skills/skills-registry.json \
+  node /<local_user>/src/androperator/apps/node/dist/cli/index.js skills run \
     com.solaxcloud.starter.set-discharge-to-limit-orchestrated \
     --device <device_serial> \
-    --operator-package com.clawperator.operator.dev \
+    --operator-package com.androperator.operator.dev \
     -- 40
 ```
 
 Each attempt was preceded by:
 
 ```bash
-node /<local_user>/src/clawperator/apps/node/dist/cli/index.js close \
+node /<local_user>/src/androperator/apps/node/dist/cli/index.js close \
   --app com.solaxcloud.starter \
   --device <device_serial> \
-  --operator-package com.clawperator.operator.dev
+  --operator-package com.androperator.operator.dev
 ```
 
 ## Timing
@@ -77,14 +77,14 @@ All three attempts failed with the same runtime symptom:
 
 - `DEVICE_NOT_FOUND for device <device_serial>`
 - connected devices list reported empty from inside the runtime agent path
-- no stderr text cited sandbox, approval, denied access, read-only mode, child-process blocking, or codex refusal to spawn Clawperator
+- no stderr text cited sandbox, approval, denied access, read-only mode, child-process blocking, or codex refusal to spawn Androperator
 
 That matches bucket C from the closeout pack: real failure, but unrelated to
 sandbox or approval based on the captured evidence.
 
 ## C2 Decision
 
-C2 Step 4 should delete `CLAWPERATOR_SKILL_AGENT_ALLOW_BYPASS` from the Solax
+C2 Step 4 should delete `ANDROPERATOR_SKILL_AGENT_ALLOW_BYPASS` from the Solax
 orchestrated harness with no contract change.
 
 ## Reliability Risk

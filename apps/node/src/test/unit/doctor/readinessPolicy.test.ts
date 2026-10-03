@@ -36,7 +36,7 @@ class ReadinessRunner extends FakeProcessRunner {
     else if (action.includes("shell getprop ro.build.version.sdk")) stdout = "35";
     else if (action.includes("shell wm size")) stdout = "Physical size: 1080x2400";
     else if (action.includes("shell wm density")) stdout = "Physical density: 420";
-    else if (action.includes("shell pm list packages")) stdout = this.installed ? "package:com.clawperator.operator.dev\n" : "";
+    else if (action.includes("shell pm list packages")) stdout = this.installed ? "package:com.androperator.operator.dev\n" : "";
     else if (action.includes("shell dumpsys package")) stdout = `versionCode=100000\nversionName=${this.version}\n`;
     else if (action.includes("shell settings get")) stdout = "1";
     else if (action.includes("shell am start")) stdout = "Starting activity";
@@ -55,8 +55,8 @@ describe("selected Operator readiness policy", () => {
     await writeFile(registry, JSON.stringify({ schemaVersion: "1.0", skills: [] }));
     await mkdir(join(root, "empty-path"));
     process.env.PATH = join(root, "empty-path");
-    process.env.CLAWPERATOR_SKILLS_REGISTRY = registry;
-    process.env.CLAWPERATOR_LOG_DIR = join(root, "logs");
+    process.env.ANDROPERATOR_SKILLS_REGISTRY = registry;
+    process.env.ANDROPERATOR_LOG_DIR = join(root, "logs");
   });
   afterEach(async () => {
     process.env = savedEnvironment;
@@ -66,7 +66,7 @@ describe("selected Operator readiness policy", () => {
 
   function setup(handshakeResult?: DoctorCheckResult, logWarning = false) {
     const runner = new ReadinessRunner();
-    const config = Object.assign(getDefaultRuntimeConfig({ runner, deviceId: "test-device", operatorPackage: "com.clawperator.operator.dev" }), {
+    const config = Object.assign(getDefaultRuntimeConfig({ runner, deviceId: "test-device", operatorPackage: "com.androperator.operator.dev" }), {
       bundledSkillsDir: join(root, "no-bundled-skills"),
     });
     let handshakes = 0;

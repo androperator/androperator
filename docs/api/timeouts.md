@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define the timeout budgeting model for Clawperator executions: execution-level timeout, action-level timeout on wait actions, builder inflation rules, and the runtime's best-effort ceiling.
+Define the timeout budgeting model for Androperator executions: execution-level timeout, action-level timeout on wait actions, builder inflation rules, and the runtime's best-effort ceiling.
 
 ## Sources
 
@@ -17,7 +17,7 @@ Define the timeout budgeting model for Clawperator executions: execution-level t
 
 ## Two Timeout Levels
 
-Clawperator currently has two timeout layers that matter to agents:
+Androperator currently has two timeout layers that matter to agents:
 
 | Level | Field | Scope |
 | --- | --- | --- |
@@ -37,9 +37,9 @@ Current CLI mappings:
 
 | Command | CLI flag | Where it ends up |
 | --- | --- | --- |
-| `clawperator wait --timeout <ms>` | global `--timeout` parsed into `ctx.timeoutMs` | `wait_for_node.params.timeoutMs`, with `buildWaitExecution()` inflating top-level `execution.timeoutMs` |
-| `clawperator wait-for-nav --timeout <ms>` | global `--timeout` parsed into `ctx.timeoutMs` | `wait_for_navigation.params.timeoutMs`, with `buildWaitForNavExecution()` inflating top-level `execution.timeoutMs` |
-| `clawperator exec --timeout <ms>` | `cmdExecute()` override | replaces top-level `execution.timeoutMs` after validation |
+| `androperator wait --timeout <ms>` | global `--timeout` parsed into `ctx.timeoutMs` | `wait_for_node.params.timeoutMs`, with `buildWaitExecution()` inflating top-level `execution.timeoutMs` |
+| `androperator wait-for-nav --timeout <ms>` | global `--timeout` parsed into `ctx.timeoutMs` | `wait_for_navigation.params.timeoutMs`, with `buildWaitForNavExecution()` inflating top-level `execution.timeoutMs` |
+| `androperator exec --timeout <ms>` | `cmdExecute()` override | replaces top-level `execution.timeoutMs` after validation |
 
 Use `--validate-only` or `--dry-run` when you need to confirm which layer a CLI flag changed.
 
@@ -77,7 +77,7 @@ If the runtime exceeds the budget and Node never receives a valid result envelop
 Verification pattern - confirm a timeout value was accepted without dispatching:
 
 ```bash
-clawperator exec --validate-only --execution '{"commandId":"timeout-check","taskId":"timeout-check","source":"docs","expectedFormat":"android-ui-automator","timeoutMs":30000,"actions":[{"id":"snap","type":"snapshot"}]}'
+androperator exec --validate-only --execution '{"commandId":"timeout-check","taskId":"timeout-check","source":"docs","expectedFormat":"android-ui-automator","timeoutMs":30000,"actions":[{"id":"snap","type":"snapshot"}]}'
 ```
 
 Expected success shape:
@@ -148,7 +148,7 @@ Relationship between the two levels:
 Verification pattern - confirm `wait-for-nav` action timeout is encoded:
 
 ```bash
-clawperator wait-for-nav --app com.android.settings --timeout 5000 --validate-only
+androperator wait-for-nav --app com.android.settings --timeout 5000 --validate-only
 ```
 
 Expected validated execution shape:
@@ -176,7 +176,7 @@ Expected validated execution shape:
 For `wait`, the equivalent CLI mapping is:
 
 ```bash
-clawperator wait --text "Done" --timeout 5000 --validate-only
+androperator wait --text "Done" --timeout 5000 --validate-only
 ```
 
 Expected shape:
@@ -216,12 +216,12 @@ The flat CLI builders intentionally inflate execution timeouts so the wait actio
 
 So:
 
-- `clawperator wait --text "Done" --timeout 5000` becomes execution timeout `30000`
-- `clawperator wait --text "Done" --timeout 45000` becomes execution timeout `50000`
+- `androperator wait --text "Done" --timeout 5000` becomes execution timeout `30000`
+- `androperator wait --text "Done" --timeout 45000` becomes execution timeout `50000`
 
 Exact builder literals:
 
-- `source: "clawperator-action"`
+- `source: "androperator-action"`
 - action id: `wait`
 - action type: `wait_for_node`
 
@@ -234,13 +234,13 @@ Exact builder literals:
 
 So:
 
-- `clawperator wait-for-nav --app com.android.settings --timeout 5000` gets execution timeout `30000`
-- `clawperator wait-for-nav --app com.android.settings --timeout 25000` gets execution timeout `30000`
-- `clawperator wait-for-nav --app com.android.settings --timeout 30000` gets execution timeout `35000`
+- `androperator wait-for-nav --app com.android.settings --timeout 5000` gets execution timeout `30000`
+- `androperator wait-for-nav --app com.android.settings --timeout 25000` gets execution timeout `30000`
+- `androperator wait-for-nav --app com.android.settings --timeout 30000` gets execution timeout `35000`
 
 Exact builder literals:
 
-- `source: "clawperator-action"`
+- `source: "androperator-action"`
 - action id: `wait-for-nav`
 - action type: `wait_for_navigation`
 
@@ -254,7 +254,7 @@ This is the same design principle: the whole execution must last longer than the
 
 Exact builder literals:
 
-- `source: "clawperator-action"`
+- `source: "androperator-action"`
 - action id: `sleep`
 - action type: `sleep`
 
@@ -264,7 +264,7 @@ Exact builder literals:
 
 Exact snapshot builder literals:
 
-- `source: "clawperator-observe"`
+- `source: "androperator-observe"`
 - action id: `snap`
 - action type: `snapshot`
 - `mode: "direct"`
@@ -301,7 +301,7 @@ Agent guidance:
 {
   "commandId": "snap-1",
   "taskId": "snap-1",
-  "source": "clawperator-observe",
+  "source": "androperator-observe",
   "expectedFormat": "android-ui-automator",
   "timeoutMs": 30000,
   "actions": [
@@ -323,7 +323,7 @@ Good budget because:
 {
   "commandId": "nav-1",
   "taskId": "nav-1",
-  "source": "clawperator-action",
+  "source": "androperator-action",
   "expectedFormat": "android-ui-automator",
   "timeoutMs": 35000,
   "actions": [
@@ -358,7 +358,7 @@ Why `35000` is the right budget here:
 {
   "commandId": "read-after-click",
   "taskId": "read-after-click",
-  "source": "clawperator-action",
+  "source": "androperator-action",
   "expectedFormat": "android-ui-automator",
   "timeoutMs": 45000,
   "actions": [
@@ -401,7 +401,7 @@ Reasonable because:
 Verification pattern - inspect the plan without dispatching:
 
 ```bash
-clawperator exec --dry-run --execution '{"commandId":"read-after-click","taskId":"read-after-click","source":"docs","expectedFormat":"android-ui-automator","timeoutMs":45000,"actions":[{"id":"click-1","type":"click","params":{"matcher":{"textEquals":"Settings"}}},{"id":"sleep-1","type":"sleep","params":{"durationMs":1500}},{"id":"wait-1","type":"wait_for_node","params":{"matcher":{"textEquals":"Connected devices"},"timeoutMs":10000}},{"id":"snap-1","type":"snapshot"}]}'
+androperator exec --dry-run --execution '{"commandId":"read-after-click","taskId":"read-after-click","source":"docs","expectedFormat":"android-ui-automator","timeoutMs":45000,"actions":[{"id":"click-1","type":"click","params":{"matcher":{"textEquals":"Settings"}}},{"id":"sleep-1","type":"sleep","params":{"durationMs":1500}},{"id":"wait-1","type":"wait_for_node","params":{"matcher":{"textEquals":"Connected devices"},"timeoutMs":10000}},{"id":"snap-1","type":"snapshot"}]}'
 ```
 
 Expected success shape:
@@ -453,7 +453,7 @@ Expected success shape:
 If a live run returns `RESULT_ENVELOPE_MALFORMED`, treat it as a transport-contract failure rather than a normal action timeout. Recovery:
 
 - rerun once to rule out transient logcat noise
-- if it repeats, check CLI and APK compatibility with `clawperator version --check-compat`
+- if it repeats, check CLI and APK compatibility with `androperator version --check-compat`
 - rerun the failing command with `--verbose` and inspect Android-side logs
 
 ## Common Mistakes

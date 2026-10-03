@@ -2,7 +2,7 @@
 
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
-import { createClawperatorLogger } from "../adapters/logger.js";
+import { createAndroperatorLogger } from "../adapters/logger.js";
 import {
   COMMANDS,
   ON_SCREEN_LOG_FLAGS,
@@ -334,9 +334,9 @@ async function main(): Promise<void> {
   }
   const out = { format: global.output as "json" | "pretty", verbose: global.verbose };
   const disableAmbientSkillRunId = cmd === "daemon" && rest[0] === "run";
-  const logger = createClawperatorLogger({
-    logDir: process.env.CLAWPERATOR_LOG_DIR,
-    logLevel: global.logLevel ?? process.env.CLAWPERATOR_LOG_LEVEL,
+  const logger = createAndroperatorLogger({
+    logDir: process.env.ANDROPERATOR_LOG_DIR,
+    logLevel: global.logLevel ?? process.env.ANDROPERATOR_LOG_LEVEL,
     outputFormat: global.output,
     inheritSkillRunId: !disableAmbientSkillRunId,
   });

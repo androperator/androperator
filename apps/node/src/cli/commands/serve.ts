@@ -13,7 +13,7 @@ import {
   type SkillRunEnv,
 } from "../../domain/skills/runSkill.js";
 import { validateSkill } from "../../domain/skills/validateSkill.js";
-import { clawperatorEvents, CLAWPERATOR_EVENT_TYPES } from "../../domain/observe/events.js";
+import { androperatorEvents, ANDROPERATOR_EVENT_TYPES } from "../../domain/observe/events.js";
 import { ERROR_CODES } from "../../contracts/errors.js";
 import { REGISTRY_READ_FAILED, SKILL_NOT_FOUND, SKILL_OUTPUT_ASSERTION_FAILED } from "../../contracts/skills.js";
 import { getDefaultRuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
@@ -53,8 +53,8 @@ export function buildServeSkillRunOptions(
 ): { scriptArgs: string[]; skillEnv: SkillRunEnv } {
   const scriptArgs = args ? [...args] : [];
   const skillEnv: SkillRunEnv = {
-    CLAWPERATOR_OPERATOR_PACKAGE: operatorPackage,
-    CLAWPERATOR_DEVICE_ID: deviceId,
+    ANDROPERATOR_OPERATOR_PACKAGE: operatorPackage,
+    ANDROPERATOR_DEVICE_ID: deviceId,
   };
   return { scriptArgs, skillEnv };
 }
@@ -142,8 +142,8 @@ export async function startServer(options: ServeOptions): Promise<Server> {
       const addr = server.address();
       const actualPort = addr && typeof addr === "object" ? addr.port : options.port;
       const startupMessage = options.socketPath
-        ? `Clawperator API server listening on ${options.socketPath}`
-        : `Clawperator API server listening on http://${options.host}:${actualPort}`;
+        ? `Androperator API server listening on ${options.socketPath}`
+        : `Androperator API server listening on http://${options.host}:${actualPort}`;
       options.logger?.emit({
         ts: new Date().toISOString(),
         level: "info",
@@ -885,14 +885,14 @@ export function createServeApp(options: ServeAppOptions): express.Application {
     });
 
     const cleanup = () => {
-      clawperatorEvents.off(CLAWPERATOR_EVENT_TYPES.RESULT, onResult);
-      clawperatorEvents.off(CLAWPERATOR_EVENT_TYPES.EXECUTION, onExecution);
+      androperatorEvents.off(ANDROPERATOR_EVENT_TYPES.RESULT, onResult);
+      androperatorEvents.off(ANDROPERATOR_EVENT_TYPES.EXECUTION, onExecution);
     };
 
     const onResult = (data: { deviceId: string; envelope: any }) => {
       try {
         if (!res.writableEnded) {
-          res.write(`event: ${CLAWPERATOR_EVENT_TYPES.RESULT}\n`);
+          res.write(`event: ${ANDROPERATOR_EVENT_TYPES.RESULT}\n`);
           res.write(`data: ${JSON.stringify(data)}\n\n`);
         }
       } catch (err) {
@@ -900,7 +900,7 @@ export function createServeApp(options: ServeAppOptions): express.Application {
         if (options.logger) {
           options.logger.emit({ ts: new Date().toISOString(), level: "warn", event: "serve.sse.write_failed", message: msg });
         } else {
-          process.stderr.write(`[clawperator] ${msg}\n`);
+          process.stderr.write(`[androperator] ${msg}\n`);
         }
         cleanup();
       }
@@ -909,7 +909,7 @@ export function createServeApp(options: ServeAppOptions): express.Application {
     const onExecution = (data: { deviceId: string; input: unknown; result: any }) => {
       try {
         if (!res.writableEnded) {
-          res.write(`event: ${CLAWPERATOR_EVENT_TYPES.EXECUTION}\n`);
+          res.write(`event: ${ANDROPERATOR_EVENT_TYPES.EXECUTION}\n`);
           res.write(`data: ${JSON.stringify(data)}\n\n`);
         }
       } catch (err) {
@@ -917,14 +917,14 @@ export function createServeApp(options: ServeAppOptions): express.Application {
         if (options.logger) {
           options.logger.emit({ ts: new Date().toISOString(), level: "warn", event: "serve.sse.write_failed", message: msg });
         } else {
-          process.stderr.write(`[clawperator] ${msg}\n`);
+          process.stderr.write(`[androperator] ${msg}\n`);
         }
         cleanup();
       }
     };
 
-    clawperatorEvents.on(CLAWPERATOR_EVENT_TYPES.RESULT, onResult);
-    clawperatorEvents.on(CLAWPERATOR_EVENT_TYPES.EXECUTION, onExecution);
+    androperatorEvents.on(ANDROPERATOR_EVENT_TYPES.RESULT, onResult);
+    androperatorEvents.on(ANDROPERATOR_EVENT_TYPES.EXECUTION, onExecution);
 
     req.on("close", () => {
       options.logger?.emit({
@@ -940,7 +940,7 @@ export function createServeApp(options: ServeAppOptions): express.Application {
       if (options.logger) {
         options.logger.emit({ ts: new Date().toISOString(), level: "warn", event: "serve.sse.write_failed", message: msg });
       } else {
-        process.stderr.write(`[clawperator] ${msg}\n`);
+        process.stderr.write(`[androperator] ${msg}\n`);
       }
       cleanup();
     });
@@ -949,7 +949,7 @@ export function createServeApp(options: ServeAppOptions): express.Application {
       if (options.logger) {
         options.logger.emit({ ts: new Date().toISOString(), level: "warn", event: "serve.sse.write_failed", message: msg });
       } else {
-        process.stderr.write(`[clawperator] ${msg}\n`);
+        process.stderr.write(`[androperator] ${msg}\n`);
       }
       cleanup();
     });
@@ -957,13 +957,13 @@ export function createServeApp(options: ServeAppOptions): express.Application {
     // Send initial heartbeat
     try {
       res.write(`event: heartbeat\n`);
-      res.write(`data: ${JSON.stringify({ code: "CONNECTED", message: "Clawperator SSE stream active" })}\n\n`);
+      res.write(`data: ${JSON.stringify({ code: "CONNECTED", message: "Androperator SSE stream active" })}\n\n`);
     } catch (err) {
       const msg = `SSE heartbeat failed: ${String(err)}`;
       if (options.logger) {
         options.logger.emit({ ts: new Date().toISOString(), level: "warn", event: "serve.sse.write_failed", message: msg });
       } else {
-        process.stderr.write(`[clawperator] ${msg}\n`);
+        process.stderr.write(`[androperator] ${msg}\n`);
       }
       cleanup();
     }
@@ -987,7 +987,7 @@ export function createServeApp(options: ServeAppOptions): express.Application {
     if (options.logger) {
       options.logger.emit({ ts: new Date().toISOString(), level: "error", event: "serve.http.error", message: msg });
     } else {
-      process.stderr.write(`[clawperator] ${msg}\n`);
+      process.stderr.write(`[androperator] ${msg}\n`);
     }
     res.status(500).json({ ok: false, error: { code: "INTERNAL_SERVER_ERROR", message: "An unexpected error occurred" } });
   });

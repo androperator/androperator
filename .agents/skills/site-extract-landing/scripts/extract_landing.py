@@ -8,9 +8,9 @@ import argparse
 from pathlib import Path
 
 def main():
-    parser = argparse.ArgumentParser(description='Extract clawperator.com landing page as markdown.')
+    parser = argparse.ArgumentParser(description='Extract androperator.com landing page as markdown.')
     parser.add_argument('--output', help='Output file path')
-    parser.add_argument('--url', default='https://clawperator.com', help='URL to extract (default: https://clawperator.com)')
+    parser.add_argument('--url', default='https://androperator.com', help='URL to extract (default: https://androperator.com)')
     args = parser.parse_args()
 
     # Determine paths
@@ -26,15 +26,15 @@ def main():
     # Ensure parent directory exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    account_id = os.environ.get('CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID')
-    token = os.environ.get('CLAWPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN')
+    account_id = os.environ.get('ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID')
+    token = os.environ.get('ANDROPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN')
 
     if not account_id or not token:
         print("Error: Missing required environment variables:")
         if not account_id:
-            print("- CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID")
+            print("- ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID")
         if not token:
-            print("- CLAWPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN")
+            print("- ANDROPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN")
         sys.exit(1)
 
     api_url = f'https://api.cloudflare.com/client/v4/accounts/{account_id}/browser-rendering/markdown'

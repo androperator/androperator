@@ -1,13 +1,13 @@
 ---
 name: release-orchestrator
-description: Run or resume the complete Clawperator release workflow, including publication and version follow-up.
+description: Run or resume the complete Androperator release workflow, including publication and version follow-up.
 ---
 
 # Release Orchestrator
 
 ## Overview
 
-Use this skill to move one Clawperator release through the full release phase while keeping the unreleased code version separate from the published release version.
+Use this skill to move one Androperator release through the full release phase while keeping the unreleased code version separate from the published release version.
 At the start, confirm both the intended release version and the intended next unreleased version with the user if either is ambiguous.
 For now, only accept prerelease-stage versions in the `0.x.y` series. Do not proceed with `4.0`, `v4.0`, or any release version that does not start with `0.`.
 

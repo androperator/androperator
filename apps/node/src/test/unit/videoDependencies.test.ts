@@ -80,7 +80,7 @@ it("CLI returns exit 1 with all missing dependencies in JSON and pretty output",
     for (const format of ["json", "pretty"]) {
       const destination = join(root, "bundle");
       const result = spawnSync(process.execPath, ["dist/cli/index.js", "evidence", "video", "start", "--device", "test-device", "--output-dir", destination, "--duration-seconds", "5", "--output", format], {
-        encoding: "utf8", env: { ...process.env, PATH: root, ADB_PATH: adb, CLAWPERATOR_LOG_DIR: join(root, "logs") },
+        encoding: "utf8", env: { ...process.env, PATH: root, ADB_PATH: adb, ANDROPERATOR_LOG_DIR: join(root, "logs") },
       });
       assert.equal(result.status, 1, result.stderr);
       const payload = JSON.parse(result.stdout);

@@ -5,7 +5,7 @@ export function buildCloseAppExecution(applicationId: string, timeoutMs = 30000)
   return {
     commandId,
     taskId: commandId,
-    source: "clawperator-cli",
+    source: "androperator-cli",
     timeoutMs,
     expectedFormat: "android-ui-automator",
     actions: [

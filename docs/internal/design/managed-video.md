@@ -4,7 +4,7 @@ The public contract is [Managed video](../../api/evidence.md#managed-video).
 Video shares the still-evidence schema and does not change accessibility-event
 recording or Android action envelopes. Host prerequisites are an installed
 scrcpy with capture-orientation locking, ffprobe, and ffmpeg 6.1+ with libx264.
-No scrcpy executable or server is shipped by Clawperator. Screenshots remain
+No scrcpy executable or server is shipped by Androperator. Screenshots remain
 ADB-only and select the active physical display.
 `videoDependencies.ts` owns the shared host probes for video start and doctor's
 advisory `host.video.dependencies` check. Unmet requirements reject video start

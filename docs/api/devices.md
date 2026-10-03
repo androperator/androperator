@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define the `clawperator devices` output shape, document how Node resolves a target device for execution, and explain how `--device` and `--operator-package` keep routing deterministic across multiple connected targets.
+Define the `androperator devices` output shape, document how Node resolves a target device for execution, and explain how `--device` and `--operator-package` keep routing deterministic across multiple connected targets.
 
 ## Sources
 
@@ -10,11 +10,11 @@ Define the `clawperator devices` output shape, document how Node resolves a targ
 - Device resolution: `apps/node/src/domain/devices/resolveDevice.ts`
 - CLI wrapper: `apps/node/src/cli/commands/devices.ts`
 
-<a id="clawperator-devices"></a>
+<a id="androperator-devices"></a>
 
-## `clawperator devices`
+## `androperator devices`
 
-`clawperator devices` is a direct listing of `adb devices` output after Node parses each non-empty line into:
+`androperator devices` is a direct listing of `adb devices` output after Node parses each non-empty line into:
 
 ```json
 {
@@ -67,7 +67,7 @@ For actual command execution, Node filters the `devices` list down to entries wh
 That means:
 
 - `device` is eligible for auto-selection or explicit selection
-- `offline`, `unauthorized`, and other adb states are visible in `clawperator devices` output but are not execution targets
+- `offline`, `unauthorized`, and other adb states are visible in `androperator devices` output but are not execution targets
 
 Concrete example:
 
@@ -165,14 +165,14 @@ Requested serial not usable:
 
 For automation, prefer this pattern even when only one device is currently connected:
 
-1. Run `clawperator devices`
+1. Run `androperator devices`
 2. Select the intended `serial`
 3. Reuse that `serial` through all subsequent commands with `--device <serial>`
 
 Example:
 
 ```bash
-clawperator snapshot --device emulator-5554
+androperator snapshot --device emulator-5554
 ```
 
 Success condition:
@@ -193,10 +193,10 @@ Common package values:
 
 | Package | Typical use |
 | --- | --- |
-| `com.clawperator.operator` | release Operator APK |
-| `com.clawperator.operator.dev` | local debug Operator APK |
+| `com.androperator.operator` | release Operator APK |
+| `com.androperator.operator.dev` | local debug Operator APK |
 
-Use `--operator-package com.clawperator.operator.dev` when:
+Use `--operator-package com.androperator.operator.dev` when:
 
 - the installed APK is a local debug build
 - `doctor` reports `OPERATOR_VARIANT_MISMATCH`
@@ -205,7 +205,7 @@ Use `--operator-package com.clawperator.operator.dev` when:
 Recommended deterministic pairing:
 
 ```bash
-clawperator snapshot --device emulator-5554 --operator-package com.clawperator.operator.dev
+androperator snapshot --device emulator-5554 --operator-package com.androperator.operator.dev
 ```
 
 ## Common Failure Modes
@@ -217,7 +217,7 @@ No connected targets in adb state `device`.
 Recovery:
 
 - connect a device or boot an emulator
-- confirm `clawperator devices` shows at least one entry with `state: "device"`
+- confirm `androperator devices` shows at least one entry with `state: "device"`
 
 ### `MULTIPLE_DEVICES_DEVICE_ID_REQUIRED`
 
@@ -234,36 +234,36 @@ You passed `--device`, but the requested serial was not present in adb state `de
 
 Recovery:
 
-- rerun `clawperator devices`
+- rerun `androperator devices`
 - check that the serial matches exactly
 - confirm the requested device is not `offline` or `unauthorized`
 
-If you see the serial in `clawperator devices` output but its state is not `device`, the fix is to repair that adb state first rather than retrying the same command.
+If you see the serial in `androperator devices` output but its state is not `device`, the fix is to repair that adb state first rather than retrying the same command.
 
 ## Example Commands
 
 List devices:
 
 ```bash
-clawperator devices
+androperator devices
 ```
 
 Doctor on one target:
 
 ```bash
-clawperator doctor --device <device_serial>
+androperator doctor --device <device_serial>
 ```
 
 Snapshot against the debug Operator package:
 
 ```bash
-clawperator snapshot --device <device_serial> --operator-package com.clawperator.operator.dev
+androperator snapshot --device <device_serial> --operator-package com.androperator.operator.dev
 ```
 
 Execute a payload on one target:
 
 ```bash
-clawperator exec payload.json --device <device_serial>
+androperator exec payload.json --device <device_serial>
 ```
 
 ## Related Pages

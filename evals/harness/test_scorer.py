@@ -19,10 +19,10 @@ def test_normalize_version():
 
 
 def test_extract_answer_last_occurrence_wins():
-    transcript_single = "some output\nCLAWPERATOR_EVAL_ANSWER: 15\nmore output"
+    transcript_single = "some output\nANDROPERATOR_EVAL_ANSWER: 15\nmore output"
     assert extract_answer(transcript_single) == "15"
 
-    transcript_multi = "CLAWPERATOR_EVAL_ANSWER: 14\nlater...\nCLAWPERATOR_EVAL_ANSWER: 15"
+    transcript_multi = "ANDROPERATOR_EVAL_ANSWER: 14\nlater...\nANDROPERATOR_EVAL_ANSWER: 15"
     assert extract_answer(transcript_multi) == "15"
 
     transcript_none = "no answer here"
@@ -30,14 +30,14 @@ def test_extract_answer_last_occurrence_wins():
 
 
 def test_score_pass():
-    result = score("CLAWPERATOR_EVAL_ANSWER: Android 15\n", "15")
+    result = score("ANDROPERATOR_EVAL_ANSWER: Android 15\n", "15")
     assert result.answer_correct is True
     assert result.answer_normalized == "15"
     assert result.answer_extracted_raw == "Android 15"
 
 
 def test_score_fail():
-    result = score("CLAWPERATOR_EVAL_ANSWER: 14\n", "15")
+    result = score("ANDROPERATOR_EVAL_ANSWER: 14\n", "15")
     assert result.answer_correct is False
 
 
@@ -48,30 +48,30 @@ def test_score_no_answer():
 
 
 def test_score_can_disable_transcript_fallback():
-    result = score("CLAWPERATOR_EVAL_ANSWER: 15\n", "15", allow_transcript_fallback=False)
+    result = score("ANDROPERATOR_EVAL_ANSWER: 15\n", "15", allow_transcript_fallback=False)
     assert result.answer_correct is False
     assert result.answer_extracted_raw is None
 
 
 def test_extract_answer_malformed_marker_no_value():
-    transcript_malformed = "CLAWPERATOR_EVAL_ANSWER:\n"
+    transcript_malformed = "ANDROPERATOR_EVAL_ANSWER:\n"
     assert extract_answer(transcript_malformed) is None
 
 
 def test_extract_answer_whitespace_only():
-    transcript_whitespace_only = "CLAWPERATOR_EVAL_ANSWER:   \n"
+    transcript_whitespace_only = "ANDROPERATOR_EVAL_ANSWER:   \n"
     assert extract_answer(transcript_whitespace_only) is None
 
 
 def test_extract_answer_inside_json_blob_does_not_match():
-    transcript_inside_json = '{"output": "CLAWPERATOR_EVAL_ANSWER: 15"}'
+    transcript_inside_json = '{"output": "ANDROPERATOR_EVAL_ANSWER: 15"}'
     assert extract_answer(transcript_inside_json) is None
 
 
 def test_extract_answer_from_assistant_json_line():
     transcript_json_line = (
         '{"type":"assistant","message":{"role":"assistant","content":['
-        '{"type":"text","text":"The snapshot clearly shows the Android version.\\n\\nCLAWPERATOR_EVAL_ANSWER: 16"}'
+        '{"type":"text","text":"The snapshot clearly shows the Android version.\\n\\nANDROPERATOR_EVAL_ANSWER: 16"}'
         ']}}'
     )
     assert extract_answer_from_transcript(transcript_json_line) == "16"
@@ -79,14 +79,14 @@ def test_extract_answer_from_assistant_json_line():
 
 def test_extract_answer_from_result_json_line():
     transcript_result_json = (
-        '{"type":"result","result":"The snapshot clearly shows the Android version.\\n\\nCLAWPERATOR_EVAL_ANSWER: 16"}'
+        '{"type":"result","result":"The snapshot clearly shows the Android version.\\n\\nANDROPERATOR_EVAL_ANSWER: 16"}'
     )
     assert extract_answer_from_transcript(transcript_result_json) == "16"
 
 
 def test_extract_answer_from_kimi_json_line_with_string_content():
     transcript_kimi_string = (
-        '{"role":"assistant","content":"The snapshot clearly shows the Android version.\\n\\nCLAWPERATOR_EVAL_ANSWER: 16"}'
+        '{"role":"assistant","content":"The snapshot clearly shows the Android version.\\n\\nANDROPERATOR_EVAL_ANSWER: 16"}'
     )
     assert extract_answer_from_transcript(transcript_kimi_string) == "16"
 
@@ -94,7 +94,7 @@ def test_extract_answer_from_kimi_json_line_with_string_content():
 def test_extract_answer_from_kimi_json_line_with_text_item_list():
     transcript_kimi_list = (
         '{"role":"assistant","content":['
-        '{"type":"text","text":"The snapshot clearly shows the Android version.\\n\\nCLAWPERATOR_"},'
+        '{"type":"text","text":"The snapshot clearly shows the Android version.\\n\\nANDROPERATOR_"},'
         '{"type":"text","text":"EVAL_ANSWER: "},'
         '{"type":"text","text":"16"}'
         ']}'
@@ -104,57 +104,57 @@ def test_extract_answer_from_kimi_json_line_with_text_item_list():
 
 def test_extract_answer_ignores_tool_role_message_json():
     transcript_tool_json = (
-        '{"type":"message","role":"tool","content":"CLAWPERATOR_EVAL_ANSWER: 16"}'
+        '{"type":"message","role":"tool","content":"ANDROPERATOR_EVAL_ANSWER: 16"}'
     )
     assert extract_answer_from_transcript(transcript_tool_json) is None
 
 
 def test_extract_answer_line_start_inside_multiline_string_matches():
-    transcript_linestart = "some output\nCLAWPERATOR_EVAL_ANSWER: 15\nmore output"
+    transcript_linestart = "some output\nANDROPERATOR_EVAL_ANSWER: 15\nmore output"
     assert extract_answer(transcript_linestart) == "15"
 
 
 def test_extract_answer_multiword_answer_is_captured():
-    transcript_multiword = "CLAWPERATOR_EVAL_ANSWER: Android 15\n"
+    transcript_multiword = "ANDROPERATOR_EVAL_ANSWER: Android 15\n"
     assert extract_answer(transcript_multiword) == "Android 15"
 
 
 def test_extract_answer_trailing_whitespace_is_stripped():
-    transcript_trailing = "CLAWPERATOR_EVAL_ANSWER: 15   \n"
+    transcript_trailing = "ANDROPERATOR_EVAL_ANSWER: 15   \n"
     assert extract_answer(transcript_trailing) == "15"
 
 
 def test_extract_answer_wrapped_marker_is_captured():
-    transcript_wrapped = "The device page is visible.\nCLAWPERATOR_\nEVAL_ANSWER: 15\n"
+    transcript_wrapped = "The device page is visible.\nANDROPERATOR_\nEVAL_ANSWER: 15\n"
     assert extract_answer(transcript_wrapped) == "15"
     assert extract_answer_from_transcript(transcript_wrapped) == "15"
 
 
 def test_extract_skill_single_block():
-    transcript = "before\nCLAWPERATOR_SKILL_START\n{\"foo\":1}\nCLAWPERATOR_SKILL_END\nafter"
-    assert extract_skill(transcript, "CLAWPERATOR_SKILL_START", "CLAWPERATOR_SKILL_END") == "{\"foo\":1}"
+    transcript = "before\nANDROPERATOR_SKILL_START\n{\"foo\":1}\nANDROPERATOR_SKILL_END\nafter"
+    assert extract_skill(transcript, "ANDROPERATOR_SKILL_START", "ANDROPERATOR_SKILL_END") == "{\"foo\":1}"
 
 
 def test_extract_skill_last_block_wins():
     transcript = (
-        "CLAWPERATOR_SKILL_START\n{\"v\":1}\nCLAWPERATOR_SKILL_END\n"
-        "CLAWPERATOR_SKILL_START\n{\"v\":2}\nCLAWPERATOR_SKILL_END"
+        "ANDROPERATOR_SKILL_START\n{\"v\":1}\nANDROPERATOR_SKILL_END\n"
+        "ANDROPERATOR_SKILL_START\n{\"v\":2}\nANDROPERATOR_SKILL_END"
     )
-    assert extract_skill(transcript, "CLAWPERATOR_SKILL_START", "CLAWPERATOR_SKILL_END") == "{\"v\":2}"
+    assert extract_skill(transcript, "ANDROPERATOR_SKILL_START", "ANDROPERATOR_SKILL_END") == "{\"v\":2}"
 
 
 def test_extract_skill_decodes_json_string_literal_block():
     transcript = (
-        "CLAWPERATOR_SKILL_START\n"
+        "ANDROPERATOR_SKILL_START\n"
         "\"{\\\"id\\\":\\\"com.example.android-version\\\",\\\"applicationId\\\":\\\"com.example\\\","
         "\\\"intent\\\":\\\"android-version\\\",\\\"summary\\\":\\\"Determine Android version\\\","
         "\\\"path\\\":\\\"skills/com.example.android-version\\\","
         "\\\"skillFile\\\":\\\"skills/com.example.android-version/SKILL.md\\\","
         "\\\"scripts\\\":[\\\"skills/com.example.android-version/scripts/run.js\\\"],"
         "\\\"artifacts\\\":[]}\"\n"
-        "CLAWPERATOR_SKILL_END"
+        "ANDROPERATOR_SKILL_END"
     )
-    assert extract_skill(transcript, "CLAWPERATOR_SKILL_START", "CLAWPERATOR_SKILL_END") == (
+    assert extract_skill(transcript, "ANDROPERATOR_SKILL_START", "ANDROPERATOR_SKILL_END") == (
         "{\"id\":\"com.example.android-version\",\"applicationId\":\"com.example\","
         "\"intent\":\"android-version\",\"summary\":\"Determine Android version\","
         "\"path\":\"skills/com.example.android-version\","
@@ -165,12 +165,12 @@ def test_extract_skill_decodes_json_string_literal_block():
 
 
 def test_extract_skill_no_block():
-    assert extract_skill("no markers here", "CLAWPERATOR_SKILL_START", "CLAWPERATOR_SKILL_END") is None
+    assert extract_skill("no markers here", "ANDROPERATOR_SKILL_START", "ANDROPERATOR_SKILL_END") is None
 
 
 def test_extract_skill_requires_standalone_marker_lines():
-    transcript = 'before "CLAWPERATOR_SKILL_START {\\\"foo\\\":1} CLAWPERATOR_SKILL_END" after'
-    assert extract_skill(transcript, "CLAWPERATOR_SKILL_START", "CLAWPERATOR_SKILL_END") is None
+    transcript = 'before "ANDROPERATOR_SKILL_START {\\\"foo\\\":1} ANDROPERATOR_SKILL_END" after'
+    assert extract_skill(transcript, "ANDROPERATOR_SKILL_START", "ANDROPERATOR_SKILL_END") is None
 
 
 def test_validate_skill_accepts_minimal_registry_shape():
@@ -183,13 +183,13 @@ def test_validate_skill_accepts_minimal_registry_shape():
         "\"scriptContents\":{\"skills/com.example.android-version/scripts/run.js\":\"console.log('hi')\\n\"},"
         "\"artifacts\":[]}"
     )
-    ok, errors = validate_skill(skill_json, ["clawperator"], "com.clawperator.operator.dev")
+    ok, errors = validate_skill(skill_json, ["androperator"], "com.androperator.operator.dev")
     assert ok is True
     assert errors == []
 
 
 def test_validate_skill_rejects_invalid_json():
-    ok, errors = validate_skill("{not-json}", ["clawperator"], "com.clawperator.operator.dev")
+    ok, errors = validate_skill("{not-json}", ["androperator"], "com.androperator.operator.dev")
     assert ok is False
     assert errors and errors[0].startswith("invalid JSON:")
 
@@ -205,7 +205,7 @@ def test_validate_skill_rejects_missing_required_fields():
         "\"scripts\":[],"
         "\"artifacts\":[]}"
     )
-    ok, errors = validate_skill(skill_json, ["clawperator"], "com.clawperator.operator.dev")
+    ok, errors = validate_skill(skill_json, ["androperator"], "com.androperator.operator.dev")
     assert ok is False
     assert "missing or invalid string field: summary" in errors
     assert "array field must not be empty: scripts" in errors
@@ -221,7 +221,7 @@ def test_validate_skill_rejects_blank_required_strings():
         "\"scriptContents\":{\"skills/com.example.android-version/scripts/run.js\":\"console.log('hi')\\n\"},"
         "\"artifacts\":[]}"
     )
-    ok, errors = validate_skill(skill_json, ["clawperator"], "com.clawperator.operator.dev")
+    ok, errors = validate_skill(skill_json, ["androperator"], "com.androperator.operator.dev")
     assert ok is False
     assert "missing or invalid string field: id" in errors
 
@@ -235,7 +235,7 @@ def test_validate_skill_rejects_missing_inline_script_contents():
         "\"scripts\":[\"skills/com.example.android-version/scripts/run.js\"],"
         "\"artifacts\":[]}"
     )
-    ok, errors = validate_skill(skill_json, ["clawperator"], "com.clawperator.operator.dev")
+    ok, errors = validate_skill(skill_json, ["androperator"], "com.androperator.operator.dev")
     assert ok is False
     assert "missing or invalid object field: scriptContents" in errors
 
@@ -250,7 +250,7 @@ def test_validate_skill_rejects_missing_inline_artifact_contents():
         "\"scriptContents\":{\"skills/com.example.android-version/scripts/run.js\":\"console.log('hi')\\n\"},"
         "\"artifacts\":[\"skills/com.example.android-version/version.txt\"]}"
     )
-    ok, errors = validate_skill(skill_json, ["clawperator"], "com.clawperator.operator.dev")
+    ok, errors = validate_skill(skill_json, ["androperator"], "com.androperator.operator.dev")
     assert ok is False
     assert "missing or invalid object field: artifactContents" in errors
 
@@ -266,7 +266,7 @@ def test_validate_skill_rejects_unsafe_relative_paths():
         "\"artifacts\":[\"/tmp/version.txt\"],"
         "\"artifactContents\":{\"/tmp/version.txt\":\"15\"}}"
     )
-    ok, errors = validate_skill(skill_json, ["clawperator"], "com.clawperator.operator.dev")
+    ok, errors = validate_skill(skill_json, ["androperator"], "com.androperator.operator.dev")
     assert ok is False
     assert "unsafe path field: path" in errors
     assert "unsafe path in scripts[0]" in errors
@@ -284,7 +284,7 @@ def test_validate_skill_rejects_windows_style_paths():
         "\"artifacts\":[\"\\\\\\\\server\\\\share\\\\version.txt\"],"
         "\"artifactContents\":{\"\\\\\\\\server\\\\share\\\\version.txt\":\"15\"}}"
     )
-    ok, errors = validate_skill(skill_json, ["clawperator"], "com.clawperator.operator.dev")
+    ok, errors = validate_skill(skill_json, ["androperator"], "com.androperator.operator.dev")
     assert ok is False
     assert "unsafe path field: skillFile" in errors
     assert "unsafe path in scripts[0]" in errors

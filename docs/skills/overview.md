@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Explain what Clawperator skills are, how the registry model works, and how
+Explain what Androperator skills are, how the registry model works, and how
 runtime skills relate to authored skill packages and host-agent helpers.
 
-For the post-install decision of when to start with `clawperator skills`
+For the post-install decision of when to start with `androperator skills`
 instead of MCP or direct CLI automation, read
 [Host Agent Orientation](../host-agents.md) first. Use [Skills CLI](cli.md) for
-the exact `clawperator skills` command contract.
+the exact `androperator skills` command contract.
 
 ## Sources
 
@@ -17,25 +17,28 @@ the exact `clawperator skills` command contract.
 - Runtime wrapper: `apps/node/src/domain/skills/runSkill.ts`
 - Listing and search: `apps/node/src/domain/skills/listSkills.ts`, `apps/node/src/domain/skills/searchSkills.ts`
 - CLI surface: `apps/node/src/cli/commands/skills.ts`, `apps/node/src/cli/registry.ts`
-- Installer outputs: [`install.sh`](https://github.com/clawperator/clawperator/blob/main/sites/landing-clawperator/public/install.sh)
+- Installer outputs: [`install.sh`](https://github.com/androperator/androperator/blob/main/sites/androperator-public/install.sh)
 - Serve API wrapper: `apps/node/src/cli/commands/serve.ts`
 
 ## What Skills Are
+
+Androperator helps agents create and run their own local skills. Installation
+initializes an empty registry; it does not download an app-skill catalog.
 
 Skills are deterministic wrappers around repeatable workflows.
 
 Current role split:
 
-- Clawperator is the execution substrate
+- Androperator is the execution substrate
 - a skill defines a reusable wrapper or artifact
 - the agent decides when to invoke the skill and how to interpret the result
 
-Skills are registry-driven. They are not discovered by folder scanning alone. `clawperator skills list`, `clawperator skills for-app`, `clawperator skills search`, `clawperator skills get`, `clawperator skills validate`, and `clawperator skills run` all read the registry through `loadRegistry()` in `apps/node/src/adapters/skills-repo/localSkillsRegistry.ts`.
+Skills are registry-driven. They are not discovered by folder scanning alone. `androperator skills list`, `androperator skills for-app`, `androperator skills search`, `androperator skills get`, `androperator skills validate`, and `androperator skills run` all read the registry through `loadRegistry()` in `apps/node/src/adapters/skills-repo/localSkillsRegistry.ts`.
 
-`clawperator skills` and `skills-registry.json` cover runtime skills only.
+`androperator skills` and `skills-registry.json` cover runtime skills only.
 Authoring skills are a separate category of AI agent programs that live in
 `.agents/skills/` in source form and install separately into
-`~/.clawperator/bundled-skills/` plus host-agent discovery directories. Claude
+`~/.androperator/bundled-skills/` plus host-agent discovery directories. Claude
 Code and Codex receive symlinks into the canonical store. Generic agents
 receive managed real directory copies under `~/.agents/skills/`. When discovery
 directories resolve to the same physical location as the generic agents directory,
@@ -43,8 +46,8 @@ all consumers share its managed copies.
 
 Installer-facing discovery is deliberately split:
 
-- `~/.clawperator/AGENTS.md` is the installer-written local guide for runtime skills
-- if `~/.agents/AGENTS.md` already exists, the installer appends one bounded Clawperator bridge there that points back to `~/.clawperator/AGENTS.md` and the `clawperator skills` discovery commands
+- `~/.androperator/AGENTS.md` is the installer-written local guide for runtime skills
+- if `~/.agents/AGENTS.md` already exists, the installer appends one bounded Androperator bridge there that points back to `~/.androperator/AGENTS.md` and the `androperator skills` discovery commands
 - the installer does not mirror runtime skills into shared agent skill directories such as `~/.agents/skills/`, `~/.claude/skills/`, or `~/.codex/skills/`
 
 ## Skill Categories
@@ -56,7 +59,7 @@ Current authoring practice recognizes two categories of skills:
   - optimized for deterministic path execution on a known UI flow
   - may rely on tighter device or layout assumptions
 - `-orchestrated` skills:
-  - agent-controlled skills intended to better match the Clawperator brain/hand model
+  - agent-controlled skills intended to better match the Androperator brain/hand model
   - may declare an `agent` block in `skill.json`
   - run through their `scripts/run.js` harness, which spawns the configured agent CLI
   - can emit structured `SkillResult` frames with checkpoints and terminal verification that `runSkill` parses and returns
@@ -131,10 +134,10 @@ An orchestrated skill is an agent-driven runtime shape with these durable rules:
 - `skill.json.agent` is the trusted runtime metadata. It names the agent CLI and timeout policy that `runSkill()` enforces.
 - registry parity validation does not police `skill.json.agent`. The registry covers distributable skill identity and file layout, while `skill.json.agent` remains the trusted runtime execution config that `runSkill()` reads directly.
 - `SKILL.md` is the skill authority. It contains the app-specific runtime program, navigation policy, checkpoints, and terminal verification expectations.
-- `scripts/run.js` is a thin harness. It reads the injected Clawperator env vars, spawns the configured agent CLI on `SKILL.md`, and forwards stdout and stderr.
+- `scripts/run.js` is a thin harness. It reads the injected Androperator env vars, spawns the configured agent CLI on `SKILL.md`, and forwards stdout and stderr.
 - the harness must not absorb the real skill logic. If app-specific decision policy, navigation authority, or terminal verification rules move into the harness, the skill has left this contract.
-- `runSkill()` remains the Clawperator-owned boundary. It validates the skill, injects runtime env vars, executes the harness, parses the framed result, and injects trusted `source` metadata.
-- orchestrated output is contract-bound. The runtime agent must emit exactly one terminal `[Clawperator-Skill-Result]` frame with a valid `SkillResult` object.
+- `runSkill()` remains the Androperator-owned boundary. It validates the skill, injects runtime env vars, executes the harness, parses the framed result, and injects trusted `source` metadata.
+- orchestrated output is contract-bound. The runtime agent must emit exactly one terminal `[Androperator-Skill-Result]` frame with a valid `SkillResult` object.
 - replay skills remain first-class. Orchestrated skills are an additional runtime shape, not a replacement for replay-driven skills.
 
 For the practical authoring rules that keep orchestrated skills debuggable and
@@ -174,36 +177,35 @@ The registry file is a JSON object with:
 Registry resolution precedence is:
 
 1. explicit `registryPath` argument, when a caller supplied one
-2. `CLAWPERATOR_SKILLS_REGISTRY`, when it is set and non-blank
+2. `ANDROPERATOR_SKILLS_REGISTRY`, when it is set and non-blank
 3. default path `skills/skills-registry.json` relative to the current working directory
 
 Current failure and fallback rules:
 
 - if an explicit `registryPath` argument is passed and that path cannot be read, `loadRegistry()` fails immediately and does not fall back
-- if `CLAWPERATOR_SKILLS_REGISTRY` is set but blank, `loadRegistry()` fails immediately and does not fall back
-- if `CLAWPERATOR_SKILLS_REGISTRY` is set to a non-blank path and that read fails, `loadRegistry()` fails immediately and does not fall back
+- if `ANDROPERATOR_SKILLS_REGISTRY` is set but blank, `loadRegistry()` fails immediately and does not fall back
+- if `ANDROPERATOR_SKILLS_REGISTRY` is set to a non-blank path and that read fails, `loadRegistry()` fails immediately and does not fall back
 - if neither an explicit path nor env var is active and the default-path read fails, `loadRegistry()` next tries:
   - `../../skills/skills-registry.json` relative to the current working directory when running from `apps/node`
-  - `~/.clawperator/skills/skills/skills-registry.json`
+  - `~/.androperator/skills/skills/skills-registry.json`
 
 The install and sync flow writes the canonical long-lived registry under:
 
-- `~/.clawperator/skills/skills/skills-registry.json`
+- `~/.androperator/skills/skills/skills-registry.json`
 
 That path is assembled from these literals in `apps/node/src/domain/skills/skillsConfig.ts`:
 
-- `DEFAULT_SKILLS_DIR = ~/.clawperator/skills`
+- `DEFAULT_SKILLS_DIR = ~/.androperator/skills`
 - `DEFAULT_SKILLS_REGISTRY_SUBPATH = skills/skills-registry.json`
-- `SKILLS_REPO_URL = https://github.com/clawperator/clawperator-skills`
 
 ## Registry Verification
 
 Use `skills list` to confirm that the registry path in your current shell is readable:
 
-- after `install.sh`, this works in a fresh non-login shell because `loadRegistry()` falls back to `~/.clawperator/skills/skills/skills-registry.json` when no explicit registry path or env var is active
+- after `install.sh`, this works in a fresh non-login shell because `loadRegistry()` falls back to `~/.androperator/skills/skills/skills-registry.json` when no explicit registry path or env var is active
 
 ```bash
-clawperator skills list
+androperator skills list
 ```
 
 Success means the registry was loaded and the `skills` array was parsed:
@@ -233,14 +235,14 @@ If the registry cannot be read, every discovery command fails with `REGISTRY_REA
 ```json
 {
   "code": "REGISTRY_READ_FAILED",
-  "message": "Registry not found at configured path: /tmp/missing-registry.json. Update CLAWPERATOR_SKILLS_REGISTRY or run clawperator skills install."
+  "message": "Registry not found at configured path: /tmp/missing-registry.json. Update ANDROPERATOR_SKILLS_REGISTRY or run androperator skills install."
 }
 ```
 
 Recovery depends on how the path was chosen:
 
-- when `CLAWPERATOR_SKILLS_REGISTRY` points at a missing file, update the env var or run `clawperator skills install`
-- when no env var is set and neither the current working directory nor `~/.clawperator/skills/skills/skills-registry.json` contains the registry, verify `~/.clawperator/skills/skills/skills-registry.json`, run `clawperator skills list`, then run `clawperator skills install` or set `CLAWPERATOR_SKILLS_REGISTRY`
+- when `ANDROPERATOR_SKILLS_REGISTRY` points at a missing file, update the env var or run `androperator skills install`
+- when no env var is set and neither the current working directory nor `~/.androperator/skills/skills/skills-registry.json` contains the registry, verify `~/.androperator/skills/skills/skills-registry.json`, run `androperator skills list`, then run `androperator skills install` or set `ANDROPERATOR_SKILLS_REGISTRY`
 - when the registry file exists but does not contain a `skills` array, fix the JSON because `loadRegistry()` rejects that shape with `Invalid registry: skills array required`
 
 Wrapper failure fields like `stdout` and `stderr` are optional. `runSkill.ts` includes them only when the child process actually emitted non-empty data on those streams.

@@ -3,10 +3,14 @@
 # Shared blocked-terms helpers used by the local Git hooks.
 
 blocked_terms_policy_prepare() {
-  if [[ -n "${CLAWPERATOR_BLOCKED_TERMS_FILE:-}" ]]; then
-    BLOCKED_TERMS_POLICY_FILE="$CLAWPERATOR_BLOCKED_TERMS_FILE"
+  if [[ -n "${ANDROPERATOR_BLOCKED_TERMS_FILE:-}" ]]; then
+    BLOCKED_TERMS_POLICY_FILE="$ANDROPERATOR_BLOCKED_TERMS_FILE"
   elif [[ -n "${HOME:-}" ]]; then
-    BLOCKED_TERMS_POLICY_FILE="${HOME}/.clawperator/blocked-terms.txt"
+    BLOCKED_TERMS_POLICY_FILE="${HOME}/.androperator/blocked-terms.txt"
+    # Migration-only fallback: never silently disable an existing privacy policy.
+    if [[ ! -e "$BLOCKED_TERMS_POLICY_FILE" && -e "${HOME}/.clawperator/blocked-terms.txt" ]]; then
+      BLOCKED_TERMS_POLICY_FILE="${HOME}/.clawperator/blocked-terms.txt"
+    fi
   else
     BLOCKED_TERMS_POLICY_FILE=""
   fi
@@ -131,7 +135,7 @@ blocked_terms_policy_scan_identities() {
     return "$preparation_status"
   fi
 
-  identity_file="$(mktemp "${TMPDIR:-/tmp}/clawperator-identities.XXXXXX")" || return 1
+  identity_file="$(mktemp "${TMPDIR:-/tmp}/androperator-identities.XXXXXX")" || return 1
   if [[ $# -eq 0 ]]; then
     if ! git var GIT_AUTHOR_IDENT > "$identity_file" ||
        ! git var GIT_COMMITTER_IDENT >> "$identity_file"; then
@@ -166,7 +170,7 @@ blocked_terms_policy_scan_staged_content() {
     return "$preparation_status"
   fi
 
-  staged_file="$(mktemp "${TMPDIR:-/tmp}/clawperator-blocked-terms.XXXXXX")" || {
+  staged_file="$(mktemp "${TMPDIR:-/tmp}/androperator-blocked-terms.XXXXXX")" || {
     echo "[blocked-terms] unable to create a temporary staged-content file" >&2
     return 1
   }
@@ -188,6 +192,20 @@ blocked_terms_policy_scan_staged_content() {
       violations=1
       continue
     fi
+
+    # App catalog definitions intentionally contain third-party product names.
+    case "${path##*/}" in
+      KnownAppsRepository*) continue ;;
+    esac
+    # PNG payloads are compressed bytes, not searchable prose. Verify the format
+    # signature so a text file named .png still receives the content scan.
+    case "$path" in
+      *.png|*.PNG)
+        if [[ "$(od -An -tx1 -N8 "$staged_file" | tr -d ' \n')" == "89504e470d0a1a0a" ]]; then
+          continue
+        fi
+        ;;
+    esac
 
     if ! blocked_terms_policy_scan_file "$path" "$staged_file"; then
       violations=1

@@ -14,10 +14,10 @@ from datetime import datetime, timezone
 from urllib.parse import urljoin
 
 
-ACCOUNT_ENV = "CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID"
-TOKEN_ENV = "CLAWPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN"
-DEFAULT_LANDING_BASE_URL = "https://clawperator.com"
-DEFAULT_DOCS_BASE_URL = "https://docs.clawperator.com"
+ACCOUNT_ENV = "ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID"
+TOKEN_ENV = "ANDROPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN"
+DEFAULT_LANDING_BASE_URL = "https://androperator.com"
+DEFAULT_DOCS_BASE_URL = "https://docs.androperator.com"
 MAX_RETRIES = 1
 
 
@@ -85,7 +85,7 @@ def markdown_probe_specs(landing_base_url, docs_base_url):
             "url": landing_base_url,
             "min_length": 400,
             "patterns": [
-                r"Clawperator",
+                r"Androperator",
                 r"Node API|node api",
             ],
         },
@@ -94,8 +94,8 @@ def markdown_probe_specs(landing_base_url, docs_base_url):
             "url": f"{landing_base_url}/index.md",
             "min_length": 200,
             "patterns": [
-                r"Clawperator",
-                r"docs\.clawperator\.com",
+                r"Androperator",
+                r"docs\.androperator\.com",
             ],
         },
         {
@@ -104,7 +104,7 @@ def markdown_probe_specs(landing_base_url, docs_base_url):
             "min_length": 1000,
             "patterns": [
                 r"Node API",
-                r"Clawperator-Result|commandId|taskId",
+                r"Androperator-Result|commandId|taskId",
             ],
         },
         {
@@ -113,7 +113,7 @@ def markdown_probe_specs(landing_base_url, docs_base_url):
             "min_length": 500,
             "patterns": [
                 r"CLI|cli",
-                r"clawperator",
+                r"androperator",
             ],
         },
     ]

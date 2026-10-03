@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # docs_build.sh
-# Build the Clawperator documentation site (MkDocs).
+# Build the Androperator documentation site (MkDocs).
 # Works from any directory.
 
 set -euo pipefail
@@ -13,7 +13,7 @@ DOCS_DIR="$REPO_ROOT/sites/docs"
 VENV_DIR="$DOCS_DIR/.venv"
 REQUIREMENTS_FILE="$DOCS_DIR/requirements.txt"
 
-echo "--- Building Clawperator Documentation Site ---"
+echo "--- Building Androperator Documentation Site ---"
 echo "Repository Root: $REPO_ROOT"
 echo "Docs Directory: $DOCS_DIR"
 

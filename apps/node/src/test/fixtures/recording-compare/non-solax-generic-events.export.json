@@ -4,7 +4,7 @@
     "sessionId": "notes-demo-20260413-b",
     "schemaVersion": 1,
     "startedAt": 1776000000000,
-    "operatorPackage": "com.clawperator.operator.dev"
+    "operatorPackage": "com.androperator.operator.dev"
   },
   "snapshotMode": "omit",
   "events": [

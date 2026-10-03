@@ -13,8 +13,8 @@ from .timeutil import format_timestamp
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LOCAL_CLI = REPO_ROOT / "apps/node/dist/cli/index.js"
-RELEASE_OPERATOR_PACKAGE = "com.clawperator.operator"
-LOCAL_DEV_OPERATOR_PACKAGE = "com.clawperator.operator.dev"
+RELEASE_OPERATOR_PACKAGE = "com.androperator.operator"
+LOCAL_DEV_OPERATOR_PACKAGE = "com.androperator.operator.dev"
 
 
 @dataclass
@@ -23,9 +23,9 @@ class Environment:
     device_timezone: str | None
     ground_truth_android_version: str
     ground_truth_collected_at: str
-    clawperator_cmd: list[str]
-    clawperator_version: str
-    clawperator_npm_version: str
+    androperator_cmd: list[str]
+    androperator_version: str
+    androperator_npm_version: str
     operator_package: str
     requested_operator_package: str | None
 
@@ -34,11 +34,11 @@ class Environment:
 class RuntimeInputs:
     device_serial: str
     device_timezone: str | None
-    clawperator_cmd: list[str]
+    androperator_cmd: list[str]
     operator_package: str
     requested_operator_package: str | None
-    clawperator_version: str
-    clawperator_npm_version: str
+    androperator_version: str
+    androperator_npm_version: str
 
 
 def _raise_environment_error(code: str, *, details: dict[str, Any] | None = None) -> None:
@@ -58,7 +58,7 @@ def _minimal_env(device_serial: str | None = None, operator_package: str | None 
     if device_serial is not None:
         env["ANDROID_SERIAL"] = device_serial
     if operator_package is not None:
-        env["CLAWPERATOR_OPERATOR_PACKAGE"] = operator_package
+        env["ANDROPERATOR_OPERATOR_PACKAGE"] = operator_package
     return env
 
 
@@ -74,23 +74,23 @@ def _parse_authorized_devices(adb_output: str) -> list[str]:
     return devices
 
 
-def _resolve_clawperator_cmd(runtime: str) -> list[str]:
+def _resolve_androperator_cmd(runtime: str) -> list[str]:
     if runtime == "published":
-        global_bin = shutil.which("clawperator")
+        global_bin = shutil.which("androperator")
         if global_bin is None:
             raise EnvironmentError("published_binary_not_found")
         return [global_bin]
-    explicit = os.environ.get("CLAWPERATOR_BIN")
+    explicit = os.environ.get("ANDROPERATOR_BIN")
     if explicit is not None and explicit.strip():
         return [explicit]
     if LOCAL_CLI.exists():
         return ["node", str(LOCAL_CLI)]
-    global_bin = shutil.which("clawperator")
+    global_bin = shutil.which("androperator")
     if global_bin is not None:
-        return ["clawperator"]
+        return ["androperator"]
     raise EnvironmentError(
-        "clawperator binary not found: checked CLAWPERATOR_BIN, "
-        f"{LOCAL_CLI}, and shutil.which('clawperator')"
+        "androperator binary not found: checked ANDROPERATOR_BIN, "
+        f"{LOCAL_CLI}, and shutil.which('androperator')"
     )
 
 
@@ -99,17 +99,17 @@ def _read_local_npm_version() -> str:
     try:
         payload = json.loads(package_json.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise EnvironmentError("clawperator_npm_version_unreadable") from exc
+        raise EnvironmentError("androperator_npm_version_unreadable") from exc
     version = payload.get("version")
     if not isinstance(version, str) or not version.strip():
-        raise EnvironmentError("clawperator_npm_version_invalid")
+        raise EnvironmentError("androperator_npm_version_invalid")
     return version.strip()
 
 
-def _probe_clawperator_version(clawperator_cmd: list[str], env: dict[str, str]) -> str:
-    cli_version_result = _run([*clawperator_cmd, "version"], env=env)
+def _probe_androperator_version(androperator_cmd: list[str], env: dict[str, str]) -> str:
+    cli_version_result = _run([*androperator_cmd, "version"], env=env)
     if cli_version_result.returncode != 0:
-        raise EnvironmentError("clawperator_version_unreadable")
+        raise EnvironmentError("androperator_version_unreadable")
     raw_output = cli_version_result.stdout.strip()
     try:
         version_payload = json.loads(raw_output or "{}")
@@ -122,7 +122,7 @@ def _probe_clawperator_version(clawperator_cmd: list[str], env: dict[str, str]) 
     text_match = re.search(r"\b\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?\b", raw_output)
     if text_match is not None:
         return text_match.group(0)
-    raise EnvironmentError("clawperator_version_invalid")
+    raise EnvironmentError("androperator_version_invalid")
 
 
 def _run(cmd: list[str], env: dict[str, str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
@@ -221,12 +221,12 @@ def resolve_inputs(
         device_serial = authorized[0]
 
     device_timezone = _resolve_device_timezone(adb, device_serial)
-    clawperator_cmd = _resolve_clawperator_cmd(runtime)
-    clawperator_bin = Path(clawperator_cmd[0])
-    if shutil.which(clawperator_cmd[0]) is None and not (clawperator_bin.is_file() and os.access(clawperator_bin, os.X_OK)):
-        raise EnvironmentError("clawperator_binary_not_found")
+    androperator_cmd = _resolve_androperator_cmd(runtime)
+    androperator_bin = Path(androperator_cmd[0])
+    if shutil.which(androperator_cmd[0]) is None and not (androperator_bin.is_file() and os.access(androperator_bin, os.X_OK)):
+        raise EnvironmentError("androperator_binary_not_found")
 
-    env_operator_package = os.environ.get("CLAWPERATOR_OPERATOR_PACKAGE")
+    env_operator_package = os.environ.get("ANDROPERATOR_OPERATOR_PACKAGE")
     requested_operator_package = (
         operator_package.strip()
         if operator_package is not None and operator_package.strip()
@@ -240,17 +240,17 @@ def resolve_inputs(
         operator_package = requested_operator_package
 
     doctor_env = _minimal_env(device_serial=device_serial, operator_package=operator_package)
-    cli_version = _probe_clawperator_version(clawperator_cmd, doctor_env)
+    cli_version = _probe_androperator_version(androperator_cmd, doctor_env)
     npm_version = cli_version if runtime == "published" else _read_local_npm_version()
 
     return RuntimeInputs(
         device_serial=device_serial,
         device_timezone=device_timezone,
-        clawperator_cmd=clawperator_cmd,
+        androperator_cmd=androperator_cmd,
         operator_package=operator_package,
         requested_operator_package=requested_operator_package,
-        clawperator_version=cli_version,
-        clawperator_npm_version=npm_version,
+        androperator_version=cli_version,
+        androperator_npm_version=npm_version,
     )
 
 
@@ -267,7 +267,7 @@ def preflight(
 
     doctor_env = _minimal_env(device_serial=inputs.device_serial, operator_package=inputs.operator_package)
     doctor_result = _run(
-        [*inputs.clawperator_cmd, "doctor", "--device", inputs.device_serial],
+        [*inputs.androperator_cmd, "doctor", "--device", inputs.device_serial],
         env=doctor_env,
     )
     if doctor_result.returncode != 0:
@@ -290,9 +290,9 @@ def preflight(
         device_timezone=inputs.device_timezone,
         ground_truth_android_version=ground_truth,
         ground_truth_collected_at=collected_at,
-        clawperator_cmd=inputs.clawperator_cmd,
-        clawperator_version=inputs.clawperator_version,
-        clawperator_npm_version=inputs.clawperator_npm_version,
+        androperator_cmd=inputs.androperator_cmd,
+        androperator_version=inputs.androperator_version,
+        androperator_npm_version=inputs.androperator_npm_version,
         operator_package=inputs.operator_package,
         requested_operator_package=inputs.requested_operator_package,
     )

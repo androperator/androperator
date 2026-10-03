@@ -4,8 +4,8 @@ Read accessible active Android notifications without opening the notification
 shade, waking the display or dismissing keyguard:
 
 ```sh
-clawperator notifications list --app <package> --limit 25 --max-text-chars 256
-clawperator doctor --capability background-observation
+androperator notifications list --app <package> --limit 25 --max-text-chars 256
+androperator doctor --capability background-observation
 ```
 
 Notification access must be enabled for the selected Operator and its listener
@@ -49,7 +49,7 @@ failed step's errorCode; transport failures remain distinct.
 ## Dismissal
 
 ```sh
-clawperator notifications dismiss '<key>' --wait-timeout-ms 2000
+androperator notifications dismiss '<key>' --wait-timeout-ms 2000
 ```
 
 `dismiss_notification` requires `notificationKey` (nonblank, at most 4096
@@ -70,7 +70,7 @@ notification returns NOTIFICATION_NOT_DISMISSIBLE before dispatch.
 ## Notification buttons
 
 ```sh
-clawperator notifications action '<key>' --action '<action-id>'
+androperator notifications action '<key>' --action '<action-id>'
 ```
 
 `invoke_notification_action` requires `notificationKey` and `actionId` (nonblank,

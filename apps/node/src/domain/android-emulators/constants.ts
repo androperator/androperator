@@ -1,4 +1,4 @@
-export const DEFAULT_EMULATOR_AVD_NAME = "clawperator-pixel";
+export const DEFAULT_EMULATOR_AVD_NAME = "androperator-pixel";
 export const SUPPORTED_EMULATOR_API_LEVEL = 35;
 export const DEFAULT_EMULATOR_DEVICE_PROFILE = "pixel_7";
 export const DEFAULT_EMULATOR_DATA_PARTITION_SIZE = "12G";

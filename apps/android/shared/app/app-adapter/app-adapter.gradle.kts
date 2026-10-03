@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "clawperator.app.adapter"
+    namespace = "androperator.app.adapter"
     compileSdk = 35
 
     defaultConfig {

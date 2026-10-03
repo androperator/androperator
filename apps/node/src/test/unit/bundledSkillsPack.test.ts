@@ -32,11 +32,11 @@ describe("bundled skill packaging", () => {
       .sort((left, right) => left.localeCompare(right));
 
     assert.deepEqual(entries, [
-      "clawperator-agent-control-loop",
-      "clawperator-agent-orientation",
-      "clawperator-skill-author-by-agent-discovery",
-      "clawperator-skill-author-by-recording",
-      "clawperator-upgrade",
+      "androperator-agent-control-loop",
+      "androperator-agent-orientation",
+      "androperator-skill-author-by-agent-discovery",
+      "androperator-skill-author-by-recording",
+      "androperator-upgrade",
     ]);
 
     for (const entry of entries) {
@@ -55,24 +55,24 @@ describe("bundled skill packaging", () => {
 
   it("keeps the bundled discovery skill aligned with the current bundled-skills CLI surface", async () => {
     const discoverySkill = await readFile(
-      join(packageRoot, "bundled-skills", "clawperator-skill-author-by-agent-discovery", "SKILL.md"),
+      join(packageRoot, "bundled-skills", "androperator-skill-author-by-agent-discovery", "SKILL.md"),
       "utf8"
     );
 
-    assert.match(discoverySkill, /clawperator bundled-skills list/);
-    assert.doesNotMatch(discoverySkill, /clawperator agent-skills list --json/);
+    assert.match(discoverySkill, /androperator bundled-skills list/);
+    assert.doesNotMatch(discoverySkill, /androperator agent-skills list --json/);
   });
   it("ships control-loop conditional references and agent metadata", async () => {
-    const skillDir = join(packageRoot, "bundled-skills", "clawperator-agent-control-loop");
+    const skillDir = join(packageRoot, "bundled-skills", "androperator-agent-control-loop");
     const entry = await readFile(join(skillDir, "SKILL.md"), "utf8");
-    assert.match(entry, /^---\nname: clawperator-agent-control-loop\n/);
+    assert.match(entry, /^---\nname: androperator-agent-control-loop\n/);
     for (const match of entry.matchAll(/\]\((references\/[^)]+)\)/g)) {
       assert.ok((await readFile(join(skillDir, match[1]), "utf8")).trim().length > 0);
     }
     for (const name of ["observation.md", "recovery.md", "delegation.md"]) {
       assert.ok(entry.includes(`references/${name}`));
     }
-    assert.match(await readFile(join(skillDir, "agents", "openai.yaml"), "utf8"), /\$clawperator-agent-control-loop/);
+    assert.match(await readFile(join(skillDir, "agents", "openai.yaml"), "utf8"), /\$androperator-agent-control-loop/);
   });
 
 });

@@ -10,7 +10,7 @@ import { normalizeMatcherInput } from "../contracts/inputAliases.js";
 import { nodeMatcherSchema } from "../domain/executions/validateExecution.js";
 import type { NodeMatcher } from "../contracts/selectors.js";
 import { ERROR_CODES } from "../contracts/errors.js";
-import type { ClawperatorError } from "../contracts/errors.js";
+import type { AndroperatorError } from "../contracts/errors.js";
 import type { OutputFormat } from "./output.js";
 import { formatError } from "./output.js";
 import type { CliFlagAliasSpec } from "./flagAliases.js";
@@ -62,11 +62,11 @@ export const CONTAINER_SELECTOR_FLAG_ALIASES: readonly CliFlagAliasSpec[] = [
 
 export type MatcherResult =
   | { ok: true; matcher: NodeMatcher }
-  | { ok: false; error: ClawperatorError };
+  | { ok: false; error: AndroperatorError };
 
 export type ContainerResult =
   | { ok: true; container: NodeMatcher | undefined }
-  | { ok: false; error: ClawperatorError };
+  | { ok: false; error: AndroperatorError };
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -118,7 +118,7 @@ function readFlagRaw(rest: string[], flag: string): string | undefined {
 function duplicateValueFlagError(
   rest: string[],
   flags: readonly string[],
-): ClawperatorError | undefined {
+): AndroperatorError | undefined {
   for (const flag of flags) {
     let count = 0;
     for (const t of rest) {
@@ -134,7 +134,7 @@ function duplicateValueFlagError(
   return undefined;
 }
 
-function blankError(flag: string): ClawperatorError {
+function blankError(flag: string): AndroperatorError {
   return {
     code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
     message: `${flag} value must not be blank`,
@@ -407,7 +407,7 @@ export function makeMissingSelectorError(command: string, format: OutputFormat =
   return formatError(
     {
       code: "MISSING_SELECTOR",
-      message: `${command} requires a selector.\n\n${SELECTOR_FLAG_LIST}\n\nExamples:\n  clawperator ${command} --text "Wi-Fi"\n  clawperator ${command} --id "button_submit"`,
+      message: `${command} requires a selector.\n\n${SELECTOR_FLAG_LIST}\n\nExamples:\n  androperator ${command} --text "Wi-Fi"\n  androperator ${command} --id "button_submit"`,
     },
     { format },
   );

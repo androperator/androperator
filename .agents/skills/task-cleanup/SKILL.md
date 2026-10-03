@@ -39,7 +39,7 @@ do not rerun every historical phase command automatically.
 Route public behavior to `docs/`, internal decisions to
 `docs/internal/design/`, maintenance workflows to `.agents/skills/`, and
 source-owned invariants to the relevant code. Runtime skill authoring guidance
-belongs in `docs/skills/`; runtime packages live in `../clawperator-skills`.
+belongs in `docs/skills/`; runtime packages live in `<workspace>`.
 Verify the destination contains the needed facts rather than assuming an
 earlier docs update covered them. Use docs-author and docs-build when applicable.
 

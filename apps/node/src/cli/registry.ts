@@ -178,8 +178,8 @@ export function readAllRequiresJsonOutputError(options: {
         code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
         message:
           command === "read"
-            ? 'read --all requires JSON output. The default output is JSON; do not use --output pretty for multi-result reads.\n\nExample:\n  clawperator read --text "Price" --all'
-            : 'read-value --all requires JSON output. The default output is JSON; do not use --output pretty for multi-result reads.\n\nExample:\n  clawperator read-value --label "Battery" --all',
+            ? 'read --all requires JSON output. The default output is JSON; do not use --output pretty for multi-result reads.\n\nExample:\n  androperator read --text "Price" --all'
+            : 'read-value --all requires JSON output. The default output is JSON; do not use --output pretty for multi-result reads.\n\nExample:\n  androperator read-value --label "Battery" --all',
       },
       { format },
     );
@@ -224,10 +224,10 @@ export interface CommandDef {
 // Help text constants (verbatim from original index.ts)
 // ---------------------------------------------------------------------------
 
-const HELP_OPERATOR_SETUP = `clawperator operator setup
+const HELP_OPERATOR_SETUP = `androperator operator setup
 
 Usage:
-  clawperator operator setup --apk <path> [--device <id>] [--operator-package <package>] [--output <json|pretty>]
+  androperator operator setup --apk <path> [--device <id>] [--operator-package <package>] [--output <json|pretty>]
 
 Required:
   --apk <path>              Local filesystem path to the Operator APK file
@@ -237,7 +237,7 @@ Optional:
   --operator-package <pkg>  Operator package identifier (required when both release and debug variants are installed)
 
 Notes:
-  - This is the canonical setup command for the Clawperator Operator APK.
+  - This is the canonical setup command for the Androperator Operator APK.
   - Runs three phases in order: install, permission grant, verification.
   - Install phase: copies the APK onto the device via adb.
   - Permission grant phase: enables the accessibility service and notification listener.
@@ -247,30 +247,30 @@ Notes:
   - If both release and debug variants are installed, pass --operator-package explicitly.
   - Do not use raw adb install for normal setup. It leaves the device in a partial state without required permissions.
   - operator install remains a compatibility alias for operator setup.
-  - Use clawperator grant-device-permissions only after the Operator APK crashes and Android revokes permissions.
+  - Use androperator grant-device-permissions only after the Operator APK crashes and Android revokes permissions.
 `;
 
-const HELP_OPERATOR_DOWNLOAD = `clawperator operator download
+const HELP_OPERATOR_DOWNLOAD = `androperator operator download
 
 Usage:
-  clawperator operator download [--operator-package <package>] [--output <json|pretty>]
+  androperator operator download [--operator-package <package>] [--output <json|pretty>]
 
 Optional:
-  --operator-package <pkg>  Operator package identifier. Automatic download currently supports com.clawperator.operator only.
+  --operator-package <pkg>  Operator package identifier. Automatic download currently supports com.androperator.operator only.
 
 Notes:
   - This is the canonical surface for Operator APK metadata fetch, download, and checksum verification.
-  - Writes the verified APK to ~/.clawperator/downloads/operator.apk via getOperatorPackageApkPath(operatorPackage).
+  - Writes the verified APK to ~/.androperator/downloads/operator.apk via getOperatorPackageApkPath(operatorPackage).
   - Returns structured JSON including localPath, operatorVersion, sha256, and operatorPackage.
-  - The metadata source defaults to https://downloads.clawperator.com/operator/latest.json.
-  - Override the metadata source for testing with CLAWPERATOR_APK_METADATA_URL.
-  - Non-release packages such as com.clawperator.operator.dev must use a matching local debug APK instead of public download.
+  - The metadata source defaults to https://downloads.androperator.com/operator/latest.json.
+  - Override the metadata source for testing with ANDROPERATOR_APK_METADATA_URL.
+  - Non-release packages such as com.androperator.operator.dev must use a matching local debug APK instead of public download.
 `;
 
-const HELP_OPERATOR_REMEDIATE = `clawperator operator remediate
+const HELP_OPERATOR_REMEDIATE = `androperator operator remediate
 
 Usage:
-  clawperator operator remediate [--operator-package <package>] [--output <json|pretty>]
+  androperator operator remediate [--operator-package <package>] [--output <json|pretty>]
 
 Optional:
   --operator-package <pkg>  Operator package identifier to inspect and remediate across connected devices
@@ -285,12 +285,12 @@ Notes:
   - Exit code 1 means at least one connected device still failed remediation.
 `;
 
-const HELP_OPERATOR = `clawperator operator
+const HELP_OPERATOR = `androperator operator
 
 Usage:
-  clawperator operator setup --apk <path> [--device <id>] [--operator-package <package>] [--output <json|pretty>]
-  clawperator operator download [--operator-package <package>] [--output <json|pretty>]
-  clawperator operator remediate [--operator-package <package>] [--output <json|pretty>]
+  androperator operator setup --apk <path> [--device <id>] [--operator-package <package>] [--output <json|pretty>]
+  androperator operator download [--operator-package <package>] [--output <json|pretty>]
+  androperator operator remediate [--operator-package <package>] [--output <json|pretty>]
 
 Subcommands:
   setup     Install the Operator APK, grant required permissions, and verify readiness
@@ -298,10 +298,10 @@ Subcommands:
   remediate Inspect connected devices and apply remediation policy
 `;
 
-const HELP_INSTALL = `clawperator install
+const HELP_INSTALL = `androperator install
 
 Usage:
-  clawperator install [--operator-package <package>] [--output <json|pretty>]
+  androperator install [--operator-package <package>] [--output <json|pretty>]
 
 Optional:
   --operator-package <pkg>  Operator package identifier to remediate and record in host artifacts
@@ -315,16 +315,16 @@ Notes:
   - Exit code 1 means no connected device is ready, remediation still failed, or host setup failed.
   - Skills install, bundled-skills install, and the shared-agent bridge remain best-effort warnings when the core install is otherwise usable.
   - If multiple connected devices are ready, future commands must target one device explicitly with --device.
-  - Use 'clawperator operator setup --apk <path>' when you only need direct APK install, permission grant, and verification.
+  - Use 'androperator operator setup --apk <path>' when you only need direct APK install, permission grant, and verification.
 `;
 
-const HELP_DAEMON = `clawperator daemon
+const HELP_DAEMON = `androperator daemon
 
 Usage:
-  clawperator daemon start [--device <id>] [--operator-package <package>] [--output <json|pretty>]
-  clawperator daemon stop [--device <id>] [--output <json|pretty>]
-  clawperator daemon status [--device <id>] [--output <json|pretty>]
-  clawperator daemon restart [--device <id>] [--operator-package <package>] [--output <json|pretty>]
+  androperator daemon start [--device <id>] [--operator-package <package>] [--output <json|pretty>]
+  androperator daemon stop [--device <id>] [--output <json|pretty>]
+  androperator daemon status [--device <id>] [--output <json|pretty>]
+  androperator daemon restart [--device <id>] [--operator-package <package>] [--output <json|pretty>]
 
 Subcommands:
   start    Start the background daemon process for the selected device key
@@ -333,56 +333,56 @@ Subcommands:
   restart  Stop then start the daemon process
 
 Notes:
-  - The daemon uses a Unix domain socket under ~/.clawperator/daemon/.
+  - The daemon uses a Unix domain socket under ~/.androperator/daemon/.
   - The daemon run subcommand is internal and is intentionally omitted from help.
 `;
 
 
-const HELP_SKILLS_INSTALL = `clawperator skills install
+const HELP_SKILLS_INSTALL = `androperator skills install
 
 Usage:
-  clawperator skills install [--output <json|pretty>]
+  androperator skills install [--output <json|pretty>]
 
 Notes:
-  - Clones the skills repository to ~/.clawperator/skills/
-  - The installed-home registry at ~/.clawperator/skills/skills/skills-registry.json is discovered automatically in fresh shells.
-  - Set CLAWPERATOR_SKILLS_REGISTRY only when you intentionally want to point at a non-default registry path.
-  - If the skills repository requires authentication, install may fail until credentials are configured.
+  - Initializes an empty local skill workspace at ~/.androperator/skills/; no catalog is downloaded.
+  - The installed-home registry at ~/.androperator/skills/skills/skills-registry.json is discovered automatically in fresh shells.
+  - Set ANDROPERATOR_SKILLS_REGISTRY only when you intentionally want to point at a non-default registry path.
+  - Existing registries and user-created skills are preserved.
 `;
 
-const HELP_SKILLS_SYNC = `clawperator skills sync
+const HELP_SKILLS_SYNC = `androperator skills sync
 
 Usage:
-  clawperator skills sync --ref <git-ref> [--output <json|pretty>]
+  androperator skills sync --ref <git-ref> [--output <json|pretty>]
 
 Notes:
-  - Fetches or clones ~/.clawperator/skills/ and pins the local registry to the requested git ref.
-  - Requires git access to the configured skills repository.
+  - Initializes or validates the local skill workspace; only --ref main is accepted.
+  - Git-backed catalog synchronization was removed in 1.0.0.
   - Registry path after sync:
-      $HOME/.clawperator/skills/skills/skills-registry.json
+      $HOME/.androperator/skills/skills/skills-registry.json
 `;
 
-const HELP_BUNDLED_SKILLS_INSTALL = `clawperator bundled-skills install
+const HELP_BUNDLED_SKILLS_INSTALL = `androperator bundled-skills install
 
 Usage:
-  clawperator bundled-skills install [--output <json|pretty>]
+  androperator bundled-skills install [--output <json|pretty>]
 
 Notes:
-  - Copies packaged first-party bundled skills to ~/.clawperator/bundled-skills/
-  - Installs the packaged bundled-skill front doors that help host agents operate Clawperator
+  - Copies packaged first-party bundled skills to ~/.androperator/bundled-skills/
+  - Installs the packaged bundled-skill front doors that help host agents operate Androperator
   - Creates Claude Code, Codex, and generic agents discovery directories unconditionally
   - Symlinks each installed skill into ~/.claude/skills/ and the Codex skills dir
   - Copies each installed skill into ~/.agents/skills/ for generic agent runtimes
-  - Use 'clawperator bundled-skills list' after install to inspect the available host-agent helpers on this machine
+  - Use 'androperator bundled-skills list' after install to inspect the available host-agent helpers on this machine
 `;
 
-const HELP_BUNDLED_SKILLS_UPDATE = `clawperator bundled-skills update
+const HELP_BUNDLED_SKILLS_UPDATE = `androperator bundled-skills update
 
 Usage:
-  clawperator bundled-skills update [--output <json|pretty>]
+  androperator bundled-skills update [--output <json|pretty>]
 
 Notes:
-  - Re-copies packaged first-party bundled skills into ~/.clawperator/bundled-skills/
+  - Re-copies packaged first-party bundled skills into ~/.androperator/bundled-skills/
   - Groups discovery directory aliases by physical path
   - Uses managed copies for groups containing ~/.agents/skills/; otherwise uses symlinks
   - Backs up exact known legacy first-party copies before migration
@@ -391,30 +391,30 @@ Notes:
   - Safe to run multiple times
 `;
 
-const HELP_BUNDLED_SKILLS_LIST = `clawperator bundled-skills list
+const HELP_BUNDLED_SKILLS_LIST = `androperator bundled-skills list
 
 Usage:
-  clawperator bundled-skills list [--output <json|pretty>]
+  androperator bundled-skills list [--output <json|pretty>]
 
 Notes:
-  - Lists installed first-party bundled skills from ~/.clawperator/bundled-skills/
+  - Lists installed first-party bundled skills from ~/.androperator/bundled-skills/
   - Shows the absolute SKILL.md path for each installed bundled skill
   - Use this when you need to inspect the installed host-agent helpers on this machine
-  - 'clawperator-agent-orientation' is the first-run orientation skill for unfamiliar hosts
-  - 'clawperator-agent-control-loop' guides bounded adaptive execution and explicit orchestrated authoring after goal-aware discovery
-  - 'clawperator-upgrade' is the whole-product upgrade route that checks clawperator --version, verifies Node 24+, npm reachability, and Java 17/21, then uses npm install -g clawperator@latest, clawperator install, and clawperator doctor when the CLI is already viable
-  - 'clawperator-skill-author-by-agent-discovery' is the zero-results front door
-  - 'clawperator-skill-author-by-recording' remains the proving workflow after discovery returns 'proceed_to_recording'
-  - Runtime skills still live under 'clawperator skills ...'; bundled skills are separate host-agent helpers
+  - 'androperator-agent-orientation' is the first-run orientation skill for unfamiliar hosts
+  - 'androperator-agent-control-loop' guides bounded adaptive execution and explicit orchestrated authoring after goal-aware discovery
+  - 'androperator-upgrade' is the whole-product upgrade route that checks androperator --version, verifies Node 24+, npm reachability, and Java 17/21, then uses npm install -g androperator@latest, androperator install, and androperator doctor when the CLI is already viable
+  - 'androperator-skill-author-by-agent-discovery' is the zero-results front door
+  - 'androperator-skill-author-by-recording' remains the proving workflow after discovery returns 'proceed_to_recording'
+  - Runtime skills still live under 'androperator skills ...'; bundled skills are separate host-agent helpers
 `;
 
-const HELP_HOST = `clawperator host
+const HELP_HOST = `androperator host
 
 Usage:
-  clawperator host setup [--installed-at <iso8601>] [--cli-version <version>] [--apk-version <version>] [--last-device-serial <serial>] [--output <json|pretty>]
+  androperator host setup [--installed-at <iso8601>] [--cli-version <version>] [--apk-version <version>] [--last-device-serial <serial>] [--output <json|pretty>]
 
 Notes:
-  - Sets up CLI-owned durable host artifacts under ~/.clawperator/.
+  - Sets up CLI-owned durable host artifacts under ~/.androperator/.
   - Writes install-state JSON, MCP config snippet JSON, local AGENTS.md, and the shared-agent bridge when ~/.agents/AGENTS.md exists.
   - Reports per-artifact outcomes as written, updated, skipped, or failed.
   - Safe to rerun. Unchanged artifacts are reported as skipped.
@@ -422,10 +422,10 @@ Notes:
   - Use --cli-version when an installer wrapper needs the setup install-state to reflect the wrapper-reported CLI version exactly.
 `;
 
-const HELP_SKILLS_NEW = `clawperator skills new
+const HELP_SKILLS_NEW = `androperator skills new
 
 Usage:
-  clawperator skills new <skill_id> [--summary <text>] [--recording-context <file>] [--output <json|pretty>]
+  androperator skills new <skill_id> [--summary <text>] [--recording-context <file>] [--output <json|pretty>]
 
 Notes:
   - Scaffolds a new local skill in the currently configured skills registry repo.
@@ -434,21 +434,21 @@ Notes:
   - --summary overrides the default TODO summary written to skill.json and SKILL.md.
   - --recording-context copies a recording export JSON file into the new skill folder as reference evidence for an external authoring agent or human.
   - Updates the configured registry JSON so the new skill appears in skills list.
-  - This is the low-level manual scaffold. If runtime-skill discovery found no relevant match, inspect 'clawperator bundled-skills list' first and start with 'clawperator-skill-author-by-agent-discovery'.
-  - Use 'clawperator-skill-author-by-recording' only after discovery returns 'proceed_to_recording', or when the app route is already well understood and you need the proving workflow.
+  - This is the low-level manual scaffold. If runtime-skill discovery found no relevant match, inspect 'androperator bundled-skills list' first and start with 'androperator-skill-author-by-agent-discovery'.
+  - Use 'androperator-skill-author-by-recording' only after discovery returns 'proceed_to_recording', or when the app route is already well understood and you need the proving workflow.
 `;
 
-const HELP_RECORDING = `clawperator recording
+const HELP_RECORDING = `androperator recording
 
 Usage:
-  clawperator recording start|stop|pull|parse|export|compare ... ('record' is an alias)
+  androperator recording start|stop|pull|parse|export|compare ... ('record' is an alias)
 `;
 
-const HELP_RECORDING_EXPORT = `clawperator recording export
+const HELP_RECORDING_EXPORT = `androperator recording export
 
 Usage:
-  clawperator recording export --input <file|directory> [--out <file>] [--snapshots <omit|include>] [--output <json|pretty>]
-  clawperator record export --input <file|directory> [--out <file>] [--snapshots <omit|include>] [--output <json|pretty>]
+  androperator recording export --input <file|directory> [--out <file>] [--snapshots <omit|include>] [--output <json|pretty>]
+  androperator record export --input <file|directory> [--out <file>] [--snapshots <omit|include>] [--output <json|pretty>]
 
 Options:
   --input <file|directory>       Local NDJSON recording file, or a directory resolved to the newest *.ndjson recording
@@ -462,15 +462,15 @@ Notes:
   - Does not generate skill logic, selectors, or parameters.
 `;
 
-const HELP_RECORDING_COMPARE = `clawperator recording compare
+const HELP_RECORDING_COMPARE = `androperator recording compare
 
 Usage:
-  clawperator recording compare --baseline <export.json> --result <skills-run.json> [--mode <auto|literal|semantic>] [--output <json|pretty>]
-  clawperator record compare --baseline <export.json> --result <skills-run.json> [--mode <auto|literal|semantic>] [--output <json|pretty>]
+  androperator recording compare --baseline <export.json> --result <skills-run.json> [--mode <auto|literal|semantic>] [--output <json|pretty>]
+  androperator record compare --baseline <export.json> --result <skills-run.json> [--mode <auto|literal|semantic>] [--output <json|pretty>]
 
 Options:
   --baseline <export.json>       Recording export JSON used as the compare baseline
-  --result <skills-run.json>     Saved clawperator skills run JSON wrapper file
+  --result <skills-run.json>     Saved androperator skills run JSON wrapper file
   --mode <auto|literal|semantic> Compare mode override (default: auto)
 
 Notes:
@@ -483,11 +483,11 @@ Notes:
   - Generic per-skill compare is follow-on work, not part of the shipped W4 closeout.
 `;
 
-const HELP_SKILLS_VALIDATE = `clawperator skills validate
+const HELP_SKILLS_VALIDATE = `androperator skills validate
 
 Usage:
-  clawperator skills validate <skill_id> [--dry-run] [--output <json|pretty>]
-  clawperator skills validate --all [--dry-run] [--output <json|pretty>]
+  androperator skills validate <skill_id> [--dry-run] [--output <json|pretty>]
+  androperator skills validate --all [--dry-run] [--output <json|pretty>]
 
 Notes:
   - Use <skill_id> to validate one skill, or --all to validate every registry entry in one pass.
@@ -499,11 +499,11 @@ Notes:
   - Script-only skills skip payload validation during --dry-run because their payload is generated at runtime by the skill script.
 `;
 
-const HELP_SKILLS_COMPILE_ARTIFACT = `clawperator skills compile-artifact
+const HELP_SKILLS_COMPILE_ARTIFACT = `androperator skills compile-artifact
 
 Usage:
-  clawperator skills compile-artifact <skill_id> --artifact <name> [--vars <json>] [--output <json|pretty>]
-  clawperator skills compile-artifact --skill-id <id> --artifact <name> [--vars <json>] [--output <json|pretty>]
+  androperator skills compile-artifact <skill_id> --artifact <name> [--vars <json>] [--output <json|pretty>]
+  androperator skills compile-artifact --skill-id <id> --artifact <name> [--vars <json>] [--output <json|pretty>]
 
 Notes:
   - Compiles a deterministic skill artifact into a validated execution payload.
@@ -511,20 +511,20 @@ Notes:
   - --artifact accepts either the bare artifact name or the full .recipe.json filename.
   - --vars must be a JSON object string used for template substitution.
   - Compile failure usually means a missing artifact, missing required vars, or an invalid execution shape.
-  - Use clawperator exec --validate-only for an extra contract-only check before a live device run.
+  - Use androperator exec --validate-only for an extra contract-only check before a live device run.
 `;
 
-const HELP_SKILLS_RUN = `clawperator skills run
+const HELP_SKILLS_RUN = `androperator skills run
 
 Usage:
-  clawperator skills run <skill_id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>] [--expect-contains <text>] [--skip-validate] [--output <json|pretty>] [skill_args...]
+  androperator skills run <skill_id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>] [--expect-contains <text>] [--skip-validate] [--output <json|pretty>] [skill_args...]
 
 Notes:
-  - Prefer 'clawperator skills for-app', 'clawperator skills search', and 'clawperator skills get' before 'clawperator skills run' when you are still discovering the correct skill.
+  - Prefer 'androperator skills for-app', 'androperator skills search', and 'androperator skills get' before 'androperator skills run' when you are still discovering the correct skill.
   - Runs the selected skill script through the local skill wrapper.
   - Use --device explicitly when more than one Android device is connected.
-  - --operator-package sets the Operator package for this skill run (default: com.clawperator.operator).
-    Use com.clawperator.operator.dev for local debug APKs. --receiver-package is a legacy alias (see global options).
+  - --operator-package sets the Operator package for this skill run (default: com.androperator.operator).
+    Use com.androperator.operator.dev for local debug APKs. --receiver-package is a legacy alias (see global options).
   - Output defaults to JSON. Use --output json when you want to request JSON explicitly. --format json is also accepted.
   - --timeout overrides the wrapper timeout for this run only (--timeout-ms is accepted as an alias).
   - --expect-contains turns the run into a lightweight output assertion.
@@ -533,21 +533,21 @@ Notes:
   - --skip-validate bypasses that gate for CI or development escape hatches only.
   - Unknown trailing tokens such as --limit 40 are forwarded to the underlying skill script unchanged.
   - Use -- when you need to force literal passthrough for tokens that would otherwise be parsed as wrapper flags.
-  - Environment variables CLAWPERATOR_BIN and CLAWPERATOR_OPERATOR_PACKAGE are injected into the skill script.
+  - Environment variables ANDROPERATOR_BIN and ANDROPERATOR_OPERATOR_PACKAGE are injected into the skill script.
   - This wrapper does not replace live validation of screenshots, artifacts, or app state.
 `;
 
-const HELP_DOCTOR = `clawperator doctor
+const HELP_DOCTOR = `androperator doctor
 
 Usage:
-  clawperator doctor [--output <json|pretty>] [--device <id>] [--operator-package <package>] [--verbose]
-  clawperator doctor --fix
-  clawperator doctor --full
-  clawperator doctor --check-only
+  androperator doctor [--output <json|pretty>] [--device <id>] [--operator-package <package>] [--verbose]
+  androperator doctor --fix
+  androperator doctor --full
+  androperator doctor --check-only
 
 Notes:
-  - Default Operator package: com.clawperator.operator
-  - Use --operator-package com.clawperator.operator.dev for local debug APKs. --receiver-package is a legacy alias (see global options).
+  - Default Operator package: com.androperator.operator
+  - Use --operator-package com.androperator.operator.dev for local debug APKs. --receiver-package is a legacy alias (see global options).
   - Exit code 0 means every required check for the selected mode ran and passed.
   - Exit code 1 means readiness is unverified, including device ambiguity, a missing selected APK, or handshake failure.
   - --check-only uses the same readiness exit status. Missing prerequisite checks appear in skippedChecks.
@@ -556,35 +556,35 @@ Notes:
   - If handshake times out, rerun with --verbose and compare the installed APK package with --operator-package.
 `;
 
-const HELP_VERSION = `clawperator version
+const HELP_VERSION = `androperator version
 
 Usage:
-  clawperator version
-  clawperator version --check-compat [--device <id>] [--operator-package <package>] [--output <json|pretty>]
+  androperator version
+  androperator version --check-compat [--device <id>] [--operator-package <package>] [--output <json|pretty>]
 
   Notes:
-  - Default Operator package: com.clawperator.operator
-  - Use --operator-package com.clawperator.operator.dev for local debug APKs. --receiver-package is a legacy alias (see global options).
+  - Default Operator package: com.androperator.operator
+  - Use --operator-package com.androperator.operator.dev for local debug APKs. --receiver-package is a legacy alias (see global options).
   - --check-compat compares the CLI version with the installed APK version on the device.
 `;
 
-const HELP_GRANT_DEVICE_PERMISSIONS = `clawperator grant-device-permissions
+const HELP_GRANT_DEVICE_PERMISSIONS = `androperator grant-device-permissions
 
 Usage:
-  clawperator grant-device-permissions [--device <id>] [--operator-package <package>] [--output <json|pretty>]
+  androperator grant-device-permissions [--device <id>] [--operator-package <package>] [--output <json|pretty>]
 
 Notes:
-  - Default Operator package: com.clawperator.operator
-  - Use --operator-package com.clawperator.operator.dev for local debug APKs. --receiver-package is a legacy alias (see global options).
+  - Default Operator package: com.androperator.operator
+  - Use --operator-package com.androperator.operator.dev for local debug APKs. --receiver-package is a legacy alias (see global options).
   - Grants accessibility, notification posting, and notification listener permissions via adb.
   - This command is for crash recovery only. Use it when the Operator APK crashes and Android revokes permissions.
-  - For normal setup, always use clawperator operator setup instead.
+  - For normal setup, always use androperator operator setup instead.
 `;
 
-const HELP_SNAPSHOT = `clawperator snapshot — Get current Android UI hierarchy as XML
+const HELP_SNAPSHOT = `androperator snapshot — Get current Android UI hierarchy as XML
 
 Usage:
-  clawperator snapshot [--device <id>] [--operator-package <pkg>]
+  androperator snapshot [--device <id>] [--operator-package <pkg>]
 
 Options:
   --compact             Return a bounded JSON hierarchy projection
@@ -598,17 +598,17 @@ Options:
 Also accepted as: --device-id
 
 Notes:
-  - If the current host is unfamiliar, inspect 'clawperator bundled-skills list' and start with 'clawperator-agent-orientation' before driving the raw CLI directly.
+  - If the current host is unfamiliar, inspect 'androperator bundled-skills list' and start with 'androperator-agent-orientation' before driving the raw CLI directly.
 
 Examples:
-  clawperator snapshot
-  clawperator snapshot --device <device_serial>
+  androperator snapshot
+  androperator snapshot --device <device_serial>
 `;
 
-const HELP_SCREENSHOT = `clawperator screenshot — Capture device screen
+const HELP_SCREENSHOT = `androperator screenshot — Capture device screen
 
 Usage:
-  clawperator screenshot [--path <file>] [--device <id>] [--operator-package <pkg>]
+  androperator screenshot [--path <file>] [--device <id>] [--operator-package <pkg>]
 
 Options:
   --path <file>          Save PNG to file path (if omitted, output is base64)
@@ -624,16 +624,16 @@ Result geometry:
   Verify current display geometry before using image coordinates for clicks.
 
 Examples:
-  clawperator screenshot --path /tmp/screen.png
-  clawperator screenshot --device <device_serial>
+  androperator screenshot --path /tmp/screen.png
+  androperator screenshot --device <device_serial>
 `;
 
-const HELP_CLICK = `clawperator click — Tap a UI element by selector or coordinates
+const HELP_CLICK = `androperator click — Tap a UI element by selector or coordinates
 
 Usage:
-  clawperator click --text "Login" [--device <id>] [--operator-package <pkg>]
-  clawperator click --id "btn_submit" [--device <id>] [--operator-package <pkg>]
-  clawperator click --coordinate 100 200 [--device <id>] [--operator-package <pkg>]
+  androperator click --text "Login" [--device <id>] [--operator-package <pkg>]
+  androperator click --id "btn_submit" [--device <id>] [--operator-package <pkg>]
+  androperator click --coordinate 100 200 [--device <id>] [--operator-package <pkg>]
 
 Selector flags (choose one):
   --text <string>        Click element with matching visible text
@@ -653,15 +653,15 @@ Options:
 Also accepted as: --device-id, tap, --resource-id, --content-desc, --content-desc-contains
 
 Examples:
-  clawperator click --text "Submit"
-  clawperator click --id "login_button" --device <device_serial>
+  androperator click --text "Submit"
+  androperator click --id "login_button" --device <device_serial>
 `;
 
-const HELP_OPEN = `clawperator open — Open an Android app or URL
+const HELP_OPEN = `androperator open — Open an Android app or URL
 
 Usage:
-  clawperator open <package-id> [--device <id>] [--operator-package <pkg>]
-  clawperator open <url_or_uri> [--device <id>] [--operator-package <pkg>]
+  androperator open <package-id> [--device <id>] [--operator-package <pkg>]
+  androperator open <url_or_uri> [--device <id>] [--operator-package <pkg>]
 
 Target types:
   Package ID (e.g. com.android.settings) uses open_app
@@ -678,15 +678,15 @@ Options:
 Also accepted as: --device-id, open-app, open_app, open-uri, open-url, open_uri, open_url, --package, --package-id, --application-id, --app-id, --url, --uri
 
 Examples:
-  clawperator open com.android.settings
-  clawperator open https://clawperator.com
+  androperator open com.android.settings
+  androperator open https://androperator.com
 `;
 
-const HELP_TYPE = `clawperator type — Type text into a UI element
+const HELP_TYPE = `androperator type — Type text into a UI element
 
 Usage:
-  clawperator type "hello world" --id "search_box" [--device <id>] [--operator-package <pkg>]
-  clawperator type "admin" --text "Username" [--device <id>] [--operator-package <pkg>]
+  androperator type "hello world" --id "search_box" [--device <id>] [--operator-package <pkg>]
+  androperator type "admin" --text "Username" [--device <id>] [--operator-package <pkg>]
 
 Text to type:
   Positional argument (e.g. "hello world") or --text <string> if not using --text as a selector.
@@ -707,15 +707,15 @@ Options:
 Also accepted as: --device-id, fill, enter-text, enter_text, --resource-id, --content-desc, --content-desc-contains
 
 Examples:
-  clawperator type "hello world" --role textfield
-  clawperator type "search query" --id "com.example:id/search_box" --submit
+  androperator type "hello world" --role textfield
+  androperator type "search query" --id "com.example:id/search_box" --submit
 `;
 
-const HELP_READ_VALUE = `clawperator read-value — Read value associated with a labeled element
+const HELP_READ_VALUE = `androperator read-value — Read value associated with a labeled element
 
 Usage:
-  clawperator read-value --label "Battery"
-  clawperator read-value --label-id "battery_label"
+  androperator read-value --label "Battery"
+  androperator read-value --label-id "battery_label"
 
 Label selector flags (choose one):
   --label <string>       Match label by exact visible text
@@ -731,15 +731,15 @@ Options:
 Also accepted as: --device-id, read-kv, read-key-value-pair, read_key_value_pair, --text, --label-text, --id, --resource-id, --desc, --content-desc
 
 Examples:
-  clawperator read-value --label "Battery"
-  clawperator read-value --label "Wi-Fi" --all
+  androperator read-value --label "Battery"
+  androperator read-value --label "Wi-Fi" --all
 `;
 
-const HELP_READ = `clawperator read — Read text content from a UI element
+const HELP_READ = `androperator read — Read text content from a UI element
 
 Usage:
-  clawperator read --text "Price" [--device <id>] [--operator-package <pkg>]
-  clawperator read --id "tv_price" [--device <id>] [--operator-package <pkg>]
+  androperator read --text "Price" [--device <id>] [--operator-package <pkg>]
+  androperator read --id "tv_price" [--device <id>] [--operator-package <pkg>]
 
 Selector flags (choose one):
   --text <string>        Match element by visible text
@@ -766,19 +766,19 @@ Container selector flags (all optional):
 Also accepted as: --device-id, read-text, read_text, --resource-id, --content-desc, --content-desc-contains, --container-resource-id, --container-content-desc, --container-content-desc-contains
 
 Examples:
-  clawperator read --id "com.example:id/battery_level"
-  clawperator read --text "Battery"
-  clawperator read --text "Price" --all
+  androperator read --id "com.example:id/battery_level"
+  androperator read --text "Battery"
+  androperator read --text "Price" --all
 `;
 
-const HELP_WAIT = `clawperator wait
+const HELP_WAIT = `androperator wait
 
 Usage:
-  clawperator wait --text <text> [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
-  clawperator wait --id <resource-id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
-  clawperator wait --role <role> [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
-  clawperator wait --desc <text> [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
-  clawperator wait --selector '<json>' [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
+  androperator wait --text <text> [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
+  androperator wait --id <resource-id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
+  androperator wait --role <role> [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
+  androperator wait --desc <text> [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
+  androperator wait --selector '<json>' [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
 
 Selector flags (at least one required; combine for AND matching):
   --text <text>           Exact visible text
@@ -802,17 +802,17 @@ Also accepted as:
   --resource-id, --content-desc, --content-desc-contains
 
 Examples:
-  clawperator wait --text "Done"
-  clawperator wait --id "com.example:id/progress" --timeout 10000
-  clawperator wait --role button --text-contains "OK"
-  Advanced (raw NodeMatcher JSON): clawperator wait --selector '{"textEquals":"Done"}'
+  androperator wait --text "Done"
+  androperator wait --id "com.example:id/progress" --timeout 10000
+  androperator wait --role button --text-contains "OK"
+  Advanced (raw NodeMatcher JSON): androperator wait --selector '{"textEquals":"Done"}'
 `;
 
-const HELP_WAIT_FOR_NAV = `clawperator wait-for-nav — Wait for app or screen transition
+const HELP_WAIT_FOR_NAV = `androperator wait-for-nav — Wait for app or screen transition
 
 Usage:
-  clawperator wait-for-nav --app com.google.home --timeout 5000 [--device <id>] [--operator-package <pkg>]
-  clawperator wait-for-nav --text "Settings" --timeout 5000 [--device <id>] [--operator-package <pkg>]
+  androperator wait-for-nav --app com.google.home --timeout 5000 [--device <id>] [--operator-package <pkg>]
+  androperator wait-for-nav --text "Settings" --timeout 5000 [--device <id>] [--operator-package <pkg>]
 
 Required (choose one or both):
   --app <package>        Wait until this app is in the foreground
@@ -828,14 +828,14 @@ Options:
 Also accepted as: --device-id, wait-for-navigation, wait_for_navigation, --package, --package-id, --application-id, --app-id, --resource-id, --content-desc, --content-desc-contains
 
 Examples:
-  clawperator wait-for-nav --app com.google.home --timeout 5000
-  clawperator wait-for-nav --text "Settings" --timeout 5000
+  androperator wait-for-nav --app com.google.home --timeout 5000
+  androperator wait-for-nav --text "Settings" --timeout 5000
 `;
 
-const HELP_PRESS = `clawperator press — Send a system key event
+const HELP_PRESS = `androperator press — Send a system key event
 
 Usage:
-  clawperator press <key> [--device <id>] [--operator-package <pkg>]
+  androperator press <key> [--device <id>] [--operator-package <pkg>]
 
 Valid keys:
   back       Navigate to previous screen
@@ -851,14 +851,14 @@ Options:
 Also accepted as: --device-id, press-key, press_key, --button
 
 Examples:
-  clawperator press home
-  clawperator press back
+  androperator press home
+  androperator press back
 `;
 
-const HELP_BACK = `clawperator back — Navigate to the previous screen
+const HELP_BACK = `androperator back — Navigate to the previous screen
 
 Usage:
-  clawperator back [--device <id>] [--operator-package <pkg>]
+  androperator back [--device <id>] [--operator-package <pkg>]
 
 Options:
   --output <json|pretty> Output format (default: json)
@@ -868,14 +868,14 @@ Options:
 Also accepted as: --device-id
 
 Examples:
-  clawperator back
+  androperator back
 `;
 
-const HELP_CLOSE = `clawperator close
+const HELP_CLOSE = `androperator close
 
 Usage:
-  clawperator close <package> [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
-  clawperator close --app <package> [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
+  androperator close <package> [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
+  androperator close --app <package> [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
 
 Required:
   <package>             Android application package ID (e.g., com.android.settings)
@@ -896,15 +896,15 @@ Also accepted as:
   --package, --package-id, --application-id, --app-id
 
 Examples:
-  clawperator close com.android.settings
-  clawperator close com.google.android.apps.chromecast.app
-  clawperator close-app com.android.settings
+  androperator close com.android.settings
+  androperator close com.google.android.apps.chromecast.app
+  androperator close-app com.android.settings
 `;
 
-const HELP_SLEEP = `clawperator sleep
+const HELP_SLEEP = `androperator sleep
 
 Usage:
-  clawperator sleep <ms> [--device <id>] [--operator-package <pkg>]
+  androperator sleep <ms> [--device <id>] [--operator-package <pkg>]
 
 Required:
   <ms>                    Duration in milliseconds (non-negative)
@@ -917,16 +917,16 @@ Notes:
   - Use --no-daemon to force direct execution instead of daemon proxy.
 
 Examples:
-  clawperator sleep 2000
-  clawperator sleep 500
-  clawperator sleep 0
+  androperator sleep 2000
+  androperator sleep 500
+  androperator sleep 0
 `;
 
-const HELP_SCROLL = `clawperator scroll — Scroll the screen in a given direction
+const HELP_SCROLL = `androperator scroll — Scroll the screen in a given direction
 
 Usage:
-  clawperator scroll down [--device <id>] [--operator-package <pkg>]
-  clawperator scroll up --container-id "list" [--device <id>] [--operator-package <pkg>]
+  androperator scroll down [--device <id>] [--operator-package <pkg>]
+  androperator scroll up --container-id "list" [--device <id>] [--operator-package <pkg>]
 
 Valid directions:
   down, up, left, right
@@ -945,15 +945,15 @@ Options:
 Also accepted as: --device-id, --container-resource-id, --container-content-desc, --container-content-desc-contains
 
 Examples:
-  clawperator scroll down
-  clawperator scroll up --container-id "com.example:id/list_view"
+  androperator scroll down
+  androperator scroll up --container-id "com.example:id/list_view"
 `;
 
-const HELP_SCROLL_UNTIL = `clawperator scroll-until
+const HELP_SCROLL_UNTIL = `androperator scroll-until
 
 Usage:
-  clawperator scroll-until [<direction>] --text <text> [--click] [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
-  clawperator scroll-until [<direction>] --id <resource-id> [--click] [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
+  androperator scroll-until [<direction>] --text <text> [--click] [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
+  androperator scroll-until [<direction>] --id <resource-id> [--click] [--device <id>] [--operator-package <pkg>] [--timeout <ms>]
 
 Valid directions:
   down, up, left, right (default: down)
@@ -988,32 +988,32 @@ Notes:
   - scroll_and_click uses different defaults than raw scroll_until (see agent guide); use exec JSON if you need scroll_until + clickAfter.
   - If a selector is provided but the target never appears, the step fails (data.error TARGET_NOT_FOUND) and JSON output exits non-zero.
   - Tuning parameters (maxScrolls, maxDurationMs, etc.) are not exposed as CLI flags.
-    Use 'clawperator exec' with raw JSON for advanced tuning.
+    Use 'androperator exec' with raw JSON for advanced tuning.
 
 Examples:
-  clawperator scroll-until --text "About phone"
-  clawperator scroll-until --text "Living room" --click
-  clawperator scroll-until up --text "Settings" --container-id "com.foo:id/list"
-  clawperator scroll-and-click --text "Submit"  (same as scroll-until --text "Submit" --click)
+  androperator scroll-until --text "About phone"
+  androperator scroll-until --text "Living room" --click
+  androperator scroll-until up --text "Settings" --container-id "com.foo:id/list"
+  androperator scroll-and-click --text "Submit"  (same as scroll-until --text "Submit" --click)
 `;
 
-const HELP_EMULATOR = `clawperator emulator
+const HELP_EMULATOR = `androperator emulator
 
 Usage:
-  clawperator emulator list [--output <json|pretty>]
-  clawperator emulator inspect <name> [--output <json|pretty>]
-  clawperator emulator create [--name <name>] [--storage-size <sizeG>] [--output <json|pretty>]
-  clawperator emulator start <name> [--output <json|pretty>]
-  clawperator emulator stop <name> [--output <json|pretty>]
-  clawperator emulator delete <name> [--output <json|pretty>]
-  clawperator emulator status [--output <json|pretty>]
-  clawperator emulator provision [--storage-size <sizeG>] [--output <json|pretty>]
-  clawperator provision emulator [--storage-size <sizeG>] [--output <json|pretty>]
+  androperator emulator list [--output <json|pretty>]
+  androperator emulator inspect <name> [--output <json|pretty>]
+  androperator emulator create [--name <name>] [--storage-size <sizeG>] [--output <json|pretty>]
+  androperator emulator start <name> [--output <json|pretty>]
+  androperator emulator stop <name> [--output <json|pretty>]
+  androperator emulator delete <name> [--output <json|pretty>]
+  androperator emulator status [--output <json|pretty>]
+  androperator emulator provision [--storage-size <sizeG>] [--output <json|pretty>]
+  androperator provision emulator [--storage-size <sizeG>] [--output <json|pretty>]
 
 Notes:
   - Emulator provisioning prefers: running supported emulator, stopped supported AVD, then new AVD creation.
   - New AVDs target Android API 35, a Google Play image, and a 12G data partition by default.
-  - When --name is omitted, the AVD name includes the storage size, for example clawperator-pixel-12gb.
+  - When --name is omitted, the AVD name includes the storage size, for example androperator-pixel-12gb.
   - --storage-size accepts positive integer gigabyte values such as 12G, 12GB, or 16G.
   - --size, --disk-size, and --data-partition-size are accepted as aliases.
   - JSON is the canonical output format for agent callers.
@@ -1105,7 +1105,7 @@ COMMANDS["operator"] = {
     if (sub === "setup" || sub === "install") {
       const apkPath = getOpt(rest, "--apk");
       if (!apkPath) {
-        return JSON.stringify({ code: "USAGE", message: `operator ${sub ?? "setup"} requires --apk <path>. Use clawperator operator setup --help for details.` });
+        return JSON.stringify({ code: "USAGE", message: `operator ${sub ?? "setup"} requires --apk <path>. Use androperator operator setup --help for details.` });
       } else {
         return (await import("./commands/operatorSetup.js")).cmdOperatorSetup({
           ...out,
@@ -1132,8 +1132,8 @@ COMMANDS["operator"] = {
       return JSON.stringify({
         code: "USAGE",
         message: sub
-          ? `Unknown operator subcommand '${sub}'. Use: clawperator operator setup --apk <path>, clawperator operator download, or clawperator operator remediate`
-          : "Use: clawperator operator setup --apk <path>, clawperator operator download, or clawperator operator remediate",
+          ? `Unknown operator subcommand '${sub}'. Use: androperator operator setup --apk <path>, androperator operator download, or androperator operator remediate`
+          : "Use: androperator operator setup --apk <path>, androperator operator download, or androperator operator remediate",
       });
     }
   },
@@ -1175,8 +1175,8 @@ COMMANDS["host"] = {
     return JSON.stringify({
       code: "USAGE",
       message: sub
-        ? `Unknown host subcommand '${sub}'. Use: clawperator host setup`
-        : "Use: clawperator host setup",
+        ? `Unknown host subcommand '${sub}'. Use: androperator host setup`
+        : "Use: androperator host setup",
     });
   },
 };
@@ -1192,8 +1192,8 @@ COMMANDS["setup"] = {
   handler: async (_ctx) => {
     return JSON.stringify({
       code: "USAGE",
-      message: "clawperator setup is not a valid top-level command. Use: clawperator operator setup --apk <path>",
-      canonical: "clawperator operator setup --apk <path> [--device <id>] [--operator-package <package>]",
+      message: "androperator setup is not a valid top-level command. Use: androperator operator setup --apk <path>",
+      canonical: "androperator operator setup --apk <path> [--device <id>] [--operator-package <package>]",
     });
   },
 };
@@ -1223,7 +1223,7 @@ COMMANDS["devices"] = {
   documentedFlags: [],
   supportedFlags: [],
   summary: "List connected Android devices",
-  help: "clawperator devices\n\nUsage:\n  clawperator devices\n\nNotes:\n  - Lists all connected Android devices detected via adb.\n",
+  help: "androperator devices\n\nUsage:\n  androperator devices\n\nNotes:\n  - Lists all connected Android devices detected via adb.\n",
   topLevelBlock: `  devices                                   List connected Android devices`,
   handler: async (ctx) => {
     const { format, verbose, logger } = ctx;
@@ -1338,7 +1338,7 @@ COMMANDS["packages"] = {
   documentedFlags: ["--third-party"],
   supportedFlags: ["--third-party"],
   summary: "List installed packages on a device",
-  help: "clawperator packages list\n\nUsage:\n  clawperator packages list [--device <id>] [--operator-package <pkg>] [--third-party]\n",
+  help: "androperator packages list\n\nUsage:\n  androperator packages list [--device <id>] [--operator-package <pkg>] [--third-party]\n",
   topLevelBlock: `  packages list [--device <id>] [--operator-package <pkg>] [--third-party]
                                             List installed package IDs on a device`,
   handler: async (ctx) => {
@@ -1368,12 +1368,12 @@ COMMANDS["exec"] = {
       ? ["--payload", "--validate-only", "--dry-run", "--goal"]
       : ["--payload", "--validate-only", "--dry-run", "--no-daemon"],
   summary: "Execute a validated command payload",
-  help: `clawperator exec
+  help: `androperator exec
 
 Usage:
-  clawperator exec <json-or-file> [--validate-only] [--dry-run] [--device <id>] [--operator-package <package>]
-  clawperator exec --payload <json-or-file> [--validate-only] [--dry-run] [--device <id>] [--operator-package <package>]
-  clawperator exec best-effort --goal <text> [--device <id>] [--operator-package <package>]
+  androperator exec <json-or-file> [--validate-only] [--dry-run] [--device <id>] [--operator-package <package>]
+  androperator exec --payload <json-or-file> [--validate-only] [--dry-run] [--device <id>] [--operator-package <package>]
+  androperator exec best-effort --goal <text> [--device <id>] [--operator-package <package>]
 
 Payload (one of):
   <json-or-file>            Positional: inline JSON or path to a JSON file (see Notes)
@@ -1393,7 +1393,7 @@ Notes:
   - 'execute' is accepted as a synonym for 'exec'.
   - '--execution', '--input', and '--file' are accepted aliases for '--payload'.
   - Use --no-daemon to force direct execution for this call.
-  - If the current host is unfamiliar, inspect 'clawperator bundled-skills list' and start with 'clawperator-agent-orientation' before driving the raw CLI directly.
+  - If the current host is unfamiliar, inspect 'androperator bundled-skills list' and start with 'androperator-agent-orientation' before driving the raw CLI directly.
 `,
   topLevelBlock: `  exec <json-or-file> [--validate-only] [--dry-run] [--device <id>] [--operator-package <package>]
                                             Execute a validated command payload or print a dry-run plan
@@ -1432,7 +1432,7 @@ Notes:
         }
       }
       if (!payloadSource) {
-        return formatError({ code: ERROR_CODES.MISSING_ARGUMENT, message: "exec requires a payload. Use: clawperator exec <json-or-file> or clawperator exec --payload <json-or-file>" }, { format });
+        return formatError({ code: ERROR_CODES.MISSING_ARGUMENT, message: "exec requires a payload. Use: androperator exec <json-or-file> or androperator exec --payload <json-or-file>" }, { format });
       } else {
         return (await import("./commands/execute.js")).cmdExecute({
           ...out,
@@ -1460,14 +1460,14 @@ COMMANDS["evidence"] = {
   supportedFlags: ["--output-dir", "--label", "--context-json", "--duration-seconds", "--size", "--session"],
   topLevelBlock: `  evidence capture --output-dir <new-directory>  Capture a still evidence bundle
   evidence video <start|status|stop>              Manage a verified screen recording`,
-  help: `clawperator evidence capture - Capture local screenshot and hierarchy evidence
+  help: `androperator evidence capture - Capture local screenshot and hierarchy evidence
 
 Usage:
-  clawperator evidence capture --output-dir <absolute-new-directory> [--label <text>] [--context-json <object>]
+  androperator evidence capture --output-dir <absolute-new-directory> [--label <text>] [--context-json <object>]
 
-  clawperator evidence video start --device <id> --output-dir <absolute-new-directory> --duration-seconds <1..180> [--size <WIDTHxHEIGHT>]
-  clawperator evidence video status --session <absolute-manifest-path>
-  clawperator evidence video stop --session <absolute-manifest-path>
+  androperator evidence video start --device <id> --output-dir <absolute-new-directory> --duration-seconds <1..180> [--size <WIDTHxHEIGHT>]
+  androperator evidence video status --session <absolute-manifest-path>
+  androperator evidence video stop --session <absolute-manifest-path>
 
 Options:
   --duration-seconds <n> Required video duration cap, 1..180 seconds
@@ -1485,7 +1485,7 @@ Captures screenshot first, then raw XML; they are not atomic or automatically se
 Complete capture exits 0. Partial/failed capture exits 1 and retains available evidence.
 Video requires scrcpy 3.0+, ffprobe, and ffmpeg 6.1+ with libx264 and passthrough/demux timing support on PATH (installed separately).
 Missing or unsupported dependencies return HOST_DEPENDENCY_MISSING with recovery instructions.
-Run clawperator doctor --device <id> and inspect host.video.dependencies before recording.
+Run androperator doctor --device <id> and inspect host.video.dependencies before recording.
 Still screenshots require only ADB. Start confirms a live recorder; only final verification means complete.
 Stop waits up to 15 seconds; pending/partial/failed results exit 1. Status uses the saved target.
 Existing record commands continue to record accessibility events.
@@ -1590,10 +1590,10 @@ COMMANDS["swipe"] = {
   documentedFlags: ["--start", "--end", "--duration-ms", "--no-daemon"],
   supportedFlags: ["--start", "--end", "--duration-ms", "--no-daemon"],
   summary: "Swipe between screen coordinates with an explicit duration",
-  help: `clawperator swipe - Swipe between screen coordinates
+  help: `androperator swipe - Swipe between screen coordinates
 
 Usage:
-  clawperator swipe --start <x> <y> --end <x> <y> --duration-ms <ms>
+  androperator swipe --start <x> <y> --end <x> <y> --duration-ms <ms>
 
 All three flags are required. Coordinates are non-negative integer screen pixels,
 with origin at the top left, and must be inside the current default display.
@@ -1602,7 +1602,7 @@ The finger moves immediately in a straight line and releases at the end.
 Success means gesture completion, not confirmation of an app-specific effect.
 
 Example:
-  clawperator swipe --start 100 500 --end 800 500 --duration-ms 300
+  androperator swipe --start 100 500 --end 800 500 --duration-ms 300
 `,
   topLevelBlock: `  swipe --start <x> <y> --end <x> <y> --duration-ms <ms>
                                             Swipe between screen coordinates`,
@@ -1611,7 +1611,7 @@ Example:
     const arities = new Map([["--start", 2], ["--end", 2], ["--duration-ms", 1]]);
     const invalid = (message: string) => formatError({
       code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
-      message: `${message}\nExample: clawperator swipe --start 100 500 --end 800 500 --duration-ms 300`,
+      message: `${message}\nExample: androperator swipe --start 100 500 --end 800 500 --duration-ms 300`,
     }, { format: ctx.format });
     for (let i = 0; i < ctx.rest.length; i++) {
       const flag = ctx.rest[i];
@@ -1646,10 +1646,10 @@ COMMANDS["drag"] = {
   documentedFlags: ["--start", "--end", "--hold-duration-ms", "--move-duration-ms", "--no-daemon"],
   supportedFlags: ["--start", "--end", "--hold-duration-ms", "--move-duration-ms", "--no-daemon"],
   summary: "Drag between screen coordinates with explicit hold and movement durations",
-  help: `clawperator drag - Drag between screen coordinates
+  help: `androperator drag - Drag between screen coordinates
 
 Usage:
-  clawperator drag --start <x> <y> --end <x> <y> --hold-duration-ms <ms> --move-duration-ms <ms>
+  androperator drag --start <x> <y> --end <x> <y> --hold-duration-ms <ms> --move-duration-ms <ms>
 
 All four flags are required. Coordinates are non-negative integer screen pixels,
 with origin at the top left, and must be inside the current default display.
@@ -1659,7 +1659,7 @@ line without lifting, then releases. Choose a hold long enough for the app.
 Success means gesture completion, not confirmation of an app-specific effect.
 
 Example:
-  clawperator drag --start 100 500 --end 800 500 --hold-duration-ms 1000 --move-duration-ms 500
+  androperator drag --start 100 500 --end 800 500 --hold-duration-ms 1000 --move-duration-ms 500
 `,
   topLevelBlock: `  drag --start <x> <y> --end <x> <y> --hold-duration-ms <ms> --move-duration-ms <ms>
                                             Drag between screen coordinates`,
@@ -1668,7 +1668,7 @@ Example:
     const arities = new Map([["--start", 2], ["--end", 2], ["--hold-duration-ms", 1], ["--move-duration-ms", 1]]);
     const invalid = (message: string) => formatError({
       code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
-      message: `${message}\nExample: clawperator drag --start 100 500 --end 800 500 --hold-duration-ms 1000 --move-duration-ms 500`,
+      message: `${message}\nExample: androperator drag --start 100 500 --end 800 500 --hold-duration-ms 1000 --move-duration-ms 500`,
     }, { format: ctx.format });
     for (let i = 0; i < ctx.rest.length; i++) {
       const flag = ctx.rest[i];
@@ -1826,7 +1826,7 @@ COMMANDS["open"] = {
         {
           code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
           message:
-            "open: pass the target as a positional argument or via --app, not both.\n\nSee: clawperator open --help",
+            "open: pass the target as a positional argument or via --app, not both.\n\nSee: androperator open --help",
         },
         { format },
       );
@@ -1836,7 +1836,7 @@ COMMANDS["open"] = {
       return JSON.stringify({
         code: "MISSING_ARGUMENT",
         message:
-          "open requires a target.\n\nUsage:\n  clawperator open <package-id>       Open an Android app\n  clawperator open <url>              Open a URL in browser\n  clawperator open <uri>              Open a deep link\n\nExamples:\n  clawperator open com.android.settings\n  clawperator open https://example.com",
+          "open requires a target.\n\nUsage:\n  androperator open <package-id>       Open an Android app\n  androperator open <url>              Open a URL in browser\n  androperator open <uri>              Open a deep link\n\nExamples:\n  androperator open com.android.settings\n  androperator open https://example.com",
       });
     }
     if (isOpenCliUriTarget(target)) {
@@ -1916,7 +1916,7 @@ COMMANDS["type"] = {
         {
           code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
           message:
-            "type: pass text as a positional argument or via --text, not both.\n\nSee: clawperator type --help",
+            "type: pass text as a positional argument or via --text, not both.\n\nSee: androperator type --help",
         },
         { format },
       );
@@ -1936,7 +1936,7 @@ COMMANDS["type"] = {
     if (!TYPE_SELECTOR_FLAGS.some((f) => restForSelector.includes(f))) {
       return JSON.stringify({
         code: "MISSING_SELECTOR",
-        message: `type requires a selector.\nUse one of:\n  --id <resource-id>      Android resource ID\n  --desc <text>           Content description\n  --desc-contains <text>  Partial content description\n  --role <role>           Element role\n  --text-contains <text>  Partial text match\n  --selector <json>       Raw JSON (advanced)\nExample:\n  clawperator type "hello" --role textfield`,
+        message: `type requires a selector.\nUse one of:\n  --id <resource-id>      Android resource ID\n  --desc <text>           Content description\n  --desc-contains <text>  Partial content description\n  --role <role>           Element role\n  --text-contains <text>  Partial text match\n  --selector <json>       Raw JSON (advanced)\nExample:\n  androperator type "hello" --role textfield`,
       });
     }
     const resolved = resolveElementMatcherFromCli(restForSelector);
@@ -1968,10 +1968,10 @@ COMMANDS["query"] = {
   documentedFlags: ["--matcher-json", "--text", "--id", "--role", "--visibility", "--limit", "--no-daemon"],
   supportedFlags: ["--selector", "--text", "--text-contains", "--id", "--desc", "--desc-contains", "--role", "--visibility", "--limit", "--no-daemon"],
   summary: "Inspect matching nodes and their current state",
-  help: `clawperator query - Inspect matching UI nodes
+  help: `androperator query - Inspect matching UI nodes
 
 Usage:
-  clawperator query [--matcher-json <json> | --text <text> | --id <id> | --role <role>]
+  androperator query [--matcher-json <json> | --text <text> | --id <id> | --role <role>]
                     [--visibility <on_screen|all>] [--limit <1..1000>]
                     [--device <id>] [--operator-package <pkg>] [--timeout <ms>] [--no-daemon]
 
@@ -1986,7 +1986,7 @@ Queries do not wait for navigation to settle. Use wait with the expected selecto
 before querying a destination screen. A zero count describes only that capture.
 
 Example:
-  clawperator query --matcher-json '{"resourceId":"row","descendant":{"textEquals":"Display"}}'
+  androperator query --matcher-json '{"resourceId":"row","descendant":{"textEquals":"Display"}}'
 `,
   topLevelBlock: "  query [--matcher-json <json>] [--visibility <on_screen|all>] [--limit <n>]  Inspect node state",
   handler: async (ctx) => {
@@ -2129,7 +2129,7 @@ COMMANDS["press"] = {
         {
           code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
           message:
-            "press: pass the key as a positional argument or via --key, not both.\n\nSee: clawperator press --help",
+            "press: pass the key as a positional argument or via --key, not both.\n\nSee: androperator press --help",
         },
         { format },
       );
@@ -2138,7 +2138,7 @@ COMMANDS["press"] = {
     if (!key) {
       return JSON.stringify({
         code: "MISSING_ARGUMENT",
-        message: "press requires a key name.\n\nValid keys: back, home, recents\n\nExample:\n  clawperator press back",
+        message: "press requires a key name.\n\nValid keys: back, home, recents\n\nExample:\n  androperator press back",
       });
     }
     return (await import("./commands/action.js")).cmdActionPressKey({
@@ -2185,7 +2185,7 @@ const closeHandler = async (ctx: HandlerContext): Promise<string | void> => {
       {
         code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
         message:
-          "close: pass the package as a positional argument or via --app, not both.\n\nSee: clawperator close --help",
+          "close: pass the package as a positional argument or via --app, not both.\n\nSee: androperator close --help",
       },
       { format },
     );
@@ -2195,7 +2195,7 @@ const closeHandler = async (ctx: HandlerContext): Promise<string | void> => {
     return JSON.stringify({
       code: "MISSING_ARGUMENT",
       message:
-        "close requires a package name.\n\nUsage:\n  clawperator close <package>\n  clawperator close --app <package>\n\nExamples:\n  clawperator close com.android.settings\n  clawperator close com.google.android.apps.chromecast.app",
+        "close requires a package name.\n\nUsage:\n  androperator close <package>\n  androperator close --app <package>\n\nExamples:\n  androperator close com.android.settings\n  androperator close com.google.android.apps.chromecast.app",
     });
   }
   return (await import("./commands/action.js")).cmdCloseApp({
@@ -2226,7 +2226,7 @@ export function parseToastArgs(rest: string[]): {
   operation: "show" | "cancel";
   params?: Pick<import("../contracts/execution.js").ActionParams, "text" | "duration">;
 } {
-  const usage = 'Usage: clawperator toast "Starting test run" [--duration short|long], or clawperator toast --cancel';
+  const usage = 'Usage: androperator toast "Starting test run" [--duration short|long], or androperator toast --cancel';
   let text: string | undefined;
   let duration: "short" | "long" | undefined;
   let cancel = false;
@@ -2264,12 +2264,12 @@ COMMANDS["toast"] = {
   topLevelBlock: `  toast <text> [--duration short|long] | toast --cancel                Show or cancel a brief on-device message`,
   documentedFlags: ["--duration", "--cancel", "--no-daemon"],
   supportedFlags: ["--duration", "--cancel", "--no-daemon"],
-  help: `clawperator toast <text> [--duration short|long]
+  help: `androperator toast <text> [--duration short|long]
 
 Usage:
-  clawperator toast "Starting test run"
-  clawperator toast "Test run complete" --duration long
-  clawperator toast --cancel
+  androperator toast "Starting test run"
+  androperator toast "Test run complete" --duration long
+  androperator toast --cancel
 
 Options:
   --duration <short|long>  Native Android duration (default short), not milliseconds
@@ -2350,11 +2350,11 @@ export function parseOnScreenLogArgs(rest: string[]): {
   return operation === "set" ? { operation, params } : { operation };
 }
 
-const HELP_ON_SCREEN_LOG = `clawperator on-screen-log set|clear
+const HELP_ON_SCREEN_LOG = `androperator on-screen-log set|clear
 
 Usage:
-  clawperator on-screen-log set (--text <text> | --template <template>) [panel options] [common options]
-  clawperator on-screen-log clear [common options]
+  androperator on-screen-log set (--text <text> | --template <template>) [panel options] [common options]
+  androperator on-screen-log clear [common options]
 
 Panel options (set only, each at most once):
   --text <text>                  Literal text, 1-2048 UTF-16 code units
@@ -2374,8 +2374,8 @@ Common options:
   --output <json|pretty> --no-daemon
 
 Examples:
-  clawperator on-screen-log set --text "FLOW-001: Observe settings" --anchor right
-  clawperator on-screen-log clear
+  androperator on-screen-log set --text "FLOW-001: Observe settings" --anchor right
+  androperator on-screen-log clear
 
 Notes:
   - Numeric tokens use integral decimal/exponent syntax; zero offsets are preserved.
@@ -2427,7 +2427,7 @@ COMMANDS["sleep"] = {
         {
           code: "MISSING_ARGUMENT",
           message:
-            "sleep requires a duration in milliseconds.\n\nUsage:\n  clawperator sleep <ms>\n\nExample:\n  clawperator sleep 2000",
+            "sleep requires a duration in milliseconds.\n\nUsage:\n  androperator sleep <ms>\n\nExample:\n  androperator sleep 2000",
         },
         { format },
       );
@@ -2486,7 +2486,7 @@ COMMANDS["scroll"] = {
         {
           code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
           message:
-            "scroll: pass direction as a positional argument or via --direction, not both.\n\nSee: clawperator scroll --help",
+            "scroll: pass direction as a positional argument or via --direction, not both.\n\nSee: androperator scroll --help",
         },
         { format },
       );
@@ -2496,7 +2496,7 @@ COMMANDS["scroll"] = {
     if (!direction || !validDirections.includes(direction)) {
       return JSON.stringify({
         code: "MISSING_ARGUMENT",
-        message: `scroll requires a direction.\n\nValid directions: ${validDirections.join(", ")}\n\nExamples:\n  clawperator scroll down\n  clawperator scroll up`,
+        message: `scroll requires a direction.\n\nValid directions: ${validDirections.join(", ")}\n\nExamples:\n  androperator scroll down\n  androperator scroll up`,
       });
     }
     const containerResolved = resolveContainerMatcherFromCli(rest);
@@ -2537,7 +2537,7 @@ const scrollUntilHandler = async (ctx: HandlerContext, clickAfterDefault: boolea
       return formatError(
         {
           code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
-          message: "scroll-until --direction requires a value.\n\nSee: clawperator scroll-until --help",
+          message: "scroll-until --direction requires a value.\n\nSee: androperator scroll-until --help",
         },
         { format },
       );
@@ -2551,7 +2551,7 @@ const scrollUntilHandler = async (ctx: HandlerContext, clickAfterDefault: boolea
       {
         code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
         message:
-          "scroll-until: pass direction as a positional argument or via --direction, not both.\n\nSee: clawperator scroll-until --help",
+          "scroll-until: pass direction as a positional argument or via --direction, not both.\n\nSee: androperator scroll-until --help",
       },
       { format },
     );
@@ -2651,7 +2651,7 @@ COMMANDS["wait-for-nav"] = {
           {
             code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
             message:
-              "wait-for-nav --app requires a non-empty package id.\n\nExample:\n  clawperator wait-for-nav --app com.android.settings --timeout 5000",
+              "wait-for-nav --app requires a non-empty package id.\n\nExample:\n  androperator wait-for-nav --app com.android.settings --timeout 5000",
           },
           { format },
         );
@@ -2665,7 +2665,7 @@ COMMANDS["wait-for-nav"] = {
       return formatError(
         {
           code: ERROR_CODES.MISSING_ARGUMENT,
-          message: "wait-for-nav requires --timeout <ms>.\n\nUsage:\n  clawperator wait-for-nav --app <package> --timeout <ms>\n  clawperator wait-for-nav --text <text> --timeout <ms>\n\nExample:\n  clawperator wait-for-nav --app com.google.home --timeout 5000",
+          message: "wait-for-nav requires --timeout <ms>.\n\nUsage:\n  androperator wait-for-nav --app <package> --timeout <ms>\n  androperator wait-for-nav --text <text> --timeout <ms>\n\nExample:\n  androperator wait-for-nav --app com.google.home --timeout 5000",
         },
         { format },
       );
@@ -2705,7 +2705,7 @@ COMMANDS["wait-for-nav"] = {
       return formatError(
         {
           code: ERROR_CODES.MISSING_ARGUMENT,
-          message: "wait-for-nav requires --app or a selector, and --timeout.\n\nUsage:\n  clawperator wait-for-nav --app <package> --timeout <ms>\n  clawperator wait-for-nav --text <text> --timeout <ms>\n\nExample:\n  clawperator wait-for-nav --app com.google.home --timeout 5000",
+          message: "wait-for-nav requires --app or a selector, and --timeout.\n\nUsage:\n  androperator wait-for-nav --app <package> --timeout <ms>\n  androperator wait-for-nav --text <text> --timeout <ms>\n\nExample:\n  androperator wait-for-nav --app com.google.home --timeout 5000",
         },
         { format },
       );
@@ -2800,7 +2800,7 @@ COMMANDS["read-value"] = {
       return formatError(
         {
           code: ERROR_CODES.MISSING_ARGUMENT,
-          message: "read-value requires a label selector.\n\nUsage:\n  clawperator read-value --label <text>\n\nExample:\n  clawperator read-value --label \"Battery\"",
+          message: "read-value requires a label selector.\n\nUsage:\n  androperator read-value --label <text>\n\nExample:\n  androperator read-value --label \"Battery\"",
         },
         { format },
       );
@@ -2849,33 +2849,33 @@ COMMANDS["skills"] = {
     return [];
   },
   summary: "Manage and run automation skills",
-  help: `clawperator skills
+  help: `androperator skills
 
 Usage:
-  clawperator skills list
-  clawperator skills get <skill_id>
-  clawperator skills for-app <package_id>
-  clawperator skills search --app <package_id> [--intent <intent>] [--keyword <text>]
-  clawperator skills search <keyword>
-  clawperator skills compile-artifact <skill_id> --artifact <name> [--vars <json>]
-  clawperator skills new <skill_id> [--summary <text>] [--recording-context <file>]
-  clawperator skills validate <skill_id> [--dry-run]
-  clawperator skills validate --all [--dry-run]
-  clawperator skills run <skill_id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>] [--expect-contains <text>] [--skip-validate] [--output <json|pretty>] [skill_args...]
-  clawperator skills install
-  clawperator skills update [--ref <git-ref>]
-  clawperator skills sync --ref <git-ref>
+  androperator skills list
+  androperator skills get <skill_id>
+  androperator skills for-app <package_id>
+  androperator skills search --app <package_id> [--intent <intent>] [--keyword <text>]
+  androperator skills search <keyword>
+  androperator skills compile-artifact <skill_id> --artifact <name> [--vars <json>]
+  androperator skills new <skill_id> [--summary <text>] [--recording-context <file>]
+  androperator skills validate <skill_id> [--dry-run]
+  androperator skills validate --all [--dry-run]
+  androperator skills run <skill_id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>] [--expect-contains <text>] [--skip-validate] [--output <json|pretty>] [skill_args...]
+  androperator skills install
+  androperator skills update [--ref <git-ref>]
+  androperator skills sync --ref <git-ref>
 
 Notes:
-  - Start with 'clawperator skills for-app <package_id>' when you know the Android package id.
-  - Use 'clawperator skills search --keyword <text>' when you only have app names or user-language intent terms.
-  - Use 'clawperator skills get <skill_id>' before 'clawperator skills run <skill_id>' when discovery already returned an id.
-  - If the current host is unfamiliar, inspect 'clawperator bundled-skills list' and start with 'clawperator-agent-orientation' before choosing runtime skills, MCP, or raw CLI actions.
-  - If this installed Clawperator environment needs a whole-product refresh, inspect 'clawperator bundled-skills list' and use 'clawperator-upgrade' before trying component-level repair commands. clawperator-upgrade checks clawperator --version, verifies Node 24+, npm reachability, and Java 17/21, then uses npm install -g clawperator@latest, clawperator install, and clawperator doctor when the CLI is already viable.
-  - If runtime-skill discovery returns no relevant match and you need guided skill creation help, use 'clawperator bundled-skills list' and start with 'clawperator-skill-author-by-agent-discovery'.
-  - Use 'clawperator-skill-author-by-recording' after discovery returns 'proceed_to_recording', or when the route is already well understood and you need the proving workflow.
-  - If your host already supports stdio MCP and wants registered tools instead of runtime-skill discovery, use 'clawperator mcp serve'.
-  - Post-install orientation: https://docs.clawperator.com/host-agents/
+  - Start with 'androperator skills for-app <package_id>' when you know the Android package id.
+  - Use 'androperator skills search --keyword <text>' when you only have app names or user-language intent terms.
+  - Use 'androperator skills get <skill_id>' before 'androperator skills run <skill_id>' when discovery already returned an id.
+  - If the current host is unfamiliar, inspect 'androperator bundled-skills list' and start with 'androperator-agent-orientation' before choosing runtime skills, MCP, or raw CLI actions.
+  - If this installed Androperator environment needs a whole-product refresh, inspect 'androperator bundled-skills list' and use 'androperator-upgrade' before trying component-level repair commands. androperator-upgrade checks androperator --version, verifies Node 24+, npm reachability, and Java 17/21, then uses npm install -g androperator@latest, androperator install, and androperator doctor when the CLI is already viable.
+  - If runtime-skill discovery returns no relevant match and you need guided skill creation help, use 'androperator bundled-skills list' and start with 'androperator-skill-author-by-agent-discovery'.
+  - Use 'androperator-skill-author-by-recording' after discovery returns 'proceed_to_recording', or when the route is already well understood and you need the proving workflow.
+  - If your host already supports stdio MCP and wants registered tools instead of runtime-skill discovery, use 'androperator mcp serve'.
+  - Post-install orientation: https://docs.androperator.com/host-agents/
 `,
   subtopics: {
     install: HELP_SKILLS_INSTALL,
@@ -2905,7 +2905,7 @@ Notes:
   skills run <skill_id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>] [--expect-contains <text>] [--skip-validate] [--output <json|pretty>] [skill_args...]
                                             Run a discovered skill through the local wrapper
   skills install
-                                            Clone skills repository to ~/.clawperator/skills/
+                                            Initialize a local skill workspace at ~/.androperator/skills/
   skills update [--ref <git-ref>]
                                             Pull latest skills (optionally pin to a ref)
   skills sync --ref <git-ref>
@@ -2932,7 +2932,7 @@ Notes:
         return JSON.stringify({
           code: "USAGE",
           message: "skills search requires --app <package_id>, --intent <intent>, or --keyword <text>",
-          example: "clawperator skills search --keyword solax",
+          example: "androperator skills search --keyword solax",
         });
       } else {
         return (await import("./commands/skills.js")).cmdSkillsSearch({ app, intent, keyword }, out);
@@ -3064,21 +3064,21 @@ COMMANDS["bundled-skills"] = {
   summary: "Manage first-party bundled skills for Claude Code, Codex, and generic agent runtimes",
   documentedFlags: [],
   supportedFlags: ["--version", "--output", "--format", "--json", "--help"],
-  help: `clawperator bundled-skills
+  help: `androperator bundled-skills
 
 Usage:
-  clawperator bundled-skills list
-  clawperator bundled-skills install
-  clawperator bundled-skills update
+  androperator bundled-skills list
+  androperator bundled-skills install
+  androperator bundled-skills update
 
 Notes:
-  - Use 'clawperator bundled-skills list' to inspect the installed host-agent workflows on this machine.
-  - 'clawperator-agent-orientation' is the first-run orientation skill when the current host is unfamiliar.
-  - 'clawperator-upgrade' is the packaged whole-product upgrade route: check clawperator --version, verify Node 24+, npm reachability, and Java 17/21, then use npm install -g clawperator@latest, clawperator install, and clawperator doctor. Use install.sh only when the CLI is not reachable or the bootstrap prerequisites need repair.
-  - 'clawperator-skill-author-by-agent-discovery' is the zero-results front door when runtime-skill discovery found no relevant match.
-  - 'clawperator-skill-author-by-recording' remains the proving workflow after discovery returns 'proceed_to_recording'.
-  - Runtime skills still live under 'clawperator skills ...'; bundled skills are separate host-agent helpers.
-  - Post-install authoring guidance: https://docs.clawperator.com/skills/authoring/
+  - Use 'androperator bundled-skills list' to inspect the installed host-agent workflows on this machine.
+  - 'androperator-agent-orientation' is the first-run orientation skill when the current host is unfamiliar.
+  - 'androperator-upgrade' is the packaged whole-product upgrade route: check androperator --version, verify Node 24+, npm reachability, and Java 17/21, then use npm install -g androperator@latest, androperator install, and androperator doctor. Use install.sh only when the CLI is not reachable or the bootstrap prerequisites need repair.
+  - 'androperator-skill-author-by-agent-discovery' is the zero-results front door when runtime-skill discovery found no relevant match.
+  - 'androperator-skill-author-by-recording' remains the proving workflow after discovery returns 'proceed_to_recording'.
+  - Runtime skills still live under 'androperator skills ...'; bundled skills are separate host-agent helpers.
+  - Post-install authoring guidance: https://docs.androperator.com/skills/authoring/
 `,
   subtopics: {
     install: HELP_BUNDLED_SKILLS_INSTALL,
@@ -3291,7 +3291,7 @@ COMMANDS["serve"] = {
   documentedFlags: ["--port", "--host"],
   supportedFlags: ["--port", "--host"],
   summary: "Start local HTTP/SSE server for remote control",
-  help: "clawperator serve\n\nUsage:\n  clawperator serve [--port <number>] [--host <string>]\n\nNotes:\n  - Default host: 127.0.0.1\n",
+  help: "androperator serve\n\nUsage:\n  androperator serve [--port <number>] [--host <string>]\n\nNotes:\n  - Default host: 127.0.0.1\n",
   topLevelBlock: `  serve [--port <number>] [--host <string>]
                                             Start local HTTP/SSE server for remote control (default host: 127.0.0.1)`,
   handler: async (ctx) => {
@@ -3313,7 +3313,7 @@ COMMANDS["mcp"] = {
   documentedFlags: [],
   supportedFlags: [],
   summary: "Start the first-party MCP server",
-  help: "clawperator mcp\n\nUsage:\n  clawperator mcp serve\n\nNotes:\n  - Starts the stdio MCP server.\n  - Use this when the host already supports stdio MCP and wants registered Clawperator tools.\n  - For app-oriented runtime-skill discovery, start with 'clawperator skills for-app <package_id>'.\n  - Post-install orientation: https://docs.clawperator.com/host-agents/\n  - Use 'node dist/cli/index.js mcp serve' for branch-local development.\n",
+  help: "androperator mcp\n\nUsage:\n  androperator mcp serve\n\nNotes:\n  - Starts the stdio MCP server.\n  - Use this when the host already supports stdio MCP and wants registered Androperator tools.\n  - For app-oriented runtime-skill discovery, start with 'androperator skills for-app <package_id>'.\n  - Post-install orientation: https://docs.androperator.com/host-agents/\n  - Use 'node dist/cli/index.js mcp serve' for branch-local development.\n",
   topLevelBlock: `  mcp serve
                                             Start the first-party stdio MCP server`,
   handler: async (ctx) => {
@@ -3334,9 +3334,9 @@ COMMANDS["logs"] = {
   group: "Utilities",
   documentedFlags: [],
   supportedFlags: [],
-  summary: "Tail the Clawperator log file",
-  help: "clawperator logs\n\nUsage:\n  clawperator logs\n\nNotes:\n  - Dumps existing log content then streams new lines.\n  - Press Ctrl+C to stop streaming.\n",
-  topLevelBlock: `  logs                                      Tail the Clawperator log file (dump then stream)`,
+  summary: "Tail the Androperator log file",
+  help: "androperator logs\n\nUsage:\n  androperator logs\n\nNotes:\n  - Dumps existing log content then streams new lines.\n  - Press Ctrl+C to stop streaming.\n",
+  topLevelBlock: `  logs                                      Tail the Androperator log file (dump then stream)`,
   handler: async (_ctx) => {
     await (await import("./commands/logs.js")).cmdLogs({});
     // Long-running: cmdLogs streams until interrupted.
@@ -3354,8 +3354,8 @@ for (const name of ["notifications", "media"] as const) {
     name, group: "Observation", documentedFlags: flags, supportedFlags: flags,
     summary: name === "notifications" ? "Inspect and control active notifications" : "Inspect and control media sessions",
     help: name === "notifications"
-      ? "clawperator notifications list [--app <package>] [--limit <1-100>] [--max-text-chars <1-1024>]\nclawperator notifications dismiss <key> [--wait-timeout-ms <0-30000>]\nclawperator notifications action <key> --action <action-id>\nReads work while locked/off without waking the device. Mutations retain interactive readiness."
-      : "clawperator media list [--app <package>]\nclawperator media status <--session <id>|--app <package>>\nclawperator media observe <--session <id>|--app <package>> --duration-ms <1-30000>\nclawperator media <pause|play> <--session <id>|--app <package>> [--wait-timeout-ms <0-30000>]\nclawperator media seek <--session <id>|--app <package>> --position-ms <integer> [--wait-timeout-ms <0-30000>] [--position-tolerance-ms <0-60000>]\nObserve returns once after the requested duration; reports arrive at player-defined intervals. Zero reports does not prove a stall.\nSeek tolerance defaults to 1000 ms; confirmation requires a new player report.\nMedia reads and controls work while locked/off without waking the device or accessibility; UI/notification-mutation lists retain interactive readiness. Estimates are not proof of playback.",
+      ? "androperator notifications list [--app <package>] [--limit <1-100>] [--max-text-chars <1-1024>]\nandroperator notifications dismiss <key> [--wait-timeout-ms <0-30000>]\nandroperator notifications action <key> --action <action-id>\nReads work while locked/off without waking the device. Mutations retain interactive readiness."
+      : "androperator media list [--app <package>]\nandroperator media status <--session <id>|--app <package>>\nandroperator media observe <--session <id>|--app <package>> --duration-ms <1-30000>\nandroperator media <pause|play> <--session <id>|--app <package>> [--wait-timeout-ms <0-30000>]\nandroperator media seek <--session <id>|--app <package>> --position-ms <integer> [--wait-timeout-ms <0-30000>] [--position-tolerance-ms <0-60000>]\nObserve returns once after the requested duration; reports arrive at player-defined intervals. Zero reports does not prove a stall.\nSeek tolerance defaults to 1000 ms; confirmation requires a new player report.\nMedia reads and controls work while locked/off without waking the device or accessibility; UI/notification-mutation lists retain interactive readiness. Estimates are not proof of playback.",
     topLevelBlock: `  ${name} ${name === "media" ? "<list|status|observe|pause|play|seek>" : "<list|dismiss|action>"}\n                                            Inspect notifications or media sessions`,
     handler: async ctx => {
       const { rest } = ctx;
@@ -3364,7 +3364,7 @@ for (const name of ["notifications", "media"] as const) {
         ? { list: "list_notifications", dismiss: "dismiss_notification", action: "invoke_notification_action" }
         : { list: "list_media_sessions", status: "get_media_status", observe: "observe_media", pause: "media_pause", play: "media_play", seek: "media_seek" };
       const type = types[operation];
-      if (type === undefined) throw new UsageError(`Use ${name} ${Object.keys(types).join("|")}; for example clawperator ${name} list.`);
+      if (type === undefined) throw new UsageError(`Use ${name} ${Object.keys(types).join("|")}; for example androperator ${name} list.`);
       const notificationMutation = name === "notifications" && operation !== "list";
       const params: import("../contracts/execution.js").ActionParams = {};
       if (notificationMutation) {
@@ -3524,7 +3524,7 @@ export function didYouMean(cmd: string, rest: string[], commands: Record<string,
     if (replacement) {
       return JSON.stringify({
         code: "UNKNOWN_COMMAND",
-        message: `'${cmd} ${sub}' has been removed. Use '${replacement}' instead. Run 'clawperator ${replacement} --help' for usage.`,
+        message: `'${cmd} ${sub}' has been removed. Use '${replacement}' instead. Run 'androperator ${replacement} --help' for usage.`,
         suggestion: replacement,
       });
     }
@@ -3532,7 +3532,7 @@ export function didYouMean(cmd: string, rest: string[], commands: Record<string,
     const validSubs = Object.keys(compoundMap).join(", ");
     return JSON.stringify({
       code: "UNKNOWN_COMMAND",
-      message: `'${cmd}' has been removed. Use one of: ${validSubs} - e.g. 'clawperator snapshot'. Run --help for available commands.`,
+      message: `'${cmd}' has been removed. Use one of: ${validSubs} - e.g. 'androperator snapshot'. Run --help for available commands.`,
     });
   }
   const threshold = Math.max(2, Math.floor(cmd.length / 2));
@@ -3570,10 +3570,10 @@ export function didYouMean(cmd: string, rest: string[], commands: Record<string,
 
 export function generateTopLevelHelp(commands: Record<string, CommandDef>): string {
   const lines: string[] = [
-    "Clawperator CLI",
+    "Androperator CLI",
     "",
     "Usage:",
-    "  clawperator <command> [options]",
+    "  androperator <command> [options]",
     "",
     "Commands:",
   ];
@@ -3628,21 +3628,21 @@ export function generateTopLevelHelp(commands: Record<string, CommandDef>): stri
     "  --version                               Show version",
     "",
     "Notes:",
-    "  - Machine-readable docs for agents: https://docs.clawperator.com/llms.txt (index) and https://docs.clawperator.com/llms-full.txt (complete docs).",
-    "  - Post-install host-agent orientation: https://docs.clawperator.com/host-agents/",
-    "  - If the current host is unfamiliar, inspect 'clawperator bundled-skills list' and start with 'clawperator-agent-orientation' before choosing runtime skills, MCP, or raw CLI actions.",
-    "  - If this installed Clawperator environment needs a whole-product refresh, inspect 'clawperator bundled-skills list' and use 'clawperator-upgrade' before trying component-level repair commands. clawperator-upgrade checks clawperator --version, verifies Node 24+, npm reachability, and Java 17/21, then uses npm install -g clawperator@latest, clawperator install, and clawperator doctor when the CLI is already viable.",
-    "  - Start runtime-skill discovery with 'clawperator skills for-app <package_id>' when you know the Android package, or 'clawperator skills search --keyword <text>' when you do not.",
-    "  - If runtime-skill discovery returns no relevant match and you need guided authoring help, use 'clawperator bundled-skills list' and start with 'clawperator-skill-author-by-agent-discovery'.",
-    "  - Use 'clawperator-skill-author-by-recording' only after discovery returns 'proceed_to_recording', or when the app route is already well understood and you need the proving workflow.",
-    "  - Use 'clawperator mcp serve' when the host already supports stdio MCP and wants registered Clawperator tools.",
+    "  - Machine-readable docs for agents: https://docs.androperator.com/llms.txt (index) and https://docs.androperator.com/llms-full.txt (complete docs).",
+    "  - Post-install host-agent orientation: https://docs.androperator.com/host-agents/",
+    "  - If the current host is unfamiliar, inspect 'androperator bundled-skills list' and start with 'androperator-agent-orientation' before choosing runtime skills, MCP, or raw CLI actions.",
+    "  - If this installed Androperator environment needs a whole-product refresh, inspect 'androperator bundled-skills list' and use 'androperator-upgrade' before trying component-level repair commands. androperator-upgrade checks androperator --version, verifies Node 24+, npm reachability, and Java 17/21, then uses npm install -g androperator@latest, androperator install, and androperator doctor when the CLI is already viable.",
+    "  - Start runtime-skill discovery with 'androperator skills for-app <package_id>' when you know the Android package, or 'androperator skills search --keyword <text>' when you do not.",
+    "  - If runtime-skill discovery returns no relevant match and you need guided authoring help, use 'androperator bundled-skills list' and start with 'androperator-skill-author-by-agent-discovery'.",
+    "  - Use 'androperator-skill-author-by-recording' only after discovery returns 'proceed_to_recording', or when the app route is already well understood and you need the proving workflow.",
+    "  - Use 'androperator mcp serve' when the host already supports stdio MCP and wants registered Androperator tools.",
     "  - install is the canonical post-bootstrap route. operator setup remains the APK-specific setup command, and operator install remains its alias.",
     "  - recording is the canonical command family; 'record' is a supported short alias.",
     "  - exec is the canonical command for execution payloads; 'execute' is a supported synonym.",
     "  - Flat commands (snapshot, click, open, type, read, wait, press, back, scroll) are the canonical device interaction surface.",
     "  - Removed nested CLI forms such as `observe snapshot` or `action click`; unknown-command errors suggest the flat replacement.",
-    "  - The default Operator package is com.clawperator.operator. Use --operator-package com.clawperator.operator.dev for local debug builds.",
-    "  - Terminal result semantics are driven by [Clawperator-Result].",
+    "  - The default Operator package is com.androperator.operator. Use --operator-package com.androperator.operator.dev for local debug builds.",
+    "  - Terminal result semantics are driven by [Androperator-Result].",
     ""
   );
 

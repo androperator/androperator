@@ -39,7 +39,7 @@ export async function checkLogDestination(
       fix: {
         title: "Choose a writable log directory",
         platform: "any",
-        steps: [{ kind: "manual", value: "Set CLAWPERATOR_LOG_DIR to a writable directory." }],
+        steps: [{ kind: "manual", value: "Set ANDROPERATOR_LOG_DIR to a writable directory." }],
       },
     };
   }

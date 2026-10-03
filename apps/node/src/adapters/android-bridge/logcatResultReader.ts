@@ -312,7 +312,7 @@ export async function waitForResultEnvelope(
         }
         const diagnostics: TimeoutDiagnostics = {
           code: ERROR_CODES.RESULT_ENVELOPE_TIMEOUT,
-          message: `No [Clawperator-Result] envelope within ${timeoutMs}ms`,
+          message: `No [Androperator-Result] envelope within ${timeoutMs}ms`,
           lastCorrelatedEvents: correlatedLines.slice(-lastCorrelatedLines),
           broadcastDispatchStatus: broadcastStatus,
           deviceId: config.deviceId,

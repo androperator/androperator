@@ -32,11 +32,11 @@ import {
 } from "../../domain/doctor/checks/deviceInteractivity.js";
 import { resolveDevice } from "../../domain/devices/resolveDevice.js";
 import type { Logger } from "../../adapters/logger.js";
-import { CLAWPERATOR_SKILL_RUN_ID_ENV_VAR, normalizeSkillRunId, type LogEvent } from "../../contracts/logging.js";
+import { ANDROPERATOR_SKILL_RUN_ID_ENV_VAR, normalizeSkillRunId, type LogEvent } from "../../contracts/logging.js";
 import {
-  CLAWPERATOR_BIN_ENV_VAR,
-  CLAWPERATOR_DEVICE_ID_ENV_VAR,
-  CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR,
+  ANDROPERATOR_BIN_ENV_VAR,
+  ANDROPERATOR_DEVICE_ID_ENV_VAR,
+  ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR,
   resolveSkillBinCommand,
   resolveOperatorPackage,
 } from "../../domain/skills/skillsConfig.js";
@@ -417,7 +417,7 @@ export async function cmdSkillsRun(
   // Priority: explicit flag > env var > default
   const resolvedBin = resolveSkillBinCommand();
   const resolvedOperatorPackage = operatorPackage ?? resolveOperatorPackage();
-  const skillRunId = normalizeSkillRunId(process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR]) ?? createSkillRunId();
+  const skillRunId = normalizeSkillRunId(process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR]) ?? createSkillRunId();
   const cliLogger = options.logger?.child({ skillId, deviceId: options.deviceId, skillRunId });
   let preRunLogs = buildSkillRunLogMetadata(skillRunId, cliLogger?.logPath());
   const currentPreRunLogs = () => buildSkillRunLogMetadata(skillRunId, cliLogger?.logPath());
@@ -435,9 +435,9 @@ export async function cmdSkillsRun(
   preRunLogs = currentPreRunLogs();
 
   const env: SkillRunEnv = {
-    [CLAWPERATOR_BIN_ENV_VAR]: resolvedBin,
-    [CLAWPERATOR_OPERATOR_PACKAGE_ENV_VAR]: resolvedOperatorPackage,
-    [CLAWPERATOR_DEVICE_ID_ENV_VAR]: undefined,
+    [ANDROPERATOR_BIN_ENV_VAR]: resolvedBin,
+    [ANDROPERATOR_OPERATOR_PACKAGE_ENV_VAR]: resolvedOperatorPackage,
+    [ANDROPERATOR_DEVICE_ID_ENV_VAR]: undefined,
   };
   if (options.deviceId !== undefined) {
     if (options.deviceId.trim().length === 0) {
@@ -448,7 +448,7 @@ export async function cmdSkillsRun(
         logs: preRunLogs,
       }, options);
     }
-    env[CLAWPERATOR_DEVICE_ID_ENV_VAR] = options.deviceId;
+    env[ANDROPERATOR_DEVICE_ID_ENV_VAR] = options.deviceId;
   }
 
   const runSkillImpl = options.runSkillImpl ?? runSkill;
@@ -501,9 +501,9 @@ export async function cmdSkillsRun(
   const yyyy = String(logDate.getFullYear());
   const mm = String(logDate.getMonth() + 1).padStart(2, "0");
   const dd = String(logDate.getDate()).padStart(2, "0");
-  const logPath = preRunLogs.path ?? join(homedir(), ".clawperator", "logs", `clawperator-${yyyy}-${mm}-${dd}.log`);
+  const logPath = preRunLogs.path ?? join(homedir(), ".androperator", "logs", `androperator-${yyyy}-${mm}-${dd}.log`);
   const tailCommand = preRunLogs.tailCommand ?? buildSkillRunLogMetadata(skillRunId, logPath).tailCommand;
-  const bannerMessage = `[Clawperator] v${getCliVersion()}  APK: ${apkStatus}  Logs: ${logPath}  Hint: ${tailCommand}  Docs: https://docs.clawperator.com/llms.txt`;
+  const bannerMessage = `[Androperator] v${getCliVersion()}  APK: ${apkStatus}  Logs: ${logPath}  Hint: ${tailCommand}  Docs: https://docs.androperator.com/llms.txt`;
   if (cliLogger !== undefined) {
     emitCliEvent(cliLogger, {
       level: "debug",
@@ -683,7 +683,7 @@ export async function cmdSkillsNew(
       skillPath: result.skillPath,
       files: result.files,
       ...(result.recordingContextPath ? { recordingContextPath: result.recordingContextPath } : {}),
-      next: "Edit `SKILL.md` and `scripts/run.js`, then run `clawperator skills validate <skill_id>`; if this repo uses generated indexes, rerun `scripts/generate_skill_indexes.sh` and `clawperator skills validate --all`",
+      next: "Edit `SKILL.md` and `scripts/run.js`, then run `androperator skills validate <skill_id>`; if this repo uses generated indexes, rerun `scripts/generate_skill_indexes.sh` and `androperator skills validate --all`",
     }, options);
   }
   return formatError({ code: result.code, message: result.message }, options);

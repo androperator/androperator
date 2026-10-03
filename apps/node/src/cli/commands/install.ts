@@ -104,11 +104,11 @@ function toSkillsInstallStep(result: SyncSkillsResult | SyncSkillsError): Instal
 }
 
 function getBundledSkillsEnvHint(env: NodeJS.ProcessEnv | undefined): string | undefined {
-  const sourceDir = env?.CLAWPERATOR_BUNDLED_SKILLS;
+  const sourceDir = env?.ANDROPERATOR_BUNDLED_SKILLS;
   if (sourceDir === undefined || sourceDir === "") {
     return undefined;
   }
-  return `Using CLAWPERATOR_BUNDLED_SKILLS=${sourceDir}`;
+  return `Using ANDROPERATOR_BUNDLED_SKILLS=${sourceDir}`;
 }
 
 function toBundledSkillsInstallStep(
@@ -223,7 +223,7 @@ function buildInstallMessage(options: {
 
 function renderInstallPrettyOutput(result: InstallCommandResult | InstallCommandFailure): string {
   const lines = [
-    `Clawperator install: ${result.status.toUpperCase()}`,
+    `Androperator install: ${result.status.toUpperCase()}`,
     result.message,
   ];
 
@@ -260,24 +260,24 @@ function renderInstallPrettyOutput(result: InstallCommandResult | InstallCommand
 
   if (!result.ok) {
     if (!result.steps.hostSetup.ok) {
-      followUp.push("Retry host artifact setup after resolving the failure: clawperator host setup");
+      followUp.push("Retry host artifact setup after resolving the failure: androperator host setup");
     } else if (result.summary.connectedDevices === 0) {
-      followUp.push(`Connect and authorize a device, then rerun: clawperator install --operator-package ${result.operatorPackage}`);
+      followUp.push(`Connect and authorize a device, then rerun: androperator install --operator-package ${result.operatorPackage}`);
     } else if (!result.steps.operatorRemediation.ok) {
-      followUp.push(`Rerun remediation after resolving device issues: clawperator operator remediate --operator-package ${result.operatorPackage}`);
+      followUp.push(`Rerun remediation after resolving device issues: androperator operator remediate --operator-package ${result.operatorPackage}`);
     }
   } else {
     if (result.deviceSelectionRequired) {
-      followUp.push(`Verify one device explicitly with: clawperator doctor --device <device_id> --output pretty --operator-package ${result.operatorPackage}`);
+      followUp.push(`Verify one device explicitly with: androperator doctor --device <device_id> --output pretty --operator-package ${result.operatorPackage}`);
     }
     if (!result.steps.skillsInstall.ok) {
-      followUp.push("Install runtime skills later with: clawperator skills install");
+      followUp.push("Install runtime skills later with: androperator skills install");
     }
     if (!result.steps.bundledSkillsInstall.ok) {
-      followUp.push("Repair bundled-skills later with: clawperator bundled-skills install");
+      followUp.push("Repair bundled-skills later with: androperator bundled-skills install");
     }
     if (result.steps.hostSetup.status === "warn") {
-      followUp.push("Rerun host artifact setup after resolving the warning if needed: clawperator host setup");
+      followUp.push("Rerun host artifact setup after resolving the warning if needed: androperator host setup");
     }
   }
 

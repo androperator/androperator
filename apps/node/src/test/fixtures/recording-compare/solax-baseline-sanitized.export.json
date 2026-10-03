@@ -4,7 +4,7 @@
     "sessionId": "<session_id>",
     "schemaVersion": 1,
     "startedAt": 1775793131923,
-    "operatorPackage": "com.clawperator.operator.dev"
+    "operatorPackage": "com.androperator.operator.dev"
   },
   "snapshotMode": "omit",
   "events": [

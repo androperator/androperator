@@ -1,6 +1,6 @@
 ---
 name: sitemaps-generate
-description: Regenerate Clawperator sitemap metadata from source-file commit timestamps.
+description: Regenerate Androperator sitemap metadata from source-file commit timestamps.
 ---
 
 # Sitemaps Generate

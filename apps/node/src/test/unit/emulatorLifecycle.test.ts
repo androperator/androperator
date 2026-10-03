@@ -44,7 +44,7 @@ describe("emulator lifecycle", () => {
   let testHome: string;
 
   beforeEach(async () => {
-    testHome = await mkdtemp(join(tmpdir(), "clawperator-emulator-lifecycle-test-"));
+    testHome = await mkdtemp(join(tmpdir(), "androperator-emulator-lifecycle-test-"));
     process.env.HOME = testHome;
     delete process.env.ANDROID_HOME;
     delete process.env.ANDROID_SDK_ROOT;
@@ -86,7 +86,7 @@ describe("emulator lifecycle", () => {
       { code: 0, stdout: "created", stderr: "" },
       () => writeAvd(
         testHome,
-        "clawperator-pixel",
+        "androperator-pixel",
         [
           "PlayStore.enabled=true",
           "disk.dataPartition.size=6G",
@@ -95,15 +95,15 @@ describe("emulator lifecycle", () => {
     );
 
     const config = getDefaultRuntimeConfig({ runner });
-    await createAvd(config, { name: "clawperator-pixel" });
+    await createAvd(config, { name: "androperator-pixel" });
 
     assert.strictEqual(runner.calls[1].command, config.avdmanagerPath);
     assert.deepStrictEqual(runner.calls[1].args, [
-      "create", "avd", "--force", "--name", "clawperator-pixel",
+      "create", "avd", "--force", "--name", "androperator-pixel",
       "--package", "system-images;android-35;google_apis_playstore;arm64-v8a",
       "--device", "pixel_7",
     ]);
-    const configIni = await readFile(join(testHome, ".android", "avd", "clawperator-pixel.avd", "config.ini"), "utf8");
+    const configIni = await readFile(join(testHome, ".android", "avd", "androperator-pixel.avd", "config.ini"), "utf8");
     assert.match(configIni, /^disk\.dataPartition\.size=12G$/m);
   });
 
@@ -118,7 +118,7 @@ describe("emulator lifecycle", () => {
       { code: 0, stdout: "created", stderr: "" },
       () => writeAvd(
         testHome,
-        "clawperator-pixel",
+        "androperator-pixel",
         [
           "PlayStore.enabled=true",
           "disk.dataPartition.size=6G",
@@ -127,9 +127,9 @@ describe("emulator lifecycle", () => {
     );
 
     const config = getDefaultRuntimeConfig({ runner });
-    await createAvd(config, { name: "clawperator-pixel", dataPartitionSize: "16GB" });
+    await createAvd(config, { name: "androperator-pixel", dataPartitionSize: "16GB" });
 
-    const configIni = await readFile(join(testHome, ".android", "avd", "clawperator-pixel.avd", "config.ini"), "utf8");
+    const configIni = await readFile(join(testHome, ".android", "avd", "androperator-pixel.avd", "config.ini"), "utf8");
     assert.match(configIni, /^disk\.dataPartition\.size=16G$/m);
   });
 
@@ -170,7 +170,7 @@ describe("emulator lifecycle", () => {
       { code: 0, stdout: "created", stderr: "" },
       () => writeAvdAtRoot(
         avdRoot,
-        "clawperator-pixel",
+        "androperator-pixel",
         [
           "PlayStore.enabled=true",
           "disk.dataPartition.size=6G",
@@ -179,9 +179,9 @@ describe("emulator lifecycle", () => {
     );
 
     const config = getDefaultRuntimeConfig({ runner });
-    await createAvd(config, { name: "clawperator-pixel" });
+    await createAvd(config, { name: "androperator-pixel" });
 
-    const configIni = await readFile(join(avdRoot, "clawperator-pixel.avd", "config.ini"), "utf8");
+    const configIni = await readFile(join(avdRoot, "androperator-pixel.avd", "config.ini"), "utf8");
     assert.match(configIni, /^disk\.dataPartition\.size=12G$/m);
   });
 
@@ -197,23 +197,23 @@ describe("emulator lifecycle", () => {
       async () => {
         await writeAvd(
           testHome,
-          "clawperator-pixel",
+          "androperator-pixel",
           [
             "PlayStore.enabled=true",
             "disk.dataPartition.size=6G",
           ].join("\n")
         );
-        const configPath = join(testHome, ".android", "avd", "clawperator-pixel.avd", "config.ini");
+        const configPath = join(testHome, ".android", "avd", "androperator-pixel.avd", "config.ini");
         await chmod(configPath, 0o444);
       }
     );
     runner.queueResult({ code: 0, stdout: "deleted", stderr: "" });
 
-    const configPath = join(testHome, ".android", "avd", "clawperator-pixel.avd", "config.ini");
+    const configPath = join(testHome, ".android", "avd", "androperator-pixel.avd", "config.ini");
 
     const config = getDefaultRuntimeConfig({ runner });
     await assert.rejects(
-      () => createAvd(config, { name: "clawperator-pixel" }),
+      () => createAvd(config, { name: "androperator-pixel" }),
       (error: unknown) => {
         const typed = error as { code: string; details?: { path?: string } };
         assert.strictEqual(typed.code, ERROR_CODES.ANDROID_AVD_CREATE_FAILED);
@@ -221,7 +221,7 @@ describe("emulator lifecycle", () => {
         return true;
       }
     );
-    assert.deepStrictEqual(runner.calls[2].args, ["delete", "avd", "--name", "clawperator-pixel"]);
+    assert.deepStrictEqual(runner.calls[2].args, ["delete", "avd", "--name", "androperator-pixel"]);
   });
 
   it("does not delete a preexisting AVD when data partition config write fails", async () => {
@@ -235,18 +235,18 @@ describe("emulator lifecycle", () => {
 
     await writeAvd(
       testHome,
-      "clawperator-pixel",
+      "androperator-pixel",
       [
         "PlayStore.enabled=true",
         "disk.dataPartition.size=6G",
       ].join("\n")
     );
-    const configPath = join(testHome, ".android", "avd", "clawperator-pixel.avd", "config.ini");
+    const configPath = join(testHome, ".android", "avd", "androperator-pixel.avd", "config.ini");
     await chmod(configPath, 0o444);
 
     const config = getDefaultRuntimeConfig({ runner });
     await assert.rejects(
-      () => createAvd(config, { name: "clawperator-pixel" }),
+      () => createAvd(config, { name: "androperator-pixel" }),
       (error: unknown) => {
         const typed = error as { code: string; details?: { path?: string } };
         assert.strictEqual(typed.code, ERROR_CODES.ANDROID_AVD_CREATE_FAILED);
@@ -261,10 +261,10 @@ describe("emulator lifecycle", () => {
     const runner = new FakeProcessRunner();
     const config = getDefaultRuntimeConfig({ runner });
 
-    startAvd(config, "clawperator-pixel");
+    startAvd(config, "androperator-pixel");
 
     assert.strictEqual(runner.calls[0].command, config.emulatorPath);
-    assert.deepStrictEqual(runner.calls[0].args, ["@clawperator-pixel", "-no-snapshot-load", "-no-boot-anim"]);
+    assert.deepStrictEqual(runner.calls[0].args, ["@androperator-pixel", "-no-snapshot-load", "-no-boot-anim"]);
     assert.deepStrictEqual(runner.calls[0].options, {
       detached: true,
       stdio: ["ignore", "ignore", "ignore"],
@@ -276,12 +276,12 @@ describe("emulator lifecycle", () => {
     const runner = new FakeProcessRunner();
     runner.queueResult({ code: 0, stdout: "List of devices attached\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "List of devices attached\nemulator-5554\tdevice\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "OK\nclawperator-pixel\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "OK\nandroperator-pixel\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "0\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "0\n", stderr: "" });
 
     const config = getDefaultRuntimeConfig({ runner });
-    const serial = await waitForEmulatorRegistration(config, "clawperator-pixel", 2_500);
+    const serial = await waitForEmulatorRegistration(config, "androperator-pixel", 2_500);
     assert.strictEqual(serial, "emulator-5554");
   });
 
@@ -304,7 +304,7 @@ describe("emulator lifecycle", () => {
   it("stops and deletes by AVD name", async () => {
     await writeAvd(
       testHome,
-      "clawperator-pixel",
+      "androperator-pixel",
       [
         "PlayStore.enabled=true",
         "abi.type=arm64-v8a",
@@ -315,21 +315,21 @@ describe("emulator lifecycle", () => {
 
     const runner = new FakeProcessRunner();
     runner.queueResult({ code: 0, stdout: "List of devices attached\nemulator-5554\tdevice\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "OK\nclawperator-pixel\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "OK\nandroperator-pixel\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
 
     const config = getDefaultRuntimeConfig({ runner });
-    await stopAvd(config, "clawperator-pixel");
+    await stopAvd(config, "androperator-pixel");
     assert.deepStrictEqual(runner.calls[4].args, ["-s", "emulator-5554", "emu", "kill"]);
 
     const deleteRunner = new FakeProcessRunner();
     deleteRunner.queueResult({ code: 0, stdout: "List of devices attached\n", stderr: "" });
     deleteRunner.queueResult({ code: 0, stdout: "", stderr: "" });
     const deleteConfig = getDefaultRuntimeConfig({ runner: deleteRunner });
-    await deleteAvd(deleteConfig, "clawperator-pixel");
-    assert.deepStrictEqual(deleteRunner.calls[1].args, ["delete", "avd", "--name", "clawperator-pixel"]);
+    await deleteAvd(deleteConfig, "androperator-pixel");
+    assert.deepStrictEqual(deleteRunner.calls[1].args, ["delete", "avd", "--name", "androperator-pixel"]);
   });
 
   it("enables developer settings and adb on a booted emulator", async () => {

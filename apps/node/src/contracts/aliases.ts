@@ -30,7 +30,7 @@ const ON_SCREEN_LOG_EXACT_INPUT_TYPES = new Set([
 ]);
 
 // NOTE: "doctor_ping" is intentionally absent. It is an internal diagnostic action
-// used only by `clawperator doctor` via broadcastAgentCommand, not the agent-facing API.
+// used only by `androperator doctor` via broadcastAgentCommand, not the agent-facing API.
 export const CANONICAL_ACTION_TYPES = [
   "list_notifications", "list_media_sessions", "get_media_status", "observe_media", "media_pause", "media_play", "dismiss_notification", "invoke_notification_action", "media_seek",
   "show_toast",

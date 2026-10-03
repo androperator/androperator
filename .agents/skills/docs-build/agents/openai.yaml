@@ -1,4 +1,4 @@
 interface:
   display_name: "Build Docs"
-  short_description: "Build Clawperator public documentation"
-  default_prompt: "Use $docs-build to regenerate and validate the Clawperator docs site from canonical sources."
+  short_description: "Build Androperator public documentation"
+  default_prompt: "Use $docs-build to regenerate and validate the Androperator docs site from canonical sources."

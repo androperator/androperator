@@ -5,7 +5,7 @@
 This pack adds first-class requirements metadata to the runtime skills model,
 surfaces it through discovery, and enforces only the mechanically provable
 requirements before execution. It is Node-dominant even though it includes a
-paired change in `../clawperator-skills`: 2 PRs, 4 phases. PR-1 ships the
+paired change in `<workspace>`: 2 PRs, 4 phases. PR-1 ships the
 metadata contract plus discovery surfaces. PR-2 ships runtime preflight
 evaluation and structured failures.
 
@@ -23,8 +23,8 @@ evaluation and structured failures.
 
 ## Goal
 
-After this task ships, `clawperator skills get <skill_id>` should tell a caller
-what a skill requires before first run, and `clawperator skills run <skill_id>`
+After this task ships, `androperator skills get <skill_id>` should tell a caller
+what a skill requires before first run, and `androperator skills run <skill_id>`
 should fail early with structured skill-surface errors when a declared hard
 requirement can be checked mechanically and is not met.
 
@@ -67,7 +67,7 @@ The design intent for this pack is:
 - Add first-class requirements metadata to the runtime skill contract
 - Parse the new metadata from trusted `skill.json` manifests and registry entries
 - Surface requirements metadata through `skills get`
-- Seed the Google Home HVAC skills in `../clawperator-skills` with real
+- Seed the Google Home HVAC skills in `<workspace>` with real
   requirements metadata as the canonical exemplar
 - Add runtime preflight evaluation for hard, mechanically provable requirements
 - Return structured skill-surface precondition failures before spawning the
@@ -93,7 +93,7 @@ The design intent for this pack is:
   `skill.json` metadata stays aligned with registry entries
 - `apps/node/src/cli/commands/skills.ts`: in scope for `skills get` rendering
   only; do not redesign list or search output into verbose metadata dumps
-- `../clawperator-skills`: in scope for paired schema and skill-metadata updates
+- `<workspace>`: in scope for paired schema and skill-metadata updates
   plus regeneration of the checked-in registry and generated indexes that must
   land with the Node-side contract work
 
@@ -108,10 +108,10 @@ The design intent for this pack is:
 | `apps/node/src/domain/skills/runSkill.ts` | Hard-requirement preflight evaluation before harness spawn | PR-2 / Phase 3 |
 | `docs/skills/overview.md` | Public discovery and requirements guidance | PR-1 / Phase 2, PR-2 / Phase 4 |
 | `docs/api/errors.md` | Public documentation for any new stable error codes that belong on that page | PR-2 / Phase 4 |
-| `../clawperator-skills/skills/skills-registry.schema.json` | Registry schema for requirements metadata | PR-1 / Phase 2 |
-| `../clawperator-skills/skills/skills-registry.json` | Regenerated canonical registry consumed by Clawperator | PR-1 / Phase 2 |
-| `../clawperator-skills/skills/generated/` | Regenerated committed indexes and manifest derived from exemplar metadata | PR-1 / Phase 2 |
-| `../clawperator-skills/skills/com.google.android.apps.chromecast.app.*/skill.json` | Seeded exemplar requirements metadata | PR-1 / Phase 2 |
+| `<workspace>/skills/skills-registry.schema.json` | Registry schema for requirements metadata | PR-1 / Phase 2 |
+| `<workspace>/skills/skills-registry.json` | Regenerated canonical registry consumed by Androperator | PR-1 / Phase 2 |
+| `<workspace>/skills/generated/` | Regenerated committed indexes and manifest derived from exemplar metadata | PR-1 / Phase 2 |
+| `<workspace>/skills/com.google.android.apps.chromecast.app.*/skill.json` | Seeded exemplar requirements metadata | PR-1 / Phase 2 |
 
 ## Source Of Truth
 
@@ -123,8 +123,8 @@ The design intent for this pack is:
 | `skills get` output surface | `apps/node/src/cli/commands/skills.ts`, `docs/skills/overview.md` |
 | Existing skill-surface regression patterns | `apps/node/src/test/unit/skills.test.ts` |
 | Public error-code contract | `docs/api/errors.md`, `apps/node/src/contracts/errors.ts` |
-| Runtime skills registry and schema | `../clawperator-skills/skills/skills-registry.json`, `../clawperator-skills/skills/skills-registry.schema.json` |
-| Canonical exemplar manifests | `../clawperator-skills/skills/com.google.android.apps.chromecast.app.*/skill.json` |
+| Runtime skills registry and schema | `<workspace>/skills/skills-registry.json`, `<workspace>/skills/skills-registry.schema.json` |
+| Canonical exemplar manifests | `<workspace>/skills/com.google.android.apps.chromecast.app.*/skill.json` |
 | First-run requirements problem framing | This `plan.md` under `Problem Statement` |
 
 ## Deterministic Versus Judgment
@@ -150,7 +150,7 @@ The design intent for this pack is:
   Do not prove the feature only with synthetic local fixtures.
 - The sibling skills repo treats `skills/skills-registry.json` and
   `skills/generated/` as checked-in generated artifacts. Any Phase 2 schema or
-  exemplar-manifest edit must be followed by `../clawperator-skills/scripts/generate_skill_indexes.sh`
+  exemplar-manifest edit must be followed by `<workspace>/scripts/generate_skill_indexes.sh`
   so the shipped registry and indexes actually carry the new metadata.
 - The manifest-level `agent.cli` field already exists and is already enforced
   at runtime by `SKILL_AGENT_CLI_UNAVAILABLE`. Do not restate `agent.cli` as a
@@ -180,7 +180,7 @@ The design intent for this pack is:
 | What kinds of requirements should this pack support? | At minimum: host CLI requirements, Android package requirements, user-input guidance, advisory account or app-state notes, and an explicit safer-first-run pointer when a safer read-only alternative exists. |
 | Which requirements are hard blockers at runtime? | Only requirements that can be checked mechanically before spawn, such as missing host CLIs or missing Android packages when a target device is known. |
 | How should manifest `agent.cli` appear in discovery? | Surface it in `skills get` as existing orchestrated runtime metadata or an equivalent derived discovery field, but do not copy it into `requirements.hostCli` and do not add a second runtime preflight path for it. |
-| What must happen after editing sibling repo schema or exemplar manifests? | Regenerate the sibling repo registry and committed indexes with `../clawperator-skills/scripts/generate_skill_indexes.sh`, then validate the generated outputs that changed. Do not leave `skills/skills-registry.json` or `skills/generated/` stale. |
+| What must happen after editing sibling repo schema or exemplar manifests? | Regenerate the sibling repo registry and committed indexes with `<workspace>/scripts/generate_skill_indexes.sh`, then validate the generated outputs that changed. Do not leave `skills/skills-registry.json` or `skills/generated/` stale. |
 | How should subjective requirements such as sign-in state be handled? | Render them as advisory requirements in discovery output. Do not invent UI probing in this pack. |
 | How should user inputs be represented? | As guidance metadata that complements, not replaces, the existing `contract.inputs` system. Do not duplicate contract parsing logic. |
 | Where should safer-first-run guidance live? | In `requirements`, as an explicit pointer to the safer skill or route. Surface it in `skills get`; do not bury it only in prose docs. |
@@ -207,11 +207,11 @@ After PR-1:
 - `SkillEntry` supports additive `requirements` metadata.
 - `skills get <skill_id>` surfaces that metadata clearly, including a
   safer-first-run pointer when present.
-- `../clawperator-skills` schema and the Google Home HVAC exemplar skills ship
+- `<workspace>` schema and the Google Home HVAC exemplar skills ship
   real `requirements` metadata in lockstep with the Node contract.
 - The checked-in sibling repo registry and generated indexes are regenerated, so
   `skills/skills-registry.json` and `skills/generated/` actually carry the new
-  metadata consumed by Clawperator.
+  metadata consumed by Androperator.
 
 After PR-2:
 
@@ -234,7 +234,7 @@ After PR-2:
 
 | Knowledge | Permanent home |
 | --- | --- |
-| Requirements metadata contract | `apps/node/src/contracts/skills.ts` and `../clawperator-skills/skills/skills-registry.schema.json` |
+| Requirements metadata contract | `apps/node/src/contracts/skills.ts` and `<workspace>/skills/skills-registry.schema.json` |
 | Trusted manifest parsing rules | `apps/node/src/domain/skills/skillManifest.ts` |
 | Discovery surface for requirements | `docs/skills/overview.md` and `apps/node/src/cli/commands/skills.ts` |
 | Stable precondition failure codes | `apps/node/src/contracts/skills.ts` and docs that describe them |

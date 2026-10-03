@@ -2,10 +2,10 @@
 
 ## Purpose
 
-Describe the first-party stdio MCP server exposed by `clawperator mcp serve`: how to launch it, how to configure long-running MCP clients, which tools ship today, and what behavior to expect when device state changes under a running client.
+Describe the first-party stdio MCP server exposed by `androperator mcp serve`: how to launch it, how to configure long-running MCP clients, which tools ship today, and what behavior to expect when device state changes under a running client.
 
 For the post-install decision of whether you should start with MCP or with
-`clawperator skills`, read [Host Agent Orientation](../host-agents.md) first.
+`androperator skills`, read [Host Agent Orientation](../host-agents.md) first.
 This page assumes you have already decided that MCP is the correct front door.
 
 ## Sources
@@ -16,7 +16,7 @@ This page assumes you have already decided that MCP is the correct front door.
 - Core tools: `apps/node/src/mcp/tools/core.ts`
 - Named tools: `apps/node/src/mcp/tools/named.ts`
 - MCP session defaults: `apps/node/src/mcp/session.ts`
-- Installer-generated MCP snippet: [`install.sh`](https://github.com/clawperator/clawperator/blob/main/sites/landing-clawperator/public/install.sh)
+- Installer-generated MCP snippet: [`install.sh`](https://github.com/androperator/androperator/blob/main/sites/androperator-public/install.sh)
 - Execution contract: `apps/node/src/contracts/execution.ts`
 - Error codes: `apps/node/src/contracts/errors.ts`
 - Selector contract: `apps/node/src/contracts/selectors.ts`
@@ -25,28 +25,28 @@ This page assumes you have already decided that MCP is the correct front door.
 
 ## What It Is
 
-`clawperator mcp serve` starts a local stdio MCP server for MCP clients such as Claude Desktop. Execution-backed tools may return the shared [result envelope](overview.md#result-envelope) in tool output. The server is transport-only:
+`androperator mcp serve` starts a local stdio MCP server for MCP clients such as Claude Desktop. Execution-backed tools may return the shared [result envelope](overview.md#result-envelope) in tool output. The server is transport-only:
 
 - it speaks MCP over stdin/stdout
 - it does not expose HTTP or SSE
 - it uses the same canonical execution engine as the CLI and `serve`
 - it starts even when no Android device is connected
 
-If no device is connected at startup, the process still boots normally. Tool calls that need a device then return structured Clawperator errors such as `NO_DEVICES` or `ADB_NOT_FOUND`.
+If no device is connected at startup, the process still boots normally. Tool calls that need a device then return structured Androperator errors such as `NO_DEVICES` or `ADB_NOT_FOUND`.
 
 ## Start The Server
 
 Installed package command:
 
 ```bash
-clawperator mcp serve
+androperator mcp serve
 ```
 
 Development validation command:
 
 ```bash
 npm --prefix apps/node run build
-clawperator mcp serve
+androperator mcp serve
 ```
 
 Notes:
@@ -60,13 +60,13 @@ Notes:
 
 `install.sh` writes a host-specific MCP snippet to:
 
-- `~/.clawperator/mcp-config-snippet.json`
+- `~/.androperator/mcp-config-snippet.json`
 
 That file is generated from the installer's current binary path, detected `adb`
-path, `DEFAULT_OPERATOR_PACKAGE` (`com.clawperator.operator`), and
-`~/.clawperator/logs`. It includes:
+path, `DEFAULT_OPERATOR_PACKAGE` (`com.androperator.operator`), and
+`~/.androperator/logs`. It includes:
 
-- `claudeDesktop.entry.clawperator`
+- `claudeDesktop.entry.androperator`
 - `codex.entryToml`
 - `genericStdioConsumer.server`
 
@@ -84,18 +84,18 @@ Example `mcpServers` entry:
 ```json
 {
   "mcpServers": {
-    "clawperator": {
+    "androperator": {
       "command": "node",
       "args": [
-        "<installed_clawperator_path>/dist/cli/index.js",
+        "<installed_androperator_path>/dist/cli/index.js",
         "mcp",
         "serve"
       ],
       "env": {
         "ADB_PATH": "<adb_path>",
-        "CLAWPERATOR_OPERATOR_PACKAGE": "com.clawperator.operator.dev",
-        "CLAWPERATOR_LOG_DIR": "<log_dir>",
-        "CLAWPERATOR_LOG_LEVEL": "info"
+        "ANDROPERATOR_OPERATOR_PACKAGE": "com.androperator.operator.dev",
+        "ANDROPERATOR_LOG_DIR": "<log_dir>",
+        "ANDROPERATOR_LOG_LEVEL": "info"
       }
     }
   }
@@ -108,9 +108,9 @@ Why `node` is the command:
 - MCP desktop clients usually want an explicit executable plus argument list
 - using `node` plus the installed CLI entrypoint avoids relying on shell wrappers
 
-## When To Use MCP Versus `clawperator skills`
+## When To Use MCP Versus `androperator skills`
 
-Use `clawperator skills` when:
+Use `androperator skills` when:
 
 - your host can shell out to the CLI directly
 - you want to discover installed runtime skills by app, keyword, or id
@@ -124,8 +124,8 @@ Use MCP when:
 
 These surfaces are complementary:
 
-- `clawperator skills` is the primary runtime-skill discovery and wrapper surface
-- `clawperator mcp serve` is the primary tool-registration surface for MCP-capable hosts
+- `androperator skills` is the primary runtime-skill discovery and wrapper surface
+- `androperator mcp serve` is the primary tool-registration surface for MCP-capable hosts
 - [Host Agent Orientation](../host-agents.md) is the canonical post-install route for choosing between them
 
 ## Environment For Long-Running MCP Clients
@@ -135,15 +135,15 @@ These environment variables matter most for MCP use:
 | Variable | Default | Why MCP users care |
 | --- | --- | --- |
 | `ADB_PATH` | `adb` from `PATH` | MCP clients like Claude Desktop usually do not inherit your interactive shell `PATH`. Set this explicitly in the MCP client config. |
-| `CLAWPERATOR_OPERATOR_PACKAGE` | `com.clawperator.operator` | Use `com.clawperator.operator.dev` for local branch testing against the debug APK. |
-| `CLAWPERATOR_LOG_DIR` | `~/.clawperator/logs` | Primary diagnostics path for MCP users because Claude Desktop does not surface stderr. |
-| `CLAWPERATOR_LOG_LEVEL` | `info` | Raise to `debug` when diagnosing tool failures. |
+| `ANDROPERATOR_OPERATOR_PACKAGE` | `com.androperator.operator` | Use `com.androperator.operator.dev` for local branch testing against the debug APK. |
+| `ANDROPERATOR_LOG_DIR` | `~/.androperator/logs` | Primary diagnostics path for MCP users because Claude Desktop does not surface stderr. |
+| `ANDROPERATOR_LOG_LEVEL` | `info` | Raise to `debug` when diagnosing tool failures. |
 
 Important diagnostics rule:
 
 - stderr is not visible in Claude Desktop
-- when an MCP session fails, check the log file under `CLAWPERATOR_LOG_DIR`
-- `CLAWPERATOR_LOG_LEVEL=debug` is the main way to get more runtime detail from a GUI MCP client
+- when an MCP session fails, check the log file under `ANDROPERATOR_LOG_DIR`
+- `ANDROPERATOR_LOG_LEVEL=debug` is the main way to get more runtime detail from a GUI MCP client
 
 For the full environment-variable contract, see [Environment Variables](environment.md).
 
@@ -238,7 +238,7 @@ Example call:
 ```json
 {
   "deviceId": "<device_serial>",
-  "operatorPackage": "com.clawperator.operator.dev",
+  "operatorPackage": "com.androperator.operator.dev",
   "maxChars": 2000
 }
 ```
@@ -282,7 +282,7 @@ Capture a local screenshot/raw-hierarchy bundle. Accepts common `deviceId`,
 2048 UTF-16 code units) and `context` (JSON object, at most 16 KiB UTF-8).
 `outputDir` and other caller-chosen host paths are rejected.
 
-The server creates a unique bundle under `~/.clawperator/evidence/bundles` and
+The server creates a unique bundle under `~/.androperator/evidence/bundles` and
 returns `{ok,status,manifestPath,evidenceId}` in both content forms. Only complete
 capture has `ok: true`. Partial/failed captures set `isError: true` and retain
 `manifestPath` when writable. The opaque caller context remains separate from
@@ -308,7 +308,7 @@ Example call:
 ```json
 {
   "deviceId": "<device_serial>",
-  "operatorPackage": "com.clawperator.operator.dev",
+  "operatorPackage": "com.androperator.operator.dev",
   "actions": [
     {
       "id": "sleep-1",
@@ -369,7 +369,7 @@ Example call:
 ```json
 {
   "deviceId": "<device_serial>",
-  "operatorPackage": "com.clawperator.operator.dev",
+  "operatorPackage": "com.androperator.operator.dev",
   "timeoutMs": 15000
 }
 ```
@@ -380,7 +380,7 @@ Example success payload:
 {
   "session": {
     "deviceId": "<device_serial>",
-    "operatorPackage": "com.clawperator.operator.dev",
+    "operatorPackage": "com.androperator.operator.dev",
     "timeoutMs": 15000
   }
 }
@@ -418,7 +418,7 @@ Example URI launch:
 
 ```json
 {
-  "uri": "https://clawperator.com",
+  "uri": "https://androperator.com",
   "deviceId": "<device_serial>"
 }
 ```
@@ -464,7 +464,7 @@ Call the named `drag` tool with these arguments, not an execution action wrapper
 
 Replace the example coordinates with bounds from the target's current snapshot.
 For a local development Operator, include
-`"operatorPackage": "com.clawperator.operator.dev"`.
+`"operatorPackage": "com.androperator.operator.dev"`.
 
 <a id="mcp-tool-click"></a>
 ### `click`
@@ -746,7 +746,7 @@ Device targeting rules:
 
 - if one device is connected, omitting `deviceId` is usually fine
 - if multiple devices are connected, pass `deviceId`
-- for local branch testing, prefer `com.clawperator.operator.dev`
+- for local branch testing, prefer `com.androperator.operator.dev`
 
 Concurrency rules:
 
@@ -773,7 +773,7 @@ What the smoke script proves:
 5. it captures a snapshot and confirms the XML contains node elements
 6. it performs a selector-driven read using text discovered from the live snapshot
 
-The smoke script prefers a physical device when both a physical device and an emulator are connected. Override with `CLAWPERATOR_SMOKE_DEVICE=<device_serial>` if needed.
+The smoke script prefers a physical device when both a physical device and an emulator are connected. Override with `ANDROPERATOR_SMOKE_DEVICE=<device_serial>` if needed.
 
 ## Strict selectors
 

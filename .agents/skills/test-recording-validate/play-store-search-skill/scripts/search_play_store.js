@@ -10,7 +10,7 @@
  * Arguments:
  *   device_id         - ADB device serial
  *   query             - App name to search for (e.g. "VLC")
- *   operator_package  - Clawperator Operator package (default: com.clawperator.operator.dev)
+ *   operator_package  - Androperator Operator package (default: com.androperator.operator.dev)
  *   package_id        - Optional Android package ID for direct entry path (e.g. org.videolan.vlc)
  *
  * Selector notes (discovered via live exploration):
@@ -30,14 +30,14 @@ const { tmpdir } = require('os');
 const deviceId = process.argv[2] || process.env.DEVICE_ID;
 const rawQuery = process.argv[3] || process.env.QUERY || '';
 const query = rawQuery.trim();
-const operatorPkg = process.argv[4] || process.env.OPERATOR_PKG || 'com.clawperator.operator.dev';
+const operatorPkg = process.argv[4] || process.env.OPERATOR_PKG || 'com.androperator.operator.dev';
 const packageId = process.argv[5] || process.env.PACKAGE_ID || '';
 
 // Use local CLI build from the repo root (supports 'recording' canonical command)
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..');
 const LOCAL_CLAW = path.join(REPO_ROOT, 'apps', 'node', 'dist', 'cli', 'index.js');
 
-function runClawperatorLocal(execution, deviceId, operatorPkg) {
+function runAndroperatorLocal(execution, deviceId, operatorPkg) {
   const tmpFile = path.join(tmpdir(), execution.commandId + '.json');
   writeFileSync(tmpFile, JSON.stringify(execution));
 
@@ -99,7 +99,7 @@ function buildSearchExecution(query) {
   return {
     commandId,
     taskId: commandId,
-    source: 'clawperator-skill',
+    source: 'androperator-skill',
     expectedFormat: 'android-ui-automator',
     timeoutMs: 120000,
     actions: [
@@ -143,7 +143,7 @@ function buildSearchExecution(query) {
  * Try to navigate directly to the app details page via adb market:// deep link.
  * This path requires package_id to be known.
  *
- * Limitation: Clawperator's open_app action does not support deep links or URI schemes.
+ * Limitation: Androperator's open_app action does not support deep links or URI schemes.
  * The adb am start command is used outside the execution payload for this path.
  *
  * Blocking state: On devices with multiple app stores (e.g. Samsung Galaxy Store),
@@ -154,7 +154,7 @@ function buildDirectEntryExecution() {
   return {
     commandId,
     taskId: commandId,
-    source: 'clawperator-skill',
+    source: 'androperator-skill',
     expectedFormat: 'android-ui-automator',
     timeoutMs: 30000,
     actions: [
@@ -180,7 +180,7 @@ let result;
 let usedDirectPath = false;
 
 if (packageId) {
-  // Attempt direct entry path via market:// deep link (outside Clawperator execution).
+  // Attempt direct entry path via market:// deep link (outside Androperator execution).
   // This fires the intent synchronously; the Play Store opens asynchronously.
   try {
     execFileSync('adb', ['-s', deviceId, 'shell', 'am', 'start',
@@ -196,7 +196,7 @@ if (packageId) {
 
 if (usedDirectPath) {
   const execution = buildDirectEntryExecution();
-  const { ok, result: r, error } = runClawperatorLocal(execution, deviceId, operatorPkg);
+  const { ok, result: r, error } = runAndroperatorLocal(execution, deviceId, operatorPkg);
   if (!ok) {
     console.error(`Direct entry execution failed: ${error}`);
     console.error('Falling back to in-app search path.');
@@ -208,7 +208,7 @@ if (usedDirectPath) {
 
 if (!usedDirectPath) {
   const execution = buildSearchExecution(query);
-  const { ok, result: r, error } = runClawperatorLocal(execution, deviceId, operatorPkg);
+  const { ok, result: r, error } = runAndroperatorLocal(execution, deviceId, operatorPkg);
   if (!ok) {
     console.error(`Search execution failed: ${error}`);
     process.exit(2);

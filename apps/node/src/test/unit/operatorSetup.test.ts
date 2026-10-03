@@ -7,7 +7,7 @@ import { setupOperator } from "../../domain/device/setupOperator.js";
 import { getDefaultRuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 import { FakeProcessRunner } from "./fakes/FakeProcessRunner.js";
 
-const TEST_APK_PATH = join(tmpdir(), "clawperator-test-operator.apk");
+const TEST_APK_PATH = join(tmpdir(), "androperator-test-operator.apk");
 
 function makeConfig(runner: FakeProcessRunner) {
   return getDefaultRuntimeConfig({
@@ -60,7 +60,7 @@ describe("setupOperator - domain", () => {
     // adb install succeeds
     runner.queueResult({ code: 0, stdout: "Success", stderr: "" });
     // listInstalledOperatorPackages: release pkg found
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator", stderr: "" });
     // listInstalledOperatorPackages: debug pkg not found
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
     // grantAccessibilityPermission: settings get fails
@@ -105,8 +105,8 @@ describe("setupOperator - domain", () => {
     const config = makeConfig(runner);
 
     runner.queueResult({ code: 0, stdout: "Success", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev", stderr: "" });
 
     const result = await setupOperator(config, TEST_APK_PATH);
 
@@ -123,19 +123,19 @@ describe("setupOperator - domain", () => {
     const config = makeConfig(runner);
 
     runner.queueResult({ code: 0, stdout: "Success", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev", stderr: "" });
     runner.queueResult({ code: 0, stdout: "null", stderr: "" });
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
     runner.queueResult({ code: 1, stdout: "", stderr: "Not a changeable permission type" });
     runner.queueResult({ code: 0, stdout: "null", stderr: "" });
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev", stderr: "" });
 
     const result = await setupOperator(config, TEST_APK_PATH);
 
-    assert.strictEqual(result.operatorPackage, "com.clawperator.operator.dev");
+    assert.strictEqual(result.operatorPackage, "com.androperator.operator.dev");
     assert.strictEqual(result.verification?.ok, true);
   });
 
@@ -146,7 +146,7 @@ describe("setupOperator - domain", () => {
     // adb install succeeds
     runner.queueResult({ code: 0, stdout: "Success", stderr: "" });
     // listInstalledOperatorPackages: release pkg found
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator", stderr: "" });
     // listInstalledOperatorPackages: debug pkg not found
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
     // grantAccessibilityPermission: read current (no existing)
@@ -162,12 +162,12 @@ describe("setupOperator - domain", () => {
     // cmd notification allow_listener
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
     // verification: pm list packages
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator", stderr: "" });
 
     const result = await setupOperator(config, TEST_APK_PATH);
 
     assert.strictEqual(result.install.ok, true);
-    assert.strictEqual(result.operatorPackage, "com.clawperator.operator");
+    assert.strictEqual(result.operatorPackage, "com.androperator.operator");
     assert.ok(result.permissions);
     assert.strictEqual(result.permissions?.accessibility.ok, true);
     assert.strictEqual(result.permissions?.notification.ok, true);
@@ -184,18 +184,18 @@ describe("setupOperator - domain", () => {
     // adb install succeeds
     runner.queueResult({ code: 0, stdout: "Success", stderr: "" });
     // grantAccessibilityPermission: read current (already enabled)
-    runner.queueResult({ code: 0, stdout: "com.clawperator.operator.dev/clawperator.operator.accessibilityservice.OperatorAccessibilityService", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "com.androperator.operator.dev/androperator.operator.accessibilityservice.OperatorAccessibilityService", stderr: "" });
     // grantNotificationPermission: already granted
     runner.queueResult({ code: 1, stdout: "", stderr: "Not a changeable permission type" });
     // grantNotificationListenerPermission: already enabled
-    runner.queueResult({ code: 0, stdout: "com.clawperator.operator.dev/action.notification.NotificationListenerService", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "com.androperator.operator.dev/action.notification.NotificationListenerService", stderr: "" });
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
     // verification: pm list packages
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev", stderr: "" });
 
-    const result = await setupOperator(config, TEST_APK_PATH, "com.clawperator.operator.dev");
+    const result = await setupOperator(config, TEST_APK_PATH, "com.androperator.operator.dev");
 
-    assert.strictEqual(result.operatorPackage, "com.clawperator.operator.dev");
+    assert.strictEqual(result.operatorPackage, "com.androperator.operator.dev");
     assert.strictEqual(result.install.ok, true);
     assert.strictEqual(result.permissions?.accessibility.alreadyEnabled, true);
     assert.strictEqual(result.verification?.ok, true);
@@ -207,7 +207,7 @@ describe("setupOperator - domain", () => {
       c.args[3] === "pm" &&
       c.args[4] === "list" &&
       c.args[5] === "packages" &&
-      c.args[6] === "com.clawperator.operator"
+      c.args[6] === "com.androperator.operator"
     );
     assert.strictEqual(detectCalls.length, 0, "Should not probe the release package when operator-package is explicit");
   });
@@ -219,15 +219,15 @@ describe("setupOperator - domain", () => {
     // adb install succeeds
     runner.queueResult({ code: 0, stdout: "Success", stderr: "" });
     // listInstalledOperatorPackages: release pkg found
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator", stderr: "" });
     // listInstalledOperatorPackages: debug pkg not found
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
     // grantAccessibilityPermission: already enabled
-    runner.queueResult({ code: 0, stdout: "com.clawperator.operator/clawperator.operator.accessibilityservice.OperatorAccessibilityService", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "com.androperator.operator/androperator.operator.accessibilityservice.OperatorAccessibilityService", stderr: "" });
     // grantNotificationPermission: skip (not changeable)
     runner.queueResult({ code: 1, stdout: "", stderr: "Not a changeable permission type" });
     // grantNotificationListenerPermission: already enabled
-    runner.queueResult({ code: 0, stdout: "com.clawperator.operator/action.notification.NotificationListenerService", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "com.androperator.operator/action.notification.NotificationListenerService", stderr: "" });
     // cmd notification allow_listener
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
     // verification: pm list returns nothing

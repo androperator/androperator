@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-OPERATOR = 'com.clawperator.operator.dev'
+OPERATOR = 'com.androperator.operator.dev'
 
 
 def main():
@@ -50,7 +50,7 @@ def main():
         assert before == 'RUNNING_LOCKED', before
         for command in [
             ['notifications', 'list'], ['media', 'list'],
-            ['media', 'status', '--app', 'com.clawperator.fixture.media'],
+            ['media', 'status', '--app', 'com.androperator.fixture.media'],
             ['doctor', '--capability', 'background-observation'],
             *[['media', control, '--session', 'pre-unlock-session'] for control in ['pause', 'play']],
             ['media', 'seek', '--session', 'pre-unlock-session', '--position-ms', '0'],

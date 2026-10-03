@@ -27,7 +27,7 @@ describe("cmdVersion", () => {
     const { versionName, versionCode } = mockApkVersionForCurrentCli();
 
     runner.queueResult({ code: 0, stdout: "List of devices attached\ntest-device-1\tdevice\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator\n", stderr: "" });
     runner.queueResult({
       code: 0,
       stdout: `    versionCode=${versionCode} minSdk=21 targetSdk=35\n    versionName=${versionName}\n`,
@@ -37,13 +37,13 @@ describe("cmdVersion", () => {
     const output = await cmdVersion({
       format: "json",
       checkCompat: true,
-      operatorPackage: "com.clawperator.operator",
+      operatorPackage: "com.androperator.operator",
       runner,
     });
     const parsed = JSON.parse(output);
 
     assert.strictEqual(parsed.compatible, true);
-    assert.strictEqual(parsed.operatorPackage, "com.clawperator.operator");
+    assert.strictEqual(parsed.operatorPackage, "com.androperator.operator");
     assert.strictEqual(parsed.apkVersion, versionName);
     assert.strictEqual(parsed.apkVersionCode, versionCode);
   });
@@ -51,7 +51,7 @@ describe("cmdVersion", () => {
   it("returns a non-compatible payload when the APK is missing", async () => {
     const runner = new FakeProcessRunner();
     const version = getCliVersion();
-    const operatorPackage = "com.clawperator.operator.dev";
+    const operatorPackage = "com.androperator.operator.dev";
 
     runner.queueResult({ code: 0, stdout: "List of devices attached\ntest-device-1\tdevice\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
@@ -68,10 +68,10 @@ describe("cmdVersion", () => {
     assert.strictEqual(parsed.compatible, false);
     assert.strictEqual(parsed.error.code, ERROR_CODES.OPERATOR_NOT_INSTALLED);
     assert.deepStrictEqual(parsed.remediation, [
-      `Download the matching APK: https://downloads.clawperator.com/operator/v${version}/operator-v${version}.apk`,
-      `Download the checksum: https://downloads.clawperator.com/operator/v${version}/operator-v${version}.apk.sha256`,
+      `Download the matching APK: https://downloads.androperator.com/operator/v${version}/operator-v${version}.apk`,
+      `Download the checksum: https://downloads.androperator.com/operator/v${version}/operator-v${version}.apk.sha256`,
       `Verify the checksum: sha256sum -c operator-v${version}.apk.sha256`,
-      `Install the matching APK: clawperator operator setup --apk operator-v${version}.apk --device <device_id> --operator-package ${operatorPackage}`,
+      `Install the matching APK: androperator operator setup --apk operator-v${version}.apk --device <device_id> --operator-package ${operatorPackage}`,
       "If you are targeting the local debug package, rebuild and reinstall the debug APK from the same source checkout instead of using the release download.",
     ]);
   });
@@ -81,39 +81,39 @@ describe("cmdVersion", () => {
 
     runner.queueResult({ code: 0, stdout: "List of devices attached\ntest-device-1\tdevice\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator\n", stderr: "" });
 
     const output = await cmdVersion({
       format: "json",
       checkCompat: true,
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
       runner,
     });
     const parsed = JSON.parse(output);
 
     assert.strictEqual(parsed.compatible, false);
     assert.strictEqual(parsed.error.code, ERROR_CODES.OPERATOR_VARIANT_MISMATCH);
-    assert.match(parsed.error.message, /Expected com\.clawperator\.operator\.dev/);
+    assert.match(parsed.error.message, /Expected com\.androperator\.operator\.dev/);
   });
 
   it("treats the debug APK as an alternate variant when the release package is requested", async () => {
     const runner = new FakeProcessRunner();
 
     runner.queueResult({ code: 0, stdout: "List of devices attached\ntest-device-1\tdevice\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
 
     const output = await cmdVersion({
       format: "json",
       checkCompat: true,
-      operatorPackage: "com.clawperator.operator",
+      operatorPackage: "com.androperator.operator",
       runner,
     });
     const parsed = JSON.parse(output);
 
     assert.strictEqual(parsed.compatible, false);
     assert.strictEqual(parsed.error.code, ERROR_CODES.OPERATOR_VARIANT_MISMATCH);
-    assert.match(parsed.error.message, /Expected com\.clawperator\.operator but found installed variant com\.clawperator\.operator\.dev/);
+    assert.match(parsed.error.message, /Expected com\.androperator\.operator but found installed variant com\.androperator\.operator\.dev/);
   });
 
   it("sets a non-zero exit code when device resolution fails", async () => {
@@ -124,7 +124,7 @@ describe("cmdVersion", () => {
     const output = await cmdVersion({
       format: "json",
       checkCompat: true,
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
       runner,
     });
     const parsed = JSON.parse(output);
@@ -140,17 +140,17 @@ describe("probeVersionCompatibility", () => {
     const config = getDefaultRuntimeConfig({
       runner,
       deviceId: "test-device-1",
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
     });
 
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator\n", stderr: "" });
 
     const result = await probeVersionCompatibility(config);
 
     assert.strictEqual(result.compatible, false);
     assert.strictEqual(result.error?.code, ERROR_CODES.OPERATOR_VARIANT_MISMATCH);
-    assert.ok(result.remediation?.includes("Use --operator-package com.clawperator.operator"));
+    assert.ok(result.remediation?.includes("Use --operator-package com.androperator.operator"));
   });
 
   it("returns invalid when the installed APK version is malformed", async () => {
@@ -158,10 +158,10 @@ describe("probeVersionCompatibility", () => {
     const config = getDefaultRuntimeConfig({
       runner,
       deviceId: "test-device-1",
-      operatorPackage: "com.clawperator.operator",
+      operatorPackage: "com.androperator.operator",
     });
 
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator\n", stderr: "" });
     runner.queueResult({
       code: 0,
       stdout: "    versionCode=104900 minSdk=21 targetSdk=35\n    versionName=build-main\n",
@@ -179,17 +179,17 @@ describe("probeVersionCompatibility", () => {
     const config = getDefaultRuntimeConfig({
       runner,
       deviceId: "test-device-1",
-      operatorPackage: "com.clawperator.operator",
+      operatorPackage: "com.androperator.operator",
     });
 
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" });
 
     const result = await probeVersionCompatibility(config);
 
     assert.strictEqual(result.compatible, false);
     assert.strictEqual(result.error?.code, ERROR_CODES.OPERATOR_VARIANT_MISMATCH);
-    assert.ok(result.remediation?.includes("Use --operator-package com.clawperator.operator.dev"));
+    assert.ok(result.remediation?.includes("Use --operator-package com.androperator.operator.dev"));
   });
 
   it("returns a shell error when package queries fail", async () => {
@@ -197,7 +197,7 @@ describe("probeVersionCompatibility", () => {
     const config = getDefaultRuntimeConfig({
       runner,
       deviceId: "test-device-1",
-      operatorPackage: "com.clawperator.operator",
+      operatorPackage: "com.androperator.operator",
     });
 
     runner.queueResult({ code: 1, stdout: "", stderr: "cmd: Can't find service: package", error: new Error("shell failed") });

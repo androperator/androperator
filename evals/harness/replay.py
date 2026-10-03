@@ -224,7 +224,7 @@ def _extract_answer_from_artifacts(
     return None
 
 
-def _build_replay_env(registry_path: Path, clawperator_cmd: list[str]) -> dict[str, str]:
+def _build_replay_env(registry_path: Path, androperator_cmd: list[str]) -> dict[str, str]:
     env = {
         "PATH": os.environ["PATH"],
         "HOME": os.environ["HOME"],
@@ -232,22 +232,22 @@ def _build_replay_env(registry_path: Path, clawperator_cmd: list[str]) -> dict[s
         "LOGNAME": os.environ.get("LOGNAME", os.environ.get("USER", "")),
         "LANG": os.environ.get("LANG", "C.UTF-8"),
         "LC_ALL": os.environ.get("LC_ALL", "C.UTF-8"),
-        "CLAWPERATOR_SKILLS_REGISTRY": str(registry_path),
+        "ANDROPERATOR_SKILLS_REGISTRY": str(registry_path),
     }
-    if clawperator_cmd and all(isinstance(part, str) and part for part in clawperator_cmd):
-        if len(clawperator_cmd) == 1:
-            env["CLAWPERATOR_BIN"] = clawperator_cmd[0]
+    if androperator_cmd and all(isinstance(part, str) and part for part in androperator_cmd):
+        if len(androperator_cmd) == 1:
+            env["ANDROPERATOR_BIN"] = androperator_cmd[0]
         else:
-            wrapper_path = registry_path.parent / ".clawperator-bin-replay-wrapper.sh"
+            wrapper_path = registry_path.parent / ".androperator-bin-replay-wrapper.sh"
             wrapper_path.parent.mkdir(parents=True, exist_ok=True)
             wrapper_lines = [
                 "#!/bin/sh",
-                f"exec {shlex.join(clawperator_cmd)} \"$@\"",
+                f"exec {shlex.join(androperator_cmd)} \"$@\"",
                 "",
             ]
             wrapper_path.write_text("\n".join(wrapper_lines), encoding="utf-8")
             wrapper_path.chmod(0o755)
-            env["CLAWPERATOR_BIN"] = str(wrapper_path)
+            env["ANDROPERATOR_BIN"] = str(wrapper_path)
     return env
 
 
@@ -272,7 +272,7 @@ def _load_skill_generation_spec(eval_id: str) -> dict[str, Any] | None:
 
 def run_replay(
     run_dir: Path,
-    clawperator_cmd: list[str],
+    androperator_cmd: list[str],
     operator_package: str,
     device_serial: str,
     timeout_s: int = DEFAULT_REPLAY_TIMEOUT_S,
@@ -290,8 +290,8 @@ def run_replay(
     eval_id = config.get("eval_id") or result.get("eval_id")
 
     skill_generation = _load_skill_generation_spec(eval_id) if isinstance(eval_id, str) else None
-    start_marker = skill_generation.get("skill_start_marker") if skill_generation else "CLAWPERATOR_SKILL_START"
-    end_marker = skill_generation.get("skill_end_marker") if skill_generation else "CLAWPERATOR_SKILL_END"
+    start_marker = skill_generation.get("skill_start_marker") if skill_generation else "ANDROPERATOR_SKILL_START"
+    end_marker = skill_generation.get("skill_end_marker") if skill_generation else "ANDROPERATOR_SKILL_END"
 
     skill_score = {
         "skill_emitted": False,
@@ -315,7 +315,7 @@ def run_replay(
         raise ValueError("replay device serial does not match the original run config")
 
     skill_score["skill_emitted"] = True
-    is_valid, errors = validate_skill(skill_json, clawperator_cmd, operator_package)
+    is_valid, errors = validate_skill(skill_json, androperator_cmd, operator_package)
     skill_score["skill_valid"] = is_valid
     skill_score["skill_validation_errors"] = errors
     if not is_valid:
@@ -323,7 +323,7 @@ def run_replay(
 
     skill_payload = json.loads(skill_json)
 
-    with tempfile.TemporaryDirectory(prefix="clawperator-eval-skill-") as temp_dir_name:
+    with tempfile.TemporaryDirectory(prefix="androperator-eval-skill-") as temp_dir_name:
         temp_root = Path(temp_dir_name)
         try:
             registry_path, skill_id = _materialize_skill_package(skill_payload, temp_root)
@@ -332,11 +332,11 @@ def run_replay(
             skill_score["replay_status"] = "error"
             return skill_score
 
-        env = _build_replay_env(registry_path, clawperator_cmd)
+        env = _build_replay_env(registry_path, androperator_cmd)
         artifact_states_before = _capture_artifact_states(skill_payload, temp_root)
 
         command = [
-            *clawperator_cmd,
+            *androperator_cmd,
             "skills",
             "run",
             skill_id,

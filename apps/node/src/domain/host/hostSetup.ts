@@ -45,7 +45,7 @@ export interface HostSetupOptions {
   claudeConfigPathMac?: string;
   claudeConfigPathLinux?: string;
   bundledSkillsDir?: string;
-  clawperatorDir?: string;
+  androperatorDir?: string;
   sharedAgentsPath?: string;
   cliWrapperPath?: string;
   cliJsPath?: string | null;
@@ -94,7 +94,7 @@ function resolveBundledSkillsDir(options: HostSetupOptions): string {
   if (options.bundledSkillsDir !== undefined) {
     return options.bundledSkillsDir;
   }
-  return join(getHomeDir(options.env), ".clawperator", "bundled-skills");
+  return join(getHomeDir(options.env), ".androperator", "bundled-skills");
 }
 
 interface RuntimeSkillSummary {
@@ -114,9 +114,9 @@ interface RuntimeGuideInfo {
   unreadableRegistry: boolean;
 }
 
-const DEFAULT_REGISTRY_SUBPATH = join(".clawperator", "skills", "skills", "skills-registry.json");
-const SHARED_BRIDGE_START = "<!-- CLAWPERATOR_SHARED_AGENT_BRIDGE:START -->";
-const SHARED_BRIDGE_END = "<!-- CLAWPERATOR_SHARED_AGENT_BRIDGE:END -->";
+const DEFAULT_REGISTRY_SUBPATH = join(".androperator", "skills", "skills", "skills-registry.json");
+const SHARED_BRIDGE_START = "<!-- ANDROPERATOR_SHARED_AGENT_BRIDGE:START -->";
+const SHARED_BRIDGE_END = "<!-- ANDROPERATOR_SHARED_AGENT_BRIDGE:END -->";
 
 function nullIfBlank(value: string | null | undefined): string | null {
   if (value === undefined || value === null) {
@@ -141,8 +141,8 @@ function trimConfiguredPath(value: string | undefined): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
-async function readPreviousInstallStateRegistryPath(clawperatorDir: string): Promise<string | undefined> {
-  const installStatePath = join(clawperatorDir, "install-state.json");
+async function readPreviousInstallStateRegistryPath(androperatorDir: string): Promise<string | undefined> {
+  const installStatePath = join(androperatorDir, "install-state.json");
   try {
     const raw = await readFile(installStatePath, "utf8");
     const parsed = JSON.parse(raw) as { registryPath?: unknown };
@@ -166,10 +166,10 @@ async function fileExists(path: string): Promise<boolean> {
   }
 }
 
-async function ensurePrivateClawperatorDir(clawperatorDir: string): Promise<void> {
-  await mkdir(clawperatorDir, { recursive: true, mode: 0o700 });
+async function ensurePrivateAndroperatorDir(androperatorDir: string): Promise<void> {
+  await mkdir(androperatorDir, { recursive: true, mode: 0o700 });
   try {
-    await chmod(clawperatorDir, 0o700);
+    await chmod(androperatorDir, 0o700);
   } catch {
     // Best-effort permission tightening only.
   }
@@ -201,7 +201,7 @@ async function writeArtifactFile(path: string, content: string, mode?: number): 
 
   await mkdir(dirname(path), { recursive: true });
 
-  const tempPath = join(dirname(path), `.clawperator-host-artifact.${process.pid}.${Date.now()}.tmp`);
+  const tempPath = join(dirname(path), `.androperator-host-artifact.${process.pid}.${Date.now()}.tmp`);
   await writeFile(tempPath, content, { encoding: "utf8", mode });
   if (mode !== undefined) {
     try {
@@ -253,17 +253,17 @@ function buildSkillRunExample(skill: Record<string, unknown>): string {
     ? Object.keys(contract.inputs as Record<string, unknown>).sort((left, right) => left.localeCompare(right))
     : [];
   const args = inputs.map((inputName) => `--${toCliFlagName(inputName)} <${inputName}>`);
-  return ["clawperator", "skills", "run", id, ...args].join(" ");
+  return ["androperator", "skills", "run", id, ...args].join(" ");
 }
 
 async function resolveRuntimeGuideInfo(
   options: HostSetupOptions,
-  clawperatorDir: string,
+  androperatorDir: string,
 ): Promise<RuntimeGuideInfo> {
   const homeDir = getHomeDir(options.env);
   const defaultRegistryPath = join(homeDir, DEFAULT_REGISTRY_SUBPATH);
-  const configuredRegistryPath = trimConfiguredPath(options.env?.CLAWPERATOR_SKILLS_REGISTRY);
-  const previousRegistryPath = await readPreviousInstallStateRegistryPath(clawperatorDir);
+  const configuredRegistryPath = trimConfiguredPath(options.env?.ANDROPERATOR_SKILLS_REGISTRY);
+  const previousRegistryPath = await readPreviousInstallStateRegistryPath(androperatorDir);
   const explicitRegistryPath = trimConfiguredPath(options.registryPath ?? undefined);
   const installPhaseRegistryPath = trimConfiguredPath(options.env?.SKILLS_REGISTRY_PATH);
 
@@ -369,7 +369,7 @@ function resolveCliJsPath(options: HostSetupOptions): string {
     return explicitPath;
   }
 
-  const envOverride = options.env?.CLAWPERATOR_CLI_JS_PATH;
+  const envOverride = options.env?.ANDROPERATOR_CLI_JS_PATH;
   if (typeof envOverride === "string") {
     return envOverride;
   }
@@ -382,14 +382,14 @@ function resolveCliJsPath(options: HostSetupOptions): string {
   return "";
 }
 
-function buildMcpConfigSnippetContent(options: HostSetupOptions, clawperatorDir: string): string {
+function buildMcpConfigSnippetContent(options: HostSetupOptions, androperatorDir: string): string {
   const operatorPackage = options.operatorPackage ?? DEFAULT_OPERATOR_PACKAGE;
-  const logDir = options.logDir ?? join(clawperatorDir, "logs");
+  const logDir = options.logDir ?? join(androperatorDir, "logs");
   const homeDir = getHomeDir(options.env);
   const codexConfigPath = options.codexConfigPath ?? join(options.env?.CODEX_HOME ?? join(homeDir, ".codex"), "config.toml");
   const claudeConfigPathMac = options.claudeConfigPathMac ?? join(homeDir, "Library", "Application Support", "Claude", "claude_desktop_config.json");
   const claudeConfigPathLinux = options.claudeConfigPathLinux ?? join(homeDir, ".config", "Claude", "claude_desktop_config.json");
-  const cliWrapperPath = options.cliWrapperPath ?? options.env?.CLAWPERATOR_BIN_PATH ?? "clawperator";
+  const cliWrapperPath = options.cliWrapperPath ?? options.env?.ANDROPERATOR_BIN_PATH ?? "androperator";
   const cliJsPath = resolveCliJsPath(options);
   const adbPath = nullIfBlank(options.adbPath ?? options.env?.ADB_PATH);
   const adbPlaceholder = "<set ADB_PATH to your adb binary>";
@@ -402,20 +402,20 @@ function buildMcpConfigSnippetContent(options: HostSetupOptions, clawperatorDir:
     args,
     env: {
       ADB_PATH: adbValue,
-      CLAWPERATOR_OPERATOR_PACKAGE: operatorPackage,
-      CLAWPERATOR_LOG_DIR: logDir,
-      CLAWPERATOR_LOG_LEVEL: "info",
+      ANDROPERATOR_OPERATOR_PACKAGE: operatorPackage,
+      ANDROPERATOR_LOG_DIR: logDir,
+      ANDROPERATOR_LOG_LEVEL: "info",
     },
   };
 
   const notes = [
     "This snippet is generated for the current host.",
-    "Regenerate it with clawperator host setup if the clawperator binary path or adb path changes.",
+    "Regenerate it with androperator host setup if the androperator binary path or adb path changes.",
   ];
 
   if (!useNodeForm) {
     notes.push(
-      "Could not resolve the Clawperator CLI JS entrypoint, so this snippet uses the npm shell wrapper. Claude Desktop and other GUI MCP clients usually do not inherit your shell PATH; if launch fails, replace \"command\" with \"node\" and \"args\" with [\"<installed_clawperator_path>/dist/cli/index.js\", \"mcp\", \"serve\"]."
+      "Could not resolve the Androperator CLI JS entrypoint, so this snippet uses the npm shell wrapper. Claude Desktop and other GUI MCP clients usually do not inherit your shell PATH; if launch fails, replace \"command\" with \"node\" and \"args\" with [\"<installed_androperator_path>/dist/cli/index.js\", \"mcp\", \"serve\"]."
     );
   }
 
@@ -432,25 +432,25 @@ function buildMcpConfigSnippetContent(options: HostSetupOptions, clawperatorDir:
       configPathHints: [claudeConfigPathMac, claudeConfigPathLinux],
       mergeKey: "mcpServers",
       entry: {
-        clawperator: serverConfig,
+        androperator: serverConfig,
       },
     },
     codex: {
       configPath: codexConfigPath,
       entryToml: [
-        "[mcp_servers.clawperator]",
+        "[mcp_servers.androperator]",
         `command = ${JSON.stringify(command)}`,
         `args = [${tomlArgs}]`,
-        "[mcp_servers.clawperator.env]",
+        "[mcp_servers.androperator.env]",
         `ADB_PATH = ${JSON.stringify(adbValue)}`,
-        `CLAWPERATOR_OPERATOR_PACKAGE = ${JSON.stringify(operatorPackage)}`,
-        `CLAWPERATOR_LOG_DIR = ${JSON.stringify(logDir)}`,
-        "CLAWPERATOR_LOG_LEVEL = \"info\"",
+        `ANDROPERATOR_OPERATOR_PACKAGE = ${JSON.stringify(operatorPackage)}`,
+        `ANDROPERATOR_LOG_DIR = ${JSON.stringify(logDir)}`,
+        "ANDROPERATOR_LOG_LEVEL = \"info\"",
         "",
       ].join("\n"),
     },
     genericStdioConsumer: {
-      serverName: "clawperator",
+      serverName: "androperator",
       server: serverConfig,
     },
   };
@@ -492,35 +492,35 @@ async function buildAgentGuideContent(
   const bundledSkillsDir = resolveBundledSkillsDir(options);
   const { installed, hasVersionFile } = await listInstalledBundledSkillNames(bundledSkillsDir);
   const hasSkills = installed.length > 0;
-  const hasOrientation = installed.includes("clawperator-agent-orientation");
-  const hasUpgrade = installed.includes("clawperator-upgrade");
-  const hasDiscovery = installed.includes("clawperator-skill-author-by-agent-discovery");
-  const hasRecording = installed.includes("clawperator-skill-author-by-recording");
+  const hasOrientation = installed.includes("androperator-agent-orientation");
+  const hasUpgrade = installed.includes("androperator-upgrade");
+  const hasDiscovery = installed.includes("androperator-skill-author-by-agent-discovery");
+  const hasRecording = installed.includes("androperator-skill-author-by-recording");
 
   const lines: string[] = [
-    "# Clawperator",
+    "# Androperator",
     "",
     "Deterministic Android automation runtime for AI agents.",
     "",
     "## Quick start",
     "",
-    "clawperator doctor    # verify readiness",
-    "clawperator snapshot  # capture device state",
-    "clawperator click --text \"Settings\"  # tap an element",
+    "androperator doctor    # verify readiness",
+    "androperator snapshot  # capture device state",
+    "androperator click --text \"Settings\"  # tap an element",
     "",
     "## Documentation",
     "",
-    "- LLM guide: https://docs.clawperator.com/llms.txt",
-    "- Full docs: https://docs.clawperator.com/llms-full.txt",
-    "- Setup guide: https://docs.clawperator.com/setup/",
+    "- LLM guide: https://docs.androperator.com/llms.txt",
+    "- Full docs: https://docs.androperator.com/llms-full.txt",
+    "- Setup guide: https://docs.androperator.com/setup/",
     "",
     "## Runtime Skills",
     "",
     "Use the installed runtime-skill registry to discover and run app workflows:",
-    "- `clawperator skills list`",
-    "- `clawperator skills search --keyword \"<term>\"`",
-    "- `clawperator skills get <id>`",
-    "- `clawperator skills run <id>`",
+    "- `androperator skills list`",
+    "- `androperator skills search --keyword \"<term>\"`",
+    "- `androperator skills get <id>`",
+    "- `androperator skills run <id>`",
   ];
 
   if (runtimeGuide.resolvedPath === null) {
@@ -531,7 +531,7 @@ async function buildAgentGuideContent(
       `\`${runtimeGuide.hintPath}\``,
       "",
       "Repair or manual bootstrap:",
-      "- run `clawperator skills install`",
+      "- run `androperator skills install`",
     );
   } else if (runtimeGuide.unreadableRegistry || runtimeGuide.applications === null) {
     lines.push(
@@ -542,12 +542,12 @@ async function buildAgentGuideContent(
       "",
       "The registry exists but could not be read.",
       "Repair or manual bootstrap:",
-      "- run `clawperator skills install`",
+      "- run `androperator skills install`",
     );
   } else {
     lines.push("", "Registry path:");
     pushLiteralBlock(lines, runtimeGuide.resolvedPath);
-    lines.push("", "Inspect required inputs before running with `clawperator skills get <id>`.");
+    lines.push("", "Inspect required inputs before running with `androperator skills get <id>`.");
 
     if (runtimeGuide.applications.length === 0) {
       lines.push("", "Runtime skills registry is present, but it does not contain any installed skills.");
@@ -576,40 +576,40 @@ async function buildAgentGuideContent(
       "",
       "## Bundled Skills",
       "",
-      "First-party Clawperator bundled skills are installed at:",
+      "First-party Androperator bundled skills are installed at:",
       bundledSkillsDir,
       "",
     );
 
     if (hasOrientation) {
       lines.push(
-        "- `clawperator-agent-orientation`: first-run orientation skill for an",
-        "  unfamiliar host. It checks readiness, chooses the correct Clawperator front",
+        "- `androperator-agent-orientation`: first-run orientation skill for an",
+        "  unfamiliar host. It checks readiness, chooses the correct Androperator front",
         "  door, and points back to the canonical public docs for the chosen path.",
       );
     }
     if (hasUpgrade) {
       lines.push(
-        "- `clawperator-upgrade`: packaged whole-product upgrade route. It checks",
-        "  `clawperator --version`, verifies the installer-owned Node, npm, and Java",
-        "  prerequisites, then runs `npm install -g clawperator@latest`,",
-        "  `clawperator install`, and `clawperator doctor` when the CLI is",
+        "- `androperator-upgrade`: packaged whole-product upgrade route. It checks",
+        "  `androperator --version`, verifies the installer-owned Node, npm, and Java",
+        "  prerequisites, then runs `npm install -g androperator@latest`,",
+        "  `androperator install`, and `androperator doctor` when the CLI is",
         "  already reachable. It keeps `install.sh` as recovery-only fallback when",
         "  the CLI or bootstrap prerequisites still need repair.",
       );
     }
     if (hasDiscovery) {
       lines.push(
-        "- `clawperator-skill-author-by-agent-discovery`: zero-results front door when",
-        "  `clawperator skills for-app <package_id>` and",
-        "  `clawperator skills search --keyword \"<term>\"` found no relevant runtime",
+        "- `androperator-skill-author-by-agent-discovery`: zero-results front door when",
+        "  `androperator skills for-app <package_id>` and",
+        "  `androperator skills search --keyword \"<term>\"` found no relevant runtime",
         "  skill. Discovery stays bounded, produces one routing artifact, and chooses",
         "  the next truthful step.",
       );
     }
     if (hasRecording) {
       lines.push(
-        "- `clawperator-skill-author-by-recording`: proving workflow after discovery returns",
+        "- `androperator-skill-author-by-recording`: proving workflow after discovery returns",
         "  `proceed_to_recording`, or when the app route is already well understood",
         "  and you need a real-device recording to draft a reusable runtime skill.",
       );
@@ -624,12 +624,12 @@ async function buildAgentGuideContent(
       lines.push(
         "",
         "Recommended first-run flow:",
-        "- If the current host is unfamiliar, start with `clawperator-agent-orientation`",
-        "- If this installed Clawperator environment needs a whole-product refresh, use `clawperator-upgrade`",
-        "- Choose one runtime-skill discovery probe: `clawperator skills for-app <package_id>` or `clawperator skills search --keyword \"<term>\"`",
-        "- If there is no relevant runtime-skill match, inspect `clawperator bundled-skills list`",
-        "- Start the guided route with `clawperator-skill-author-by-agent-discovery`",
-        "- Use `clawperator-skill-author-by-recording` only after discovery returns `proceed_to_recording`",
+        "- If the current host is unfamiliar, start with `androperator-agent-orientation`",
+        "- If this installed Androperator environment needs a whole-product refresh, use `androperator-upgrade`",
+        "- Choose one runtime-skill discovery probe: `androperator skills for-app <package_id>` or `androperator skills search --keyword \"<term>\"`",
+        "- If there is no relevant runtime-skill match, inspect `androperator bundled-skills list`",
+        "- Start the guided route with `androperator-skill-author-by-agent-discovery`",
+        "- Use `androperator-skill-author-by-recording` only after discovery returns `proceed_to_recording`",
       );
     } else {
       lines.push(
@@ -637,19 +637,19 @@ async function buildAgentGuideContent(
         "Installed bundled-skill front doors are incomplete on this host.",
         "",
         "Repair it with:",
-        "- run `clawperator bundled-skills update`",
+        "- run `androperator bundled-skills update`",
       );
       if (!hasOrientation) {
-        lines.push("- missing `clawperator-agent-orientation`");
+        lines.push("- missing `androperator-agent-orientation`");
       }
       if (!hasUpgrade) {
-        lines.push("- missing `clawperator-upgrade`");
+        lines.push("- missing `androperator-upgrade`");
       }
       if (!hasDiscovery) {
-        lines.push("- missing `clawperator-skill-author-by-agent-discovery`");
+        lines.push("- missing `androperator-skill-author-by-agent-discovery`");
       }
       if (!hasRecording) {
-        lines.push("- missing `clawperator-skill-author-by-recording`");
+        lines.push("- missing `androperator-skill-author-by-recording`");
       }
     }
 
@@ -658,7 +658,7 @@ async function buildAgentGuideContent(
         "",
         "Version metadata is missing for this install.",
         "Refresh it with:",
-        "- run `clawperator bundled-skills update`",
+        "- run `androperator bundled-skills update`",
       );
     }
   } else {
@@ -666,16 +666,16 @@ async function buildAgentGuideContent(
       "",
       "## Bundled Skills",
       "",
-      "First-party Clawperator bundled skills are not currently configured on this host.",
+      "First-party Androperator bundled skills are not currently configured on this host.",
       "",
       "Expected packaged front doors after install:",
-      "- `clawperator-agent-orientation`: first-run orientation for unfamiliar hosts",
-      "- `clawperator-upgrade`: packaged whole-product upgrade route through `clawperator install` and `clawperator doctor`, with `install.sh` retained as recovery-only fallback",
-      "- `clawperator-skill-author-by-agent-discovery`: zero-results front door when runtime-skill discovery found no relevant match",
-      "- `clawperator-skill-author-by-recording`: proving workflow after discovery returns `proceed_to_recording`",
+      "- `androperator-agent-orientation`: first-run orientation for unfamiliar hosts",
+      "- `androperator-upgrade`: packaged whole-product upgrade route through `androperator install` and `androperator doctor`, with `install.sh` retained as recovery-only fallback",
+      "- `androperator-skill-author-by-agent-discovery`: zero-results front door when runtime-skill discovery found no relevant match",
+      "- `androperator-skill-author-by-recording`: proving workflow after discovery returns `proceed_to_recording`",
       "",
       "Repair or manual bootstrap:",
-      "- run `clawperator bundled-skills install`",
+      "- run `androperator bundled-skills install`",
     );
   }
 
@@ -689,22 +689,22 @@ function escapeRegExp(value: string): string {
 function buildSharedAgentBridgeContent(sharedAgentsContent: string, localAgentGuidePath: string): string {
   const bridgeBlock = [
     SHARED_BRIDGE_START,
-    "## Clawperator",
+    "## Androperator",
     "",
-    "Clawperator runtime skills stay in the `clawperator` CLI surface.",
+    "Androperator runtime skills stay in the `androperator` CLI surface.",
     "Do not mirror them into shared agent skill directories.",
     "",
     "Start here:",
     `- \`${localAgentGuidePath}\``,
-    "- if the host is unfamiliar and the local guide lists it, start with `clawperator-agent-orientation`",
-    "- `clawperator skills for-app <package_id>`",
-    "- `clawperator skills search --keyword \"<term>\"`",
-    "- `clawperator skills get <skill_id>`",
-    "- `clawperator bundled-skills list`",
+    "- if the host is unfamiliar and the local guide lists it, start with `androperator-agent-orientation`",
+    "- `androperator skills for-app <package_id>`",
+    "- `androperator skills search --keyword \"<term>\"`",
+    "- `androperator skills get <skill_id>`",
+    "- `androperator bundled-skills list`",
     "",
     "If runtime-skill discovery finds no relevant match, follow the local guide for the bundled-skill front doors installed on this host.",
-    "Confirm the local guide lists `clawperator-agent-orientation`, `clawperator-upgrade`, `clawperator-skill-author-by-agent-discovery`, and `clawperator-skill-author-by-recording` before starting the discovery-to-proving route.",
-    "Use `clawperator skills run <skill_id>` after you have identified the right runtime skill.",
+    "Confirm the local guide lists `androperator-agent-orientation`, `androperator-upgrade`, `androperator-skill-author-by-agent-discovery`, and `androperator-skill-author-by-recording` before starting the discovery-to-proving route.",
+    "Use `androperator skills run <skill_id>` after you have identified the right runtime skill.",
     SHARED_BRIDGE_END,
   ].join("\n");
 
@@ -723,14 +723,14 @@ export async function setupHost(
   options: HostSetupOptions = {},
 ): Promise<HostSetupResult> {
   const homeDir = getHomeDir(options.env);
-  const clawperatorDir = options.clawperatorDir ?? join(homeDir, ".clawperator");
-  const installStatePath = join(clawperatorDir, "install-state.json");
-  const mcpConfigSnippetPath = join(clawperatorDir, "mcp-config-snippet.json");
-  const agentGuidePath = join(clawperatorDir, "AGENTS.md");
+  const androperatorDir = options.androperatorDir ?? join(homeDir, ".androperator");
+  const installStatePath = join(androperatorDir, "install-state.json");
+  const mcpConfigSnippetPath = join(androperatorDir, "mcp-config-snippet.json");
+  const agentGuidePath = join(androperatorDir, "AGENTS.md");
   const sharedAgentsPath = options.sharedAgentsPath ?? join(homeDir, ".agents", "AGENTS.md");
 
-  await ensurePrivateClawperatorDir(clawperatorDir);
-  const runtimeGuide = await resolveRuntimeGuideInfo(options, clawperatorDir);
+  await ensurePrivateAndroperatorDir(androperatorDir);
+  const runtimeGuide = await resolveRuntimeGuideInfo(options, androperatorDir);
 
   const results: HostArtifactOutcome[] = [];
 
@@ -748,7 +748,7 @@ export async function setupHost(
     });
   }
 
-  const mcpConfigSnippetContent = buildMcpConfigSnippetContent(options, clawperatorDir);
+  const mcpConfigSnippetContent = buildMcpConfigSnippetContent(options, androperatorDir);
   try {
     const status = await writeArtifactFile(mcpConfigSnippetPath, mcpConfigSnippetContent, 0o600);
     await secureFileIfPresent(mcpConfigSnippetPath);
@@ -781,7 +781,7 @@ export async function setupHost(
       artifact: "sharedAgentBridge",
       path: sharedAgentsPath,
       status: "skipped",
-      message: "Shared agent guide not found; skipping Clawperator bridge update.",
+      message: "Shared agent guide not found; skipping Androperator bridge update.",
     });
   } else {
     try {

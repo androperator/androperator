@@ -1,9 +1,9 @@
-package clawperator.operator.agent
+package androperator.operator.agent
 
-import clawperator.task.runner.OnScreenLogAnchor
-import clawperator.task.runner.OnScreenLogContract
-import clawperator.task.runner.OnScreenLogTextAlign
-import clawperator.task.runner.UiAction
+import androperator.task.runner.OnScreenLogAnchor
+import androperator.task.runner.OnScreenLogContract
+import androperator.task.runner.OnScreenLogTextAlign
+import androperator.task.runner.UiAction
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs

@@ -22,9 +22,9 @@ travel over logcat in paced chunks with command/task identity, ordered indices,
 byte length and SHA-256 verification. Node validates the complete XML before
 returning raw or compact output.
 
-The built-in `clawperator snapshot` command constructs a one-step execution with these exact defaults:
+The built-in `androperator snapshot` command constructs a one-step execution with these exact defaults:
 
-- `source: "clawperator-observe"`
+- `source: "androperator-observe"`
 - `expectedFormat: "android-ui-automator"`
 - `timeoutMs: 30000` when `buildSnapshotExecution()` is called without an override
 - one action with `id: "snap"` and `type: "snapshot"`
@@ -41,13 +41,13 @@ For default raw CLI `snapshot`, machine-checkable success means:
 - `envelope.stepResults[0].success == true`
 - `envelope.stepResults[0].data.text` is present
 
-Example one-step payload from the `clawperator snapshot` builder:
+Example one-step payload from the `androperator snapshot` builder:
 
 ```json
 {
   "commandId": "snapshot-1700000000000-abcd123",
   "taskId": "snapshot-1700000000000-abcd123",
-  "source": "clawperator-observe",
+  "source": "androperator-observe",
   "expectedFormat": "android-ui-automator",
   "timeoutMs": 30000,
   "actions": [
@@ -66,7 +66,7 @@ Use compact output to bound the hierarchy returned to an agent while retaining
 containers, state, and ancestry:
 
 ```bash
-clawperator snapshot --device <device_serial> --operator-package com.clawperator.operator.dev --compact --max-nodes 20 --raw-path ./hierarchy.xml
+androperator snapshot --device <device_serial> --operator-package com.androperator.operator.dev --compact --max-nodes 20 --raw-path ./hierarchy.xml
 ```
 
 | CLI option | Behavior |
@@ -154,7 +154,7 @@ not acquire the new chunk integrity guarantees. Use a matching updated Operator
 and CLI to obtain the repaired capture path.
 
 Multiple current snapshots stay attached to their own action IDs inside the
-verified envelope. For direct `clawperator snapshot`, the step ID remains
+verified envelope. For direct `androperator snapshot`, the step ID remains
 `"snap"`. CLI arguments, compact output, raw XML and the public result envelope
 shape are unchanged. No socket, file-transfer service or new device connection
 is required.
@@ -182,7 +182,7 @@ In default raw CLI output, successful `snapshot` XML lives inside the step resul
     "error": null
   },
   "deviceId": "<device_serial>",
-  "terminalSource": "clawperator_result",
+  "terminalSource": "androperator_result",
   "isCanonicalTerminal": true
 }
 ```
@@ -190,7 +190,7 @@ In default raw CLI output, successful `snapshot` XML lives inside the step resul
 Verification pattern - confirm the snapshot contract is active:
 
 ```bash
-clawperator snapshot --device <device_serial>
+androperator snapshot --device <device_serial>
 ```
 
 Check these exact fields:
@@ -233,7 +233,7 @@ Typical node attributes visible in current snapshots include:
 Important limits on what to infer:
 
 - `data.text` is the only Node-guaranteed snapshot success field today.
-- `NodeMatcher.role` is a Clawperator selector concept documented in [Selectors](selectors.md), not a direct XML attribute.
+- `NodeMatcher.role` is an Androperator selector concept documented in [Selectors](selectors.md), not a direct XML attribute.
 - A node appearing in the XML does not guarantee it is currently reachable on screen. Use `bounds`, scrolling, and follow-up actions to confirm reachability.
 
 Current runtime note:
@@ -275,7 +275,7 @@ Current runtime note:
 
 ## Annotated Live-Device Example
 
-Full `clawperator snapshot` output from an Android emulator running
+Full `androperator snapshot` output from an Android emulator running
 Android 15 (API 35) with the Settings app open. This example uses the emulator
 because it produces reproducible results that any device can create and run.
 
@@ -305,7 +305,7 @@ because it produces reproducible results that any device can create and run.
     "error": null
   },
   "deviceId": "emulator-5554",
-  "terminalSource": "clawperator_result",
+  "terminalSource": "androperator_result",
   "isCanonicalTerminal": true
 }
 ```
@@ -324,7 +324,7 @@ Fields to note:
   `overlay_package`, or `window_count`, which retain their raw runtime meaning.
   This is also the visibility check after the [CLI set/clear commands](on-screen-logs.md#cli-commands);
   it does not verify screenshot pixels.
-- `terminalSource: "clawperator_result"` and `isCanonicalTerminal: true`
+- `terminalSource: "androperator_result"` and `isCanonicalTerminal: true`
   are outer-envelope fields added by the terminal output layer; they are not
   part of the `envelope` sub-object.
 
@@ -493,7 +493,7 @@ If a `snapshot` step initially succeeds but Node cannot attach `data.text`, Node
   "success": false,
   "data": {
     "error": "SNAPSHOT_EXTRACTION_FAILED",
-    "message": "UI hierarchy extraction produced missing or invalid XML for this step. Check clawperator version compatibility and logcat extraction health."
+    "message": "UI hierarchy extraction produced missing or invalid XML for this step. Check androperator version compatibility and logcat extraction health."
   }
 }
 ```
@@ -502,14 +502,14 @@ This is not just a warning. It changes the step to `success: false`, and later e
 
 Typical recovery:
 
-1. Run `clawperator version --check-compat`.
-2. Run `clawperator doctor`.
+1. Run `androperator version --check-compat`.
+2. Run `androperator doctor`.
 3. Use `--verbose` for a bounded read-only observation when you need result-transport correlation and chunk diagnostics. The `[TaskScope] UI Hierarchy [commandId=<command_id>]:` marker applies only to legacy extraction.
 
 Verification pattern - confirm extraction failure handling:
 
 ```bash
-clawperator snapshot --device <device_serial>
+androperator snapshot --device <device_serial>
 ```
 
 If extraction failed, branch on `data.error`:

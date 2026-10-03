@@ -50,7 +50,7 @@ describe("compact snapshot", () => {
     assert.equal(limited.nodes[0].text, "First\nS");
     assert.equal(limited.nodes[0].textTruncated, true);
     const cli = JSON.parse(await cmdObserveSnapshot({ format: "json", compact: true,
-      tryDaemonExecutionFn: async () => ({ ok: true, envelope: envelope(raw), deviceId: "test-device", terminalSource: "clawperator_result" }),
+      tryDaemonExecutionFn: async () => ({ ok: true, envelope: envelope(raw), deviceId: "test-device", terminalSource: "androperator_result" }),
     }));
     const presentation = await presentSnapshot(envelope(raw), { compact: true });
     const mcp = buildSnapshotSuccessResult({ envelope: presentation.envelope }, presentation);
@@ -108,7 +108,7 @@ describe("compact snapshot", () => {
     const path = result.compact!.rawArtifactPath!;
     try {
       const cli = JSON.parse(await cmdObserveSnapshot({ format: "json", compact: true,
-        tryDaemonExecutionFn: async () => ({ ok: true, envelope: original, deviceId: "test-device", terminalSource: "clawperator_result" }),
+        tryDaemonExecutionFn: async () => ({ ok: true, envelope: original, deviceId: "test-device", terminalSource: "androperator_result" }),
       }));
       const mcp = buildSnapshotSuccessResult({ envelope: result.envelope }, result);
       assert.deepEqual(JSON.parse(mcp.content[0].text), mcp.structuredContent);
@@ -123,7 +123,7 @@ describe("compact snapshot", () => {
   it("fails CLI presentation without replacing the successful execution verdict", async () => {
     const original = envelope();
     const result = await cmdObserveSnapshot({ format: "json", compact: true, rawPath: "/missing-parent/snapshot.xml",
-      tryDaemonExecutionFn: async () => ({ ok: true, envelope: original, deviceId: "test-device", terminalSource: "clawperator_result" }),
+      tryDaemonExecutionFn: async () => ({ ok: true, envelope: original, deviceId: "test-device", terminalSource: "androperator_result" }),
     });
     assert.equal(JSON.parse(result).code, "SNAPSHOT_ARTIFACT_WRITE_FAILED");
     assert.equal(JSON.parse(result).envelope.status, "success");
@@ -133,9 +133,9 @@ describe("compact snapshot", () => {
   it("keeps default CLI output unchanged and validates before dispatch", async () => {
     const original = envelope();
     const raw = JSON.parse(await cmdObserveSnapshot({ format: "json", tryDaemonExecutionFn: async () => ({
-      ok: true, envelope: original, deviceId: "test-device", terminalSource: "clawperator_result",
+      ok: true, envelope: original, deviceId: "test-device", terminalSource: "androperator_result",
     }) }));
-    assert.deepEqual(raw, { envelope: original, deviceId: "test-device", terminalSource: "clawperator_result", isCanonicalTerminal: true });
+    assert.deepEqual(raw, { envelope: original, deviceId: "test-device", terminalSource: "androperator_result", isCanonicalTerminal: true });
     for (const options of [{ maxNodes: 1 }, { compact: true, maxNodes: 0 }, { compact: true, maxTextChars: 4097 }, { rawPath: " " }]) {
       const value = JSON.parse(await cmdObserveSnapshot({ format: "json", ...options, tryDaemonExecutionFn: async () => { throw new Error("must not dispatch"); } }));
       assert.equal(value.code, "USAGE");

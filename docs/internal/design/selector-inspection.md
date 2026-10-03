@@ -33,7 +33,7 @@ invalid JSON fragments. The query's 256 KiB response guard cannot solve logcat's
 much smaller per-record limit.
 
 `resultEnvelopeLogLines` retains small canonical lines unchanged. Larger logical
-`[Clawperator-Result]` envelopes use `[Clawperator-Result-Chunk]` records. Each
+`[Androperator-Result]` envelopes use `[Androperator-Result-Chunk]` records. Each
 record carries command/task identity, a zero-based index, chunk count, original
 byte length, SHA-256, and base64 for at most 1024 bytes. This fits beneath logcat's
 record limit even with escaped or Unicode identifiers. Android timestamp and

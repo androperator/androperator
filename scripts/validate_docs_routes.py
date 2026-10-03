@@ -15,7 +15,7 @@ except ImportError as exc:
     raise ImportError("PyYAML is required to run validate_docs_routes.py") from exc
 
 
-DOCS_HOST = "docs.clawperator.com"
+DOCS_HOST = "docs.androperator.com"
 REQUIRED_SITE_FILES = [
     "index.html",
     "404.html",

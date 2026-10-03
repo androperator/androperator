@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-Clawperator is the deterministic "hand" for an agent's "brain". Planning and
+Androperator is the deterministic "hand" for an agent's "brain". Planning and
 app-specific strategy stay in the agent or skills; the Android runtime and Node
 API execute validated actions and return structured evidence.
 
@@ -19,13 +19,13 @@ unproven. Do not expand into unrelated fixes or later PRs.
 ## Runtime Contracts
 
 - The Node API/CLI is the canonical interface for agent-driven device actions.
-  Preserve the `[Clawperator-Result]` envelope and stable `commandId`/`taskId`
+  Preserve the `[Androperator-Result]` envelope and stable `commandId`/`taskId`
   correlation end to end.
 - Use the branch-local build in `apps/node/` for development and verification,
-  not the global `clawperator` install, which may lag the checkout.
-- Local development defaults to `com.clawperator.operator.dev`; pass
-  `--operator-package com.clawperator.operator.dev`. Use
-  `com.clawperator.operator` for explicit release validation.
+  not the global `androperator` install, which may lag the checkout.
+- Local development defaults to `com.androperator.operator.dev`; pass
+  `--operator-package com.androperator.operator.dev`. Use
+  `com.androperator.operator` for explicit release validation.
 - Keep contracts strict. Distinguish omitted strings from `""` with explicit
   `undefined` checks; reject blank values where invalid. Avoid truthy fallbacks
   on contract fields such as file paths.
@@ -58,8 +58,8 @@ Use `.agents/skills/docs-author/SKILL.md` for authored docs and
 
 | Surface | Authored inputs | Build |
 | --- | --- | --- |
-| `clawperator.com` landing site | `sites/landing-clawperator/`; root machine-facing files and installer in `sites/landing-clawperator/public/` | `./scripts/site_build_clawperator.sh` |
-| `docs.clawperator.com` technical docs | `docs/`, code-derived inputs in `apps/node/src/`; root static files in `sites/docs/static/` | `./scripts/docs_build.sh` |
+| `clawperator.com` preserved landing site | `sites/landing-clawperator/`; legacy machine-facing files and installer in `sites/landing-clawperator/public/` | `./scripts/site_build_clawperator.sh` |
+| `docs.androperator.com` technical docs | `docs/`, code-derived inputs in `apps/node/src/`; root static files in `sites/docs/static/` | `./scripts/docs_build.sh` |
 
 `sites/docs/.build/` and `sites/docs/site/` are generated. Fix the canonical
 source or generator, then rebuild; do not hand-edit output. Use
@@ -77,13 +77,13 @@ material only where release/version management requires it.
 
 ## Skills and Task Packs
 
-- Runtime/user-facing skills live in the sibling `../clawperator-skills` repo,
-  published at `https://github.com/clawperator/clawperator-skills`.
-  Their canonical documentation lives here in `docs/skills/`.
+- Agents create and run local skills. Optional bundled examples will live in
+  `examples/skills/`; no companion skills catalog is required.
+  Canonical skill documentation lives here in `docs/skills/`.
 - Repo maintenance skills live in `.agents/skills/`. Keep descriptions narrowly
   scoped and load conditional references only when needed.
-- For contract changes affecting runtime skills, update both repos in lockstep,
-  bump affected skill versions, and run skills smoke checks.
+- For contract changes affecting runtime skills, update bundled authoring skills
+  and fixtures in lockstep and run relevant skills smoke checks.
 - `tasks/` holds temporary handoffs. Separate active tasks may have separate
   packs, including small tasks. Before retiring a pack, move durable knowledge
   to docs, skills, or code and preserve actionable follow-up.
@@ -120,10 +120,10 @@ live failures discovered during the change.
 Relevant device helpers:
 
 - Debug install: `./gradlew :app:installDebug`; launch the app's actual main activity.
-- Permissions: `./scripts/clawperator_grant_android_permissions.sh`.
-- Ingress: `./scripts/clawperator_validate_operator_ingress.sh`.
-- Smoke: `./scripts/clawperator_smoke_core.sh`, `./scripts/clawperator_smoke_skills.sh`.
-- Opt-in integration: `CLAWPERATOR_RUN_INTEGRATION=1 ./scripts/clawperator_integration_canonical.sh`.
+- Permissions: `./scripts/androperator_grant_android_permissions.sh`.
+- Ingress: `./scripts/androperator_validate_operator_ingress.sh`.
+- Smoke: `./scripts/androperator_smoke_core.sh`, `./scripts/androperator_smoke_skills.sh`.
+- Opt-in integration: `ANDROPERATOR_RUN_INTEGRATION=1 ./scripts/androperator_integration_canonical.sh`.
 - Formatting: `./scripts/apply_coding_standards.sh -f`.
 
 New repo validation harnesses belong in `validation/` and should be wired into
@@ -146,16 +146,18 @@ and report missing event categories and other measurement limits.
 
 Use placeholders such as `<device_serial>`, `<person_name>`, and `<local_user>`
 in committed examples. Do not hardcode private names, device identifiers, or
-machine paths. Do not abbreviate Clawperator to Claw; Claw refers to OpenClaw or
+machine paths. Do not abbreviate Androperator to Claw; Claw refers to OpenClaw or
 similar agents. Use regular hyphens rather than em dashes in Markdown.
 
 Keep `core.hooksPath=.githooks` and do not bypass hooks with `--no-verify`.
-The local terms file is `~/.clawperator/blocked-terms.txt`, with one term per
-non-empty line and `#` comments. `CLAWPERATOR_BLOCKED_TERMS_FILE` overrides
+The local terms file is `~/.androperator/blocked-terms.txt`, with one term per
+non-empty line and `#` comments. `ANDROPERATOR_BLOCKED_TERMS_FILE` overrides
 its location. A missing file permits commits; an unreadable configured file
 blocks them. The hooks scan effective author and committer identities, staged
 content, and the sanitized commit message, case-insensitively, matching identifiers
-or literal phrases as appropriate. Before pushing, the hooks also scan raw author
+or literal phrases as appropriate. Staged-content scans exempt PNG payloads with
+a verified format signature and files named `KnownAppsRepository*`; text disguised
+with a PNG extension is still scanned. Before pushing, the hooks also scan raw author
 and committer identities and messages in the outgoing history.
 Verify changes to this policy with `./validation/test_blocked_terms_policy.sh`.
 Before release or force-push events, scan for blocked terms and verify history.

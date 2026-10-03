@@ -1,11 +1,11 @@
 ---
 name: evals-run
-description: Run, replay, rescore, or diagnose Clawperator eval harness runs and their artifacts.
+description: Run, replay, rescore, or diagnose Androperator eval harness runs and their artifacts.
 ---
 
 # Evals Run
 
-Use this skill for Clawperator eval runs and their follow-up triage.
+Use this skill for Androperator eval runs and their follow-up triage.
 
 Read [`references/evals-run.md`](references/evals-run.md) for the operational runbook.
 Use [`scripts/run_android_version_eval.sh`](scripts/run_android_version_eval.sh)

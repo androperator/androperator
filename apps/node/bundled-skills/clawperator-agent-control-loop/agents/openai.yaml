@@ -1,4 +1,0 @@
-interface:
-  display_name: "Clawperator Agent Control Loop"
-  short_description: "Observe, act and independently verify Android outcomes"
-  default_prompt: "Use $clawperator-agent-control-loop to complete the requested Android goal within declared budgets, with independently verified results or an evidence-backed partial or failed outcome. For explicitly requested orchestrated authoring, continue through implementation, validation and live proof."

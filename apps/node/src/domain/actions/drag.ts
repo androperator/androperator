@@ -6,7 +6,7 @@ export function buildDragExecution(params: DragParams, timeoutMs = 30000): Execu
   return {
     commandId,
     taskId: commandId,
-    source: "clawperator-action",
+    source: "androperator-action",
     expectedFormat: "android-ui-automator",
     timeoutMs,
     actions: [{ id: "drag", type: "drag", params }],

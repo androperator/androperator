@@ -1,9 +1,9 @@
-package clawperator.operator.agent
+package androperator.operator.agent
 
-import clawperator.task.runner.UiAction
-import clawperator.task.runner.UiSystemKey
-import clawperator.task.runner.TaskRetry
-import clawperator.task.runner.TaskRetryPresets
+import androperator.task.runner.UiAction
+import androperator.task.runner.UiSystemKey
+import androperator.task.runner.TaskRetry
+import androperator.task.runner.TaskRetryPresets
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs

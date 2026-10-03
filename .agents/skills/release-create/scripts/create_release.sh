@@ -216,10 +216,10 @@ main() {
   validate_changelog_entry "$version"
 
   local npm_view_output
-  if npm_view_output="$(npm view "clawperator@${version}" version 2>&1)"; then
-    die "npm already has clawperator@$version"
+  if npm_view_output="$(npm view "androperator@${version}" version 2>&1)"; then
+    die "npm already has androperator@$version"
   elif ! printf '%s\n' "$npm_view_output" | grep -qiE 'E404|404 Not Found'; then
-    die "failed to check npm for clawperator@$version: $npm_view_output"
+    die "failed to check npm for androperator@$version: $npm_view_output"
   fi
 
   if gh release view "$tag_name" --repo "$repo_slug" >/dev/null 2>&1; then

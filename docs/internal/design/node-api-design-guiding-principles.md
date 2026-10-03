@@ -1,6 +1,6 @@
 # Node API Design: Guiding Principles
 
-Audience: agents and developers implementing or extending the Clawperator CLI
+Audience: agents and developers implementing or extending the Androperator CLI
 and Node API. Read this before designing a new command, flag, or output format.
 Review it after implementation to verify compliance.
 
@@ -8,13 +8,13 @@ Review it after implementation to verify compliance.
 
 ## The API Is the Product
 
-Clawperator is an actuator. Its value is entirely mediated through its API. The
+Androperator is an actuator. Its value is entirely mediated through its API. The
 Android receiver, the accessibility service, the execution engine - all of these
 exist in service of the CLI and Node API that agents call. If the API is hard to
 use, none of the underlying capability matters.
 
 The primary consumer of this API is not a human developer reading docs. It is an
-LLM agent that has never seen Clawperator before, operating under token pressure,
+LLM agent that has never seen Androperator before, operating under token pressure,
 making decisions about which commands to try based on training data from other
 tools. Design every surface for that consumer first.
 
@@ -61,7 +61,7 @@ The following excerpt from Steve Yegge's
 > Over the past few months we've made dozens of tweaks, adding flags and
 > commands, and the agents now rarely have trouble using Beads fluently.
 
-This is directly applicable to Clawperator. The lesson is not "add lots of
+This is directly applicable to Androperator. The lesson is not "add lots of
 aliases." The lesson is: **the command an agent tries first, based on intuition
 from other tools, should work.** When it does not, the fix is to change the API,
 not to write better documentation for the existing API.
@@ -77,16 +77,16 @@ failed once. The command surface should be guessable from general knowledge of
 CLI tools, mobile automation, and common English verbs.
 
 **Test:** imagine an agent that has read a one-sentence description of
-Clawperator ("CLI tool for automating Android devices") and nothing else. What
+Androperator ("CLI tool for automating Android devices") and nothing else. What
 commands would it try? Those commands should work.
 
 Anti-pattern (removed - do not use): deprecated nested command families are not supported. They are not documented here as runnable examples because agents and crawlers sometimes copy code blocks verbatim.
 
 Good (current):
 ```
-clawperator open com.android.settings
-clawperator snapshot
-clawperator click --text "Wi-Fi"
+androperator open com.android.settings
+androperator snapshot
+androperator click --text "Wi-Fi"
 ```
 
 ### 2. Flat Commands for Actions, Namespaces Only for Subsystems
@@ -122,12 +122,12 @@ Sources agents draw from:
   `--flag` for modifiers, `--help` for usage
 
 When naming a new command or flag, ask: "What would an agent type if it had used
-Playwright yesterday and is using Clawperator today?" Use that name as the
+Playwright yesterday and is using Androperator today?" Use that name as the
 primary. Accept other reasonable guesses as synonyms.
 
 Note: this does not mean blindly copying Playwright names. Playwright uses
 `fill` for text entry, but `type` is a shorter, more universal verb that agents
-reach for first. Clawperator uses `type` as the primary name and accepts `fill`
+reach for first. Androperator uses `type` as the primary name and accepts `fill`
 as a synonym. Apply the same judgment to each case: familiarity is a signal, not
 a mandate.
 
@@ -155,14 +155,14 @@ hatch, not the default path.
 
 Bad:
 ```
-clawperator click --selector '{"text":"Login"}'
-clawperator type --selector '{"contentDescription":"Search"}' --text "hello"
+androperator click --selector '{"text":"Login"}'
+androperator type --selector '{"contentDescription":"Search"}' --text "hello"
 ```
 
 Good:
 ```
-clawperator click --text "Login"
-clawperator type "hello" --desc "Search"
+androperator click --text "Login"
+androperator type "hello" --desc "Search"
 ```
 
 **Rules for new commands:**
@@ -182,7 +182,7 @@ the shortest unambiguous name.
 - default JSON output first; `--output json` is the preferred explicit spelling
 - use the canonical timeout flag form only
 - `--operator-package` not `--operator-package` ("receiver" is an Android
-  implementation detail; "operator" is Clawperator's own terminology)
+  implementation detail; "operator" is Androperator's own terminology)
 - `--text` not `--text-equals`
 - `--desc` not `--content-description`
 
@@ -219,7 +219,7 @@ Use one of:
   --role <role>           Element role
 
 Example:
-  clawperator click --text "Wi-Fi"
+  androperator click --text "Wi-Fi"
 ```
 
 **"Did you mean?" guidance:** when an agent uses a removed or misspelled
@@ -229,7 +229,7 @@ agent recovery.
 
 ### 8. Deterministic Behavior Over Convenience Heuristics
 
-Clawperator is an actuator, not an assistant. Commands must behave identically
+Androperator is an actuator, not an assistant. Commands must behave identically
 given identical inputs. Do not add "smart" behavior that varies based on context
 unless the variation is explicitly controlled by a flag.
 
@@ -265,16 +265,16 @@ surfaces.
 ### 10. Implementation Details Are Not API
 
 Flag names, command names, and output schemas should reflect what the agent
-wants to do, not how Clawperator does it internally.
+wants to do, not how Androperator does it internally.
 
 Bad examples of implementation leaking into API:
 - `--operator-package` (agent does not know what a "receiver" is; renamed to
-  `--operator-package` which uses Clawperator's own terminology)
+  `--operator-package` which uses Androperator's own terminology)
 - `snapshot` (flat command - no nested namespace)
 - `open` (direct verb - the agent wants to open something)
 - `RESULT_ENVELOPE_TIMEOUT` (useful in logs, not in agent-facing errors)
 
-When adding a new command, ask: "Would an agent who has never read the Clawperator
+When adding a new command, ask: "Would an agent who has never read the Androperator
 source code understand what this flag/command/output field means?" If not, rename
 it at the API boundary. Internal names can differ from external names.
 

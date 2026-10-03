@@ -1,5 +1,5 @@
 /**
- * Basic Clawperator API Integration Sample
+ * Basic Androperator API Integration Sample
  * 
  * Demonstrates the recommended 'Connect-then-Dispatch' pattern:
  * 1. Subscribe to the SSE event stream to listen for results.
@@ -13,7 +13,7 @@ async function runSample() {
   const commandId = `sample-${Date.now()}`;
   
   // 1. Start listening for events (SSE)
-  console.log('📡 Connecting to Clawperator SSE stream...');
+  console.log('📡 Connecting to Androperator SSE stream...');
   const eventSource = await fetch(`${API_BASE}/events`);
   const reader = eventSource.body.getReader();
   const decoder = new TextDecoder();

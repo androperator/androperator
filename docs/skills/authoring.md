@@ -6,7 +6,7 @@ Document the current authoring contract for local skills: zero-results
 discovery, recording-based proving, scaffolded files, `SKILL.md`, run scripts,
 artifact compilation, and validation.
 
-The [context adapter](context-adapter.md) in `clawperator-skills` limits how
+The [context adapter](context-adapter.md) in `local skill workspace` limits how
 much UI data you send to a model while keeping node relationships, state and
 capture details.
 
@@ -15,7 +15,7 @@ It covers the agent/provider boundary, proposal validation, and recovery evidenc
 
 ## Adaptive execution and goal coverage
 
-After orientation, use `clawperator-agent-control-loop` for bounded adaptive
+After orientation, use `androperator-agent-control-loop` for bounded adaptive
 navigation and independently verified extraction. It checks completeness,
 coverage, freshness and UI relationships, executes on the explicit target, and
 verifies each destination. Conditional references cover ambiguous selectors,
@@ -28,7 +28,7 @@ and build-number extraction. Partial coverage remains a discovery gap.
 
 For an explicit orchestrated-authoring request with sufficient bounded evidence,
 discovery can return `proceed_to_orchestrated_authoring` with `handoff_target`
-`clawperator-agent-control-loop`. Discovery stops before authoring; the control
+`androperator-agent-control-loop`. Discovery stops before authoring; the control
 loop then uses the canonical authoring workflow and the Settings examples linked
 from [Jev integration](jev.md). Recording-based authoring retains
 `proceed_to_recording` and its dedicated proving workflow. One-shot requests do
@@ -41,22 +41,22 @@ Use this order:
 
 | Situation | Start here | Stop when |
 | --- | --- | --- |
-| An installed runtime skill already matches the request | `clawperator skills for-app`, `clawperator skills search`, `clawperator skills get` | You have a truthful runtime skill to run. |
-| Runtime-skill discovery returned no relevant match and you need the host-visible zero-results route | `clawperator bundled-skills list`, then `clawperator-skill-author-by-agent-discovery` | Discovery emits one artifact and chooses exactly one next step. |
-| Discovery returned `proceed_to_recording`, or the route is already well understood | `clawperator-skill-author-by-recording` | One recording-derived skill shape is authored and its self-test surfaces a `SkillResult`. |
-| You explicitly want the low-level manual scaffold instead of the installed guided workflows | `clawperator skills new <skill_id>` | The local scaffold exists and the registry entry was added. |
+| An installed runtime skill already matches the request | `androperator skills for-app`, `androperator skills search`, `androperator skills get` | You have a truthful runtime skill to run. |
+| Runtime-skill discovery returned no relevant match and you need the host-visible zero-results route | `androperator bundled-skills list`, then `androperator-skill-author-by-agent-discovery` | Discovery emits one artifact and chooses exactly one next step. |
+| Discovery returned `proceed_to_recording`, or the route is already well understood | `androperator-skill-author-by-recording` | One recording-derived skill shape is authored and its self-test surfaces a `SkillResult`. |
+| You explicitly want the low-level manual scaffold instead of the installed guided workflows | `androperator skills new <skill_id>` | The local scaffold exists and the registry entry was added. |
 
 Current route rules:
 
 - Start with runtime-skill discovery first.
 - If the user or calling workflow explicitly chose to refresh the installed
-  Clawperator environment itself, use `clawperator-upgrade` before debugging
+  Androperator environment itself, use `androperator-upgrade` before debugging
   component-level skill surfaces.
 - If runtime-skill discovery returns no relevant match, use
-  `clawperator-skill-author-by-agent-discovery` as the zero-results front door.
-- Use `clawperator-skill-author-by-recording` only after discovery returns
+  `androperator-skill-author-by-agent-discovery` as the zero-results front door.
+- Use `androperator-skill-author-by-recording` only after discovery returns
   `proceed_to_recording`, or when the route is already well understood.
-- Use raw `clawperator skills new <skill_id>` scaffolding only when you
+- Use raw `androperator skills new <skill_id>` scaffolding only when you
   explicitly want the low-level manual surface instead of the installed guided
   authoring workflows.
 
@@ -65,21 +65,21 @@ Current route rules:
 When a host-facing agent is trying to decide how to create or maintain a skill,
 use this order:
 
-1. Discover runtime skills first with `clawperator skills for-app` or
-   `clawperator skills search`.
+1. Discover runtime skills first with `androperator skills for-app` or
+   `androperator skills search`.
 2. If runtime-skill discovery returns no relevant match and you need to inspect
    installed guided authoring workflows on the current host, run
-   `clawperator bundled-skills list`.
-3. Start with `clawperator-skill-author-by-agent-discovery` as the zero-results front door.
-4. Use `clawperator-skill-author-by-recording` only after discovery returns
+   `androperator bundled-skills list`.
+3. Start with `androperator-skill-author-by-agent-discovery` as the zero-results front door.
+4. Use `androperator-skill-author-by-recording` only after discovery returns
    `proceed_to_recording`, or when the route is already well understood.
-5. Use `clawperator skills new <skill_id>` only when you explicitly want the
+5. Use `androperator skills new <skill_id>` only when you explicitly want the
    low-level manual scaffold instead of an installed authoring workflow.
 
 Verification pattern:
 
 ```bash
-clawperator bundled-skills list
+androperator bundled-skills list
 ```
 
 Expected signals:
@@ -88,30 +88,19 @@ Expected signals:
 - top-level `count`
 - top-level `installedDir`
 - each listed agent-skill includes `name` and `skillPath`
-- `skills[].name` includes `clawperator-agent-orientation`
-- `skills[].name` includes `clawperator-agent-control-loop`
-- `skills[].name` includes `clawperator-upgrade`
-- `skills[].name` includes `clawperator-skill-author-by-agent-discovery`
-- `skills[].name` includes `clawperator-skill-author-by-recording`
+- `skills[].name` includes `androperator-agent-orientation`
+- `skills[].name` includes `androperator-agent-control-loop`
+- `skills[].name` includes `androperator-upgrade`
+- `skills[].name` includes `androperator-skill-author-by-agent-discovery`
+- `skills[].name` includes `androperator-skill-author-by-recording`
 
-## Skills Repo Entry Points
+## Local Skill Workspace
 
-When you are editing runtime skills in the separate
-[`clawperator-skills`](https://github.com/clawperator/clawperator-skills)
-repository, use these surfaces together:
-
-- [README.md](https://github.com/clawperator/clawperator-skills/blob/main/README.md)
-  for the top-level route to durable docs and local entrypoints
-- [AGENTS.md](https://github.com/clawperator/clawperator-skills/blob/main/AGENTS.md)
-  for the repo-local checklist and recurring review failures
-- `./scripts/test_all.sh` in `clawperator-skills` for off-device `node --test`
-  runs on pure JS helper, parser, normalizer, and output-shaping logic
-- run `./scripts/generate_skill_indexes.sh` in `clawperator-skills` whenever
-  registry-linked metadata changes
-
-Use this page for the durable workflow and contract rules. Use the
-`clawperator-skills` entrypoints for the repo-local checklist and test
-commands while editing that repository.
+Create skills in a workspace you control, with a `skills/skills-registry.json`
+registry and `skills/<skill_id>/` directories. Set
+`ANDROPERATOR_SKILLS_REGISTRY` to its registry path, then run
+`androperator skills new <skill_id>`. No separate skills catalog is required.
+Optional bundled examples will be added separately.
 
 ## Authoring Skills Install
 
@@ -123,61 +112,61 @@ Normal first-time users do not need to install them manually. The recommended
 installer:
 
 ```bash
-curl -fsSL https://clawperator.com/install.sh | bash
+curl -fsSL https://androperator.com/install.sh | bash
 ```
 
 already installs first-party bundled skills automatically.
 
-If you bootstrap the CLI with `npm install -g clawperator` instead, run
-`clawperator install` to perform the same post-bootstrap install flow.
+If you bootstrap the CLI with `npm install -g androperator` instead, run
+`androperator install` to perform the same post-bootstrap install flow.
 
 Current install model:
 
 | Surface | Path | Role |
 | --- | --- | --- |
-| Canonical bundled-skills store | `~/.clawperator/bundled-skills/` | copied first-party bundled skills |
+| Canonical bundled-skills store | `~/.androperator/bundled-skills/` | copied first-party bundled skills |
 | Claude Code discovery dir | `~/.claude/skills/` | symlinks into the canonical store |
 | Codex discovery dir | `$CODEX_HOME/skills/` | symlinks into the canonical store when `CODEX_HOME` is set |
 | Codex default discovery dir | `~/.codex/skills/` | used when `CODEX_HOME` is unset |
 | Generic agents discovery dir | `~/.agents/skills/` | managed real directory copies for generic agent runtimes |
-| Managed-copy marker | `~/.agents/skills/<skill_name>/.clawperator-managed` | ownership marker used before refreshing or removing Clawperator-managed generic agents copies |
+| Managed-copy marker | `~/.agents/skills/<skill_name>/.androperator-managed` | ownership marker used before refreshing or removing Androperator-managed generic agents copies |
 
 Current packaged first-party bundled skills:
 
 | Skill | Role | Boundary |
 | --- | --- | --- |
-| `clawperator-agent-orientation` | first-run orientation | Routes an unfamiliar host agent to the correct Clawperator front door and canonical docs without redefining the contracts. |
-| `clawperator-upgrade` | whole-product upgrade route | Checks `clawperator --version`, verifies Node 24+, npm reachability, and Java 17/21, then uses `npm install -g clawperator@latest`, `clawperator install`, and `clawperator doctor`. Uses `install.sh` only as recovery when the CLI is not reachable or the bootstrap prerequisites need repair. |
-| `clawperator-agent-control-loop` | adaptive execution and explicit orchestrated authoring | Bounded observe, decide, act and verify guidance with optional provider delegation. |
-| `clawperator-skill-author-by-agent-discovery` | zero-results front door | Produces one discovery artifact, chooses exactly one next step, and does not author a durable runtime skill directly. |
-| `clawperator-skill-author-by-recording` | proving workflow | Records a real device flow, authors one skill shape, and runs one self-test that surfaces the emitted `SkillResult`. |
+| `androperator-agent-orientation` | first-run orientation | Routes an unfamiliar host agent to the correct Androperator front door and canonical docs without redefining the contracts. |
+| `androperator-upgrade` | whole-product upgrade route | Checks `androperator --version`, verifies Node 24+, npm reachability, and Java 17/21, then uses `npm install -g androperator@latest`, `androperator install`, and `androperator doctor`. Uses `install.sh` only as recovery when the CLI is not reachable or the bootstrap prerequisites need repair. |
+| `androperator-agent-control-loop` | adaptive execution and explicit orchestrated authoring | Bounded observe, decide, act and verify guidance with optional provider delegation. |
+| `androperator-skill-author-by-agent-discovery` | zero-results front door | Produces one discovery artifact, chooses exactly one next step, and does not author a durable runtime skill directly. |
+| `androperator-skill-author-by-recording` | proving workflow | Records a real device flow, authors one skill shape, and runs one self-test that surfaces the emitted `SkillResult`. |
 
 Maintenance and repair commands:
 
 | Command | Use it when | First-run requirement |
 | --- | --- | --- |
-| `clawperator bundled-skills install` | repair a missing install, or manually bootstrap bundled skills without `install.sh` | no |
-| `clawperator bundled-skills update` | re-copy and re-wire bundled skills after `npm install -g clawperator@latest` or after local conflicts are resolved | no |
-| `clawperator bundled-skills list` | inspect which bundled skills are installed and where their `SKILL.md` files live | no |
+| `androperator bundled-skills install` | repair a missing install, or manually bootstrap bundled skills without `install.sh` | no |
+| `androperator bundled-skills update` | re-copy and re-wire bundled skills after `npm install -g androperator@latest` or after local conflicts are resolved | no |
+| `androperator bundled-skills list` | inspect which bundled skills are installed and where their `SKILL.md` files live | no |
 
 Current command behavior:
 
-- `clawperator bundled-skills install` copies packaged first-party bundled skills
-  into `~/.clawperator/bundled-skills/`, recreates discovery symlinks for
+- `androperator bundled-skills install` copies packaged first-party bundled skills
+  into `~/.androperator/bundled-skills/`, recreates discovery symlinks for
   Claude Code and Codex, and refreshes managed directory copies under
   `~/.agents/skills/`. Discovery directories are resolved to physical paths first;
   aliases of the same directory share one representation. Any group containing
   the generic agents location uses managed copies for all consumers.
-- `clawperator bundled-skills update` runs the same copy-and-wire flow but
+- `androperator bundled-skills update` runs the same copy-and-wire flow but
   reports the result as an update rather than a first install
-- rerunning either command repairs legacy Clawperator-managed symlinks under
+- rerunning either command repairs legacy Androperator-managed symlinks under
   `~/.agents/skills/` by replacing them with managed real directories
-- the installer refuses to overwrite a non-Clawperator entry in any shared
+- the installer refuses to overwrite a non-Androperator entry in any shared
   discovery directory; generic agents directories are considered
-  Clawperator-managed when they contain the valid `.clawperator-managed` marker.
+  Androperator-managed when they contain the valid `.androperator-managed` marker.
   Unmarked directories that exactly match a known first-party bundled skill
   version are moved to a unique timestamped directory under
-  `~/.clawperator/bundled-skills-backups/` before replacement. Modified files,
+  `~/.androperator/bundled-skills-backups/` before replacement. Modified files,
   extra files, and symlinks inside unmarked copies prevent automatic migration.
   When discovery and backup directories are on different filesystems, the updater
   copies and verifies the backup before removing the original. A copy or
@@ -190,16 +179,16 @@ Current command behavior:
   using Doctor's ownership check. A failed check returns
   `BUNDLED_SKILLS_INSTALL_FAILED` with the entry path, representation, and issue;
   completed migrations are included in the error explanation
-- `clawperator bundled-skills list` reports installed skill names and the
+- `androperator bundled-skills list` reports installed skill names and the
   absolute `SKILL.md` path for each installed bundled skill
 - the current packaged install set contains
-  `clawperator-agent-orientation`, `clawperator-upgrade`,
-  `clawperator-skill-author-by-agent-discovery`, and `clawperator-skill-author-by-recording`
+  `androperator-agent-orientation`, `androperator-upgrade`,
+  `androperator-skill-author-by-agent-discovery`, and `androperator-skill-author-by-recording`
 
 Current doctor behavior:
 
-- `clawperator doctor` includes `host.bundled-skills.staleness`
-- if `~/.clawperator/bundled-skills/` does not exist, doctor reports
+- `androperator doctor` includes `host.bundled-skills.staleness`
+- if `~/.androperator/bundled-skills/` does not exist, doctor reports
   `pass` with `Bundled-skills not yet installed.`
 - if the installed bundled-skills state exists but is stale, incomplete, or
   malformed, doctor reports `warn`
@@ -208,31 +197,31 @@ Current doctor behavior:
 - current warning conditions include:
   - `version.txt` is missing, empty, unreadable, or does not match the current
     CLI version
-  - `~/.clawperator/bundled-skills/` exists but is not a directory, or is a
+  - `~/.androperator/bundled-skills/` exists but is not a directory, or is a
     dangling symlink
   - one or more packaged first-party bundled-skill directories are missing
     from the canonical install store
   - Claude Code or Codex discovery symlinks are missing, broken, conflicting,
-    or no longer point at `~/.clawperator/bundled-skills/<skill_name>`
+    or no longer point at `~/.androperator/bundled-skills/<skill_name>`
   - generic agents discovery copies are missing, conflicting, unmarked, stale,
-    or still present as legacy Clawperator-managed symlinks
+    or still present as legacy Androperator-managed symlinks
 - recommended remediation for those `warn` states is
-  `clawperator bundled-skills update`
+  `androperator bundled-skills update`
 - if the install path itself is malformed and cannot be repaired in place,
   remove or rename the conflicting path and then run
-  `clawperator bundled-skills install`
+  `androperator bundled-skills install`
 
 Verification pattern:
 
 ```bash
-clawperator bundled-skills list
-clawperator doctor
+androperator bundled-skills list
+androperator doctor
 ```
 
 Expected signals:
 
 - `bundled-skills list` returns `installedDir` as
-  `~/.clawperator/bundled-skills/` or the resolved absolute equivalent on the
+  `~/.androperator/bundled-skills/` or the resolved absolute equivalent on the
   current host
 - `doctor` includes a check with
   `"id": "host.bundled-skills.staleness"`
@@ -241,7 +230,7 @@ Expected signals:
 
 When you create a skill from a recording, use these current authoring rules:
 
-- use the `clawperator-skill-author-by-recording` skill as the proving workflow after
+- use the `androperator-skill-author-by-recording` skill as the proving workflow after
   discovery returned `proceed_to_recording`, or when the route is already well
   understood
 - start from the user's plain-language goal, not from a final prechosen
@@ -256,15 +245,15 @@ When you create a skill from a recording, use these current authoring rules:
   depends on one user's labels, rooms, or device graph
 
 These are the current documented rules for recording-derived authoring. They
-should stay aligned with the `clawperator-skill-author-by-recording` skill.
+should stay aligned with the `androperator-skill-author-by-recording` skill.
 
 ## Discovery And Recording Boundary
 
 Keep the two front doors distinct:
 
-- `clawperator-skill-author-by-agent-discovery` is the agent-driven zero-results route when
+- `androperator-skill-author-by-agent-discovery` is the agent-driven zero-results route when
   runtime-skill discovery found no clear match
-- `clawperator-skill-author-by-recording` is the proving workflow where the user performs
+- `androperator-skill-author-by-recording` is the proving workflow where the user performs
   the recorded phone flow once recording starts
 - discovery may hand off route notes, mutation notes, classification, and
   setup caveats, but it should not silently turn recording into continued
@@ -284,17 +273,16 @@ Keep the two front doors distinct:
 
 ## Validation And Testing Boundary
 
-Use `clawperator skills validate` as the static gate. Use the
-`clawperator-skills` repo entrypoints for off-device tests and live proof.
+Use `androperator skills validate` as the static gate. Use your workspace tests for off-device logic and a real device for live proof.
 
 Current `validateSkill` coverage:
 
 - checks `skill.json` parity against the registry entry
 - checks required file presence
-- checks `clawperator-skill-type` frontmatter in `SKILL.md`
+- checks `androperator-skill-type` frontmatter in `SKILL.md`
 - validates artifact payloads only under `--dry-run`
 
-Use `clawperator skills validate --all` to check generated-index freshness when
+Use `androperator skills validate --all` to check generated-index freshness when
 the validated repo includes `scripts/generate_skill_indexes.sh`.
 
 Current `validateSkill` non-goals:
@@ -302,25 +290,25 @@ Current `validateSkill` non-goals:
 - it does not replace `./scripts/test_all.sh` for pure off-device JS logic
 - it does not replace live-device proof for selector, navigation, recording,
   compare-baseline, checkpoint, or terminal-verification behavior
-- it does not replace the repo-local checklist in `clawperator-skills/AGENTS.md`
+- it does not replace the repo-local checklist in `local skill workspace/AGENTS.md`
 
 Use this route when hardening a runtime skill:
 
 1. Discover installed guided authoring workflows with
-   `clawperator bundled-skills list` when you need a host-visible
+   `androperator bundled-skills list` when you need a host-visible
    front door and runtime-skill discovery returned no relevant match.
-2. Start with `clawperator-skill-author-by-agent-discovery`, then move to
-   `clawperator-skill-author-by-recording` only after discovery returns
+2. Start with `androperator-skill-author-by-agent-discovery`, then move to
+   `androperator-skill-author-by-recording` only after discovery returns
    `proceed_to_recording`, or when the route is already well understood.
 3. Scaffold only when you want the low-level manual surface:
-   `clawperator skills new <skill_id>`.
-4. Run `clawperator skills validate <skill_id> --dry-run` for skill-local file,
+   `androperator skills new <skill_id>`.
+4. Run `androperator skills validate <skill_id> --dry-run` for skill-local file,
    metadata, and artifact checks.
 5. Regenerate indexes with `./scripts/generate_skill_indexes.sh` in
-   `clawperator-skills` when registry-linked metadata changes.
-6. Run `clawperator skills validate --all --dry-run` after regenerating those
+   `local skill workspace` when registry-linked metadata changes.
+6. Run `androperator skills validate --all --dry-run` after regenerating those
    indexes.
-7. Run `./scripts/test_all.sh` in `clawperator-skills` when the change touches
+7. Run `./scripts/test_all.sh` in `local skill workspace` when the change touches
    pure off-device JS logic.
 8. Prove UI behavior on a real target device or emulator when the change affects
    selectors, navigation, checkpoints, compare baselines, or terminal
@@ -328,7 +316,7 @@ Use this route when hardening a runtime skill:
 
 ## What A New Skill Contains
 
-`clawperator skills new <skill_id>` creates:
+`androperator skills new <skill_id>` creates:
 
 - `SKILL.md`
 - `skill.json`
@@ -401,7 +389,7 @@ Exact failure shape:
 
 ## Recording Context
 
-`clawperator skills new <skill_id> --recording-context <file>` copies the provided export file verbatim to `skills/<skill_id>/recording-context.json`.
+`androperator skills new <skill_id> --recording-context <file>` copies the provided export file verbatim to `skills/<skill_id>/recording-context.json`.
 
 What that file is for:
 
@@ -426,14 +414,14 @@ Practical authoring workflow:
 
 Recommended source:
 
-- use `clawperator recording export --snapshots omit` by default when the goal is agent or human authoring context
+- use `androperator recording export --snapshots omit` by default when the goal is agent or human authoring context
 - use `--snapshots include` only when the author genuinely needs the raw XML snapshots for manual inspection
 - the parsed `recording parse` output is not a substitute for `recording-context.json`
 - `recording parse` is a lossy step log, while `recording export` preserves the raw event timeline and package-transition evidence
 - recording-derived selectors and path hints are starting evidence only; the
   authored skill still needs explicit control flow and truthful terminal
   verification
-- the saved `clawperator skills run` JSON wrapper is the v1 compare input for `clawperator recording compare --result <file>`
+- the saved `androperator skills run` JSON wrapper is the v1 compare input for `androperator recording compare --result <file>`
 - the recording export baseline is reference evidence for compare and authoring, not a runtime input passed to the skill
 
 Recording-derived authoring truthfulness:
@@ -468,45 +456,11 @@ Authoring mode terminology:
 
 Recommended exemplar inspection:
 
-- when you want a concrete structure reference, inspect maintained skills in
-  the sibling skills repo at `../clawperator-skills/skills/`
-- the current best exemplar family to inspect is the Google Home package
-  `com.google.android.apps.chromecast.app`, because it contains both replay and
-  orchestrated authoring lessons from recent real recording-driven work
-- especially useful current examples are:
-- `../clawperator-skills/skills/com.google.android.apps.chromecast.app.get-climate-replay/`
-- `../clawperator-skills/skills/com.google.android.apps.chromecast.app.set-power-replay/`
-- `../clawperator-skills/skills/com.google.android.apps.chromecast.app.set-temperature-replay/`
-- `../clawperator-skills/skills/com.google.android.apps.chromecast.app.control-hvac-orchestrated/`
+Use optional examples under `examples/skills/` when they become available.
+The initial references will demonstrate Codex-only Settings orchestration and
+bounded Jev delegation; importing those examples is deferred beyond the rename.
+Validate each authored skill and prove its UI behavior on its intended device.
 
-Recording-count guidance:
-
-- one recording is the minimum viable authoring handoff
-- two recordings are often better when the first pass looked messy or
-  branch-dependent
-- three recordings are reserved for flows that are especially flaky or whose
-  path differs materially by state
-- do not merge multiple recordings by hand-waving; explain which pass became
-  the retained baseline and why
-
-Durable compare-baseline rule:
-
-- `recording-context.json` is the scaffold-time handoff for an external author or agent
-- once a skill has a retained baseline that should be used for ongoing compare, keep that baseline under `skills/<skill_id>/references/compare-baseline.export.json`
-- keep the compare baseline outside `skill.json.artifacts`
-- do not treat `recording-context.json` as the long-term canonical compare path for a maintained skill
-- for replay and orchestrated sibling skills, both may compare against the same retained export baseline when that baseline captures the intended contract-level route and terminal outcome
-
-Cross-repo baseline sync:
-
-- the Clawperator test fixtures under `apps/node/src/test/fixtures/recording-compare/` must stay in sync with the canonical retained baseline in the skills repo
-- when the canonical baseline changes, update the corresponding Clawperator test fixture in the same PR or the next available PR
-- to verify sync: `CLAWPERATOR_SKILLS_ROOT=../clawperator-skills npm --prefix apps/node run test`
-- this is the current developer-side guard for canonical-baseline provenance
-
-The scaffolded `SKILL.md` includes this section before the `Usage:` block:
-
-```markdown
 ## Recording Context
 
 This skill was scaffolded with recording context at `recording-context.json`.
@@ -531,14 +485,14 @@ Success output with recording context adds the copied path:
     "/abs/path/to/skills/com.example.recording.export-demo/scripts/run.sh",
     "/abs/path/to/skills/com.example.recording.export-demo/recording-context.json"
   ],
-  "next": "Edit `SKILL.md` and `scripts/run.js`, then run `clawperator skills validate <skill_id>`; if this repo uses generated indexes, rerun `scripts/generate_skill_indexes.sh` and `clawperator skills validate --all`"
+  "next": "Edit `SKILL.md` and `scripts/run.js`, then run `androperator skills validate <skill_id>`; if this repo uses generated indexes, rerun `scripts/generate_skill_indexes.sh` and `androperator skills validate --all`"
 }
 ```
 
 Verification:
 
 ```bash
-clawperator skills new com.example.recording.export-demo --recording-context ./recordings/export-demo.export.json
+androperator skills new com.example.recording.export-demo --recording-context ./recordings/export-demo.export.json
 ```
 
 Check:
@@ -561,7 +515,7 @@ The current scaffold writes `SKILL.md` with YAML frontmatter:
 ```markdown
 ---
 name: com.android.settings.capture-overview
-clawperator-skill-type: replay
+androperator-skill-type: replay
 description: |-
   Capture a Settings overview snapshot
 ---
@@ -574,7 +528,7 @@ The scaffold always writes the frontmatter as a YAML block scalar under `descrip
 ```markdown
 ---
 name: com.example.multiline.capture
-clawperator-skill-type: replay
+androperator-skill-type: replay
 description: |-
   Line1
   Line2: has colon
@@ -585,9 +539,9 @@ description: |-
 
 Current reality:
 
-- the scaffold writes `name`, `clawperator-skill-type`, and `description`
+- the scaffold writes `name`, `androperator-skill-type`, and `description`
 - `validateSkill` now reads `SKILL.md` frontmatter enough to require
-  `clawperator-skill-type`
+  `androperator-skill-type`
 - `validateSkill` still does not treat `SKILL.md` as a full schema beyond that
   frontmatter check
 
@@ -604,13 +558,13 @@ Recommended current practice:
 
 - use a `-replay` id suffix for replay-oriented baseline skills
 - use a `-orchestrated` id suffix for agent-controlled skills
-- when a skill follows one of those conventions, keep the frontmatter `clawperator-skill-type` value aligned with the id suffix
+- when a skill follows one of those conventions, keep the frontmatter `androperator-skill-type` value aligned with the id suffix
 
 So the minimum current `SKILL.md` contract is:
 
 - `SKILL.md` exists
 - the registry entry points to it correctly
-- the frontmatter declares `clawperator-skill-type`
+- the frontmatter declares `androperator-skill-type`
 
 The scaffold's usage section is a starting point, not a machine-enforced schema.
 
@@ -619,15 +573,15 @@ program. In that shape:
 
 - `scripts/run.js` should stay a thin harness
 - the harness spawns the configured agent CLI from `skill.json.agent`
-- the runtime agent uses Clawperator as the hand
-- the runtime agent emits exactly one terminal `[Clawperator-Skill-Result]` frame
+- the runtime agent uses Androperator as the hand
+- the runtime agent emits exactly one terminal `[Androperator-Skill-Result]` frame
 - the currently supported orchestrated runtime path uses `codex` as the agent CLI
 - some orchestrated harnesses currently run codex with `danger-full-access` so the runtime agent can reach live adb targets, but that is a harness-specific choice rather than a Node runtime guarantee
 
 <a id="writing-agent-instructions"></a>
 ## Writing Agent Instructions
 
-Write for a capable agent while preserving Clawperator's exact runtime
+Write for a capable agent while preserving Androperator's exact runtime
 contracts. These are authoring recommendations, not additional validator rules.
 
 - Keep the description short: name the capability and the request that should
@@ -751,20 +705,20 @@ Current v1 rule:
 For `node_text_matches`, the runtime currently requires:
 
 - `skillResult.terminalVerification.status === "verified"`
-- the declared `matcher` is rendered from trusted invocation inputs, preferring named flags that match declared input names in kebab-case form such as `unit_name -> --unit-name`, then falling back to trailing positional arguments forwarded by `clawperator skills run` in deterministic lexicographic order of `contract.inputs`; `--` is not required for ordinary positional args, but can be used to keep wrapper-known flags such as `--timeout` or `--expect-contains` from being consumed by the wrapper, and to force tokens that would otherwise be intercepted by the top-level CLI or wrapper to be forwarded positionally; for example, `--help` is intercepted unless it appears after the forwarding `--`, while standalone literals such as `--foo=bar` can still be forwarded for positional binding
+- the declared `matcher` is rendered from trusted invocation inputs, preferring named flags that match declared input names in kebab-case form such as `unit_name -> --unit-name`, then falling back to trailing positional arguments forwarded by `androperator skills run` in deterministic lexicographic order of `contract.inputs`; `--` is not required for ordinary positional args, but can be used to keep wrapper-known flags such as `--timeout` or `--expect-contains` from being consumed by the wrapper, and to force tokens that would otherwise be intercepted by the top-level CLI or wrapper to be forwarded positionally; for example, `--help` is intercepted unless it appears after the forwarding `--`, while standalone literals such as `--foo=bar` can still be forwarded for positional binding
 - `skillResult.inputs` must agree with those trusted invocation inputs for the declared fields
 - the observed terminal verification text matches the declared matcher after placeholder replacement; decorative trailing glyphs or punctuation in the observed text are allowed, but a different value or different leading text is not
 
 This keeps `skill.json` claims tied to the shipped `SkillResult` contract instead
 of inventing a second result channel.
 
-Use `clawperator skills validate <skill_id>` to verify the file paths
+Use `androperator skills validate <skill_id>` to verify the file paths
 and metadata match. After rerunning generated indexes in repos that own them,
-use `clawperator skills validate --all` for the repo-wide freshness
+use `androperator skills validate --all` for the repo-wide freshness
 check:
 
 ```bash
-clawperator skills validate com.example.demo.capture-state
+androperator skills validate com.example.demo.capture-state
 ```
 
 Success response:
@@ -808,10 +762,10 @@ When a skill follows the orchestrated runtime contract, the authoring split is:
 - `SKILL.md` contains the runtime program for the agent
 - `skill.json` carries the trusted `agent` metadata
 - `scripts/run.js` is a thin harness that:
-  - receives the forwarded script args from `clawperator skills run`
-  - reads `CLAWPERATOR_SKILL_PROGRAM`
-  - reads `CLAWPERATOR_SKILL_INPUTS`
-  - reads the resolved agent CLI path from `CLAWPERATOR_SKILL_AGENT_CLI_PATH`
+  - receives the forwarded script args from `androperator skills run`
+  - reads `ANDROPERATOR_SKILL_PROGRAM`
+  - reads `ANDROPERATOR_SKILL_INPUTS`
+  - reads the resolved agent CLI path from `ANDROPERATOR_SKILL_AGENT_CLI_PATH`
   - spawns the configured agent CLI on `SKILL.md`
   - forwards stdout and stderr
 
@@ -832,7 +786,7 @@ real orchestrated skills.
   the runtime agent must satisfy.
 - Use retained recording export plus live device observation to define the
   checkpoints and terminal verification that matter.
-- Require one live Clawperator device command at a time.
+- Require one live Androperator device command at a time.
 - Do not pipeline multiple live device commands for the same run.
 - Make success depend on post-save or post-action verification, not on the
   input value that was requested.
@@ -874,7 +828,7 @@ agent is reading one definition while the wrapper is enforcing another.
 When an orchestrated skill misbehaves, start with the minimum durable evidence
 set before you rewrite the skill:
 
-1. The saved `clawperator skills run` JSON wrapper result for that exact run.
+1. The saved `androperator skills run` JSON wrapper result for that exact run.
 2. The forwarded agent stderr stream from that run.
 3. The emitted `SkillResult.checkpoints`.
 4. Compare output against the retained baseline, if the skill keeps
@@ -898,7 +852,7 @@ If those do not explain the failure, read these next:
 1. The retained per-run `prompt.txt`.
 2. The retained agent stdout and stderr logs, if the harness kept them.
 3. The retained run metadata file, if the harness kept it.
-4. A direct `clawperator snapshot` from the current screen when the run ended
+4. A direct `androperator snapshot` from the current screen when the run ended
    in an unexpected UI state.
 
 Recommended current debugging support for orchestrated harnesses:
@@ -909,7 +863,7 @@ Recommended current debugging support for orchestrated harnesses:
 - keep a small `run-metadata.json` file describing device id, operator
   package, forwarded args, and output paths
 - keep the saved wrapper JSON or an equivalent stderr/stdout capture for the
-  exact `clawperator skills run` invocation you are debugging
+  exact `androperator skills run` invocation you are debugging
 
 This matters because many orchestrated failures are not pure route failures.
 Common failure shapes include:
@@ -925,7 +879,7 @@ The fastest path out of "flying blind" is to preserve the exact runtime prompt,
 agent transcript, and final `SkillResult`, then confirm the visible device
 state with a direct `snapshot`.
 
-`clawperator skills run` injects the orchestrated runtime env vars that the
+`androperator skills run` injects the orchestrated runtime env vars that the
 harness reads. For the exact variable list and defaults, see
 [Environment Variables](../api/environment.md#orchestrated-skill-runtime-env-vars).
 
@@ -968,7 +922,7 @@ success.
 
 Required current rule:
 
-- if an underlying `clawperator exec` call fails, the skill must exit non-zero
+- if an underlying `androperator exec` call fails, the skill must exit non-zero
 - a non-trivial skill must verify the intended terminal app state before it
   reports success
 - success should mean "the requested state was actually observed", not merely
@@ -1034,12 +988,12 @@ Notes on those literals:
 
 - `taskId` is the literal `skillId`
 - `commandId` is `${skillId}-${Date.now()}`
-- the default `operatorPackage` fallback inside the scaffolded script is `com.clawperator.operator`
+- the default `operatorPackage` fallback inside the scaffolded script is `com.androperator.operator`
 - the child process timeout inside scaffolded `run.js` is `120000`
-- the scaffolded script includes local `resolveClawperatorBin()` and
+- the scaffolded script includes local `resolveAndroperatorBin()` and
   `resolveOperatorPackage()` helpers instead of requiring `skills/utils/common.js`
-- the local command resolver honors `CLAWPERATOR_BIN`, checks
-  `CLAWPERATOR_CLI_PATH`, prefers a detected branch-local `apps/node/dist/cli/index.js`
+- the local command resolver honors `ANDROPERATOR_BIN`, checks
+  `ANDROPERATOR_CLI_PATH`, prefers a detected branch-local `apps/node/dist/cli/index.js`
   when present, and may contribute both a command and parsed helper args before
   `exec`
 - the scaffolded `sleep` actions are starter placeholders for app close/open
@@ -1051,16 +1005,16 @@ The scaffolded `run.sh` just forwards to `run.js`.
 Current wrapper expectations:
 
 - device id is passed as the first positional arg when the caller used `skills run --device ...`
-- `CLAWPERATOR_BIN` is available in the environment
-- `CLAWPERATOR_OPERATOR_PACKAGE` is available in the environment
+- `ANDROPERATOR_BIN` is available in the environment
+- `ANDROPERATOR_OPERATOR_PACKAGE` is available in the environment
 
 Important boundary:
 
-- the wrapper injects `CLAWPERATOR_BIN`, and the scaffolded default `run.js`
-  reads it through its local `resolveClawperatorBin()` helper
+- the wrapper injects `ANDROPERATOR_BIN`, and the scaffolded default `run.js`
+  reads it through its local `resolveAndroperatorBin()` helper
 - direct `node run.js ...` execution also prefers a detected branch-local
   `apps/node/dist/cli/index.js` when available, before falling back to the
-  global `clawperator` binary
+  global `androperator` binary
 - the scaffolded script has no repo-level `skills/utils/common.js` dependency
 
 Generated scripts forward child stdout and stderr once, including successful
@@ -1079,7 +1033,7 @@ Current runtime behavior from `apps/node/src/contracts/skillResult.ts` and
 `apps/node/src/domain/skills/runSkill.ts`:
 
 - `runSkill()` recognizes a skill-level framed result marker:
-  `[Clawperator-Skill-Result]`
+  `[Androperator-Skill-Result]`
 - the v1 frame is two lines at the end of stdout:
   - line 1: the marker exactly
   - line 2: one JSON object line
@@ -1150,7 +1104,7 @@ Current typed checkpoint evidence kinds:
 Minimal framed example (note `result` before `status`):
 
 ```text
-[Clawperator-Skill-Result]
+[Androperator-Skill-Result]
 {"contractVersion":"1.0.0","skillId":"com.example.demo.capture-state","result":{"kind":"text","text":"40%"},"status":"success","checkpoints":[{"id":"terminal_state_verified","status":"ok","evidence":{"kind":"text","text":"Discharge to 40%"}}],"terminalVerification":{"status":"verified","expected":{"kind":"text","text":"Discharge to 40%"},"observed":{"kind":"text","text":"Discharge to 40%"}}}
 ```
 
@@ -1168,7 +1122,7 @@ Current authoring rule for new non-trivial skills:
   contract is genuinely single-purpose and obvious
 - if the skill is authored from a retained recording baseline, save a
   `skills run` wrapper for the run you want to compare and feed that
-  wrapper directly to `clawperator recording compare`
+  wrapper directly to `androperator recording compare`
 - design replay and scripted skills for daemon-backed polling, not arbitrary
   time padding:
   - split long recorded routes into the smallest execution calls that preserve
@@ -1178,10 +1132,10 @@ Current authoring rule for new non-trivial skills:
   - stop as soon as the expected UI state is observed
   - keep fixed `sleep` actions only when there is no observable state to poll,
     and document that reason in `SKILL.md`
-  - pass an explicit execution timeout to nested `clawperator exec` calls when
+  - pass an explicit execution timeout to nested `androperator exec` calls when
     a multi-step payload can legitimately run longer than the CLI default
-  - use the wrapper-injected `CLAWPERATOR_BIN` so nested calls run through the
-    same local Clawperator implementation and daemon support as the outer
+  - use the wrapper-injected `ANDROPERATOR_BIN` so nested calls run through the
+    same local Androperator implementation and daemon support as the outer
     `skills run`
 
 Current compare contract for authored skills:
@@ -1210,8 +1164,8 @@ Version handling:
 Validate the registry entry first, then run the scaffolded skill through the wrapper:
 
 ```bash
-clawperator skills validate com.example.demo.capture-state --dry-run
-clawperator skills run com.example.demo.capture-state --device <device_serial>
+androperator skills validate com.example.demo.capture-state --dry-run
+androperator skills run com.example.demo.capture-state --device <device_serial>
 ```
 
 For the run result, verify:
@@ -1245,7 +1199,7 @@ Working definition:
 
 Current authoring expectation:
 
-- if an underlying nested `clawperator exec` call fails, the skill script must
+- if an underlying nested `androperator exec` call fails, the skill script must
   exit non-zero rather than translating the failure into a "successful" skill run
 - if the skill's purpose is to change app state, the skill should verify the
   intended terminal state before reporting success
@@ -1270,7 +1224,7 @@ non-trivial skill. If the skill changes state, prefer proving the state.
 Current compile command:
 
 ```bash
-clawperator skills compile-artifact <skill_id> --artifact <name> [--vars <json>]
+androperator skills compile-artifact <skill_id> --artifact <name> [--vars <json>]
 ```
 
 What `compileArtifact()` does:
@@ -1329,7 +1283,7 @@ So `climate-status` and `climate-status.recipe.json` produce the same default `c
 Run the compiler with JSON output, then validate the result as a normal execution payload:
 
 ```bash
-clawperator skills compile-artifact com.google.android.apps.chromecast.app.get-climate --artifact climate-status --vars '{"CLIMATE_TILE_NAME":"Master"}'
+androperator skills compile-artifact com.google.android.apps.chromecast.app.get-climate --artifact climate-status --vars '{"CLIMATE_TILE_NAME":"Master"}'
 ```
 
 Success shape:
@@ -1358,7 +1312,7 @@ Check these exact fields:
 - `execution.mode` is always set to `"artifact_compiled"` after validation succeeds
 - `commandId` starts with `cmd-`
 - `taskId` starts with `task-`
-- the payload is valid input to `clawperator exec --validate-only`
+- the payload is valid input to `androperator exec --validate-only`
 
 ### Artifact Compilation Error Cases
 
@@ -1428,15 +1382,15 @@ Recovery pattern:
 - `ARTIFACT_NOT_FOUND`: confirm the exact artifact filename in `skill.json` and the registry entry
 - `COMPILE_VARS_PARSE_FAILED`: fix the JSON string passed to `--vars`
 - `COMPILE_VAR_MISSING`: provide every `{{VAR}}` placeholder with a non-empty value
-- `COMPILE_VALIDATION_FAILED`: repair the compiled execution payload until `clawperator exec --validate-only` accepts it
+- `COMPILE_VALIDATION_FAILED`: repair the compiled execution payload until `androperator exec --validate-only` accepts it
 
 ## Validation
 
 Current validation commands:
 
 ```bash
-clawperator skills validate <skill_id> [--dry-run]
-clawperator skills validate --all [--dry-run]
+androperator skills validate <skill_id> [--dry-run]
+androperator skills validate --all [--dry-run]
 ```
 
 Validation checks:
@@ -1484,9 +1438,9 @@ If an artifact-backed skill compiles to an invalid execution shape, `skills vali
 Use:
 
 ```bash
-clawperator skills validate com.example.demo.capture-state
-clawperator skills validate com.example.demo.capture-state --dry-run
-clawperator skills validate --all --dry-run
+androperator skills validate com.example.demo.capture-state
+androperator skills validate com.example.demo.capture-state --dry-run
+androperator skills validate --all --dry-run
 ```
 
 Check:
@@ -1501,7 +1455,7 @@ Check:
 Create a new skill:
 
 ```bash
-clawperator skills new com.example.app.do-thing --summary "Do one deterministic workflow"
+androperator skills new com.example.app.do-thing --summary "Do one deterministic workflow"
 ```
 
 Success response shape:
@@ -1525,7 +1479,7 @@ Exact defaults and follow-up behavior:
 
 - if `--summary` is omitted, the scaffold writes `TODO: describe <skill_id>`
 - blank or whitespace-only summaries are treated as omitted
-- `cmdSkillsNew()` returns `next: "Edit \`SKILL.md\` and \`scripts/run.js\`, then run \`clawperator skills validate <skill_id>\`; if this repo uses generated indexes, rerun \`scripts/generate_skill_indexes.sh\` and \`clawperator skills validate --all\`"`
+- `cmdSkillsNew()` returns `next: "Edit \`SKILL.md\` and \`scripts/run.js\`, then run \`androperator skills validate <skill_id>\`; if this repo uses generated indexes, rerun \`scripts/generate_skill_indexes.sh\` and \`androperator skills validate --all\`"`
 
 ### Scaffolding Error Cases
 
@@ -1561,11 +1515,11 @@ Registry write or filesystem write failures surface as `SKILLS_SCAFFOLD_FAILED`.
 Run:
 
 ```bash
-clawperator skills new com.example.app.do-thing --summary "Do one deterministic workflow"
-clawperator skills get com.example.app.do-thing
-clawperator skills validate com.example.app.do-thing
+androperator skills new com.example.app.do-thing --summary "Do one deterministic workflow"
+androperator skills get com.example.app.do-thing
+androperator skills validate com.example.app.do-thing
 ./scripts/generate_skill_indexes.sh
-clawperator skills validate --all
+androperator skills validate --all
 ```
 
 Confirm:

@@ -42,7 +42,7 @@ itself. Each terminal attempt requires a new directory.
 
 MCP exposes only domain-created manifest paths and never accepts caller output
 paths. Managed bundles default to the evidence bundle root under the user's
-Clawperator state directory. Node tests inject their own root, process/capture
+Androperator state directory. Node tests inject their own root, process/capture
 providers, metadata readers, clock, and file operations. There are no uploads or report generation in the still-capture path.
 
 ## Device classification
@@ -156,7 +156,7 @@ These follow-ups were not re-tested on a live sleeping or locked device.
 
 ## Writable evidence roots and video ownership
 
-`domain/evidence/storage.ts` resolves `CLAWPERATOR_EVIDENCE_DIR` once before
+`domain/evidence/storage.ts` resolves `ANDROPERATOR_EVIDENCE_DIR` once before
 asynchronous request work. Managed captures share its `bundles/` convention;
 legacy still-test `baseDir` injection remains a bundle directory. Video workers
 and manifest-path lifecycle calls use persisted absolute paths and do not
@@ -166,8 +166,8 @@ check is not an existing surface; MCP is the managed lookup owner.
 
 Video ownership uses exclusive file creation in a fixed per-OS-user directory,
 independent of home/environment overrides and the chosen bundle root. On POSIX
-this is `/tmp/clawperator-evidence-locks-<uid>`; Windows uses the OS account's
-`AppData/Local/Temp/clawperator-evidence-locks`, derived from `os.userInfo()`.
+this is `/tmp/androperator-evidence-locks-<uid>`; Windows uses the OS account's
+`AppData/Local/Temp/androperator-evidence-locks`, derived from `os.userInfo()`.
 POSIX derives ownership directly from the process effective numeric UID, so
 container users do not need an account database entry. It rejects symlinks,
 foreign owners and group/other permissions on that directory. The directory is

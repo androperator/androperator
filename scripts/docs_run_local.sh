@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # docs_run_local.sh
-# Build (if needed) and run the Clawperator documentation site locally on port 8000.
+# Build (if needed) and run the Androperator documentation site locally on port 8000.
 # Uses MkDocs dev server for live reload.
 
 set -euo pipefail
@@ -12,7 +12,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 DOCS_DIR="$REPO_ROOT/sites/docs"
 VENV_DIR="$DOCS_DIR/.venv"
 
-echo "--- Running Clawperator Documentation Site Locally ---"
+echo "--- Running Androperator Documentation Site Locally ---"
 echo "Repository Root: $REPO_ROOT"
 echo "Docs Directory: $DOCS_DIR"
 

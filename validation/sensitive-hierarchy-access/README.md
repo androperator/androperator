@@ -3,7 +3,7 @@
 Run from the repository root after building Node and installing the matching APK:
 
 ```sh
-python3 validation/sensitive-hierarchy-access/run.py --device <device_serial> --operator-package com.clawperator.operator.dev --out /tmp/sensitive-hierarchy-proof
+python3 validation/sensitive-hierarchy-access/run.py --device <device_serial> --operator-package com.androperator.operator.dev --out /tmp/sensitive-hierarchy-proof
 ```
 
 Use an unlocked Android 15/API 35 emulator with Google APIs image revision 9,
@@ -20,7 +20,7 @@ Use the checked-in setup helper before each variant:
 
 ```sh
 python3 validation/sensitive-hierarchy-access/prepare_operator.py \
-  --device <device_serial> --operator-package com.clawperator.operator.dev \
+  --device <device_serial> --operator-package com.androperator.operator.dev \
   --apk apps/android/app/build/outputs/apk/debug/app-debug.apk --out /tmp/hierarchy-debug-setup
 ```
 

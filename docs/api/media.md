@@ -1,11 +1,11 @@
 # Media sessions
 
 ```sh
-clawperator media list
-clawperator media status --session <id>
-clawperator media observe --session <id> --duration-ms 10000
-clawperator media pause --session <id> --wait-timeout-ms 2000
-clawperator media play --session <id> --wait-timeout-ms 2000
+androperator media list
+androperator media status --session <id>
+androperator media observe --session <id> --duration-ms 10000
+androperator media pause --session <id> --wait-timeout-ms 2000
+androperator media play --session <id> --wait-timeout-ms 2000
 ```
 
 Discover active Android sessions before targeting one. `--app <package>` may
@@ -73,7 +73,7 @@ MEDIA_SESSION_AMBIGUOUS. Never replay a mutation after uncertain transport.
 ## Seeking
 
 ```sh
-clawperator media seek --session <id> --position-ms 20000 --wait-timeout-ms 2000 --position-tolerance-ms 100
+androperator media seek --session <id> --position-ms 20000 --wait-timeout-ms 2000 --position-tolerance-ms 100
 ```
 
 `media_seek` requires exactly one `mediaSessionId` or `applicationId`, and

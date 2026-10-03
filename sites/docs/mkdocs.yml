@@ -1,7 +1,7 @@
-site_name: Clawperator
+site_name: Androperator
 site_description: Deterministic actuator tool for device automation
 docs_dir: .build
-site_url: https://docs.clawperator.com/
+site_url: https://docs.androperator.com/
 strict: true
 
 theme:
@@ -15,7 +15,7 @@ plugins:
       redirect_maps:
         'getting-started/first-time-setup.md': 'setup.md'
         'getting-started/index.md': 'setup.md'
-        'getting-started/running-clawperator-on-android.md': 'setup.md'
+        'getting-started/running-androperator-on-android.md': 'setup.md'
         'getting-started/openclaw-first-run.md': 'setup.md'
         'getting-started/project-overview.md': 'api/overview.md'
         'getting-started/terminology.md': 'api/overview.md'
@@ -49,6 +49,7 @@ plugins:
         'skills/device-prep-and-runtime-tips.md': 'skills/runtime.md'
 
 nav:
+  - Migration to 1.0.0: migration-to-androperator.md
   - Docs Home: index.md
   - Setup: setup.md
   - Host Agent Orientation: host-agents.md

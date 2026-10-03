@@ -31,7 +31,7 @@ describe("CLI help", () => {
   it("shows operator setup help for operator setup --help", async () => {
     const { stdout, code } = await runCli(["operator", "setup", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator operator setup/);
+    assert.match(stdout, /androperator operator setup/);
     assert.match(stdout, /--apk <path>/);
     assert.doesNotMatch(stdout, /skills compile-artifact/);
   });
@@ -39,15 +39,15 @@ describe("CLI help", () => {
   it("shows operator setup help for operator --help", async () => {
     const { stdout, code } = await runCli(["operator", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator operator setup/);
+    assert.match(stdout, /androperator operator setup/);
     assert.match(stdout, /--apk <path>/);
-    assert.match(stdout, /clawperator operator remediate/);
+    assert.match(stdout, /androperator operator remediate/);
   });
 
   it("shows operator remediate help for operator remediate --help", async () => {
     const { stdout, code } = await runCli(["operator", "remediate", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator operator remediate/);
+    assert.match(stdout, /androperator operator remediate/);
     assert.match(stdout, /doctor single-device by contract/);
     assert.match(stdout, /adb-unready devices are still reported/);
   });
@@ -55,14 +55,14 @@ describe("CLI help", () => {
   it("shows operator setup guidance for setup --help", async () => {
     const { stdout, code } = await runCli(["setup", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator operator setup/);
+    assert.match(stdout, /androperator operator setup/);
     assert.match(stdout, /--apk <path>/);
   });
 
   it("shows installer help for install --help", async () => {
     const { stdout, code } = await runCli(["install", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator install/);
+    assert.match(stdout, /androperator install/);
     assert.match(stdout, /canonical post-bootstrap install route/);
     assert.match(stdout, /operator remediate, skills install, bundled-skills install, and host setup/);
   });
@@ -78,23 +78,23 @@ describe("CLI help", () => {
   it("shows operator setup help for operator install --help alias", async () => {
     const { stdout, code } = await runCli(["operator", "install", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator operator setup/);
+    assert.match(stdout, /androperator operator setup/);
     assert.match(stdout, /operator install remains a compatibility alias/);
   });
 
   it("falls back to top-level help for operator unknown --help", async () => {
     const { stdout, code } = await runCli(["operator", "unknown", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /Clawperator CLI/);
+    assert.match(stdout, /Androperator CLI/);
     assert.match(stdout, /Commands:/);
-    assert.doesNotMatch(stdout, /^clawperator operator setup$/m);
+    assert.doesNotMatch(stdout, /^androperator operator setup$/m);
   });
 
-  it("returns structured guidance for bare clawperator setup", async () => {
+  it("returns structured guidance for bare androperator setup", async () => {
     const { stdout } = await runCli(["setup"]);
     const obj = JSON.parse(stdout);
     assert.strictEqual(obj.code, "USAGE");
-    assert.match(obj.message, /clawperator operator setup/);
+    assert.match(obj.message, /androperator operator setup/);
     assert.ok(obj.canonical);
     assert.match(obj.canonical, /operator setup/);
   });
@@ -126,7 +126,7 @@ describe("CLI help", () => {
     // Nested observe is removed; --help with an unknown command falls back to top-level help.
     const { stdout, code } = await runCli(["observe", "snapshot", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /Clawperator CLI/);
+    assert.match(stdout, /Androperator CLI/);
     assert.match(stdout, /Commands:/);
   });
 
@@ -134,7 +134,7 @@ describe("CLI help", () => {
     // Nested observe is removed; --help with an unknown command falls back to top-level help.
     const { stdout, code } = await runCli(["observe", "screenshot", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /Clawperator CLI/);
+    assert.match(stdout, /Androperator CLI/);
     assert.match(stdout, /Commands:/);
   });
 
@@ -142,15 +142,15 @@ describe("CLI help", () => {
     const { stdout, code } = await runCli(["--help"]);
     assert.strictEqual(code, 0);
     assert.match(stdout, /exec <json-or-file> \[--validate-only\]/);
-    assert.match(stdout, /https:\/\/docs\.clawperator\.com\/llms\.txt/);
-    assert.match(stdout, /https:\/\/docs\.clawperator\.com\/llms-full\.txt/);
-    assert.match(stdout, /https:\/\/docs\.clawperator\.com\/host-agents\//);
-    assert.match(stdout, /clawperator-agent-orientation/);
-    assert.match(stdout, /clawperator-upgrade/);
+    assert.match(stdout, /https:\/\/docs\.androperator\.com\/llms\.txt/);
+    assert.match(stdout, /https:\/\/docs\.androperator\.com\/llms-full\.txt/);
+    assert.match(stdout, /https:\/\/docs\.androperator\.com\/host-agents\//);
+    assert.match(stdout, /androperator-agent-orientation/);
+    assert.match(stdout, /androperator-upgrade/);
     assert.match(stdout, /skills for-app <package_id>/);
     assert.match(stdout, /bundled-skills list/);
-    assert.match(stdout, /clawperator-skill-author-by-agent-discovery/);
-    assert.match(stdout, /clawperator-skill-author-by-recording/);
+    assert.match(stdout, /androperator-skill-author-by-agent-discovery/);
+    assert.match(stdout, /androperator-skill-author-by-recording/);
     assert.match(stdout, /mcp serve/);
   });
 
@@ -158,13 +158,13 @@ describe("CLI help", () => {
     const { stdout, code } = await runCli(["exec", "--help"]);
     assert.strictEqual(code, 0);
     assert.match(stdout, /bundled-skills list/);
-    assert.match(stdout, /clawperator-agent-orientation/);
+    assert.match(stdout, /androperator-agent-orientation/);
   });
 
   it("shows top-level help for help mcp serve", async () => {
     const { stdout, code } = await runCli(["help", "mcp", "serve"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /Clawperator CLI/);
+    assert.match(stdout, /Androperator CLI/);
     assert.match(stdout, /mcp serve/);
   });
 
@@ -173,7 +173,7 @@ describe("CLI help", () => {
     assert.strictEqual(code, 0);
     assert.match(stdout, /stdio MCP server/);
     assert.match(stdout, /skills for-app <package_id>/);
-    assert.match(stdout, /https:\/\/docs\.clawperator\.com\/host-agents\//);
+    assert.match(stdout, /https:\/\/docs\.androperator\.com\/host-agents\//);
   });
 
   it("prints the version for --version before mcp serve", async () => {
@@ -183,7 +183,7 @@ describe("CLI help", () => {
   });
 
   it("returns mcp serve usage for global flags before mcp serve", async () => {
-    const { stdout, code } = await runCli(["--operator-package", "com.clawperator.operator.dev", "mcp", "serve"]);
+    const { stdout, code } = await runCli(["--operator-package", "com.androperator.operator.dev", "mcp", "serve"]);
     assert.strictEqual(code, 0);
     assert.match(stdout, /mcp serve is a stdio transport/);
   });
@@ -207,7 +207,7 @@ describe("CLI help", () => {
   it("shows skills sync help instead of top-level help", async () => {
     const { stdout, code } = await runCli(["skills", "sync", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator skills sync/);
+    assert.match(stdout, /androperator skills sync/);
     assert.match(stdout, /--ref <git-ref>/);
     assert.doesNotMatch(stdout, /action open-app/);
   });
@@ -215,7 +215,7 @@ describe("CLI help", () => {
   it("shows skills validate help instead of top-level help", async () => {
     const { stdout, code } = await runCli(["skills", "validate", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator skills validate/);
+    assert.match(stdout, /androperator skills validate/);
     assert.match(stdout, /skills validate --all/);
     assert.match(stdout, /integrity check, not a live device test/i);
     assert.doesNotMatch(stdout, /action open-app/);
@@ -224,7 +224,7 @@ describe("CLI help", () => {
   it("shows skills compile-artifact help instead of top-level help", async () => {
     const { stdout, code } = await runCli(["skills", "compile-artifact", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator skills compile-artifact/);
+    assert.match(stdout, /androperator skills compile-artifact/);
     assert.match(stdout, /--artifact <name>/);
     assert.match(stdout, /--skill-id <id>/);
     assert.match(stdout, /--vars <json>/);
@@ -234,7 +234,7 @@ describe("CLI help", () => {
   it("shows skills run help instead of top-level help", async () => {
     const { stdout, code } = await runCli(["skills", "run", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator skills run/);
+    assert.match(stdout, /androperator skills run/);
     assert.match(stdout, /skills for-app/);
     assert.match(stdout, /skills search/);
     assert.match(stdout, /skills get/);
@@ -250,26 +250,26 @@ describe("CLI help", () => {
     assert.match(stdout, /skills for-app <package_id>/);
     assert.match(stdout, /skills search --keyword <text>/);
     assert.match(stdout, /skills get <skill_id>/);
-    assert.match(stdout, /clawperator-agent-orientation/);
-    assert.match(stdout, /clawperator-upgrade/);
+    assert.match(stdout, /androperator-agent-orientation/);
+    assert.match(stdout, /androperator-upgrade/);
     assert.match(stdout, /bundled-skills list/);
-    assert.match(stdout, /clawperator-skill-author-by-agent-discovery/);
-    assert.match(stdout, /clawperator-skill-author-by-recording/);
-    assert.match(stdout, /clawperator mcp serve/);
-    assert.match(stdout, /https:\/\/docs\.clawperator\.com\/host-agents\//);
+    assert.match(stdout, /androperator-skill-author-by-agent-discovery/);
+    assert.match(stdout, /androperator-skill-author-by-recording/);
+    assert.match(stdout, /androperator mcp serve/);
+    assert.match(stdout, /https:\/\/docs\.androperator\.com\/host-agents\//);
   });
 
   it("shows bundled-skills discovery guidance", async () => {
     const { stdout, code } = await runCli(["bundled-skills", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator bundled-skills/);
+    assert.match(stdout, /androperator bundled-skills/);
     assert.match(stdout, /bundled-skills list/);
-    assert.match(stdout, /clawperator-agent-orientation/);
-    assert.match(stdout, /clawperator-upgrade/);
-    assert.match(stdout, /clawperator-skill-author-by-agent-discovery/);
-    assert.match(stdout, /clawperator-skill-author-by-recording/);
-    assert.match(stdout, /Runtime skills still live under 'clawperator skills/);
-    assert.match(stdout, /https:\/\/docs\.clawperator\.com\/skills\/authoring\//);
+    assert.match(stdout, /androperator-agent-orientation/);
+    assert.match(stdout, /androperator-upgrade/);
+    assert.match(stdout, /androperator-skill-author-by-agent-discovery/);
+    assert.match(stdout, /androperator-skill-author-by-recording/);
+    assert.match(stdout, /Runtime skills still live under 'androperator skills/);
+    assert.match(stdout, /https:\/\/docs\.androperator\.com\/skills\/authoring\//);
   });
 
   it("rejects the removed agent-skills command surface", async () => {
@@ -291,17 +291,17 @@ describe("CLI help", () => {
   it("shows manual-scaffold boundary in skills new help", async () => {
     const { stdout, code } = await runCli(["skills", "new", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator skills new/);
+    assert.match(stdout, /androperator skills new/);
     assert.match(stdout, /low-level manual scaffold/i);
     assert.match(stdout, /bundled-skills list/);
-    assert.match(stdout, /clawperator-skill-author-by-agent-discovery/);
-    assert.match(stdout, /clawperator-skill-author-by-recording/);
+    assert.match(stdout, /androperator-skill-author-by-agent-discovery/);
+    assert.match(stdout, /androperator-skill-author-by-recording/);
   });
 
   it("shows host setup help", async () => {
     const { stdout, code } = await runCli(["host", "setup", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator host/);
+    assert.match(stdout, /androperator host/);
     assert.match(stdout, /host setup/);
     assert.match(stdout, /install-state JSON/);
     assert.match(stdout, /shared-agent bridge/);
@@ -311,7 +311,7 @@ describe("CLI help", () => {
     const { stdout } = await runCli(["host", "materialize-artifacts"]);
     const obj = JSON.parse(stdout);
     assert.strictEqual(obj.code, "USAGE");
-    assert.match(obj.message, /clawperator host setup/);
+    assert.match(obj.message, /androperator host setup/);
   });
 
   it("returns USAGE when host setup --installed-at is missing its value", async () => {
@@ -332,7 +332,7 @@ describe("CLI help", () => {
     // inspect ui is removed; --help with an unknown command falls back to top-level help.
     const { stdout, code } = await runCli(["inspect", "ui", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /Clawperator CLI/);
+    assert.match(stdout, /Androperator CLI/);
     assert.match(stdout, /Commands:/);
   });
 
@@ -515,7 +515,7 @@ describe("CLI help", () => {
   });
 
   it("recording export accepts a dash-prefixed input path", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-recording-dash-input-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-recording-dash-input-"));
     const inputFile = join(tempRoot, "-context.ndjson");
     await mkdir(tempRoot, { recursive: true });
     await writeFile(
@@ -526,7 +526,7 @@ describe("CLI help", () => {
           schemaVersion: 1,
           sessionId: "dash-input",
           startedAt: 1710000000000,
-          operatorPackage: "com.clawperator.operator.dev",
+          operatorPackage: "com.androperator.operator.dev",
         }),
         JSON.stringify({
           ts: 1710000000100,
@@ -555,7 +555,7 @@ describe("CLI help", () => {
   });
 
   it("recording export accepts an escaped double-dash input path", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-recording-double-dash-input-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-recording-double-dash-input-"));
     const inputFile = join(tempRoot, "--context.ndjson");
     await mkdir(tempRoot, { recursive: true });
     await writeFile(
@@ -566,7 +566,7 @@ describe("CLI help", () => {
           schemaVersion: 1,
           sessionId: "double-dash-input",
           startedAt: 1710000000000,
-          operatorPackage: "com.clawperator.operator.dev",
+          operatorPackage: "com.androperator.operator.dev",
         }),
         JSON.stringify({
           ts: 1710000000100,
@@ -595,7 +595,7 @@ describe("CLI help", () => {
   });
 
   it("still rejects unknown flags after an escaped double-dash input path", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-recording-double-dash-input-unknown-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-recording-double-dash-input-unknown-"));
     const inputFile = join(tempRoot, "--context.ndjson");
     await mkdir(tempRoot, { recursive: true });
     await writeFile(
@@ -606,7 +606,7 @@ describe("CLI help", () => {
           schemaVersion: 1,
           sessionId: "double-dash-input",
           startedAt: 1710000000000,
-          operatorPackage: "com.clawperator.operator.dev",
+          operatorPackage: "com.androperator.operator.dev",
         }),
         JSON.stringify({
           ts: 1710000000100,
@@ -641,7 +641,7 @@ describe("CLI help", () => {
 });
 
 describe("operator setup CLI output", () => {
-  const NONEXISTENT_APK = "/nonexistent/clawperator-test-operator.apk";
+  const NONEXISTENT_APK = "/nonexistent/androperator-test-operator.apk";
 
   it("returns OPERATOR_APK_NOT_FOUND with exit code 1 when APK path does not exist", async () => {
     const { stdout, code } = await runCli(["operator", "setup", "--apk", NONEXISTENT_APK]);
@@ -661,38 +661,38 @@ describe("operator setup CLI output", () => {
     const { stdout } = await runCli([
       "operator", "setup",
       "--apk", NONEXISTENT_APK,
-      "--operator-package", "com.clawperator.operator.dev",
+      "--operator-package", "com.androperator.operator.dev",
     ]);
     const obj = JSON.parse(stdout);
-    assert.strictEqual(obj.operatorPackage, "com.clawperator.operator.dev");
+    assert.strictEqual(obj.operatorPackage, "com.androperator.operator.dev");
   });
 
   it("accepts --operator-package as alias for --operator-package", async () => {
     const { stdout } = await runCli([
       "operator", "setup",
       "--apk", NONEXISTENT_APK,
-      "--operator-package", "com.clawperator.operator.dev",
+      "--operator-package", "com.androperator.operator.dev",
     ]);
     const obj = JSON.parse(stdout);
-    assert.strictEqual(obj.operatorPackage, "com.clawperator.operator.dev");
+    assert.strictEqual(obj.operatorPackage, "com.androperator.operator.dev");
   });
 
-  it("uses CLAWPERATOR_OPERATOR_PACKAGE env var when --operator-package is omitted", async () => {
+  it("uses ANDROPERATOR_OPERATOR_PACKAGE env var when --operator-package is omitted", async () => {
     const { stdout } = await runCli(
       ["operator", "setup", "--apk", NONEXISTENT_APK],
-      { CLAWPERATOR_OPERATOR_PACKAGE: "com.clawperator.operator.dev" }
+      { ANDROPERATOR_OPERATOR_PACKAGE: "com.androperator.operator.dev" }
     );
     const obj = JSON.parse(stdout);
-    assert.strictEqual(obj.operatorPackage, "com.clawperator.operator.dev");
+    assert.strictEqual(obj.operatorPackage, "com.androperator.operator.dev");
   });
 
-  it("treats blank CLAWPERATOR_OPERATOR_PACKAGE as unset for operator setup", async () => {
+  it("treats blank ANDROPERATOR_OPERATOR_PACKAGE as unset for operator setup", async () => {
     const { stdout } = await runCli(
       ["operator", "setup", "--apk", NONEXISTENT_APK],
-      { CLAWPERATOR_OPERATOR_PACKAGE: "   " }
+      { ANDROPERATOR_OPERATOR_PACKAGE: "   " }
     );
     const obj = JSON.parse(stdout);
-    assert.strictEqual(obj.operatorPackage, "com.clawperator.operator");
+    assert.strictEqual(obj.operatorPackage, "com.androperator.operator");
   });
 
   it("operator install alias still returns OPERATOR_APK_NOT_FOUND", async () => {
@@ -738,11 +738,11 @@ describe("promoted flat commands - help and missing-arg errors", () => {
   it("snapshot --help shows snapshot help", async () => {
     const { stdout, code } = await runCli(["snapshot", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator snapshot/);
+    assert.match(stdout, /androperator snapshot/);
     assert.match(stdout, /--output <json\|pretty>\s+Output format \(default: json\)/);
     assert.match(stdout, /--timeout <ms>/);
     assert.match(stdout, /bundled-skills list/);
-    assert.match(stdout, /clawperator-agent-orientation/);
+    assert.match(stdout, /androperator-agent-orientation/);
     assert.doesNotMatch(stdout, /--json\s+JSON output/);
     assert.doesNotMatch(stdout, /--file/);
   });
@@ -750,7 +750,7 @@ describe("promoted flat commands - help and missing-arg errors", () => {
   it("screenshot --help shows screenshot help", async () => {
     const { stdout, code } = await runCli(["screenshot", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator screenshot/);
+    assert.match(stdout, /androperator screenshot/);
     assert.match(stdout, /--path <file>/);
     assert.match(stdout, /Also accepted as: --device-id, --file/);
   });
@@ -758,7 +758,7 @@ describe("promoted flat commands - help and missing-arg errors", () => {
   it("click --help shows click help", async () => {
     const { stdout, code } = await runCli(["click", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator click/);
+    assert.match(stdout, /androperator click/);
     assert.match(stdout, /--selector/);
     assert.match(stdout, /--output <json\|pretty>\s+Output format \(default: json\)/);
     assert.doesNotMatch(stdout, /--json\s+JSON output/);
@@ -978,7 +978,7 @@ describe("promoted flat commands - help and missing-arg errors", () => {
   it("open --help shows open help", async () => {
     const { stdout, code } = await runCli(["open", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator open/);
+    assert.match(stdout, /androperator open/);
     assert.match(stdout, /package-id/);
     assert.match(stdout, /--navigation-timeout-ms/);
     assert.match(stdout, /--skip-navigation-wait/);
@@ -997,7 +997,7 @@ describe("promoted flat commands - help and missing-arg errors", () => {
   it("press --help shows press help", async () => {
     const { stdout, code } = await runCli(["press", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator press/);
+    assert.match(stdout, /androperator press/);
     assert.match(stdout, /back/);
   });
 
@@ -1013,7 +1013,7 @@ describe("promoted flat commands - help and missing-arg errors", () => {
   it("scroll --help shows scroll help", async () => {
     const { stdout, code } = await runCli(["scroll", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator scroll/);
+    assert.match(stdout, /androperator scroll/);
     assert.match(stdout, /down/);
   });
 

@@ -13,7 +13,7 @@ Define what must be true before a skill run is reliable: device readiness, wrapp
 
 ## Device Prep Checklist
 
-Before `clawperator skills run`, the target should already satisfy the normal Clawperator readiness path:
+Before `androperator skills run`, the target should already satisfy the normal Androperator readiness path:
 
 1. device visible to adb
 2. expected Operator package installed
@@ -24,7 +24,7 @@ Before `clawperator skills run`, the target should already satisfy the normal Cl
 Recommended verification:
 
 ```bash
-clawperator doctor --device <device_serial>
+androperator doctor --device <device_serial>
 ```
 
 Treat the device as ready only when:
@@ -35,13 +35,13 @@ Treat the device as ready only when:
 
 Verification pattern:
 
-- run `clawperator doctor --device <device_serial> --operator-package <package>`
+- run `androperator doctor --device <device_serial> --operator-package <package>`
 - confirm `report.operatorPackage` matches the package you plan to use inside the skill
 - confirm the doctor report is for the same `deviceId` you plan to pass to `skills run`
 
 High-level wrapper enforcement now matches that readiness contract:
 
-- `clawperator skills run` resolves the target tuple, checks the requested Operator package first, and when the target is asleep it makes a bounded host-side wake attempt before failing with `DEVICE_NOT_INTERACTIVE`
+- `androperator skills run` resolves the target tuple, checks the requested Operator package first, and when the target is asleep it makes a bounded host-side wake attempt before failing with `DEVICE_NOT_INTERACTIVE`
 - `POST /skills/:skillId/run` in serve performs the same pre-spawn readiness preparation
 
 Current bounded wake behavior:
@@ -62,7 +62,7 @@ Wrapper-level non-interactive failure shape:
 }
 ```
 
-Use `clawperator doctor` when you need the structured evidence fields
+Use `androperator doctor` when you need the structured evidence fields
 (`screenOn`, `deviceLocked`, `userUnlocked`) that explain why the device is not
 ready.
 
@@ -74,40 +74,40 @@ The wrapper injects these environment variables:
 
 | Variable | Meaning |
 | --- | --- |
-| `CLAWPERATOR_BIN` | command the skill should use when it needs to invoke Clawperator |
-| `CLAWPERATOR_OPERATOR_PACKAGE` | Operator package the skill should target on its internal CLI calls |
-| `CLAWPERATOR_DEVICE_ID` | explicit device selection only; present only when the caller passed `--device` or serve `deviceId` |
+| `ANDROPERATOR_BIN` | command the skill should use when it needs to invoke Androperator |
+| `ANDROPERATOR_OPERATOR_PACKAGE` | Operator package the skill should target on its internal CLI calls |
+| `ANDROPERATOR_DEVICE_ID` | explicit device selection only; present only when the caller passed `--device` or serve `deviceId` |
 
 Resolution behavior:
 
-- `CLAWPERATOR_BIN` uses explicit env override first, then a local sibling build, then global `clawperator`
-- `CLAWPERATOR_OPERATOR_PACKAGE` uses the explicit wrapper flag first, then environment, then `com.clawperator.operator`
+- `ANDROPERATOR_BIN` uses explicit env override first, then a local sibling build, then global `androperator`
+- `ANDROPERATOR_OPERATOR_PACKAGE` uses the explicit wrapper flag first, then environment, then `com.androperator.operator`
 
-The wrapper preserves the rest of `process.env` when spawning the child process, but it explicitly clears inherited `CLAWPERATOR_DEVICE_ID` unless the caller passed an explicit device selection.
+The wrapper preserves the rest of `process.env` when spawning the child process, but it explicitly clears inherited `ANDROPERATOR_DEVICE_ID` unless the caller passed an explicit device selection.
 
-The exact `CLAWPERATOR_BIN` resolution order from `resolveSkillBin()` is:
+The exact `ANDROPERATOR_BIN` resolution order from `resolveSkillBin()` is:
 
-1. non-empty `CLAWPERATOR_BIN`
+1. non-empty `ANDROPERATOR_BIN`
 2. branch-local sibling build at `apps/node/dist/cli/index.js` when it exists
-3. global `clawperator`
+3. global `androperator`
 
-The exact `CLAWPERATOR_OPERATOR_PACKAGE` resolution order from `cmdSkillsRun()` plus `resolveOperatorPackage()` is:
+The exact `ANDROPERATOR_OPERATOR_PACKAGE` resolution order from `cmdSkillsRun()` plus `resolveOperatorPackage()` is:
 
-1. `--operator-package <pkg>` on `clawperator skills run`
-2. non-empty `CLAWPERATOR_OPERATOR_PACKAGE`
-3. `com.clawperator.operator`
+1. `--operator-package <pkg>` on `androperator skills run`
+2. non-empty `ANDROPERATOR_OPERATOR_PACKAGE`
+3. `com.androperator.operator`
 
 Verification pattern:
 
 ```bash
-CLAWPERATOR_OPERATOR_PACKAGE=com.clawperator.operator.dev \
-clawperator skills run com.android.settings.capture-overview
+ANDROPERATOR_OPERATOR_PACKAGE=com.androperator.operator.dev \
+androperator skills run com.android.settings.capture-overview
 
-CLAWPERATOR_OPERATOR_PACKAGE=com.clawperator.operator.dev \
-clawperator skills run com.android.settings.capture-overview --operator-package com.clawperator.operator
+ANDROPERATOR_OPERATOR_PACKAGE=com.androperator.operator.dev \
+androperator skills run com.android.settings.capture-overview --operator-package com.androperator.operator
 ```
 
-Then verify the skill's internal `clawperator` calls behave against the intended package. When you need stronger confirmation, add a deliberate internal probe inside the skill script and inspect the raw `output`.
+Then verify the skill's internal `androperator` calls behave against the intended package. When you need stronger confirmation, add a deliberate internal probe inside the skill script and inspect the raw `output`.
 
 ## How Device Id Is Passed
 
@@ -117,8 +117,8 @@ Current high-level wrapper behavior:
 
 - both CLI `skills run` and serve `POST /skills/:skillId/run` may resolve a target device for readiness preflight even when the caller omitted explicit device selection
 - that implicit resolution is preflight-only
-- if `--device <serial>` or serve `deviceId` is present, the wrapper writes that explicit value into `CLAWPERATOR_DEVICE_ID`
-- for script-driven skills, `runSkill()` then prepends `CLAWPERATOR_DEVICE_ID` as the first child argument
+- if `--device <serial>` or serve `deviceId` is present, the wrapper writes that explicit value into `ANDROPERATOR_DEVICE_ID`
+- for script-driven skills, `runSkill()` then prepends `ANDROPERATOR_DEVICE_ID` as the first child argument
 - then the wrapper appends any forwarded args after `--`
 
 That means most scripts should expect:
@@ -132,7 +132,7 @@ when they are run through the wrapper with explicit device targeting.
 Verification pattern:
 
 ```bash
-clawperator skills run com.example.app.do-thing --device <device_serial> -- --mode smoke
+androperator skills run com.example.app.do-thing --device <device_serial> -- --mode smoke
 ```
 
 Confirm that your script receives:
@@ -148,12 +148,12 @@ Default skill timeout:
 
 - `120000` milliseconds
 
-This comes from `runSkill.ts` and applies to the subprocess wrapper, not to any single Clawperator action inside the skill.
+This comes from `runSkill.ts` and applies to the subprocess wrapper, not to any single Androperator action inside the skill.
 
 Override it with:
 
 ```bash
-clawperator skills run <skill_id> --timeout 90000
+androperator skills run <skill_id> --timeout 90000
 ```
 
 If the child does not exit in time:
@@ -180,7 +180,7 @@ Top-level timeout parsing failures happen before the skill starts:
 Verification pattern:
 
 ```bash
-clawperator skills run com.android.settings.capture-overview --timeout 3210
+androperator skills run com.android.settings.capture-overview --timeout 3210
 ```
 
 Check:
@@ -197,25 +197,25 @@ When more than one device is connected:
 Example:
 
 ```bash
-clawperator skills run com.android.settings.capture-overview --device <device_serial>
+androperator skills run com.android.settings.capture-overview --device <device_serial>
 ```
 
 Why:
 
 - the wrapper uses the resolved target device for pre-spawn readiness
 - the wrapper forwards only explicit caller-supplied device selection into the child script
-- the child script can then pass that same serial into its internal Clawperator calls
+- the child script can then pass that same serial into its internal Androperator calls
 
 Without explicit targeting, skill behavior depends on what the script itself does. The wrapper does not auto-add a device argument unless one was provided.
 
 Related failure mode:
 
-- if the child script later invokes Clawperator without a device while multiple devices are connected, the nested call can fail with `MULTIPLE_DEVICES_DEVICE_ID_REQUIRED`
+- if the child script later invokes Androperator without a device while multiple devices are connected, the nested call can fail with `MULTIPLE_DEVICES_DEVICE_ID_REQUIRED`
 
 Recovery:
 
 - pass `--device <serial>` on the outer `skills run`
-- ensure the child script forwards that positional device id into its own internal Clawperator calls
+- ensure the child script forwards that positional device id into its own internal Androperator calls
 
 ## Output and Logging
 
@@ -246,7 +246,7 @@ Failure wrapper fields may also include:
 | `stderr` | partial stderr captured before failure |
 | `exitCode` | non-zero child exit code when available |
 
-JSON responses for `clawperator skills run` include a `logs` object. The CLI
+JSON responses for `androperator skills run` include a `logs` object. The CLI
 creates it before validation and readiness preflight, so early failures can
 still be correlated with the daily log when file logging is available:
 
@@ -257,7 +257,7 @@ still be correlated with the daily log when file logging is available:
 | `logs.tailCommand` | ready-to-run command for observing that log file |
 
 The same `skillRunId` is also available to the skill script as
-`CLAWPERATOR_SKILL_RUN_ID`. Nested Clawperator CLI calls inherit it. When those
+`ANDROPERATOR_SKILL_RUN_ID`. Nested Androperator CLI calls inherit it. When those
 calls use the daemon, the id is sent on the individual daemon request so
 request-specific execution logs can correlate to the skill run without making
 the long-lived daemon process inherit stale per-run state.
@@ -275,9 +275,9 @@ The pretty banner contains these exact components:
 
 - CLI version from `getCliVersion()`
 - APK status derived from `checkApkPresence()`
-- log path, defaulting to `~/.clawperator/logs/clawperator-YYYY-MM-DD.log` when `logger.logPath()` did not supply an override
+- log path, defaulting to `~/.androperator/logs/androperator-YYYY-MM-DD.log` when `logger.logPath()` did not supply an override
 - hint: `tail -f <logPath>`
-- docs hint: `https://docs.clawperator.com/llms.txt`
+- docs hint: `https://docs.androperator.com/llms.txt`
 
 Verification pattern:
 
@@ -297,7 +297,7 @@ Verification pattern:
 
 **Nested field order in examples and emitted JSON (human and agent scanability):** inside the nested `skillResult` object, **`result` first**, then **`status`**, then the remaining proof and metadata fields. Object key order is not required for parsers, but it is the documented authoring convention.
 
-**Default JSON for `clawperator skills run` and `POST /skills/:skillId/run`:**
+**Default JSON for `androperator skills run` and `POST /skills/:skillId/run`:**
 
 | Wrapper path | `skillResult` | Top-level `status` | `skillId` | `exitCode` | `output` |
 | --- | --- | --- | --- | --- | --- |
@@ -318,10 +318,10 @@ Debugging skill runs with logs:
 
 ```bash
 # Stream logs in real time while a skill runs
-clawperator logs
+androperator logs
 
 # In another terminal:
-clawperator skills run <skill_id> --device <device_serial> --operator-package <package>
+androperator skills run <skill_id> --device <device_serial> --operator-package <package>
 ```
 
 The unified logger captures skill output as `skills.run.output` events, enabling post-timeout diagnostics. See [Logging](../api/logging.md) for details. Each run also emits a `skills.run.log_location` event with the same `logs.skillRunId` and daily file path.
@@ -351,8 +351,8 @@ answer is under `skillResult.result`.
   },
   "logs": {
     "skillRunId": "skillrun_1777600000000_00000000-0000-4000-8000-000000000000",
-    "path": "/home/user/.clawperator/logs/clawperator-2026-03-28.log",
-    "tailCommand": "tail -f '/home/user/.clawperator/logs/clawperator-2026-03-28.log'"
+    "path": "/home/user/.androperator/logs/androperator-2026-03-28.log",
+    "tailCommand": "tail -f '/home/user/.androperator/logs/androperator-2026-03-28.log'"
   },
   "durationMs": 15321
 }
@@ -403,7 +403,7 @@ Another common failure is a bad registry or missing script:
 ```json
 {
   "code": "REGISTRY_READ_FAILED",
-  "message": "Registry not found at configured path: /tmp/missing-registry.json. The installed registry normally lives at ~/.clawperator/skills/skills/skills-registry.json. Fix CLAWPERATOR_SKILLS_REGISTRY, unset it to use the installed copy, then rerun clawperator skills list, or run clawperator skills install."
+  "message": "Registry not found at configured path: /tmp/missing-registry.json. The installed registry normally lives at ~/.androperator/skills/skills/skills-registry.json. Fix ANDROPERATOR_SKILLS_REGISTRY, unset it to use the installed copy, then rerun androperator skills list, or run androperator skills install."
 }
 ```
 
@@ -425,8 +425,8 @@ Another common failure is a bad registry or missing script:
 
 Recovery patterns:
 
-- `REGISTRY_READ_FAILED`: run `clawperator skills install` to restore the registry at the installed home path (`~/.clawperator/skills/skills/skills-registry.json`); if `CLAWPERATOR_SKILLS_REGISTRY` is set to a custom path, fix or unset that variable
-- `SKILL_NOT_FOUND`: confirm the exact registry `id` with `clawperator skills list`
+- `REGISTRY_READ_FAILED`: run `androperator skills install` to restore the registry at the installed home path (`~/.androperator/skills/skills/skills-registry.json`); if `ANDROPERATOR_SKILLS_REGISTRY` is set to a custom path, fix or unset that variable
+- `SKILL_NOT_FOUND`: confirm the exact registry `id` with `androperator skills list`
 - `SKILL_SCRIPT_NOT_FOUND`: repair the registry entry or restore the script file on disk
 - `SKILL_EXECUTION_FAILED`: inspect `exitCode`, `stdout`, and `stderr`
 - <code>SKILL_EXECUTION_&#x54;IMEOUT</code>: inspect partial `stdout` and only then consider increasing `--timeout`
@@ -436,7 +436,7 @@ Recovery patterns:
 
 - gate device readiness with `doctor` before blaming the skill
 - pass `--device` explicitly in multi-device environments
-- pass `--operator-package com.clawperator.operator.dev` for local debug APK workflows
+- pass `--operator-package com.androperator.operator.dev` for local debug APK workflows
 - prefer default JSON output for machine-consumed skill runs so the pretty banner does not pollute stdout
 - inspect partial stdout and stderr on failures before rerunning blindly
 

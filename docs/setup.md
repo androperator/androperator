@@ -114,11 +114,7 @@ before the CLI returns its final install status.
 
 Bundled host guidance has a canonical store at `~/.androperator/bundled-skills/`.
 Claude receives managed links in `~/.claude/skills/`. Codex and other shared
-consumers use managed directory copies in `~/.agents/skills/`. No additional
-Codex entries are installed. After verifying the active install, install/update
-removes redundant installer-owned links from `$CODEX_HOME/skills` (default:
-`~/.codex/skills/`). Unrelated links and real directories there are preserved.
-Cleanup skips paths overlapping active discovery or bundled storage. Aliased discovery
+consumers use managed directory copies in `~/.agents/skills/`. Aliased discovery
 locations share the generic managed copies. Conflicting user-owned content is
 preserved and reported as an install warning, never silently overwritten.
 Use `androperator bundled-skills list` to inspect installed instructions and

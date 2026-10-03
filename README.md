@@ -2,8 +2,8 @@
 
 <img src="assets/androperator-logo.png" width="200" height="200" alt="Androperator logo" />
 
-Androperator is a tool for AI agents to navigate, observe, and control Android
-apps. It connects an agent running on your computer to an Android phone or
+Androperator is a deterministic Android automation tool for AI agents to
+navigate, observe, and control apps. It connects an agent running on your computer to an Android phone or
 emulator, so the agent can inspect the screen, tap controls, enter text, and
 check what happened.
 
@@ -35,13 +35,29 @@ the requested actions and returns evidence for the agent to inspect.
 
 ## How it works
 
+Androperator is the **hand** for the agent's **brain**. The agent or LLM owns
+reasoning, planning, and app-specific strategy; Androperator executes validated
+Android actions and returns structured evidence. This separation lets agents
+adapt their plans while keeping the execution interface predictable.
+
 Androperator has two parts: a Node.js CLI on the host and an Operator app on the
 Android target. The host communicates with the device through `adb`; the
 Operator uses Android accessibility to observe and interact with app UI.
 
 Agents can use the CLI, MCP server, or HTTP API. The same execution contracts
 support individual actions and validated sequences. Results include structured
-status and errors, with command and task IDs for correlation.
+status and errors, with `commandId` and `taskId` for correlation. Canonical
+terminal results from the Operator use the `[Androperator-Result]` envelope.
+
+**Design principles:**
+
+- **Deterministic:** explicit actions and strict validation contracts; app-specific decisions stay with the agent.
+- **Observable:** structured UI snapshots, machine-readable errors, and correlated execution results.
+- **Agent-first:** JSON output, CLI/MCP/HTTP interfaces, and single-flight execution per device.
+
+A typical setup keeps a phone connected to the agent's host machine, or uses
+an emulator during development. The agent sends actions, reads the evidence,
+and chooses its next step.
 
 Available tools include:
 
@@ -88,6 +104,7 @@ with the matching APK and installer at `androperator.com`.
 - [Quickstart](docs/quickstart.md) - first device interaction.
 - [Setup](docs/setup.md) - host requirements, APK installation, and permissions.
 - [API overview](docs/api/overview.md) - CLI, HTTP API, actions, and result contracts.
+- [Operator automation playbook](docs/internal/design/operator-llm-playbook.md) - runtime conventions and the agent/runtime boundary.
 - [Local skills](docs/skills/overview.md) - create and run your own workflows.
 - [Recording](docs/api/recording.md) - capture observations for skill authoring.
 - [Troubleshooting](docs/troubleshooting/operator.md) - diagnose setup and runtime failures.

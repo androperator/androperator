@@ -58,7 +58,7 @@ Use `.agents/skills/docs-author/SKILL.md` for authored docs and
 
 | Surface | Authored inputs | Build |
 | --- | --- | --- |
-| `clawperator.com` landing site | `sites/landing/`; root machine-facing files and installer in `sites/landing/public/` | `./scripts/site_build.sh` |
+| `clawperator.com` landing site | `sites/landing-clawperator/`; root machine-facing files and installer in `sites/landing-clawperator/public/` | `./scripts/site_build_clawperator.sh` |
 | `docs.clawperator.com` technical docs | `docs/`, code-derived inputs in `apps/node/src/`; root static files in `sites/docs/static/` | `./scripts/docs_build.sh` |
 
 `sites/docs/.build/` and `sites/docs/site/` are generated. Fix the canonical
@@ -104,7 +104,7 @@ do not require Android installation or unrelated runtime suites.
 | Android | `./gradlew :app:assembleDebug` and `./gradlew :app:testDebugUnitTest` |
 | Device/runtime behavior | Install the matching APK and verify a real scenario on an explicit device |
 | Docs | `./scripts/docs_build.sh` |
-| Landing site | `./scripts/site_build.sh` |
+| Landing site | `./scripts/site_build_clawperator.sh` |
 | Installer | Matching coverage in `validation/install/` and `./validation/install/test_install.sh` |
 
 Build Node before tests that consume `dist/`; do not run build and test in

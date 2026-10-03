@@ -77,4 +77,4 @@ also run read-only in diagnostic mode (reporting "missing" vs. installing).
 
 - `apps/node/src/adapters/android-bridge/runtimeConfig.ts` - path resolution
 - `apps/node/src/cli/commands/doctor.ts` - doctor command entry point
-- `sites/landing/public/install.sh` - shell RC export pattern to follow
+- `sites/landing-clawperator/public/install.sh` - shell RC export pattern to follow

@@ -42,11 +42,11 @@ breakage.
 
 Observed gaps at the time of review:
 
-- `sites/landing/public/landing-sitemap.xml` includes only `<loc>` entries
+- `sites/landing-clawperator/public/landing-sitemap.xml` includes only `<loc>` entries
   without `<lastmod>`
-- `sites/landing/public/landing-sitemap.xml` does not include `<priority>` for
+- `sites/landing-clawperator/public/landing-sitemap.xml` does not include `<priority>` for
   important landing routes
-- `sites/landing/public/sitemap.xml` is a sitemap index without `<lastmod>` on
+- `sites/landing-clawperator/public/sitemap.xml` is a sitemap index without `<lastmod>` on
   its child sitemap entries
 - the docs sitemap includes `<lastmod>` but does not include `<priority>`
 

@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 
 REPO_ROOT="$(pwd)"
-INSTALL_SCRIPT="$REPO_ROOT/sites/landing/public/install.sh"
+INSTALL_SCRIPT="$REPO_ROOT/sites/landing-clawperator/public/install.sh"
 
 assert_equals() {
     local expected="$1"

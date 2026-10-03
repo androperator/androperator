@@ -91,7 +91,7 @@ claim being authored.
 | Version compatibility | `apps/node/src/domain/version/compatibility.ts` |
 | Doctor checks | `apps/node/src/domain/doctor/checks/` |
 | Serve endpoints | `apps/node/src/cli/commands/serve.ts` |
-| Install script | `sites/landing/public/install.sh` |
+| Install script | `sites/landing-clawperator/public/install.sh` |
 
 
 ## Terminology

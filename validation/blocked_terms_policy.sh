@@ -151,6 +151,8 @@ blocked_terms_policy_scan_identities() {
 blocked_terms_policy_scan_staged_content() {
   local staged_file
   local path
+  local change
+  local change_status
   local preparation_status=0
   local violations=0
 
@@ -169,7 +171,18 @@ blocked_terms_policy_scan_staged_content() {
     return 1
   }
 
-  while IFS= read -r -d '' path; do
+  while IFS= read -r -d '' change; do
+    change_status="${change##* }"
+    IFS= read -r -d '' path || { violations=1; break; }
+    if [[ "$change_status" == R* || "$change_status" == C* ]]; then
+      IFS= read -r -d '' path || { violations=1; break; }
+      # Exact renames reuse the existing blob. Only exempt binary blobs; text,
+      # copies, and modified renames still receive the full content scan.
+      if [[ "$change_status" == R100 ]] &&
+         [[ "$(git diff --cached --numstat --no-renames -- "$path")" == $'-\t-'* ]]; then
+        continue
+      fi
+    fi
     if ! git show ":$path" > "$staged_file"; then
       echo "[blocked-terms] unable to read staged content for $path" >&2
       violations=1
@@ -179,7 +192,7 @@ blocked_terms_policy_scan_staged_content() {
     if ! blocked_terms_policy_scan_file "$path" "$staged_file"; then
       violations=1
     fi
-  done < <(git diff --cached --name-only --diff-filter=ACMR -z)
+  done < <(git diff --cached --raw --no-abbrev --find-renames=100% --diff-filter=ACMR -z)
 
   rm -f "$staged_file"
 

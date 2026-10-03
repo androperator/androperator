@@ -79,7 +79,7 @@ def published_version_output_problems(repo_root: Path, version: str) -> list[str
     artifact_paths = [
         repo_root / "sites" / "docs" / "static" / "llms-full.txt",
         repo_root / "sites" / "docs" / "site" / "llms-full.txt",
-        repo_root / "sites" / "landing" / "public" / "llms-full.txt",
+        repo_root / "sites" / "landing-clawperator" / "public" / "llms-full.txt",
     ]
     for artifact_path in artifact_paths:
         if not artifact_path.exists():
@@ -217,7 +217,7 @@ def main() -> None:
             updated_docs.append(release_procedure_path)
 
     replace_required(
-        repo_root / "sites" / "landing" / "public" / "install.sh",
+        repo_root / "sites" / "landing-clawperator" / "public" / "install.sh",
         r"# install\.sh \(v[0-9]+\.[0-9]+\.[0-9]+\)",
         f"# install.sh (v{version})",
     )
@@ -237,8 +237,8 @@ def main() -> None:
     # aborting the follow-up commit due to removed/migrated doc inputs.
     paths_to_stage = {
         repo_root / "sites" / "docs" / "static" / "llms-full.txt",
-        repo_root / "sites" / "landing" / "public" / "install.sh",
-        repo_root / "sites" / "landing" / "public" / "llms-full.txt",
+        repo_root / "sites" / "landing-clawperator" / "public" / "install.sh",
+        repo_root / "sites" / "landing-clawperator" / "public" / "llms-full.txt",
     }
     for p in updated_docs:
         paths_to_stage.add(p)

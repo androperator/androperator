@@ -34,12 +34,12 @@ path_type() {
       docs/internal/**|\
       sites/docs/AGENTS.md|\
       sites/docs/requirements.txt|\
-      sites/landing/public/sitemap.xml|\
-      sites/landing/public/landing-sitemap.xml|\
+      sites/landing-clawperator/public/sitemap.xml|\
+      sites/landing-clawperator/public/landing-sitemap.xml|\
       sites/docs/.build/**|\
       sites/docs/site/**|\
-      sites/landing/.next/**|\
-      sites/landing/out/**|\
+      sites/landing-clawperator/.next/**|\
+      sites/landing-clawperator/out/**|\
       detekt*.yml|\
       detekt-baseline.xml)
       printf 'infra'
@@ -47,8 +47,8 @@ path_type() {
     apps/node/package-lock.json|\
       sites/docs/static/llms-full.txt|\
       sites/docs/static/llms.txt|\
-      sites/landing/public/llms-full.txt|\
-      sites/landing/public/llms.txt)
+      sites/landing-clawperator/public/llms-full.txt|\
+      sites/landing-clawperator/public/llms.txt)
       printf 'generated'
       ;;
     apps/node/package.json|\
@@ -56,10 +56,10 @@ path_type() {
       apps/node/tsconfig.*.json|\
       sites/docs/mkdocs.yml|\
       sites/docs/source-map.yaml|\
-      sites/landing/next.config.js|\
-      sites/landing/next.config.cjs|\
-      sites/landing/next.config.mjs|\
-      sites/landing/next.config.ts|\
+      sites/landing-clawperator/next.config.js|\
+      sites/landing-clawperator/next.config.cjs|\
+      sites/landing-clawperator/next.config.mjs|\
+      sites/landing-clawperator/next.config.ts|\
       *.gradle.kts|\
       gradle/**|\
       gradle.properties|\
@@ -68,7 +68,7 @@ path_type() {
       ;;
     *)
       case "$path" in
-        apps/node/**|apps/android/**|docs/**|sites/docs/**|sites/landing/**)
+        apps/node/**|apps/android/**|docs/**|sites/docs/**|sites/landing-clawperator/**)
           printf 'src'
           ;;
         *)
@@ -183,7 +183,7 @@ else
   failures=$((failures + 1))
 fi
 
-case5c_path='sites/landing/next.config.js'
+case5c_path='sites/landing-clawperator/next.config.js'
 if [[ "$(path_type "$case5c_path")" == "config" ]]; then
   printf 'PASS: %s is classified as config\n' "$case5c_path"
 else
@@ -302,15 +302,15 @@ release_fixture_err="$(mktemp)"
   git init -q
   git config user.name "Release Notes Test"
   git config user.email "release-notes-test@example.com"
-  mkdir -p docs/troubleshooting sites/landing/public
+  mkdir -p docs/troubleshooting sites/landing-clawperator/public
   printf 'Compatibility guide.\n' > docs/troubleshooting/compatibility.md
-  printf '#!/usr/bin/env bash\n' > sites/landing/public/install.sh
-  git add docs/troubleshooting/compatibility.md sites/landing/public/install.sh
+  printf '#!/usr/bin/env bash\n' > sites/landing-clawperator/public/install.sh
+  git add docs/troubleshooting/compatibility.md sites/landing-clawperator/public/install.sh
   git commit -q -m "docs: add public install docs"
   git tag v1.0.0
   printf 'Compatibility guide for 1.0.0.\n' > docs/troubleshooting/compatibility.md
-  printf '#!/usr/bin/env bash\n# install 1.0.0\n' > sites/landing/public/install.sh
-  git add docs/troubleshooting/compatibility.md sites/landing/public/install.sh
+  printf '#!/usr/bin/env bash\n# install 1.0.0\n' > sites/landing-clawperator/public/install.sh
+  git add docs/troubleshooting/compatibility.md sites/landing-clawperator/public/install.sh
   git commit -q -m "docs(release): update published version to 1.0.0"
   git tag v1.0.1
 )

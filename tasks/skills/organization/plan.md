@@ -89,7 +89,7 @@ wrong mental model.
   `apps/node/src/cli/registry.ts`, and
   `apps/node/src/domain/doctor/checks/hostChecks.ts` are in scope for the
   relocation and rename work only. Do not redesign unrelated skills behavior.
-- `sites/landing/public/install.sh`, `validation/install/`, `docs/`, and
+- `sites/landing-clawperator/public/install.sh`, `validation/install/`, `docs/`, and
   `evals/` are in scope only for bundled-skills terminology, skill-id
   references, and the validation needed to prove the rename. Preserve unrelated
   behavior and content.
@@ -108,7 +108,7 @@ wrong mental model.
 | `apps/node/src/cli/commands/agentSkills.ts`, `registry.ts` | External noun rename and removal of the old command surface | PR-2 / Phase 3 |
 | `apps/node/src/domain/skills/skillsConfig.ts` | Default bundled-skills install dir and env-var plumbing | PR-2 / Phase 3 |
 | `apps/node/src/domain/doctor/checks/hostChecks.ts` | Doctor id and fix text rename | PR-2 / Phase 3 |
-| `sites/landing/public/install.sh` | Bundled-skills install path and guide text | PR-1 / Phase 2, PR-2 / Phase 3 |
+| `sites/landing-clawperator/public/install.sh` | Bundled-skills install path and guide text | PR-1 / Phase 2, PR-2 / Phase 3 |
 | `validation/install/` | Installer regression expectations | PR-1 / Phase 2, PR-2 / Phase 3 |
 | `docs/host-agents.md`, `docs/skills/authoring.md`, `docs/skills/overview.md`, `docs/setup.md`, `docs/api/doctor.md`, `docs/internal/design/agent-host-integration.md` | Public and internal docs updates | PR-1 / Phase 2, PR-2 / Phase 3 |
 | `evals/harness/`, `evals/specs/` | Authoring-front-door command expectations and any prompt text that actually names the shipped ids or surface | PR-1 / Phase 2, PR-2 / Phase 3 |
@@ -123,7 +123,7 @@ wrong mental model.
 | Packaged-skill install behavior | `apps/node/src/domain/skills/copyAgentSkills.ts`, `apps/node/src/domain/skills/skillsConfig.ts` |
 | Doctor behavior | `apps/node/src/domain/doctor/checks/hostChecks.ts`, `apps/node/src/contracts/errors.ts`, `docs/api/doctor.md` |
 | Ad-hoc error-code string literals on the install or list paths | `apps/node/src/domain/skills/copyAgentSkills.ts`, `apps/node/src/cli/commands/agentSkills.ts` |
-| Installer behavior and guide text | `sites/landing/public/install.sh`, `validation/install/README.md` |
+| Installer behavior and guide text | `sites/landing-clawperator/public/install.sh`, `validation/install/README.md` |
 | Existing Node-side regression patterns | `apps/node/src/test/unit/agentSkills.test.ts`, `apps/node/src/test/unit/cliHelp.test.ts`, `apps/node/src/test/unit/doctor/hostChecks.test.ts` |
 | Existing packaging test coverage | `apps/node/src/test/unit/agentSkillsPack.test.ts` |
 | Authored docs surfaces | `docs/` |
@@ -248,7 +248,7 @@ After PR-2:
 | Knowledge | Permanent home |
 | --- | --- |
 | Canonical packaged-skill location and install-dir behavior | `apps/node/src/domain/skills/` plus public docs in `docs/skills/authoring.md` and `docs/host-agents.md` |
-| Primary external noun and install guidance | `apps/node/src/cli/registry.ts`, `sites/landing/public/install.sh`, `docs/host-agents.md`, `docs/setup.md` |
+| Primary external noun and install guidance | `apps/node/src/cli/registry.ts`, `sites/landing-clawperator/public/install.sh`, `docs/host-agents.md`, `docs/setup.md` |
 | Bundled-skill first-party branding rules | `apps/node/bundled-skills/*/SKILL.md` |
 | Doctor terminology and remediation path | `apps/node/src/domain/doctor/checks/hostChecks.ts` and any user-facing docs that describe it |
 | Eval command expectations for the authoring front door | `evals/harness/runner.py`, `evals/harness/test_run_eval.py`, `evals/specs/android-version/prompt-skill.md` |

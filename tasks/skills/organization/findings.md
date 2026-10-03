@@ -96,7 +96,7 @@ Both stories can't both be primary. Pick one and retire the other.
 The install contract itself is healthy and unambiguous:
 
 - installer calls `clawperator agent-skills install`
-  ([install.sh:563](../../../../sites/landing/public/install.sh))
+  ([install.sh:563](../../../../sites/landing-clawperator/public/install.sh))
 - target dir on the user's machine is `~/.clawperator/agent-skills/`
 - symlinks are fanned out into `~/.claude/skills/`, `~/.codex/skills/`, and
   `~/.agents/skills/`
@@ -169,7 +169,7 @@ the ids self-documenting.
 
 Note on migration: the skill ids are also referenced in docs and install-time
 generated agent guides (see
-[install.sh:1131](../../../../sites/landing/public/install.sh) and
+[install.sh:1131](../../../../sites/landing-clawperator/public/install.sh) and
 [docs/skills/authoring.md:115](../../../../docs/skills/authoring.md)). These
 need to be updated in lockstep.
 

@@ -16,7 +16,7 @@ This page assumes you have already decided that MCP is the correct front door.
 - Core tools: `apps/node/src/mcp/tools/core.ts`
 - Named tools: `apps/node/src/mcp/tools/named.ts`
 - MCP session defaults: `apps/node/src/mcp/session.ts`
-- Installer-generated MCP snippet: [`install.sh`](https://github.com/clawperator/clawperator/blob/main/sites/landing/public/install.sh)
+- Installer-generated MCP snippet: [`install.sh`](https://github.com/clawperator/clawperator/blob/main/sites/landing-clawperator/public/install.sh)
 - Execution contract: `apps/node/src/contracts/execution.ts`
 - Error codes: `apps/node/src/contracts/errors.ts`
 - Selector contract: `apps/node/src/contracts/selectors.ts`

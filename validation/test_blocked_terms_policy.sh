@@ -93,4 +93,27 @@ printf 'test: allowed\n' > "$test_root/message"
 assert_rejected env CLAWPERATOR_BLOCKED_TERMS_FILE="$test_root/not-a-file" bash "$test_repo/.githooks/commit-msg" "$test_root/message"
 assert_rejected env CLAWPERATOR_BLOCKED_TERMS_FILE="$test_root/not-a-file" git -C "$test_repo" commit --allow-empty -m "test: invalid terms file"
 
+# Binary content already present in HEAD is not newly introduced by an exact rename.
+printf '\000%s\000' "$blocked_lower" > "$test_repo/existing binary.png"
+printf '%s\n' "$blocked_lower" > "$test_repo/existing-text.txt"
+CLAWPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" git -C "$test_repo" add .
+CLAWPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" git -C "$test_repo" commit -m "test: preexisting assets" --quiet
+git -C "$test_repo" mv "existing binary.png" "renamed binary.png"
+git -C "$test_repo" commit -m "test: exact binary rename" --quiet
+
+git -C "$test_repo" mv existing-text.txt renamed-text.txt
+assert_rejected git -C "$test_repo" commit -m "test: text rename still scanned"
+git -C "$test_repo" reset --hard --quiet HEAD
+
+cp "$test_repo/renamed binary.png" "$test_repo/new-binary.png"
+git -C "$test_repo" add new-binary.png
+assert_rejected git -C "$test_repo" commit -m "test: binary copy still scanned"
+git -C "$test_repo" reset --hard --quiet HEAD
+
+git -C "$test_repo" mv "renamed binary.png" "modified binary.png"
+printf 'changed' >> "$test_repo/modified binary.png"
+git -C "$test_repo" add "modified binary.png"
+assert_rejected git -C "$test_repo" commit -m "test: modified binary rename still scanned"
+git -C "$test_repo" reset --hard --quiet HEAD
+
 echo "blocked-terms policy tests passed"

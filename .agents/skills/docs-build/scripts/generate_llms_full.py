@@ -122,7 +122,7 @@ def main() -> int:
     output_paths = [
         docs_dir / "site" / "llms-full.txt",
         docs_dir / "static" / "llms-full.txt",
-        root / "sites" / "landing" / "public" / "llms-full.txt",
+        root / "sites" / "landing-clawperator" / "public" / "llms-full.txt",
     ]
 
     nav_entries = load_nav_entries(mkdocs_path)

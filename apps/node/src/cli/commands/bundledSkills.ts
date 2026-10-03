@@ -1,12 +1,12 @@
 import { stat } from "node:fs/promises";
-import { DEFAULT_BUNDLED_SKILLS_DIR } from "../../domain/skills/skillsConfig.js";
+import { DEFAULT_BUNDLED_SKILLS_DIR } from "../../domain/bundledSkills/config.js";
 import {
   copyBundledSkills,
   listInstalledBundledSkills,
   resolveClaudeSkillsDir,
   resolveCodexSkillsDir,
   type CopyBundledSkillsOptions,
-} from "../../domain/skills/copyBundledSkills.js";
+} from "../../domain/bundledSkills/copyBundledSkills.js";
 import type { OutputOptions } from "../output.js";
 import { formatError, formatSuccess } from "../output.js";
 

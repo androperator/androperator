@@ -5,6 +5,28 @@ import { ERROR_CODES } from "../../contracts/errors.js";
 import { LIMITS } from "../../contracts/limits.js";
 
 describe("validateExecution", () => {
+  it("accepts omitted or direct mode and rejects unsupported modes", () => {
+    const payload = {
+      commandId: "cmd-mode",
+      taskId: "task-mode",
+      source: "test",
+      expectedFormat: "android-ui-automator",
+      timeoutMs: 8000,
+      actions: [{ id: "snapshot", type: "snapshot" }],
+    };
+    assert.strictEqual(validateExecution(payload).mode, undefined);
+    assert.strictEqual(validateExecution({ ...payload, mode: "direct" }).mode, "direct");
+    for (const mode of ["artifact_compiled", "unknown", "", null]) {
+      assert.throws(
+        () => validateExecution({ ...payload, mode }),
+        (error: unknown) => {
+          assert.strictEqual((error as { code: string }).code, ERROR_CODES.EXECUTION_VALIDATION_FAILED);
+          return true;
+        },
+      );
+    }
+  });
+
   it("accepts valid minimal execution", () => {
     const ex = validateExecution({
       commandId: "cmd-1",

@@ -647,8 +647,7 @@ Android string-valued step fields, this is a host-added structured object:
 | `closingHierarchySeen` | Whether the reconstructed source contains a closing `hierarchy` marker. This does not establish well-formedness; a self-closing root needs no closing marker. Omitted when no extraction record exists. |
 | `terminationReason` | `closing_hierarchy` for a standalone closing line, `same_tag_event` for an intervening bracketed event on the same log tag, `next_snapshot` for a new capture marker, or `end_of_capture` for the end of supplied log lines. Omitted when no extraction record exists. |
 
-Retained SkillResult `execEnvelopes` preserve this diagnostic object and envelope
-logging status rather than coercing them into strings.
+Retained execution envelopes preserve diagnostics and correlation.
 
 Positions are nonnegative safe integers. No parser message, tag name, or source
 excerpt appears in these public facts. Missing fields mean unavailable, not zero.

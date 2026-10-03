@@ -46,7 +46,7 @@ function command(args) {
   const failureEvidence=response?.details ?? response?.envelope?.failureEvidence;
   const failed=child.status!==0 || response?.code || response?.error || response?.envelope?.status!=='success' || !Array.isArray(response?.envelope?.stepResults) || response.envelope.stepResults.some(s=>s?.success!==true);
   const failure=failed ? {...failureFrom(response,child,index,args[0]),logging:loggingStatus} : undefined;
-  events.push({startedAt,completedAt:new Date().toISOString(),failureEvidence,failure,logging:loggingStatus,index,args,device:process.env.ANDROPERATOR_DEVICE_ID,runId:process.env.ANDROPERATOR_SKILL_RUN_ID,elapsedMs,exitCode:child.status,signal:child.signal,commandId:response?.envelope?.commandId,taskId:response?.envelope?.taskId});
+  events.push({startedAt,completedAt:new Date().toISOString(),failureEvidence,failure,logging:loggingStatus,index,args,device:process.env.ANDROPERATOR_DEVICE_ID,runId:process.env.ANDROPERATOR_RUN_ID,elapsedMs,exitCode:child.status,signal:child.signal,commandId:response?.envelope?.commandId,taskId:response?.envelope?.taskId});
   save('events.json',events);
   if (failure) throw failureError(failure);
   return {response,index};
@@ -160,7 +160,7 @@ function verifyRetainedEvidence(frame) {
     const step=validateRead(response,field,observed);
     const ref=frame.result.value.evidence[field];
     if (ref.execEnvelopeIndex!==retained.findIndex(entry=>entry.commandIndex===evidence.readIndex) || ref.stepResultId!==step.id || digest(frame.execEnvelopes[ref.execEnvelopeIndex])!==digest(response.envelope)) throw Error('Envelope reference mismatch');
-    for (const i of [evidence.readIndex,evidence.snapshotIndex]) if(events[i].device!==process.env.ANDROPERATOR_DEVICE_ID || events[i].runId!==process.env.ANDROPERATOR_SKILL_RUN_ID) throw Error('Evidence belongs to another run or device');
+    for (const i of [evidence.readIndex,evidence.snapshotIndex]) if(events[i].device!==process.env.ANDROPERATOR_DEVICE_ID || events[i].runId!==process.env.ANDROPERATOR_RUN_ID) throw Error('Evidence belongs to another run or device');
   }
   const screenshot=events.findLast(e=>e.args[0]==='screenshot');
   if (!screenshot || screenshot.exitCode!==0 || events.at(-1).args[0]!=='screenshot') throw Error('Final screenshot missing');

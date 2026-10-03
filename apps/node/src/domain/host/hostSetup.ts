@@ -1,7 +1,7 @@
 import { mkdir, readFile, rename, chmod, lstat, unlink, writeFile, readdir } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { homedir } from "node:os";
-import { DEFAULT_OPERATOR_PACKAGE } from "../skills/skillsConfig.js";
+import { DEFAULT_OPERATOR_PACKAGE } from "../config/resolveOperatorPackage.js";
 import { getCliVersion } from "../version/compatibility.js";
 
 export type HostArtifactKey =
@@ -35,7 +35,6 @@ export interface HostSetupResult {
 export interface HostSetupOptions {
   installedAt?: string;
   cliVersion?: string | null;
-  registryPath?: string | null;
   apkVersion?: string | null;
   lastDeviceSerial?: string | null;
   adbPath?: string | null;
@@ -97,24 +96,6 @@ function resolveBundledSkillsDir(options: HostSetupOptions): string {
   return join(getHomeDir(options.env), ".androperator", "bundled-skills");
 }
 
-interface RuntimeSkillSummary {
-  applicationId: string;
-  skills: Array<{
-    id: string;
-    intent: string;
-    summary: string;
-    example: string;
-  }>;
-}
-
-interface RuntimeGuideInfo {
-  resolvedPath: string | null;
-  hintPath: string;
-  applications: RuntimeSkillSummary[] | null;
-  unreadableRegistry: boolean;
-}
-
-const DEFAULT_REGISTRY_SUBPATH = join(".androperator", "skills", "skills", "skills-registry.json");
 const SHARED_BRIDGE_START = "<!-- ANDROPERATOR_SHARED_AGENT_BRIDGE:START -->";
 const SHARED_BRIDGE_END = "<!-- ANDROPERATOR_SHARED_AGENT_BRIDGE:END -->";
 
@@ -131,27 +112,6 @@ function getHomeDir(env: NodeJS.ProcessEnv | undefined): string {
     return home;
   }
   return homedir();
-}
-
-function trimConfiguredPath(value: string | undefined): string | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
-}
-
-async function readPreviousInstallStateRegistryPath(androperatorDir: string): Promise<string | undefined> {
-  const installStatePath = join(androperatorDir, "install-state.json");
-  try {
-    const raw = await readFile(installStatePath, "utf8");
-    const parsed = JSON.parse(raw) as { registryPath?: unknown };
-    return typeof parsed.registryPath === "string" && parsed.registryPath.length > 0
-      ? parsed.registryPath
-      : undefined;
-  } catch {
-    return undefined;
-  }
 }
 
 async function fileExists(path: string): Promise<boolean> {
@@ -229,131 +189,11 @@ function resolveInstalledAt(options: HostSetupOptions): string {
   return (options.now ?? (() => new Date()))().toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
-function toCliFlagName(inputName: string): string {
-  return inputName.replace(/_/g, "-");
-}
-
-function normalizeGuideValue(value: string): string {
-  return String(value).replace(/\r\n?/g, "\n");
-}
-
-function pushLiteralBlock(lines: string[], value: string, indent = ""): void {
-  const literalIndent = `${indent}    `;
-  lines.push(literalIndent);
-  for (const line of normalizeGuideValue(value).split("\n")) {
-    lines.push(literalIndent + line);
-  }
-}
-
-function buildSkillRunExample(skill: Record<string, unknown>): string {
-  const id = typeof skill.id === "string" && skill.id.length > 0 ? skill.id : "unknown-skill";
-  const contract = skill.contract;
-  const inputs = contract && typeof contract === "object" && contract !== null && "inputs" in contract
-    && contract.inputs && typeof contract.inputs === "object" && contract.inputs !== null
-    ? Object.keys(contract.inputs as Record<string, unknown>).sort((left, right) => left.localeCompare(right))
-    : [];
-  const args = inputs.map((inputName) => `--${toCliFlagName(inputName)} <${inputName}>`);
-  return ["androperator", "skills", "run", id, ...args].join(" ");
-}
-
-async function resolveRuntimeGuideInfo(
-  options: HostSetupOptions,
-  androperatorDir: string,
-): Promise<RuntimeGuideInfo> {
-  const homeDir = getHomeDir(options.env);
-  const defaultRegistryPath = join(homeDir, DEFAULT_REGISTRY_SUBPATH);
-  const configuredRegistryPath = trimConfiguredPath(options.env?.ANDROPERATOR_SKILLS_REGISTRY);
-  const previousRegistryPath = await readPreviousInstallStateRegistryPath(androperatorDir);
-  const explicitRegistryPath = trimConfiguredPath(options.registryPath ?? undefined);
-  const installPhaseRegistryPath = trimConfiguredPath(options.env?.SKILLS_REGISTRY_PATH);
-
-  const candidates = [
-    installPhaseRegistryPath,
-    explicitRegistryPath,
-    configuredRegistryPath,
-    previousRegistryPath,
-    defaultRegistryPath,
-  ].filter((value, index, all): value is string => value !== undefined && all.indexOf(value) === index);
-
-  const hintPath = candidates[0] ?? defaultRegistryPath;
-
-  for (const candidate of candidates) {
-    try {
-      const raw = await readFile(candidate, "utf8");
-      const parsed = JSON.parse(raw) as { skills?: unknown };
-      if (!Array.isArray(parsed.skills)) {
-        return {
-          resolvedPath: candidate,
-          hintPath,
-          applications: null,
-          unreadableRegistry: true,
-        };
-      }
-
-      const byApplication = new Map<string, RuntimeSkillSummary["skills"]>();
-      for (const rawSkill of parsed.skills) {
-        if (!rawSkill || typeof rawSkill !== "object") {
-          continue;
-        }
-
-        const skill = rawSkill as Record<string, unknown>;
-        const applicationId = typeof skill.applicationId === "string" && skill.applicationId.length > 0
-          ? skill.applicationId
-          : "unknown.application";
-        const entries = byApplication.get(applicationId) ?? [];
-        entries.push({
-          id: typeof skill.id === "string" && skill.id.length > 0 ? skill.id : "unknown-skill",
-          intent: typeof skill.intent === "string" && skill.intent.length > 0 ? skill.intent : "unknown",
-          summary: typeof skill.summary === "string" && skill.summary.length > 0 ? skill.summary : "No summary provided.",
-          example: buildSkillRunExample(skill),
-        });
-        byApplication.set(applicationId, entries);
-      }
-
-      const applications = Array.from(byApplication.entries())
-        .sort(([left], [right]) => left.localeCompare(right))
-        .map(([applicationId, skills]) => ({
-          applicationId,
-          skills: skills.slice().sort((left, right) => {
-            if (left.intent !== right.intent) {
-              return left.intent.localeCompare(right.intent);
-            }
-            return left.id.localeCompare(right.id);
-          }),
-        }));
-
-      return {
-        resolvedPath: candidate,
-        hintPath,
-        applications,
-        unreadableRegistry: false,
-      };
-    } catch (error) {
-      if (!(error && typeof error === "object" && "code" in error && (error.code === "ENOENT" || error.code === "ENOTDIR"))) {
-        return {
-          resolvedPath: candidate,
-          hintPath,
-          applications: null,
-          unreadableRegistry: true,
-        };
-      }
-    }
-  }
-
-  return {
-    resolvedPath: null,
-    hintPath,
-    applications: null,
-    unreadableRegistry: false,
-  };
-}
-
-function buildInstallStateContent(options: HostSetupOptions, resolvedRegistryPath: string | null): string {
+function buildInstallStateContent(options: HostSetupOptions): string {
   const installState = {
     schemaVersion: 1,
     installedAt: resolveInstalledAt(options),
     cliVersion: options.cliVersion === undefined ? getCliVersion() : nullIfBlank(options.cliVersion),
-    registryPath: resolvedRegistryPath,
     apkVersion: nullIfBlank(options.apkVersion),
     lastDeviceSerial: nullIfBlank(options.lastDeviceSerial),
   };
@@ -485,200 +325,28 @@ async function listInstalledBundledSkillNames(bundledSkillsDir: string): Promise
   };
 }
 
-async function buildAgentGuideContent(
-  options: HostSetupOptions,
-  runtimeGuide: RuntimeGuideInfo,
-): Promise<string> {
+async function buildAgentGuideContent(options: HostSetupOptions): Promise<string> {
   const bundledSkillsDir = resolveBundledSkillsDir(options);
   const { installed, hasVersionFile } = await listInstalledBundledSkillNames(bundledSkillsDir);
-  const hasSkills = installed.length > 0;
-  const hasOrientation = installed.includes("androperator-agent-orientation");
-  const hasUpgrade = installed.includes("androperator-upgrade");
-  const hasDiscovery = installed.includes("androperator-skill-author-by-agent-discovery");
-  const hasRecording = installed.includes("androperator-skill-author-by-recording");
-
-  const lines: string[] = [
-    "# Androperator",
-    "",
-    "Deterministic Android automation runtime for AI agents.",
-    "",
-    "## Quick start",
-    "",
-    "androperator doctor    # verify readiness",
-    "androperator snapshot  # capture device state",
-    "androperator click --text \"Settings\"  # tap an element",
-    "",
-    "## Documentation",
-    "",
-    "- LLM guide: https://docs.androperator.com/llms.txt",
-    "- Full docs: https://docs.androperator.com/llms-full.txt",
-    "- Setup guide: https://docs.androperator.com/setup/",
-    "",
-    "## Runtime Skills",
-    "",
-    "Use the installed runtime-skill registry to discover and run app workflows:",
-    "- `androperator skills list`",
-    "- `androperator skills search --keyword \"<term>\"`",
-    "- `androperator skills get <id>`",
-    "- `androperator skills run <id>`",
+  const lines = [
+    "# Androperator", "", "Deterministic Android execution and evidence for the current agent.", "",
+    "## Quick start", "", "- `androperator doctor` - verify readiness",
+    "- `androperator snapshot` - observe current state",
+    "- Choose an action from current evidence, then verify the requested outcome.",
+    "- Use explicit `--device` when multiple targets are connected.", "",
+    "## Agent instructions", "",
+    "The current agent owns app strategy, recovery and outcome verification. Ordinary helpers are optional.",
+    "Save reusable instructions when requested or worthwhile; one-off tasks do not require authoring a skill.",
+    "Recordings are optional evidence of a likely route, not an execution program.", "",
+    "## Bundled Skills", "", "Inspect host guidance with `androperator bundled-skills list`.",
+    "Start with `androperator-agent-orientation` on an unfamiliar host.",
+    "Use `androperator-upgrade` for a whole-product refresh.",
+    "Use `androperator-skill-author-by-agent-discovery` for bounded exploration and optional authoring.",
+    "Use `androperator-skill-author-by-recording` when a demonstration contributes missing evidence.",
+    "", `Installed guidance: ${bundledSkillsDir}`, ...installed.map(name => `- ${name}`),
   ];
-
-  if (runtimeGuide.resolvedPath === null) {
-    lines.push(
-      "",
-      "Runtime skills not available on this host right now.",
-      "Expected registry path:",
-      `\`${runtimeGuide.hintPath}\``,
-      "",
-      "Repair or manual bootstrap:",
-      "- run `androperator skills install`",
-    );
-  } else if (runtimeGuide.unreadableRegistry || runtimeGuide.applications === null) {
-    lines.push(
-      "",
-      "Runtime skills not available on this host right now.",
-      "Expected registry path:",
-      `\`${runtimeGuide.hintPath}\``,
-      "",
-      "The registry exists but could not be read.",
-      "Repair or manual bootstrap:",
-      "- run `androperator skills install`",
-    );
-  } else {
-    lines.push("", "Registry path:");
-    pushLiteralBlock(lines, runtimeGuide.resolvedPath);
-    lines.push("", "Inspect required inputs before running with `androperator skills get <id>`.");
-
-    if (runtimeGuide.applications.length === 0) {
-      lines.push("", "Runtime skills registry is present, but it does not contain any installed skills.");
-    } else {
-      for (const application of runtimeGuide.applications) {
-        lines.push("", "### Application", "", "App ID:");
-        pushLiteralBlock(lines, application.applicationId);
-        lines.push("");
-
-        for (const skill of application.skills) {
-          lines.push("- Skill", "  id:");
-          pushLiteralBlock(lines, skill.id, "  ");
-          lines.push("  intent:");
-          pushLiteralBlock(lines, skill.intent, "  ");
-          lines.push("  summary:");
-          pushLiteralBlock(lines, skill.summary, "  ");
-          lines.push("  example:");
-          pushLiteralBlock(lines, skill.example, "  ");
-        }
-      }
-    }
-  }
-
-  if (hasSkills) {
-    lines.push(
-      "",
-      "## Bundled Skills",
-      "",
-      "First-party Androperator bundled skills are installed at:",
-      bundledSkillsDir,
-      "",
-    );
-
-    if (hasOrientation) {
-      lines.push(
-        "- `androperator-agent-orientation`: first-run orientation skill for an",
-        "  unfamiliar host. It checks readiness, chooses the correct Androperator front",
-        "  door, and points back to the canonical public docs for the chosen path.",
-      );
-    }
-    if (hasUpgrade) {
-      lines.push(
-        "- `androperator-upgrade`: packaged whole-product upgrade route. It checks",
-        "  `androperator --version`, verifies the installer-owned Node, npm, and Java",
-        "  prerequisites, then runs `npm install -g androperator@latest`,",
-        "  `androperator install`, and `androperator doctor` when the CLI is",
-        "  already reachable. It keeps `install.sh` as recovery-only fallback when",
-        "  the CLI or bootstrap prerequisites still need repair.",
-      );
-    }
-    if (hasDiscovery) {
-      lines.push(
-        "- `androperator-skill-author-by-agent-discovery`: zero-results front door when",
-        "  `androperator skills for-app <package_id>` and",
-        "  `androperator skills search --keyword \"<term>\"` found no relevant runtime",
-        "  skill. Discovery stays bounded, produces one routing artifact, and chooses",
-        "  the next truthful step.",
-      );
-    }
-    if (hasRecording) {
-      lines.push(
-        "- `androperator-skill-author-by-recording`: proving workflow after discovery returns",
-        "  `proceed_to_recording`, or when the app route is already well understood",
-        "  and you need a real-device recording to draft a reusable runtime skill.",
-      );
-    }
-
-    lines.push("", "Installed entries on this host:");
-    for (const skillName of installed) {
-      lines.push(`- ${skillName}`);
-    }
-
-    if (hasOrientation && hasUpgrade && hasDiscovery && hasRecording) {
-      lines.push(
-        "",
-        "Recommended first-run flow:",
-        "- If the current host is unfamiliar, start with `androperator-agent-orientation`",
-        "- If this installed Androperator environment needs a whole-product refresh, use `androperator-upgrade`",
-        "- Choose one runtime-skill discovery probe: `androperator skills for-app <package_id>` or `androperator skills search --keyword \"<term>\"`",
-        "- If there is no relevant runtime-skill match, inspect `androperator bundled-skills list`",
-        "- Start the guided route with `androperator-skill-author-by-agent-discovery`",
-        "- Use `androperator-skill-author-by-recording` only after discovery returns `proceed_to_recording`",
-      );
-    } else {
-      lines.push(
-        "",
-        "Installed bundled-skill front doors are incomplete on this host.",
-        "",
-        "Repair it with:",
-        "- run `androperator bundled-skills update`",
-      );
-      if (!hasOrientation) {
-        lines.push("- missing `androperator-agent-orientation`");
-      }
-      if (!hasUpgrade) {
-        lines.push("- missing `androperator-upgrade`");
-      }
-      if (!hasDiscovery) {
-        lines.push("- missing `androperator-skill-author-by-agent-discovery`");
-      }
-      if (!hasRecording) {
-        lines.push("- missing `androperator-skill-author-by-recording`");
-      }
-    }
-
-    if (!hasVersionFile) {
-      lines.push(
-        "",
-        "Version metadata is missing for this install.",
-        "Refresh it with:",
-        "- run `androperator bundled-skills update`",
-      );
-    }
-  } else {
-    lines.push(
-      "",
-      "## Bundled Skills",
-      "",
-      "First-party Androperator bundled skills are not currently configured on this host.",
-      "",
-      "Expected packaged front doors after install:",
-      "- `androperator-agent-orientation`: first-run orientation for unfamiliar hosts",
-      "- `androperator-upgrade`: packaged whole-product upgrade route through `androperator install` and `androperator doctor`, with `install.sh` retained as recovery-only fallback",
-      "- `androperator-skill-author-by-agent-discovery`: zero-results front door when runtime-skill discovery found no relevant match",
-      "- `androperator-skill-author-by-recording`: proving workflow after discovery returns `proceed_to_recording`",
-      "",
-      "Repair or manual bootstrap:",
-      "- run `androperator bundled-skills install`",
-    );
-  }
-
+  if (installed.length === 0 || !hasVersionFile) lines.push("", "Install or refresh guidance with `androperator bundled-skills install`.");
+  lines.push("", "## Documentation", "", "- https://docs.androperator.com/llms.txt", "- https://docs.androperator.com/host-agents/");
   return `${lines.join("\n")}\n`;
 }
 
@@ -691,20 +359,11 @@ function buildSharedAgentBridgeContent(sharedAgentsContent: string, localAgentGu
     SHARED_BRIDGE_START,
     "## Androperator",
     "",
-    "Androperator runtime skills stay in the `androperator` CLI surface.",
-    "Do not mirror them into shared agent skill directories.",
-    "",
-    "Start here:",
-    `- \`${localAgentGuidePath}\``,
-    "- if the host is unfamiliar and the local guide lists it, start with `androperator-agent-orientation`",
-    "- `androperator skills for-app <package_id>`",
-    "- `androperator skills search --keyword \"<term>\"`",
-    "- `androperator skills get <skill_id>`",
-    "- `androperator bundled-skills list`",
-    "",
-    "If runtime-skill discovery finds no relevant match, follow the local guide for the bundled-skill front doors installed on this host.",
-    "Confirm the local guide lists `androperator-agent-orientation`, `androperator-upgrade`, `androperator-skill-author-by-agent-discovery`, and `androperator-skill-author-by-recording` before starting the discovery-to-proving route.",
-    "Use `androperator skills run <skill_id>` after you have identified the right runtime skill.",
+    "The current agent follows instructions and uses Androperator for Android actions and evidence.",
+    `- Read \`${localAgentGuidePath}\``,
+    "- Inspect `androperator bundled-skills list` for installed host guidance.",
+    "- Start with `androperator-agent-orientation` on an unfamiliar host.",
+    "- Observe current state, act, and verify the requested result; report blockers truthfully.",
     SHARED_BRIDGE_END,
   ].join("\n");
 
@@ -730,11 +389,10 @@ export async function setupHost(
   const sharedAgentsPath = options.sharedAgentsPath ?? join(homeDir, ".agents", "AGENTS.md");
 
   await ensurePrivateAndroperatorDir(androperatorDir);
-  const runtimeGuide = await resolveRuntimeGuideInfo(options, androperatorDir);
 
   const results: HostArtifactOutcome[] = [];
 
-  const installStateContent = buildInstallStateContent(options, runtimeGuide.resolvedPath);
+  const installStateContent = buildInstallStateContent(options);
   try {
     const status = await writeArtifactFile(installStatePath, installStateContent, 0o600);
     await secureFileIfPresent(installStatePath);
@@ -763,7 +421,7 @@ export async function setupHost(
   }
 
   try {
-    const agentGuideContent = await buildAgentGuideContent(options, runtimeGuide);
+    const agentGuideContent = await buildAgentGuideContent(options);
     const status = await writeArtifactFile(agentGuidePath, agentGuideContent, 0o600);
     await secureFileIfPresent(agentGuidePath);
     results.push({ artifact: "agentGuide", path: agentGuidePath, status });

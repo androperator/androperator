@@ -5,8 +5,6 @@ import {
   checkNodeVersion,
   checkAdbPresence,
   checkAdbServer,
-  checkDefaultOrchestratedSkillAgentCli,
-  checkInstalledOrchestratedSkillAgentCliAvailability,
   checkBundledSkillsStaleness,
 } from "./checks/hostChecks.js";
 import {
@@ -104,8 +102,6 @@ export class DoctorService {
       if (check.status !== "pass") break;
       if (id === "host.adb.presence") {
         checks.push(await checkVideoDependencies(config));
-        checks.push(await checkDefaultOrchestratedSkillAgentCli(config));
-        checks.push(await checkInstalledOrchestratedSkillAgentCliAvailability(config));
         checks.push(await checkBundledSkillsStaleness(config, {
           installedDir: (config as RuntimeConfigWithDoctorOverrides).bundledSkillsDir,
         }));

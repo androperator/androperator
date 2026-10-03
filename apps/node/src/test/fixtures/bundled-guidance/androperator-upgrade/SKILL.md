@@ -146,7 +146,7 @@ androperator doctor
 Rules:
 
 - use `androperator install` as the CLI-owned post-bootstrap route
-- do not re-implement multi-device policy, bundled-skills install, or host-artifact sequencing inside the skill
+- do not re-implement multi-device policy, runtime-skills install, bundled-skills install, or host-artifact sequencing inside the skill
 - use the structured CLI results rather than guessing about state
 - keep `androperator doctor` as the readiness check after the sequence
 - if the install result has `deviceSelectionRequired: true`, collect the
@@ -190,7 +190,9 @@ Rules:
 After a successful upgrade:
 
 - if the host is unfamiliar, suggest `androperator-agent-orientation`
-- for an Android goal, follow the current-agent control loop from observed state
+- if the goal is runtime-skill discovery, suggest
+  `androperator skills for-app <package_id>` or
+  `androperator skills search --keyword <text>`
 - if the user explicitly needs repair after doctor failure, point at the
   existing setup or repair guidance instead of widening scope
 

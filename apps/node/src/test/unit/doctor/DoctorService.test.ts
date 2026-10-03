@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert";
-import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { delimiter, join } from "node:path";
 import { tmpdir } from "node:os";
 import { DoctorService } from "../../../domain/doctor/DoctorService.js";
@@ -29,25 +29,13 @@ describe("DoctorService", () => {
   let fakeRegistryDir: string;
   let originalPath: string | undefined;
   let originalLogDir: string | undefined;
-  let originalRegistryPath: string | undefined;
 
   beforeEach(async () => {
     originalPath = process.env.PATH;
     originalLogDir = process.env.ANDROPERATOR_LOG_DIR;
-    originalRegistryPath = process.env.ANDROPERATOR_SKILLS_REGISTRY;
     fakeAgentCliDir = await mkdtemp(join(tmpdir(), "androperator-doctor-agent-cli-"));
     fakeRegistryDir = await mkdtemp(join(tmpdir(), "androperator-doctor-registry-"));
     process.env.ANDROPERATOR_LOG_DIR = join(fakeRegistryDir, "logs");
-    const fakeAgentPath = join(fakeAgentCliDir, "codex");
-    const registryPath = join(fakeRegistryDir, "skills", "skills-registry.json");
-    await mkdir(join(fakeRegistryDir, "skills"), { recursive: true });
-    await writeFile(fakeAgentPath, "#!/bin/sh\nexit 0\n", "utf8");
-    // Keep DoctorService tests isolated from any developer-local skills registry so
-    // host.skill-agent-cli.skills assertions stay deterministic across machines.
-    await writeFile(registryPath, `${JSON.stringify({ schemaVersion: "1.0", generatedAt: "2026-04-16T00:00:00Z", skills: [] }, null, 2)}\n`, "utf8");
-    await chmod(fakeAgentPath, 0o755);
-    process.env.PATH = `${fakeAgentCliDir}${delimiter}${originalPath ?? ""}`;
-    process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
   });
 
   afterEach(async () => {
@@ -59,11 +47,6 @@ describe("DoctorService", () => {
       delete process.env.PATH;
     } else {
       process.env.PATH = originalPath;
-    }
-    if (originalRegistryPath === undefined) {
-      delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
-    } else {
-      process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistryPath;
     }
   });
 
@@ -136,7 +119,7 @@ describe("DoctorService", () => {
     assert.ok(!report.checks.some(check => check.id === "readiness.handshake"));
   });
 
-  it("still reports the orchestrated agent CLI advisory when adb server startup fails", async () => {
+  it("reports host advisories when adb server startup fails", async () => {
     const runner = new FakeProcessRunner();
     const config = withTempBundledSkillsDir(getDefaultRuntimeConfig({ runner, operatorPackage: "com.androperator.operator.dev" }), fakeRegistryDir);
 
@@ -145,14 +128,6 @@ describe("DoctorService", () => {
     runner.queueResult({ code: 1, stdout: "", stderr: "cannot start adb server" });
 
     const report = await new DoctorService().run({ config });
-
-    const defaultAgentCliCheck = report.checks.find(check => check.id === "host.skill-agent-cli.default");
-    assert.ok(defaultAgentCliCheck);
-    assert.strictEqual(defaultAgentCliCheck.status, "pass");
-
-    const installedAgentCliCheck = report.checks.find(check => check.id === "host.skill-agent-cli.skills");
-    assert.ok(installedAgentCliCheck);
-    assert.strictEqual(installedAgentCliCheck.status, "pass");
 
     const adbServer = report.checks.find(check => check.id === "host.adb.server");
     assert.ok(adbServer);
@@ -525,9 +500,6 @@ describe("DoctorService logging", () => {
     tempRoot = await mkdtemp(join(tmpdir(), "androperator-doctor-log-"));
     originalPath = process.env.PATH;
     fakeAgentCliDir = await mkdtemp(join(tmpdir(), "androperator-doctor-log-agent-cli-"));
-    const fakeAgentPath = join(fakeAgentCliDir, "codex");
-    await writeFile(fakeAgentPath, "#!/bin/sh\nexit 0\n", "utf8");
-    await chmod(fakeAgentPath, 0o755);
     process.env.PATH = `${fakeAgentCliDir}${delimiter}${originalPath ?? ""}`;
   });
 

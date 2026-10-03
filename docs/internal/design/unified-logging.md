@@ -17,7 +17,7 @@ Provide deterministic, structured logging for all Androperator operations. An ag
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
 │   CLI Commands  │────▶│                  │────▶│  NDJSON File    │
-│   Skill Runner  │────▶│  Unified Logger  │     │  (~/.androperator│
+│   Executions    │────▶│  Unified Logger  │     │  (~/.androperator│
 │   HTTP Server   │────▶│                  │     │   /logs/...)     │
 └─────────────────┘     └──────────────────┘     └─────────────────┘
                                  │
@@ -52,11 +52,10 @@ interface LogEvent {
   commandId?: string;
   taskId?: string;
   deviceId?: string;
-  skillId?: string;
-  stream?: "stdout" | "stderr";
+  runId?: string;
+  logPath?: string;
   status?: string;
   durationMs?: number;
-  exitCode?: number;
 }
 ```
 
@@ -66,7 +65,6 @@ Events use dot-separated prefixes for categorization:
 
 | Prefix | Category | Examples |
 |--------|----------|----------|
-| `skills.run.` | Skill execution lifecycle | `start`, `output`, `complete`, `failed`, `timeout` |
 | `cli.` | CLI command output | `banner`, `validation` |
 | `doctor.` | Doctor diagnostics | `check` |
 | `serve.` | HTTP/SSE server | `server.started`, `http.request`, `sse.client.connected` |
@@ -77,7 +75,6 @@ Routing determines where events go (file, terminal, or both). Terminal routing i
 
 | Event Category | File | Terminal | In JSON Mode |
 |----------------|------|----------|--------------|
-| `skills.run.output` | Yes | No | No |
 | `cli.*` | Yes | Yes | No |
 | `doctor.*` | Yes | No | No |
 | `serve.*` | Yes | No | No |
@@ -85,28 +82,13 @@ Routing determines where events go (file, terminal, or both). Terminal routing i
 
 **Design Rationale**:
 
-- `skills.run.output` is file-only because skill terminal streaming is live interactive I/O handled by the `onOutput` callback (see below)
 - `cli.*` events appear on stderr in pretty mode for user feedback, but are suppressed in JSON mode to keep output parseable
 - Most server events are file-only to avoid terminal noise during long-running serve
 
-### Why Skill Terminal Streaming Stays on `onOutput`
-
-Skill execution produces two distinct output streams:
-
-1. **Live Interactive I/O**: The skill's stdout/stderr lines as they happen, for real-time user feedback during long-running operations.
-2. **Structured Log Events**: NDJSON records for post-hoc debugging and agent inspection.
-
-These are intentionally separate:
-
-- **Live stream** (`onOutput` callback) is immediate, unbuffered, and may be lossy if the consumer is slow. It's for human eyes.
-- **Log events** (`skills.run.output`) are persisted, ordered, and complete. They're for machine analysis.
-
-If we routed skill stdout through the logger's terminal output, we'd lose this separation:
-- Real-time feedback would be gated by log level (file threshold)
-- Interactive progress indicators would be interleaved with other log events
-- JSON output mode would become unparseable
-
-The `skills.run.output` event is file-only, while the live stream uses the existing `onOutput` callback pattern. This preserves both use cases without compromise.
+Optional caller-owned helpers may correlate their CLI calls with
+`ANDROPERATOR_RUN_ID`. This supplies logging context only; the logger does
+not run helpers or collect their stdout/stderr. See [public logging guidance](../../api/logging.md)
+for the current fields and propagation rules.
 
 ## Level Threshold Behavior
 
@@ -153,7 +135,7 @@ The `androperator logs` command reads from the file system rather than subscribi
 
 1. **Process Independence**: The CLI process that generated logs may have exited. A separate `androperator logs` invocation can still retrieve the complete history.
 
-2. **Post-Mortem Debugging**: After a skill timeout or crash, agents can inspect what happened without requiring a persistent in-memory event stream.
+2. **Post-Mortem Debugging**: After an execution timeout or crash, agents can inspect what happened without requiring a persistent in-memory event stream.
 
 3. **No Shared Runtime**: Different CLI invocations share no memory. File system is the natural shared substrate.
 
@@ -170,7 +152,7 @@ If the log directory cannot be written to:
    [androperator] WARN: logging disabled after write failure for <path>
    ```
 2. **Disable file logging** for the remainder of the process
-3. **Continue normal operation** - commands and skills execute normally
+3. **Continue normal operation** - commands continue normally
 
 This ensures logging problems never cascade into execution failures.
 
@@ -201,11 +183,10 @@ const cmdLogger = logger.child({ commandId: "cmd-123", deviceId: "abc" });
 cmdLogger.emit({
   ts: new Date().toISOString(),
   level: "info",
-  event: "skills.run.start",
-  message: "Skill started",
-  skillId: "com.example.app",
+  event: "cli.validation",
+  message: "Execution validated",
 });
-// Logged: {..., "commandId":"cmd-123", "deviceId":"abc", "skillId":"com.example.app"}
+// Logged: {..., "commandId":"cmd-123", "deviceId":"abc"}
 ```
 
 ### Context Inheritance Rules
@@ -219,9 +200,9 @@ cmdLogger.emit({
 | Scenario | Pattern |
 |----------|---------|
 | Command execution | `logger.child({ commandId })` at command start |
-| Skill run | `logger.child({ skillId, commandId })` in skill runner |
+| Helper correlation | `logger.child({ runId })` with validated caller context |
 | Device-specific operations | `logger.child({ deviceId })` when device resolved |
-| HTTP request context | `logger.child({ requestId })` in middleware |
+| Task context | `logger.child({ taskId })` when an execution supplies one |
 
 Child loggers ensure all events in a scope carry consistent correlation IDs without manual repetition.
 
@@ -267,7 +248,7 @@ Currently, the EventEmitter (`androperatorEvents`) and the logger are separate s
 - Emit rich objects through a single pipeline
 - Serialize to NDJSON for file sink
 - Forward to SSE clients for live streaming
-- Avoid dual event paths in skill runner and serve
+- Avoid dual event paths in execution and serve
 
 This would simplify the codebase but is not required for the current feature set. The separation is stable and well-tested. Unification would require careful handling of circular references and performance characteristics of the SSE transport.
 

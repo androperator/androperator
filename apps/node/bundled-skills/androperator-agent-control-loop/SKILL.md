@@ -1,19 +1,17 @@
 ---
 name: androperator-agent-control-loop
-description: Execute Android goals that need adaptive navigation or verified extraction with Androperator. Use also for explicitly requested orchestrated skill authoring after bounded discovery.
+description: Execute Android goals that need adaptive navigation or verified extraction with Androperator. Use also for authoring reusable agent instructions when requested.
 ---
 
 # Androperator Agent Control Loop
 
 Complete the requested Android goal with independently verified results, or return
 a supported partial or failed outcome when a blocker or budget prevents completion.
-For authorized orchestrated authoring, continue through implementation, metadata
-validation and live proof using the authoring reference below.
+For authorized authoring, save adaptive instructions and verify them live.
 
 The agent owns decisions and verification; Androperator executes. Use
 `androperator-agent-orientation` if the CLI, device and Operator have not already
-been selected and checked. Discover runtime skills and inspect actual goal
-coverage before choosing this loop. No provider credential is required.
+been selected and checked. Define actual goal coverage before choosing this loop. No provider credential is required.
 
 ## Execute the goal
 
@@ -46,4 +44,4 @@ coverage before choosing this loop. No provider credential is required.
 - [Failure and recovery](references/recovery.md): failed steps, timeouts,
   interruptions, prior effects and retained diagnostics.
 - [Delegation and authoring](references/delegation.md): optional model proposals,
-  Settings examples, or an explicit request to author an orchestrated skill.
+  Settings examples, or an explicit request to author reusable instructions.

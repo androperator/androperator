@@ -309,11 +309,11 @@ Optional:
 Notes:
   - This is the canonical post-bootstrap install route after the CLI is installed.
   - install.sh delegates here after it finishes shell-owned prerequisite bootstrap.
-  - Internally sequences: operator remediate, skills install, bundled-skills install, and host setup.
+  - Internally sequences: operator remediate, bundled-skills install, and host setup.
   - Returns stable JSON for automation and installer tests.
   - Pretty output is intended for installer pass-through and human review.
   - Exit code 1 means no connected device is ready, remediation still failed, or host setup failed.
-  - Skills install, bundled-skills install, and the shared-agent bridge remain best-effort warnings when the core install is otherwise usable.
+  - Bundled-skills install, and the shared-agent bridge remain best-effort warnings when the core install is otherwise usable.
   - If multiple connected devices are ready, future commands must target one device explicitly with --device.
   - Use 'androperator operator setup --apk <path>' when you only need direct APK install, permission grant, and verification.
 `;
@@ -337,30 +337,6 @@ Notes:
   - The daemon run subcommand is internal and is intentionally omitted from help.
 `;
 
-
-const HELP_SKILLS_INSTALL = `androperator skills install
-
-Usage:
-  androperator skills install [--output <json|pretty>]
-
-Notes:
-  - Initializes an empty local skill workspace at ~/.androperator/skills/; no catalog is downloaded.
-  - The installed-home registry at ~/.androperator/skills/skills/skills-registry.json is discovered automatically in fresh shells.
-  - Set ANDROPERATOR_SKILLS_REGISTRY only when you intentionally want to point at a non-default registry path.
-  - Existing registries and user-created skills are preserved.
-`;
-
-const HELP_SKILLS_SYNC = `androperator skills sync
-
-Usage:
-  androperator skills sync --ref <git-ref> [--output <json|pretty>]
-
-Notes:
-  - Initializes or validates the local skill workspace; only --ref main is accepted.
-  - Git-backed catalog synchronization was removed in 1.0.0.
-  - Registry path after sync:
-      $HOME/.androperator/skills/skills/skills-registry.json
-`;
 
 const HELP_BUNDLED_SKILLS_INSTALL = `androperator bundled-skills install
 
@@ -401,11 +377,10 @@ Notes:
   - Shows the absolute SKILL.md path for each installed bundled skill
   - Use this when you need to inspect the installed host-agent helpers on this machine
   - 'androperator-agent-orientation' is the first-run orientation skill for unfamiliar hosts
-  - 'androperator-agent-control-loop' guides bounded adaptive execution and explicit orchestrated authoring after goal-aware discovery
+  - 'androperator-agent-control-loop' guides bounded adaptive execution and optional authoring of reusable instructions
   - 'androperator-upgrade' is the whole-product upgrade route that checks androperator --version, verifies Node 24+, npm reachability, and Java 17/21, then uses npm install -g androperator@latest, androperator install, and androperator doctor when the CLI is already viable
-  - 'androperator-skill-author-by-agent-discovery' is the zero-results front door
-  - 'androperator-skill-author-by-recording' remains the proving workflow after discovery returns 'proceed_to_recording'
-  - Runtime skills still live under 'androperator skills ...'; bundled skills are separate host-agent helpers
+  - 'androperator-skill-author-by-agent-discovery' supports bounded exploration and optional instruction authoring
+  - 'androperator-skill-author-by-recording' uses optional human demonstration as evidence for adaptive instructions
 `;
 
 const HELP_HOST = `androperator host
@@ -422,26 +397,10 @@ Notes:
   - Use --cli-version when an installer wrapper needs the setup install-state to reflect the wrapper-reported CLI version exactly.
 `;
 
-const HELP_SKILLS_NEW = `androperator skills new
-
-Usage:
-  androperator skills new <skill_id> [--summary <text>] [--recording-context <file>] [--output <json|pretty>]
-
-Notes:
-  - Scaffolds a new local skill in the currently configured skills registry repo.
-  - Derives applicationId and intent by splitting <skill_id> on the final dot.
-  - Creates: SKILL.md, skill.json, scripts/run.js, and scripts/run.sh
-  - --summary overrides the default TODO summary written to skill.json and SKILL.md.
-  - --recording-context copies a recording export JSON file into the new skill folder as reference evidence for an external authoring agent or human.
-  - Updates the configured registry JSON so the new skill appears in skills list.
-  - This is the low-level manual scaffold. If runtime-skill discovery found no relevant match, inspect 'androperator bundled-skills list' first and start with 'androperator-skill-author-by-agent-discovery'.
-  - Use 'androperator-skill-author-by-recording' only after discovery returns 'proceed_to_recording', or when the app route is already well understood and you need the proving workflow.
-`;
-
 const HELP_RECORDING = `androperator recording
 
 Usage:
-  androperator recording start|stop|pull|parse|export|compare ... ('record' is an alias)
+  androperator recording start|stop|pull|export ... ('record' is an alias)
 `;
 
 const HELP_RECORDING_EXPORT = `androperator recording export
@@ -460,81 +419,6 @@ Notes:
   - Otherwise appends .export.json to the input path when --out is omitted.
   - Preserves raw recording evidence for agent or human review.
   - Does not generate skill logic, selectors, or parameters.
-`;
-
-const HELP_RECORDING_COMPARE = `androperator recording compare
-
-Usage:
-  androperator recording compare --baseline <export.json> --result <skills-run.json> [--mode <auto|literal|semantic>] [--output <json|pretty>]
-  androperator record compare --baseline <export.json> --result <skills-run.json> [--mode <auto|literal|semantic>] [--output <json|pretty>]
-
-Options:
-  --baseline <export.json>       Recording export JSON used as the compare baseline
-  --result <skills-run.json>     Saved androperator skills run JSON wrapper file
-  --mode <auto|literal|semantic> Compare mode override (default: auto)
-
-Notes:
-  - Auto mode selects semantic compare for agent-driven skill results and literal compare for scripted results.
-  - Exit code is 0 for no meaningful divergence and for USAGE responses.
-  - Exit code is non-zero for meaningful divergence and non-USAGE compare errors.
-  - Compare reads the wrapper's top-level skillResult field. It does not accept a bare SkillResult document in v1.
-  - v1 compare currently uses the Solax heuristic normalization path.
-  - Compare fails closed when the retained baseline does not satisfy that heuristic checkpoint set.
-  - Generic per-skill compare is follow-on work, not part of the shipped W4 closeout.
-`;
-
-const HELP_SKILLS_VALIDATE = `androperator skills validate
-
-Usage:
-  androperator skills validate <skill_id> [--dry-run] [--output <json|pretty>]
-  androperator skills validate --all [--dry-run] [--output <json|pretty>]
-
-Notes:
-  - Use <skill_id> to validate one skill, or --all to validate every registry entry in one pass.
-  - Verifies that the registry entry exists for the requested skill.
-  - Checks that skill.json, SKILL.md, script files, and artifact files exist on disk.
-  - Confirms that the parsed skill.json metadata matches the registry entry.
-  - This is an integrity check, not a live device test.
-  - --dry-run extends the check to compiled artifact payloads for artifact-backed skills by parsing each artifact JSON and validating it against the execution schema.
-  - Script-only skills skip payload validation during --dry-run because their payload is generated at runtime by the skill script.
-`;
-
-const HELP_SKILLS_COMPILE_ARTIFACT = `androperator skills compile-artifact
-
-Usage:
-  androperator skills compile-artifact <skill_id> --artifact <name> [--vars <json>] [--output <json|pretty>]
-  androperator skills compile-artifact --skill-id <id> --artifact <name> [--vars <json>] [--output <json|pretty>]
-
-Notes:
-  - Compiles a deterministic skill artifact into a validated execution payload.
-  - Use either the positional <skill_id> or --skill-id <id>.
-  - --artifact accepts either the bare artifact name or the full .recipe.json filename.
-  - --vars must be a JSON object string used for template substitution.
-  - Compile failure usually means a missing artifact, missing required vars, or an invalid execution shape.
-  - Use androperator exec --validate-only for an extra contract-only check before a live device run.
-`;
-
-const HELP_SKILLS_RUN = `androperator skills run
-
-Usage:
-  androperator skills run <skill_id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>] [--expect-contains <text>] [--skip-validate] [--output <json|pretty>] [skill_args...]
-
-Notes:
-  - Prefer 'androperator skills for-app', 'androperator skills search', and 'androperator skills get' before 'androperator skills run' when you are still discovering the correct skill.
-  - Runs the selected skill script through the local skill wrapper.
-  - Use --device explicitly when more than one Android device is connected.
-  - --operator-package sets the Operator package for this skill run (default: com.androperator.operator).
-    Use com.androperator.operator.dev for local debug APKs. --receiver-package is a legacy alias (see global options).
-  - Output defaults to JSON. Use --output json when you want to request JSON explicitly. --format json is also accepted.
-  - --timeout overrides the wrapper timeout for this run only (--timeout-ms is accepted as an alias).
-  - --expect-contains turns the run into a lightweight output assertion.
-  - If the assertion text is missing, the wrapper fails with SKILL_OUTPUT_ASSERTION_FAILED.
-  - By default, the wrapper performs a pre-run dry-run validation gate before starting the skill script.
-  - --skip-validate bypasses that gate for CI or development escape hatches only.
-  - Unknown trailing tokens such as --limit 40 are forwarded to the underlying skill script unchanged.
-  - Use -- when you need to force literal passthrough for tokens that would otherwise be parsed as wrapper flags.
-  - Environment variables ANDROPERATOR_BIN and ANDROPERATOR_OPERATOR_PACKAGE are injected into the skill script.
-  - This wrapper does not replace live validation of screenshots, artifacts, or app state.
 `;
 
 const HELP_DOCTOR = `androperator doctor
@@ -1062,18 +946,6 @@ const READ_VALUE_FLAG_ALIASES: readonly CliFlagAliasSpec[] = [
   { canonical: "--label-desc", aliases: ["--desc", "--content-desc"] },
 ] as const;
 
-const SKILLS_SEARCH_FLAG_ALIASES: readonly CliFlagAliasSpec[] = [
-  { canonical: "--app", aliases: ["--package", "--package-id", "--application-id"] },
-] as const;
-
-const SKILLS_COMPILE_ARTIFACT_FLAG_ALIASES: readonly CliFlagAliasSpec[] = [
-  { canonical: "--skill-id", aliases: ["--skill"] },
-] as const;
-
-const SKILLS_NEW_FLAG_ALIASES: readonly CliFlagAliasSpec[] = [
-  { canonical: "--summary", aliases: ["--description"] },
-] as const;
-
 const SERVE_FLAG_ALIASES: readonly CliFlagAliasSpec[] = [
   { canonical: "--host", aliases: ["--bind"] },
 ] as const;
@@ -1208,10 +1080,10 @@ COMMANDS["setup"] = {
 COMMANDS["install"] = {
   name: "install",
   group: "Setup",
-  summary: "Run the CLI-owned post-bootstrap install flow for device remediation, runtime skills, bundled skills, and host setup",
+  summary: "Run the CLI-owned post-bootstrap install flow for device remediation, bundled skills, and host setup",
   help: HELP_INSTALL,
   topLevelBlock: `  install [--operator-package <package>]
-                                            Run the CLI-owned post-bootstrap remediation, skills install, bundled-skills install, and host setup`,
+                                            Run the CLI-owned post-bootstrap remediation, bundled-skills install, and host setup`,
   documentedFlags: ["--operator-package"],
   handler: async (ctx) => {
     const { format, deviceId, operatorPackage, logger } = ctx;
@@ -2832,237 +2704,6 @@ COMMANDS["read-value"] = {
   },
 };
 
-// skills
-COMMANDS["skills"] = {
-  name: "skills",
-  group: "Execution",
-  documentedFlags: ["--app", "--intent", "--keyword", "--skill-id", "--artifact", "--vars", "--summary", "--recording-context", "--all", "--dry-run", "--device", "--operator-package", "--timeout", "--expect-contains", "--skip-validate", "--ref"],
-  flagAliases: (rest) => {
-    const sub = rest[0];
-    if (sub === "search") return SKILLS_SEARCH_FLAG_ALIASES;
-    if (sub === "compile-artifact") return SKILLS_COMPILE_ARTIFACT_FLAG_ALIASES;
-    if (sub === "new") return SKILLS_NEW_FLAG_ALIASES;
-    return [];
-  },
-  supportedFlags: (rest) => {
-    const sub = rest[0];
-    if (sub === "search") return ["--app", "--intent", "--keyword"];
-    if (sub === "compile-artifact") return ["--skill-id", "--artifact", "--vars"];
-    if (sub === "new") return ["--summary", "--recording-context"];
-    if (sub === "validate") return ["--all", "--dry-run"];
-    if (sub === "run") return ["--device", "--device-id", "--operator-package", "--receiver-package", "--timeout", "--timeout-ms", "--expect-contains", "--skip-validate"];
-    if (sub === "sync" || sub === "update") return ["--ref"];
-    return [];
-  },
-  summary: "Manage and run automation skills",
-  help: `androperator skills
-
-Usage:
-  androperator skills list
-  androperator skills get <skill_id>
-  androperator skills for-app <package_id>
-  androperator skills search --app <package_id> [--intent <intent>] [--keyword <text>]
-  androperator skills search <keyword>
-  androperator skills compile-artifact <skill_id> --artifact <name> [--vars <json>]
-  androperator skills new <skill_id> [--summary <text>] [--recording-context <file>]
-  androperator skills validate <skill_id> [--dry-run]
-  androperator skills validate --all [--dry-run]
-  androperator skills run <skill_id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>] [--expect-contains <text>] [--skip-validate] [--output <json|pretty>] [skill_args...]
-  androperator skills install
-  androperator skills update [--ref <git-ref>]
-  androperator skills sync --ref <git-ref>
-
-Notes:
-  - Start with 'androperator skills for-app <package_id>' when you know the Android package id.
-  - Use 'androperator skills search --keyword <text>' when you only have app names or user-language intent terms.
-  - Use 'androperator skills get <skill_id>' before 'androperator skills run <skill_id>' when discovery already returned an id.
-  - If the current host is unfamiliar, inspect 'androperator bundled-skills list' and start with 'androperator-agent-orientation' before choosing runtime skills, MCP, or raw CLI actions.
-  - If this installed Androperator environment needs a whole-product refresh, inspect 'androperator bundled-skills list' and use 'androperator-upgrade' before trying component-level repair commands. androperator-upgrade checks androperator --version, verifies Node 24+, npm reachability, and Java 17/21, then uses npm install -g androperator@latest, androperator install, and androperator doctor when the CLI is already viable.
-  - If runtime-skill discovery returns no relevant match and you need guided skill creation help, use 'androperator bundled-skills list' and start with 'androperator-skill-author-by-agent-discovery'.
-  - Use 'androperator-skill-author-by-recording' after discovery returns 'proceed_to_recording', or when the route is already well understood and you need the proving workflow.
-  - If your host already supports stdio MCP and wants registered tools instead of runtime-skill discovery, use 'androperator mcp serve'.
-  - Post-install orientation: https://docs.androperator.com/host-agents/
-`,
-  subtopics: {
-    install: HELP_SKILLS_INSTALL,
-    sync: HELP_SKILLS_SYNC,
-    new: HELP_SKILLS_NEW,
-    validate: HELP_SKILLS_VALIDATE,
-    "compile-artifact": HELP_SKILLS_COMPILE_ARTIFACT,
-    run: HELP_SKILLS_RUN,
-  },
-  topLevelBlock: `  skills list
-                                            List available runtime skills from the registry
-  skills get <skill_id>
-                                            Show skill metadata
-  skills for-app <package_id>
-                                            Primary app-oriented discovery by package id
-  skills search --app <package_id> [--intent <intent>] [--keyword <text>]
-  skills search <keyword>                   Search skills by app package, intent, or keyword
-                                            (bare keyword is shorthand for --keyword)
-  skills compile-artifact <skill_id> --artifact <name> [--vars <json>]
-  skills compile-artifact --skill-id <id> --artifact <name> [--vars <json>]
-                                            Compile from a skill artifact (skill: positional or --skill-id; artifact: climate-status or climate-status.recipe.json)
-  skills new <skill_id> [--summary <text>] [--recording-context <file>]
-                                            Scaffold a new local skill folder and registry entry
-  skills validate <skill_id> [--dry-run]
-  skills validate --all [--dry-run]
-                                            Validate one local skill or the entire configured registry
-  skills run <skill_id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>] [--expect-contains <text>] [--skip-validate] [--output <json|pretty>] [skill_args...]
-                                            Run a discovered skill through the local wrapper
-  skills install
-                                            Initialize a local skill workspace at ~/.androperator/skills/
-  skills update [--ref <git-ref>]
-                                            Pull latest skills (optionally pin to a ref)
-  skills sync --ref <git-ref>
-                                            Sync and pin skills index/cache to a git ref`,
-  handler: async (ctx) => {
-    const { rest, format, verbose, logger, deviceId, operatorPackage, timeoutMs } = ctx;
-    const out = { format, verbose, logger };
-    if (rest[0] === "list") {
-      return (await import("./commands/skills.js")).cmdSkillsList(out);
-    } else if (rest[0] === "get") {
-      return rest[1]
-        ? (await import("./commands/skills.js")).cmdSkillsGet(rest[1], out)
-        : JSON.stringify({ code: "USAGE", message: "skills get <skill_id>" });
-    } else if (rest[0] === "for-app") {
-      return rest[1]
-        ? (await import("./commands/skills.js")).cmdSkillsForApp(rest[1], out)
-        : JSON.stringify({ code: "USAGE", message: "skills for-app <package_id>" });
-    } else if (rest[0] === "search") {
-      const app = getOpt(rest, "--app");
-      const intent = getOpt(rest, "--intent");
-      const positional = rest[1] && !rest[1].startsWith("--") ? rest[1] : undefined;
-      const keyword = getOpt(rest, "--keyword") ?? positional;
-      if (!app && !intent && !keyword) {
-        return JSON.stringify({
-          code: "USAGE",
-          message: "skills search requires --app <package_id>, --intent <intent>, or --keyword <text>",
-          example: "androperator skills search --keyword solax",
-        });
-      } else {
-        return (await import("./commands/skills.js")).cmdSkillsSearch({ app, intent, keyword }, out);
-      }
-    } else if (rest[0] === "compile-artifact") {
-      const skillId = getOpt(rest, "--skill-id") ?? rest[1];
-      const artifact = getOpt(rest, "--artifact");
-      const vars = getOpt(rest, "--vars") ?? "{}";
-      if (!skillId || !artifact) {
-        return JSON.stringify({
-          code: "USAGE",
-          message:
-            "skills compile-artifact requires <skill_id> (positional) or --skill-id <id>, and --artifact <name>. Example: skills compile-artifact com.example.skill --artifact climate-status [--vars '{}']",
-        });
-      } else {
-        return (await import("./commands/skills.js")).cmdSkillsCompileArtifact(skillId, artifact, vars, out);
-      }
-    } else if (rest[0] === "new") {
-      if (!rest[1]) {
-        return JSON.stringify({ code: "USAGE", message: "skills new <skill_id> [--summary <text>] [--recording-context <file>]" });
-      } else {
-        const knownFlags = ["--summary", "--recording-context"];
-        return (await import("./commands/skills.js")).cmdSkillsNew(rest[1], {
-          ...out,
-          summary: getStringOptStrict(rest, "--summary", knownFlags),
-          recordingContextPath: getStringOptStrict(rest, "--recording-context", knownFlags),
-        });
-      }
-    } else if (rest[0] === "validate") {
-      const dryRun = hasFlag(rest, "--dry-run");
-      if (hasFlag(rest, "--all")) {
-        return (await import("./commands/skills.js")).cmdSkillsValidateAll({ ...out, dryRun, logger });
-      } else if (!rest[1]) {
-        return JSON.stringify({ code: "USAGE", message: "skills validate <skill_id> [--dry-run] | skills validate --all [--dry-run]" });
-      } else {
-        return (await import("./commands/skills.js")).cmdSkillsValidate(rest[1], { ...out, dryRun, logger });
-      }
-    } else if (rest[0] === "run") {
-      const skillId = rest[1];
-      if (!skillId) {
-        return JSON.stringify({
-          code: "USAGE",
-          message:
-            "skills run <skill_id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>] [--expect-contains <text>] [--skip-validate] [--output <json|pretty>] [skill_args...]",
-        });
-      } else {
-        const scriptArgs: string[] = [];
-        let localTimeoutMs: number | undefined;
-        let expectContains: string | undefined;
-        let skipValidate = false;
-        for (let i = 2; i < rest.length; i += 1) {
-          const token = rest[i];
-          if (token === "--") {
-            scriptArgs.push(...rest.slice(i + 1));
-            break;
-          }
-          if (token === "--skip-validate") {
-            skipValidate = true;
-            continue;
-          }
-          if (token === "--expect-contains") {
-            if (i + 1 >= rest.length) {
-              throw new UsageError("--expect-contains requires a value");
-            }
-            const nextToken = rest[i + 1];
-            if (nextToken === "--") {
-              if (i + 2 >= rest.length) {
-                throw new UsageError("--expect-contains requires a value");
-              }
-              expectContains = rest[i + 2];
-              i += 2;
-              continue;
-            }
-            if (nextToken.startsWith("--")) {
-              throw new UsageError("--expect-contains requires a value");
-            }
-            expectContains = nextToken;
-            i += 1;
-            continue;
-          }
-          if (token === "--timeout" || token === "--timeout-ms") {
-            if (i + 1 >= rest.length) {
-              throw new UsageError(`${token} requires a value`);
-            }
-            const value = Number(rest[i + 1]);
-            if (!Number.isFinite(value)) {
-              throw new UsageError(`${token} requires a numeric value`);
-            }
-            localTimeoutMs = value;
-            i += 1;
-            continue;
-          }
-          scriptArgs.push(token);
-        }
-        const effectiveTimeoutMs = localTimeoutMs ?? timeoutMs;
-        const invalidTimeoutResult = getInvalidTimeoutResult(effectiveTimeoutMs, { format });
-        if (invalidTimeoutResult) {
-          return invalidTimeoutResult;
-        }
-        return (await import("./commands/skills.js")).cmdSkillsRun(
-          skillId,
-          scriptArgs,
-          effectiveTimeoutMs,
-          expectContains,
-          operatorPackage,
-          { ...out, skipValidate, deviceId, logger }
-        );
-      }
-    } else if (rest[0] === "install") {
-      return (await import("./commands/skills.js")).cmdSkillsInstall(out);
-    } else if (rest[0] === "update") {
-      const ref = getOpt(rest, "--ref") ?? "main";
-      return (await import("./commands/skills.js")).cmdSkillsUpdate(ref, out);
-    } else if (rest[0] === "sync") {
-      const ref = getOpt(rest, "--ref");
-      return ref
-        ? (await import("./commands/skills.js")).cmdSkillsSync(ref, out)
-        : JSON.stringify({ code: "USAGE", message: "skills sync --ref <git-ref>" });
-    } else {
-      return JSON.stringify({ code: "USAGE", message: "skills list|get|search|compile-artifact|new|validate|run|install|update|sync ..." });
-    }
-  },
-};
-
 // bundled-skills
 COMMANDS["bundled-skills"] = {
   name: "bundled-skills",
@@ -3081,9 +2722,8 @@ Notes:
   - Use 'androperator bundled-skills list' to inspect the installed host-agent workflows on this machine.
   - 'androperator-agent-orientation' is the first-run orientation skill when the current host is unfamiliar.
   - 'androperator-upgrade' is the packaged whole-product upgrade route: check androperator --version, verify Node 24+, npm reachability, and Java 17/21, then use npm install -g androperator@latest, androperator install, and androperator doctor. Use install.sh only when the CLI is not reachable or the bootstrap prerequisites need repair.
-  - 'androperator-skill-author-by-agent-discovery' is the zero-results front door when runtime-skill discovery found no relevant match.
-  - 'androperator-skill-author-by-recording' remains the proving workflow after discovery returns 'proceed_to_recording'.
-  - Runtime skills still live under 'androperator skills ...'; bundled skills are separate host-agent helpers.
+  - 'androperator-skill-author-by-agent-discovery' supports bounded exploration and optional instruction authoring.
+  - 'androperator-skill-author-by-recording' uses optional human demonstration as evidence for adaptive instructions.
   - Post-install authoring guidance: https://docs.androperator.com/skills/authoring/
 `,
   subtopics: {
@@ -3117,20 +2757,17 @@ COMMANDS["recording"] = {
   name: "recording",
   synonyms: ["record"],
   group: "Recording",
-  documentedFlags: ["--session-id", "--out", "--input", "--snapshots", "--baseline", "--result", "--mode"],
+  documentedFlags: ["--session-id", "--out", "--input", "--snapshots"],
   supportedFlags: (rest) => {
     const sub = rest[0];
     if (sub === "start" || sub === "stop") return ["--session-id"];
     if (sub === "pull") return ["--session-id", "--out"];
-    if (sub === "parse") return ["--input", "--out"];
     if (sub === "export") return ["--input", "--out", "--snapshots"];
-    if (sub === "compare") return ["--baseline", "--result", "--mode"];
     return [];
   },
   summary: "Manage recording sessions on the Operator app",
   help: HELP_RECORDING,
   subtopics: {
-    compare: HELP_RECORDING_COMPARE,
     export: HELP_RECORDING_EXPORT,
   },
   topLevelBlock: `  recording start [--session-id <id>] [--device <serial>] [--operator-package <pkg>]
@@ -3139,12 +2776,8 @@ COMMANDS["recording"] = {
                                             Stop the active recording session and finalize the on-device file ('record' is an alias)
   recording pull  [--session-id <id>] [--out <dir>] [--device <serial>]
                                             Pull the on-device NDJSON recording to host (default: ./recordings/, 'record' is an alias)
-  recording parse --input <file> [--out <file>]
-                                            Parse a raw NDJSON recording into a step log JSON ('record' is an alias)
   recording export --input <file|directory> [--out <file>] [--snapshots <omit|include>]
-                                            Export raw recording evidence into agent-context JSON ('record' is an alias)
-  recording compare --baseline <export.json> --result <skills-run.json> [--mode <auto|literal|semantic>]
-                                            Compare a saved skill run against a recording baseline ('record' is an alias)`,
+                                            Export raw recording evidence into agent-context JSON ('record' is an alias)`,
   handler: async (ctx) => {
     const { rest, format, verbose, logger, deviceId, operatorPackage } = ctx;
     const out = { format, verbose, logger };
@@ -3174,18 +2807,6 @@ COMMANDS["recording"] = {
         outputDir,
         ...runOpts,
       });
-    } else if (sub === "parse") {
-      const inputFile = getStringOptStrict(rest, "--input", ["--input", "--out"]);
-      if (!inputFile) {
-        return JSON.stringify({ code: "USAGE", message: "recording parse --input <file> [--out <file>] ('record' is an alias)" });
-      } else {
-        const outputFileFlag = getStringOptStrict(rest, "--out", ["--input", "--out"]);
-        return (await import("./commands/record.js")).cmdRecordParse({
-          ...out,
-          inputFile,
-          outputFile: outputFileFlag,
-        });
-      }
     } else if (sub === "export") {
       const inputFile = getStringOptStrict(rest, "--input", ["--input", "--out", "--snapshots"]);
       if (!inputFile) {
@@ -3201,33 +2822,8 @@ COMMANDS["recording"] = {
         outputFile: getStringOptStrict(rest, "--out", ["--input", "--out", "--snapshots"]),
         snapshotMode,
       });
-    } else if (sub === "compare") {
-      const knownFlags = ["--baseline", "--result", "--mode"];
-      const baselineFile = getStringOptStrict(rest, "--baseline", knownFlags);
-      const resultFile = getStringOptStrict(rest, "--result", knownFlags);
-      if (!baselineFile || !resultFile) {
-        return JSON.stringify({
-          code: "USAGE",
-          message: "recording compare --baseline <export.json> --result <skills-run.json> [--mode <auto|literal|semantic>] ('record' is an alias)",
-        });
-      }
-
-      const mode = getStringOptStrict(rest, "--mode", knownFlags);
-      if (mode !== undefined && mode !== "auto" && mode !== "literal" && mode !== "semantic") {
-        return JSON.stringify({
-          code: "USAGE",
-          message: "recording compare --mode must be one of: auto, literal, semantic",
-        });
-      }
-
-      return (await import("./commands/record.js")).cmdRecordCompare({
-        ...out,
-        baselineFile,
-        resultFile,
-        mode,
-      });
     } else {
-      return JSON.stringify({ code: "USAGE", message: "recording start|stop|pull|parse|export|compare ... ('record' is an alias)" });
+      return JSON.stringify({ code: "USAGE", message: "recording start|stop|pull|export ... ('record' is an alias)" });
     }
   },
 };
@@ -3314,12 +2910,12 @@ COMMANDS["serve"] = {
 };
 
 COMMANDS["mcp"] = {
+  help: "androperator mcp\n\nUsage:\n  androperator mcp serve\n\nStarts the stdio MCP server for device actions and evidence.\nHost guidance: https://docs.androperator.com/host-agents/\n",
   name: "mcp",
   group: "Execution",
   documentedFlags: [],
   supportedFlags: [],
   summary: "Start the first-party MCP server",
-  help: "androperator mcp\n\nUsage:\n  androperator mcp serve\n\nNotes:\n  - Starts the stdio MCP server.\n  - Use this when the host already supports stdio MCP and wants registered Androperator tools.\n  - For app-oriented runtime-skill discovery, start with 'androperator skills for-app <package_id>'.\n  - Post-install orientation: https://docs.androperator.com/host-agents/\n  - Use 'node dist/cli/index.js mcp serve' for branch-local development.\n",
   topLevelBlock: `  mcp serve
                                             Start the first-party stdio MCP server`,
   handler: async (ctx) => {
@@ -3636,11 +3232,10 @@ export function generateTopLevelHelp(commands: Record<string, CommandDef>): stri
     "Notes:",
     "  - Machine-readable docs for agents: https://docs.androperator.com/llms.txt (index) and https://docs.androperator.com/llms-full.txt (complete docs).",
     "  - Post-install host-agent orientation: https://docs.androperator.com/host-agents/",
-    "  - If the current host is unfamiliar, inspect 'androperator bundled-skills list' and start with 'androperator-agent-orientation' before choosing runtime skills, MCP, or raw CLI actions.",
+    "  - If the current host is unfamiliar, inspect 'androperator bundled-skills list' and start with 'androperator-agent-orientation' before choosing MCP or CLI actions.",
     "  - If this installed Androperator environment needs a whole-product refresh, inspect 'androperator bundled-skills list' and use 'androperator-upgrade' before trying component-level repair commands. androperator-upgrade checks androperator --version, verifies Node 24+, npm reachability, and Java 17/21, then uses npm install -g androperator@latest, androperator install, and androperator doctor when the CLI is already viable.",
-    "  - Start runtime-skill discovery with 'androperator skills for-app <package_id>' when you know the Android package, or 'androperator skills search --keyword <text>' when you do not.",
-    "  - If runtime-skill discovery returns no relevant match and you need guided authoring help, use 'androperator bundled-skills list' and start with 'androperator-skill-author-by-agent-discovery'.",
-    "  - Use 'androperator-skill-author-by-recording' only after discovery returns 'proceed_to_recording', or when the app route is already well understood and you need the proving workflow.",
+    "  - Use 'androperator-skill-author-by-agent-discovery' for bounded exploration and optional reusable instructions.",
+    "  - Use 'androperator-skill-author-by-recording' when a demonstration supplies missing evidence.",
     "  - Use 'androperator mcp serve' when the host already supports stdio MCP and wants registered Androperator tools.",
     "  - install is the canonical post-bootstrap route. operator setup remains the APK-specific setup command, and operator install remains its alias.",
     "  - recording is the canonical command family; 'record' is a supported short alias.",

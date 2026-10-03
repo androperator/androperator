@@ -1,7 +1,0 @@
-{
-  "status": "success",
-  "skillId": "com.solaxcloud.starter.set-discharge-to-limit-orchestrated",
-  "output": "missing wrapper field",
-  "exitCode": 0,
-  "durationMs": 1200
-}

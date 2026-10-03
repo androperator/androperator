@@ -458,8 +458,6 @@ Current shipped surface:
 - the doctor check `readiness.device.interactive`
 - direct execution preflight before dispatch
 - high-level skill-wrapper pre-spawn checks in:
-  - `androperator skills run`
-  - `POST /skills/:skillId/run`
 
 Meaning:
 

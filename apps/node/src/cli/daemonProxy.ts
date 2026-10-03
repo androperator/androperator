@@ -4,7 +4,7 @@ import { isAbsolute } from "node:path";
 import { ERROR_CODES } from "../contracts/errors.js";
 import type { RunExecutionResult } from "../domain/executions/runExecution.js";
 import type { ResultEnvelope } from "../contracts/result.js";
-import { ANDROPERATOR_SKILL_RUN_ID_ENV_VAR, normalizeSkillRunId } from "../contracts/logging.js";
+import { ANDROPERATOR_RUN_ID_ENV_VAR, normalizeRunId } from "../contracts/logging.js";
 import { resolveOperatorPackageForRequest } from "../domain/config/resolveOperatorPackage.js";
 import { getDaemonSocketPath, isDaemonRunning, spawnDaemonRun, stopDaemon, withDaemonLock } from "../domain/daemon/lifecycle.js";
 import { getCliBuildIdentity, getCliVersion, type CliBuildIdentity } from "../domain/version/compatibility.js";
@@ -314,8 +314,8 @@ function proxyLostResult(error: unknown, execution: unknown, startedAt: string):
   };
 }
 
-function getInheritedSkillRunId(): string | undefined {
-  return normalizeSkillRunId(process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR]);
+function getInheritedRunId(): string | undefined {
+  return normalizeRunId(process.env[ANDROPERATOR_RUN_ID_ENV_VAR]);
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -395,12 +395,12 @@ export async function tryDaemonExecution(
 
   const startedAt = new Date().toISOString();
   try {
-    const skillRunId = getInheritedSkillRunId();
+    const runId = getInheritedRunId();
     const postResult = await (deps.httpPostFn ?? httpPost)(socketPath, "/execute", {
       execution,
       deviceId: options.rawDeviceId,
       operatorPackage: effectiveOperatorPackage,
-      ...(skillRunId !== undefined ? { skillRunId } : {}),
+      ...(runId !== undefined ? { runId } : {}),
     });
     if (!postResult.ok) {
       if (!postResult.dispatched || options.allowPostDispatchFallback === true) {

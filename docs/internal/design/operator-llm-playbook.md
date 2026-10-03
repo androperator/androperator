@@ -6,12 +6,12 @@ If you are starting cold, begin with the operational docs first:
 
 - `docs/setup.md`
 - `docs/api/overview.md`
-- `docs/api/overview.md`
+- `docs/skills/overview.md`
 
 Use this playbook after that, when you need deeper context for:
 - running the app through `ACTION_AGENT_COMMAND`
-- authoring/maintaining skill packages
-- integrating skill scripts with OpenClaw
+- authoring agent instructions and optional helpers
+- integrating those helpers with agent hosts
 - understanding runtime components and naming
 
 ---
@@ -31,24 +31,24 @@ They own broadcast ingress for:
 
 ## 2) Command ingress contract
 
-### Reliability rule (required)
-For app automation commands, default to:
-1. `close_app`
-2. `open_app`
-3. wait for stabilization
-4. add small post-navigation settle delays (~500–1500ms) before critical reads/clicks
+### Observe before acting
+
+Use the Node API/CLI for device actions. Capture current evidence and choose the
+next bounded action in the agent. Reset the app with `close_app` then `open_app`
+only when the task needs a fresh session. Prefer observable readiness checks to
+fixed delays, and verify the effect after navigation or mutation.
 
 ### Required fields
 - `commandId: string`
 - `taskId: string`
 - `source: string`
-- **`expectedFormat: "android-ui-automator"`** (Required for v1 compatibility)
+- **`expectedFormat: "android-ui-automator"`** (required execution format)
 - `actions: []`
 
 ### Determinism Doctrine
 1. **Validation First:** No side effects if the payload is malformed.
 2. **Exactly One Envelope:** Every command must emit a `[Androperator-Result]`.
-3. **No Retries:** The runtime never retries a failed step; it reports the failure immediately to the Brain.
+3. **Bounded Execution:** Actions may use their documented retry policies. App-specific recovery and replanning belong to the agent.
 4. **Stable IDs:** Correlate `commandId` and `taskId` end-to-end.
 
 ---
@@ -108,62 +108,25 @@ adb exec-out screencap -p > ./tmp/ui-check.png
 
 ---
 
-## 3) Skills-first packaging (PII-safe)
+## 3) Agent instructions and optional helpers
 
-Canonical unit is a skill package, not a standalone recipe file.
+Skills are instructions followed by the current agent. The host owns their
+discovery and invocation; Androperator has no runtime skill registry, package
+schema, compiler, or runner. Bundled examples live in `examples/skills/`.
 
-### Required structure
-Skills are maintained in a dedicated sibling repository: `<workspace>`.
-Each skill follows this structure:
-- `skills/<applicationId>.<intent>/SKILL.md`
-- `skills/<applicationId>.<intent>/scripts/*.sh`
+Optional executable helpers may invoke the CLI or Node API for bounded work.
+They use ordinary process inputs, outputs, and exit status. Keep app-specific
+strategy in the instructions and verify current screen evidence; a recorded
+sequence is not a reliable plan for every future run.
 
-### Nature of Skills
-Due to the dynamic nature of mobile apps (A/B tests, server-side flags, unexpected popups), skills are treated as **highly informed context** for the Agent rather than purely deterministic scripts.
-- **Agent Responsibility:** The Agent uses skill templates as a baseline, modifying them at runtime to handle personal configurations (variable substitution) or UI drift.
+Authoring checklist:
 
-### Rules
-1. No PII in committed skill artifacts.
-2. Use variables/placeholders for user-specific labels (for example `{{AC_TILE_NAME}}`).
-3. Prefer stable selectors first (`resourceId`), text matching second.
-4. Keep fallback matching strategy documented in `SKILL.md`.
-5. Keep skill-specific scripts/artifacts inside the skill folder.
+1. Capture a snapshot and screenshot from the target app.
+2. Identify stable selectors and document expected outcomes and recovery cues.
+3. Write host-native instructions with placeholders for private values.
+4. Add a helper only when it makes a concrete repeated operation simpler.
+5. Validate the intended result on a device, not just the process exit code.
 
----
-
-## 4) Current skill set
-
-- `com.google.android.apps.chromecast.app.get-climate`
-- `com.google.android.apps.chromecast.app.set-climate`
-- `com.globird.energy.get-usage`
-- `com.solaxcloud.starter.get-battery`
-- `com.theswitchbot.switchbot.get-bedroom-temperature`
-
----
-
-## 5) New skill authoring checklist
-
-1. When the target flow needs a clean baseline, start from a fresh app session
-   (`close_app` then `open_app`).
-2. Capture `snapshot` and an ADB screenshot.
-3. Identify robust selectors (`resource-id` first).
-4. Create `skills/<appId>.<intent>/SKILL.md`.
-5. Add `scripts/*.sh` deterministic wrapper(s).
-6. Add optional `artifacts/*.recipe.json` template(s) if helpful.
-7. Validate on device end-to-end.
-8. Update this playbook if conventions changed.
-
-Notes:
-
-- `close_app` is a deliberate replay normalization step, not something that
-  should be injected automatically for every recording.
-- Use it when the app resumes into stale state and a fresh start is needed for
-  reproducibility.
-
----
-
-## 6) Where to update docs
-
-- Skill model/design: `docs/internal/design/skill-design.md`
-- Secondary runtime playbook and conventions: `docs/internal/design/operator-llm-playbook.md` (this file)
-- App-specific skill packages: `skills/<applicationId>.<intent>/...`
+Recording is optional demonstration evidence. It does not require every user to
+record a flow or produce a replay package. See [skill authoring](../../skills/authoring.md)
+and [skill design](skill-design.md) for the current conventions.

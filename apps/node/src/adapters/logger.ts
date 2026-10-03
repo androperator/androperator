@@ -1,7 +1,7 @@
 import { appendFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import {
-  ANDROPERATOR_SKILL_RUN_ID_ENV_VAR,
+  ANDROPERATOR_RUN_ID_ENV_VAR,
   type LogEvent,
   type LoggingStatus,
   type LogLevel,
@@ -11,7 +11,7 @@ import {
   DEFAULT_ROUTING_RULES,
   expandHomePath,
   formatLogPath,
-  normalizeSkillRunId,
+  normalizeRunId,
 } from "../contracts/logging.js";
 
 // Re-export contract types for consumers
@@ -63,7 +63,7 @@ export interface CreateAndroperatorLoggerOptions {
   logDir?: string;
   logLevel?: string;
   outputFormat?: "json" | "pretty";
-  inheritSkillRunId?: boolean;
+  inheritRunId?: boolean;
   fileLogging?: boolean;
 }
 
@@ -129,10 +129,9 @@ export function createAndroperatorLogger(options?: CreateAndroperatorLoggerOptio
       const merged = mergeDefinedContext(defaultContext, event) as LogEvent;
 
       const rule = resolveRoutingRule(merged.event, DEFAULT_ROUTING_RULES);
-      const alwaysWriteToFile = merged.event === "skills.run.output";
 
       // File destination
-      if (rule.file && (alwaysWriteToFile || shouldLogToFile(merged.level))) {
+      if (rule.file && shouldLogToFile(merged.level)) {
         writeToFile(merged);
       }
 
@@ -170,10 +169,10 @@ export function createAndroperatorLogger(options?: CreateAndroperatorLoggerOptio
     return logger;
   }
 
-  const inheritedSkillRunId = options?.inheritSkillRunId === false
+  const inheritedRunId = options?.inheritRunId === false
     ? undefined
-    : normalizeSkillRunId(process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR]);
-  return buildLogger(inheritedSkillRunId !== undefined ? { skillRunId: inheritedSkillRunId } : undefined);
+    : normalizeRunId(process.env[ANDROPERATOR_RUN_ID_ENV_VAR]);
+  return buildLogger(inheritedRunId !== undefined ? { runId: inheritedRunId } : undefined);
 }
 
 export function getLoggingStatus(logger?: AndroperatorLogger): LoggingStatus {

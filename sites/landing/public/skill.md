@@ -77,10 +77,8 @@ unauthorized/offline device is not ready.
 
 `androperator install` handles Operator remediation, bundled authoring skills,
 and host-local orientation. Use this route rather than substituting a raw
-`adb install`. Agents create their own local runtime skills; installation initializes a local
-workspace rather than downloading a companion catalog. Follow the current
-[skills documentation](https://docs.androperator.com/skills/overview/) for local
-metadata and discovery requirements.
+`adb install`. The current agent follows reusable instructions and optional helpers. See
+[skills documentation](https://docs.androperator.com/skills/overview/).
 
 Stable release APK aliases `/operator.apk`, `/install.apk`, and `/apk` on
 `androperator.com` resolve the latest published APK through release metadata.
@@ -137,18 +135,9 @@ If the host supports stdio MCP, configure it using the local snippet and
 androperator mcp serve
 ```
 
-For an app-specific task, discover local runtime skills before authoring one:
-
-```bash
-androperator skills list
-androperator skills search --keyword "<term>"
-androperator skills get <skill_id>
-```
-
-An empty local collection is valid. Use the bundled authoring guidance and
-[skills documentation](https://docs.androperator.com/skills/overview/) to create
-skills from observed behavior. The agent remains responsible for planning and
-verification.
+For an app-specific task, observe current state, choose one action and verify
+the requested outcome. Save reusable instructions when requested or worthwhile.
+A demonstration is optional evidence, not a prerequisite.
 
 ## Stop and report blockers
 

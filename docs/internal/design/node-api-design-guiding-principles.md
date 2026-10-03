@@ -92,15 +92,14 @@ androperator click --text "Wi-Fi"
 ### 2. Flat Commands for Actions, Namespaces Only for Subsystems
 
 Every device interaction verb should be a top-level command. Namespaces are
-reserved for subsystems with shared lifecycle or state management (e.g. `skills`,
-`emulator`, `recording`).
+reserved for subsystems with shared lifecycle or state management (e.g. `recording` and
+`emulator`).
 
 **The rule:** if a command is a single action with no siblings that share state,
 it is a top-level command. If it is one of several operations on a shared
 resource, it belongs in a namespace.
 
 - `click` - top-level (single action)
-- `skills list`, `skills run`, `skills validate` - namespace (shared registry)
 - `emulator create`, `emulator start`, `emulator stop` - namespace (shared
   lifecycle)
 

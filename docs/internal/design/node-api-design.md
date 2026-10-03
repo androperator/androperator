@@ -45,7 +45,6 @@ Core commands:
 - Flat device interaction commands (single-step wrappers): `androperator open`, `androperator click`, `androperator type`, `androperator read`, `androperator wait`, `androperator press`, `androperator back`, `androperator scroll`, and related flags documented in the CLI reference.
 - `androperator serve`: Start HTTP/SSE server for remote agent access.
 - `androperator doctor --fix`: Best-effort environment remediation.
-- `androperator skills install/update/search/run`: Skills lifecycle.
 - `androperator version --check-compat`: CLI/APK compatibility check.
 
 Contracts:
@@ -172,22 +171,6 @@ When fallback adb is used, Androperator should still encourage convergence back 
 - exposing equivalent primitives as they become common,
 - keeping result/error formats structured and machine-readable,
 - documenting fallback-to-API migration paths.
-
-## Skill Artifact Optionality and Failure Handling
-
-Skill artifacts are optional, but fallback behavior is explicit:
-
-1. If artifact compile succeeds, execute compiled execution.
-2. If artifact compile fails, Androperator returns a structured compile error and does not auto-fallback.
-3. If runtime verification fails, Androperator returns a structured execution failure and does not auto-retry with alternate strategy.
-4. Agent chooses next step (retry, inspect UI, switch to direct actions, or abort).
-
-Runtime must expose a `mode` on each execution:
-
-- `artifact_compiled`
-- `direct`
-
-This keeps behavior deterministic and avoids hidden control-flow in the runtime.
 
 ## Execution Unit Contract
 
@@ -345,48 +328,6 @@ Supported action types (v1):
 
 See [Androperator Doctor](../reference/node-api-doctor.md) for the full check list and JSON report shape.
 
-## Skill Integration Mechanism
-
-Canonical source of skills:
-
-- `local skill workspace` repository
-
-Distribution model:
-
-1. `local skill workspace` CI generates `skills-index.json` on `main`.
-2. `androperator skills install` clones the local skills checkout on first setup.
-3. `androperator skills update [--ref <ref>]` refreshes the checkout and can pin to a specific ref when needed.
-4. Local cache stores synced artifacts for deterministic offline execution.
-
-Runtime should execute against cached/pinned skill content, not live network fetches during execution.
-
-Skill compilation requirements are defined in:
-
-- `docs/internal/design/skill-design.md`
-
-When skill artifacts are missing/stale, runtime can still execute direct executions supplied by the agent.
-
-## Skill Implementation Language Strategy
-
-To set a maintainable baseline for future skills:
-
-1. Preferred language for new non-trivial skills: Node.js with TypeScript.
-2. Bash is allowed only for thin wrappers and simple glue.
-3. Python is a planned secondary path after Node contracts and tooling are stable.
-
-Rationale:
-
-- Better testability, typing, and reuse for parsing-heavy and multimodal workflows.
-- Safer payload construction and lower shell-quoting risk than large Bash scripts.
-- Cleaner evolution toward SDK-backed skill execution.
-
-Migration policy:
-
-- Do not mass-rewrite all existing Bash skills immediately.
-- For new high-value or high-complexity skills, prefer Node.js/TypeScript implementations.
-- Temporary Bash implementations (including the current Life360 flow) are acceptable only as stopgaps and must be queued for early migration once minimal Node skill SDK/runtime helpers are in place.
-
-
 ## Agent-Friendly Command Surface
 
 Because agents are the primary consumers, the CLI command surface must be
@@ -412,8 +353,6 @@ and will be updated as the command surface evolves.
   - prerequisites and auto-fix logic
 - `src/domain/devices/*`
   - adb discovery and selection
-- `src/domain/skills/*`
-  - install/update/search/run/list/get/compile-artifact
 - `src/domain/executions/*`
   - validation, run, state transitions
 - `src/adapters/android-bridge/*`

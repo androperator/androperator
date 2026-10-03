@@ -237,7 +237,7 @@ const executionSchema = z.object({
         params: { code: ERROR_CODES.EXECUTION_ACTION_UNSUPPORTED },
       }
     ),
-  mode: z.enum(["artifact_compiled", "direct"]).optional(),
+  mode: z.literal("direct").optional(),
 }).strict().superRefine((execution, ctx) => {
   const addIssue = (index: number, message: string, path: string[]) => {
     ctx.addIssue({

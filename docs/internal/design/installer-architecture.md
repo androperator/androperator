@@ -7,7 +7,7 @@ Keep the Androperator install path easy to reason about, test, and recover.
 This note defines the ownership boundary between the public shell installer at
 `sites/androperator-public/install.sh` and the Node CLI install surfaces. Use it when
 changing setup, upgrade, host artifact generation, operator remediation,
-runtime-skill installation, bundled-skill installation, or install validation.
+bundled-skill installation, or install validation.
 
 ## Source Of Truth
 
@@ -67,7 +67,6 @@ The Node CLI owns Androperator install behavior after the CLI is available.
 `androperator install` should own:
 
 - operator remediation orchestration
-- runtime skills install
 - bundled-skills install, including canonical bundled-skill copies, Claude and
   Codex discovery symlinks, and managed real directory copies under
   `~/.agents/skills/`
@@ -81,7 +80,6 @@ The Node CLI owns Androperator install behavior after the CLI is available.
 Lower-level commands must remain reusable and truthful:
 
 - `androperator operator remediate`
-- `androperator skills install`
 - `androperator bundled-skills install`
 - `androperator host setup`
 
@@ -98,7 +96,6 @@ Do not add these responsibilities to `install.sh`:
 - decide host artifact success or warning semantics
 - format device remediation summaries
 - format host artifact summaries
-- install runtime skills by re-implementing CLI logic
 - install bundled skills by re-implementing CLI logic
 - write Androperator host artifacts directly
 - decide whether shared-agent bridge failures are fatal
@@ -132,7 +129,7 @@ Node tests should prove product behavior:
 
 - post-bootstrap sequencing
 - operator remediation policy
-- skills and bundled-skills warning behavior
+- bundled-skills warning behavior
 - host artifact warning behavior
 - multi-device summaries
 - no-device and remediation-failure paths

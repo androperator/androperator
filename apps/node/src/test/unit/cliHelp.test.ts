@@ -64,7 +64,7 @@ describe("CLI help", () => {
     assert.strictEqual(code, 0);
     assert.match(stdout, /androperator install/);
     assert.match(stdout, /canonical post-bootstrap install route/);
-    assert.match(stdout, /operator remediate, skills install, bundled-skills install, and host setup/);
+    assert.match(stdout, /operator remediate, bundled-skills install, and host setup/);
   });
 
   it("rejects --device for install because remediation enumerates devices itself", async () => {
@@ -122,20 +122,18 @@ describe("CLI help", () => {
     assert.match(obj.message, /operator setup/);
   });
 
-  it("legacy nested `observe snapshot --help` falls back to top-level help", async () => {
-    // Nested observe is removed; --help with an unknown command falls back to top-level help.
-    const { stdout, code } = await runCli(["observe", "snapshot", "--help"]);
-    assert.strictEqual(code, 0);
-    assert.match(stdout, /Androperator CLI/);
-    assert.match(stdout, /Commands:/);
+  it("legacy nested `observe snapshot --help` returns unknown-command guidance", async () => {
+    // Unknown command help uses the same command error as ordinary dispatch.
+    const { stdout, stderr, code } = await runCli(["observe", "snapshot", "--help"]);
+    assert.strictEqual(code, 1);
+    assert.match(stderr || stdout, /UNKNOWN_COMMAND/);
   });
 
-  it("legacy nested `observe screenshot --help` falls back to top-level help", async () => {
-    // Nested observe is removed; --help with an unknown command falls back to top-level help.
-    const { stdout, code } = await runCli(["observe", "screenshot", "--help"]);
-    assert.strictEqual(code, 0);
-    assert.match(stdout, /Androperator CLI/);
-    assert.match(stdout, /Commands:/);
+  it("legacy nested `observe screenshot --help` returns unknown-command guidance", async () => {
+    // Unknown command help uses the same command error as ordinary dispatch.
+    const { stdout, stderr, code } = await runCli(["observe", "screenshot", "--help"]);
+    assert.strictEqual(code, 1);
+    assert.match(stderr || stdout, /UNKNOWN_COMMAND/);
   });
 
   it("shows top-level discovery notes in help output", async () => {
@@ -147,7 +145,6 @@ describe("CLI help", () => {
     assert.match(stdout, /https:\/\/docs\.androperator\.com\/host-agents\//);
     assert.match(stdout, /androperator-agent-orientation/);
     assert.match(stdout, /androperator-upgrade/);
-    assert.match(stdout, /skills for-app <package_id>/);
     assert.match(stdout, /bundled-skills list/);
     assert.match(stdout, /androperator-skill-author-by-agent-discovery/);
     assert.match(stdout, /androperator-skill-author-by-recording/);
@@ -172,7 +169,6 @@ describe("CLI help", () => {
     const { stdout, code } = await runCli(["--help", "mcp", "serve"]);
     assert.strictEqual(code, 0);
     assert.match(stdout, /stdio MCP server/);
-    assert.match(stdout, /skills for-app <package_id>/);
     assert.match(stdout, /https:\/\/docs\.androperator\.com\/host-agents\//);
   });
 
@@ -204,61 +200,6 @@ describe("CLI help", () => {
     assert.doesNotMatch(obj.message ?? "", /observe snapshot/);
   });
 
-  it("shows skills sync help instead of top-level help", async () => {
-    const { stdout, code } = await runCli(["skills", "sync", "--help"]);
-    assert.strictEqual(code, 0);
-    assert.match(stdout, /androperator skills sync/);
-    assert.match(stdout, /--ref <git-ref>/);
-    assert.doesNotMatch(stdout, /action open-app/);
-  });
-
-  it("shows skills validate help instead of top-level help", async () => {
-    const { stdout, code } = await runCli(["skills", "validate", "--help"]);
-    assert.strictEqual(code, 0);
-    assert.match(stdout, /androperator skills validate/);
-    assert.match(stdout, /skills validate --all/);
-    assert.match(stdout, /integrity check, not a live device test/i);
-    assert.doesNotMatch(stdout, /action open-app/);
-  });
-
-  it("shows skills compile-artifact help instead of top-level help", async () => {
-    const { stdout, code } = await runCli(["skills", "compile-artifact", "--help"]);
-    assert.strictEqual(code, 0);
-    assert.match(stdout, /androperator skills compile-artifact/);
-    assert.match(stdout, /--artifact <name>/);
-    assert.match(stdout, /--skill-id <id>/);
-    assert.match(stdout, /--vars <json>/);
-    assert.doesNotMatch(stdout, /action open-app/);
-  });
-
-  it("shows skills run help instead of top-level help", async () => {
-    const { stdout, code } = await runCli(["skills", "run", "--help"]);
-    assert.strictEqual(code, 0);
-    assert.match(stdout, /androperator skills run/);
-    assert.match(stdout, /skills for-app/);
-    assert.match(stdout, /skills search/);
-    assert.match(stdout, /skills get/);
-    assert.match(stdout, /--timeout <ms>/);
-    assert.match(stdout, /--expect-contains <text>/);
-    assert.match(stdout, /SKILL_OUTPUT_ASSERTION_FAILED/);
-    assert.doesNotMatch(stdout, /action open-app/);
-  });
-
-  it("shows post-install discovery guidance in skills help", async () => {
-    const { stdout, code } = await runCli(["skills", "--help"]);
-    assert.strictEqual(code, 0);
-    assert.match(stdout, /skills for-app <package_id>/);
-    assert.match(stdout, /skills search --keyword <text>/);
-    assert.match(stdout, /skills get <skill_id>/);
-    assert.match(stdout, /androperator-agent-orientation/);
-    assert.match(stdout, /androperator-upgrade/);
-    assert.match(stdout, /bundled-skills list/);
-    assert.match(stdout, /androperator-skill-author-by-agent-discovery/);
-    assert.match(stdout, /androperator-skill-author-by-recording/);
-    assert.match(stdout, /androperator mcp serve/);
-    assert.match(stdout, /https:\/\/docs\.androperator\.com\/host-agents\//);
-  });
-
   it("shows bundled-skills discovery guidance", async () => {
     const { stdout, code } = await runCli(["bundled-skills", "--help"]);
     assert.strictEqual(code, 0);
@@ -268,7 +209,6 @@ describe("CLI help", () => {
     assert.match(stdout, /androperator-upgrade/);
     assert.match(stdout, /androperator-skill-author-by-agent-discovery/);
     assert.match(stdout, /androperator-skill-author-by-recording/);
-    assert.match(stdout, /Runtime skills still live under 'androperator skills/);
     assert.match(stdout, /https:\/\/docs\.androperator\.com\/skills\/authoring\//);
   });
 
@@ -286,16 +226,6 @@ describe("CLI help", () => {
     const list = await runCli(["agent-skills", "list"]);
     assert.notStrictEqual(list.code, 0);
     assert.match(list.stderr || list.stdout, /Unknown command: agent-skills/);
-  });
-
-  it("shows manual-scaffold boundary in skills new help", async () => {
-    const { stdout, code } = await runCli(["skills", "new", "--help"]);
-    assert.strictEqual(code, 0);
-    assert.match(stdout, /androperator skills new/);
-    assert.match(stdout, /low-level manual scaffold/i);
-    assert.match(stdout, /bundled-skills list/);
-    assert.match(stdout, /androperator-skill-author-by-agent-discovery/);
-    assert.match(stdout, /androperator-skill-author-by-recording/);
   });
 
   it("shows host setup help", async () => {
@@ -328,17 +258,15 @@ describe("CLI help", () => {
     assert.match(stdout, /--cli-version requires a value/);
   });
 
-  it("inspect ui --help falls back to top-level help", async () => {
+  it("inspect ui --help returns unknown-command guidance", async () => {
     // inspect ui is removed; --help with an unknown command falls back to top-level help.
-    const { stdout, code } = await runCli(["inspect", "ui", "--help"]);
-    assert.strictEqual(code, 0);
-    assert.match(stdout, /Androperator CLI/);
-    assert.match(stdout, /Commands:/);
+    const { stdout, stderr, code } = await runCli(["inspect", "ui", "--help"]);
+    assert.strictEqual(code, 1);
+    assert.match(stderr || stdout, /UNKNOWN_COMMAND/);
   });
 
   it("forwards invalid timeout to EXECUTION_VALIDATION_FAILED", async () => {
-    // skills run validates the effective timeout before attempting device dispatch.
-    const { stdout, code } = await runCli(["skills", "run", "some-skill", "--timeout", "nope"]);
+    const { stdout, code } = await runCli(["snapshot", "--timeout", "nope"]);
     assert.notStrictEqual(code, 0);
     assert.match(stdout, /EXECUTION_VALIDATION_FAILED/);
     assert.match(stdout, /timeoutMs must be a finite number/);
@@ -352,14 +280,13 @@ describe("CLI help", () => {
   });
 
   it("accepts --format as an alias for --output", async () => {
-    // --format is a global alias for --output; validated via timeout error through skills run.
-    const jsonResult = await runCli(["skills", "run", "some-skill", "--timeout", "nope", "--format", "json"]);
+    const jsonResult = await runCli(["snapshot", "--timeout", "nope", "--format", "json"]);
     assert.notStrictEqual(jsonResult.code, 0);
     const json = JSON.parse(jsonResult.stdout);
     assert.strictEqual(json.code, "EXECUTION_VALIDATION_FAILED");
     assert.strictEqual(json.message, "timeoutMs must be a finite number");
 
-    const prettyResult = await runCli(["skills", "run", "some-skill", "--timeout", "nope", "--format", "pretty"]);
+    const prettyResult = await runCli(["snapshot", "--timeout", "nope", "--format", "pretty"]);
     assert.notStrictEqual(prettyResult.code, 0);
     const pretty = JSON.parse(prettyResult.stdout);
     assert.strictEqual(pretty.code, "EXECUTION_VALIDATION_FAILED");
@@ -401,9 +328,9 @@ describe("CLI help", () => {
     assert.match(stdout, /recording start/);
     assert.match(stdout, /recording stop/);
     assert.match(stdout, /recording pull/);
-    assert.match(stdout, /recording parse/);
+    assert.doesNotMatch(stdout, /recording parse/);
     assert.match(stdout, /recording export/);
-    assert.match(stdout, /recording compare/);
+    assert.doesNotMatch(stdout, /recording compare/);
     assert.match(stdout, /'record' is an alias/);
   });
 
@@ -412,7 +339,7 @@ describe("CLI help", () => {
     assert.strictEqual(code, 0);
     const obj = JSON.parse(stdout);
     assert.strictEqual(obj.code, "USAGE");
-    assert.match(obj.message, /recording start\|stop\|pull\|parse\|export\|compare/);
+    assert.match(obj.message, /recording start\|stop\|pull\|export/);
     assert.match(obj.message, /'record' is an alias/);
   });
 
@@ -421,17 +348,10 @@ describe("CLI help", () => {
     assert.strictEqual(code, 0);
     const obj = JSON.parse(stdout);
     assert.strictEqual(obj.code, "USAGE");
-    assert.match(obj.message, /recording start\|stop\|pull\|parse\|export\|compare/);
+    assert.match(obj.message, /recording start\|stop\|pull\|export/);
     assert.match(obj.message, /'record' is an alias/);
   });
 
-  it("returns USAGE for recording parse without --input", async () => {
-    const { stdout, code } = await runCli(["recording", "parse"]);
-    assert.strictEqual(code, 0);
-    const obj = JSON.parse(stdout);
-    assert.strictEqual(obj.code, "USAGE");
-    assert.match(obj.message, /--input/);
-  });
 
   it("returns USAGE for recording export without --input", async () => {
     const { stdout, code } = await runCli(["recording", "export"]);
@@ -455,12 +375,6 @@ describe("CLI help", () => {
     assert.match(stdout, /Use '--input -- <literal>'/);
   });
 
-  it("returns USAGE when --input is followed by another flag for recording parse", async () => {
-    const { stdout, code } = await runCli(["recording", "parse", "--input", "--out", "/tmp/demo.steps.json"]);
-    assert.notStrictEqual(code, 0);
-    assert.match(stdout, /"code":"USAGE"/);
-    assert.match(stdout, /--input requires a value/);
-  });
 
   it("returns USAGE when --snapshots is missing a value for recording export", async () => {
     const { stdout, code } = await runCli(["recording", "export", "--input", "/tmp/demo.ndjson", "--snapshots"]);
@@ -477,28 +391,6 @@ describe("CLI help", () => {
     assert.match(obj.message, /omit, include/);
   });
 
-  it("returns USAGE for recording compare without required flags", async () => {
-    const { stdout, code } = await runCli(["recording", "compare"]);
-    assert.strictEqual(code, 0);
-    const obj = JSON.parse(stdout);
-    assert.strictEqual(obj.code, "USAGE");
-    assert.match(obj.message, /recording compare --baseline <export\.json> --result <skills-run\.json>/);
-  });
-
-  it("shows accurate exit-code notes for recording compare help", async () => {
-    const { stdout, code } = await runCli(["recording", "compare", "--help"]);
-    assert.strictEqual(code, 0);
-    assert.match(stdout, /Exit code is 0 for no meaningful divergence and for USAGE responses/);
-    assert.match(stdout, /Exit code is non-zero for meaningful divergence and non-USAGE compare errors/);
-  });
-
-  it("returns USAGE for record parse without --input", async () => {
-    const { stdout, code } = await runCli(["record", "parse"]);
-    assert.strictEqual(code, 0);
-    const obj = JSON.parse(stdout);
-    assert.strictEqual(obj.code, "USAGE");
-    assert.match(obj.message, /--input/);
-  });
 
   it("returns USAGE when --out flag has no value for recording pull", async () => {
     const { stdout, code } = await runCli(["recording", "pull", "--out"]);
@@ -1144,4 +1036,23 @@ describe("promoted flat commands - help and missing-arg errors", () => {
     assert.strictEqual(obj.code, "EXECUTION_VALIDATION_FAILED");
     assert.match(obj.message ?? "", /not both/);
   });
+});
+
+describe("removed recording parser", () => {
+  for (const command of ["recording", "record"]) {
+    it(`does not dispatch ${command} parse`, async () => {
+      const { stdout } = await runCli([command, "parse"]);
+      const result = JSON.parse(stdout);
+      assert.strictEqual(result.code, "USAGE");
+      assert.match(result.message, /start\|stop\|pull\|export/);
+      assert.doesNotMatch(result.message, /parse/);
+    });
+  }
+  for (const flag of ["--baseline", "--result", "--mode"]) {
+    it(`rejects removed comparison flag ${flag}`, async () => {
+      const { stdout, code } = await runCli(["recording", "export", "--input", "unused.ndjson", flag, "unused"]);
+      assert.notStrictEqual(code, 0);
+      assert.match(stdout, /USAGE/);
+    });
+  }
 });

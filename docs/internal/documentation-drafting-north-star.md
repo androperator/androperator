@@ -79,13 +79,8 @@ claim being authored.
 | Runtime config | `apps/node/src/adapters/android-bridge/runtimeConfig.ts` |
 | Navigation builders | `apps/node/src/domain/actions/waitForNav.ts`, `openApp.ts`, `openUri.ts` |
 | Recording format | `apps/node/src/domain/recording/recordingEventTypes.ts` |
-| Recording parsing | `apps/node/src/domain/recording/parseRecording.ts` |
+| Recording export | `apps/node/src/domain/recording/exportRecording.ts` |
 | Recording CLI | `apps/node/src/cli/commands/record.ts` |
-| Skills registry | `apps/node/src/contracts/skills.ts`, `apps/node/src/adapters/skills-repo/localSkillsRegistry.ts` |
-| Skills runtime | `apps/node/src/domain/skills/runSkill.ts`, `apps/node/src/domain/skills/skillsConfig.ts` |
-| Skills CLI | `apps/node/src/cli/commands/skills.ts` |
-| Skill validation | `apps/node/src/domain/skills/validateSkill.ts` |
-| Skill compilation | `apps/node/src/domain/skills/compileArtifact.ts` |
 | Operator setup | `apps/node/src/cli/commands/operatorSetup.ts`, `apps/node/src/domain/device/setupOperator.ts` |
 | Permissions | `apps/node/src/domain/device/grantPermissions.ts` |
 | Version compatibility | `apps/node/src/domain/version/compatibility.ts` |

@@ -30,14 +30,10 @@ export interface LogEvent {
   commandId?: string;
   taskId?: string;
   deviceId?: string;
-  skillId?: string;
-  skillRunId?: string;
+  runId?: string;
   logPath?: string;
-  tailCommand?: string;
-  stream?: "stdout" | "stderr";
   status?: string;
   durationMs?: number;
-  exitCode?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -58,19 +54,19 @@ export interface AndroperatorLogger {
   logPath(): string | undefined;
 }
 
-export const ANDROPERATOR_SKILL_RUN_ID_ENV_VAR = "ANDROPERATOR_SKILL_RUN_ID";
-export const SKILL_RUN_ID_PATTERN = /^skillrun_[A-Za-z0-9._:-]+$/;
-export const SKILL_RUN_ID_MAX_LENGTH = 240;
+export const ANDROPERATOR_RUN_ID_ENV_VAR = "ANDROPERATOR_RUN_ID";
+export const RUN_ID_PATTERN = /^[A-Za-z0-9._:-]+$/;
+export const RUN_ID_MAX_LENGTH = 240;
 
-export function normalizeSkillRunId(value: unknown): string | undefined {
+export function normalizeRunId(value: unknown): string | undefined {
   if (typeof value !== "string") {
     return undefined;
   }
   const trimmed = value.trim();
-  if (trimmed.length === 0 || trimmed.length > SKILL_RUN_ID_MAX_LENGTH) {
+  if (trimmed.length === 0 || trimmed.length > RUN_ID_MAX_LENGTH) {
     return undefined;
   }
-  return SKILL_RUN_ID_PATTERN.test(trimmed) ? trimmed : undefined;
+  return RUN_ID_PATTERN.test(trimmed) ? trimmed : undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,14 +96,12 @@ export interface RoutingRule {
  *
  * | Event category                | File | Terminal | In JSON mode |
  * |-------------------------------|------|----------|--------------|
- * | skills.run.output             | Yes  | No       | No           |
  * | cli.                          | Yes  | Yes      | No           |
  * | doctor.                       | Yes  | No       | No           |
  * | serve.                        | Yes  | No       | No           |
  * | * (default)                   | Yes  | No       | No           |
  */
 export const DEFAULT_ROUTING_RULES: readonly RoutingRule[] = [
-  { prefix: "skills.run.output", file: true, terminal: false, terminalInJsonMode: false },
   { prefix: "cli.", file: true, terminal: true, terminalInJsonMode: false },
   { prefix: "doctor.", file: true, terminal: false, terminalInJsonMode: false },
   { prefix: "serve.", file: true, terminal: false, terminalInJsonMode: false },

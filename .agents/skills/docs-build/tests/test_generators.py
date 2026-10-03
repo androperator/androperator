@@ -74,15 +74,15 @@ COMMANDS["second"] = {
     def test_parse_subcommands_handles_quoted_keys(self) -> None:
         body = """
   subtopics: {
-    install: "Install the skill",
-    "compile-artifact": "Compile an artifact",
-    run: "Run the skill",
+    start: "Start recording",
+    "export-evidence": "Export evidence",
+    stop: "Stop recording",
   },
 """
 
         self.assertEqual(
             cli_reference.parse_subcommands(body),
-            ["install", "compile-artifact", "run"],
+            ["start", "export-evidence", "stop"],
         )
 
     def test_public_reference_uses_docs_metadata_not_regex_flags(self) -> None:
@@ -387,7 +387,7 @@ class ValidateDocsOrganizationTests(unittest.TestCase):
             cli_reference.write_text(
                 "| Command | Group | Primary syntax | Primary flags | Details | Summary |\n"
                 "| --- | --- | --- | --- | --- | --- |\n"
-                "| [`skills`](#command-skills) | Execution | `skills list` | - | Planned: `../skills/cli.md` | Skills |\n",
+                "| [`recording`](#command-recording) | Execution | `recording export` | - | Planned: `recording.md` | Recording |\n",
                 encoding="utf-8",
             )
 
@@ -395,7 +395,7 @@ class ValidateDocsOrganizationTests(unittest.TestCase):
 
         self.assertEqual(len(warnings), 1)
         self.assertEqual(warnings[0].kind, "command-detail")
-        self.assertIn("skills", warnings[0].message)
+        self.assertIn("recording", warnings[0].message)
 
 
 if __name__ == "__main__":

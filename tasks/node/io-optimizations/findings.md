@@ -59,7 +59,6 @@ Interpretation:
 | Snapshot payload size | Full XML includes many unused attributes | Larger payloads increase Android serialization, logcat transport, and Node parsing cost. |
 | Broadcast/logcat transport | Still subprocess and logcat based | The daemon reduces host startup cost but does not remove the Android transport model. |
 | App readiness | App-specific values may appear seconds after open or navigation | Skills must poll observable readiness rather than sleeping guessed durations. |
-| Wrapper preflight | `skills run` still performs target resolution, APK checks, and interactivity checks | This is correct for safety, but it remains part of full skill wall time. |
 
 ## Future Task Candidates
 

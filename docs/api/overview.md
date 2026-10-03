@@ -23,8 +23,8 @@ you document, call, or parse behavior:
 
 | Surface | What it is | Canonical owner |
 | --- | --- | --- |
-| CLI command | A top-level shell command such as `snapshot`, `click`, or `skills`. | [CLI Reference](cli.md) for command lookup; behavior lives on the linked owner page. |
-| CLI subcommand | A nested shell command such as `skills run`, `recording export`, or `emulator provision`. | The subsystem page, such as [Skills CLI](../skills/cli.md) or [Recording](recording.md). |
+| CLI command | A top-level shell command such as `snapshot`, `click`, or `recording`. | [CLI Reference](cli.md) for command lookup; behavior lives on the linked owner page. |
+| CLI subcommand | A nested shell command such as `recording export` or `emulator provision`. | The subsystem page, such as [Recording](recording.md). |
 | Execution action | A JSON action inside `ExecutionInput.actions[]`, such as `click` or `open_app`. | [Actions](actions.md). |
 | Node contract | A TypeScript-backed data shape accepted or returned by the Node package. | This page for execution payload and [result envelope](#result-envelope); feature pages for narrower contracts. |
 | Serve endpoint | An HTTP or SSE route exposed by `androperator serve`, such as `POST /execute`. | [Serve API](serve.md). |
@@ -83,7 +83,7 @@ Top-level execution fields:
 | `expectedFormat` | `"android-ui-automator"` | Required constant. |
 | `timeoutMs` | `number` | Execution-level timeout for the whole payload. Current Node limits require `1000 <= timeoutMs <= 120000`. |
 | `actions` | `ExecutionAction[]` | Ordered action list. |
-| `mode` | `"artifact_compiled" | "direct"` | Optional runtime mode marker. |
+| `mode` | `"direct"` | Optional runtime mode marker. |
 
 Each action has:
 
@@ -311,7 +311,6 @@ Use the wrapper shape that matches the surface you called:
 | `androperator exec --dry-run` | `{ "ok": true, "dryRun": true, "plan": ... }` | Pre-dispatch only; no result envelope exists. |
 | Serve execution endpoint | `{ "ok": true, "deviceId": "...", "terminalSource": "...", "envelope": ... }` | Read `envelope` with the same [result-envelope](#result-envelope) rules. |
 | MCP execution-backed tool | Tool-specific `structuredContent` containing action output and usually `envelope`. | When present, read `envelope` with the same [result-envelope](#result-envelope) rules. |
-| Skills CLI command | Skill wrapper JSON with `skillResult`, `durationMs`, or feature-specific error fields. | Not a `[Androperator-Result]` envelope unless a skill chooses to expose one in its own result. |
 
 `isCanonicalTerminal` is a CLI wrapper field. HTTP serve execution responses do not include it.
 

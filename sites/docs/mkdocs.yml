@@ -79,7 +79,6 @@ nav:
   - Skills:
       - Overview: skills/overview.md
       - Agent-followed Examples: skills/examples.md
-      - Skills CLI: skills/cli.md
       - Authoring: skills/authoring.md
       - Development Workflow: skills/development.md
       - Context Adapter: skills/context-adapter.md

@@ -1,6 +1,6 @@
 /**
- * Type definitions for recording events and step log.
- * Aligns with the NDJSON schema and step log format from the Record feature PRD.
+ * Type definitions for recording events and evidence exports.
+ * Aligns with the NDJSON schema and export format from the Record feature PRD.
  */
 
 // Header - first line of the NDJSON file
@@ -185,44 +185,14 @@ export interface RecordingExportArtifact {
 /**
  * Shared NDJSON validation contract for recordingValidation.ts.
  *
- * Rules pinned here for parse and export call sites:
+ * Rules pinned here for evidence export:
  * - returns `{ header, events }`
  * - `events` are sorted by `seq` before return
  * - throws plain `{ code, message }` objects, not `Error` instances
  * - preserves current line-numbered validation messages
  * - never writes to stderr
- * - parser-only warnings remain in parseRecording.ts
  */
 export interface ValidatedRecording {
   header: RecordingHeader;
   events: RawRecordingEvent[];
-}
-
-// Step types emitted by the parser (v1)
-export interface OpenAppStep {
-  seq: number;
-  type: "open_app";
-  packageName: string;
-  uiStateBefore: string | null;
-}
-
-export interface ClickStep {
-  seq: number;
-  type: "click";
-  packageName: string;
-  resourceId: string | null;
-  text: string | null;
-  contentDesc: string | null;
-  bounds: { left: number; top: number; right: number; bottom: number };
-  uiStateBefore: string | null;
-}
-
-export type RecordingStep = OpenAppStep | ClickStep;
-
-// Step log output from record parse
-export interface RecordingStepLog {
-  sessionId: string;
-  schemaVersion: number;
-  steps: RecordingStep[];
-  _warnings?: string[]; // present only when parser generated warnings; absent if clean
 }

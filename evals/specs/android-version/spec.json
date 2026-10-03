@@ -7,16 +7,6 @@
     "public-surface": "prompt-public.md",
     "full-repo": "prompt-full-repo.md"
   },
-  "skill_generation": {
-    "skill_prompt": "prompt-skill.md",
-    "skill_start_marker": "ANDROPERATOR_SKILL_START",
-    "skill_end_marker": "ANDROPERATOR_SKILL_END",
-    "replay_timeout_s": 60,
-    "required_authoring_front_door": "androperator-skill-author-by-agent-discovery",
-    "required_proving_handoff": "androperator-skill-author-by-recording",
-    "target_app_package": "com.android.settings",
-    "target_skill_scope": "target-specific Settings/About-device authored skill"
-  },
   "environment": {
     "requires_device": true,
     "requires_androperator_doctor": true,

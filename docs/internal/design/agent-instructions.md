@@ -15,7 +15,7 @@ Runtime skill authors should also use
 | Details needed only for one mode | A linked skill reference |
 | Repeated deterministic operations | A tested helper script |
 | A particular task's outcome, inputs, and completion boundary | The task prompt or pack |
-| Public runtime skill contracts | `docs/skills/` |
+| Agent-followed instructions and examples | `docs/skills/` |
 
 `CLAUDE.md` links to `AGENTS.md`; keep one repository instruction source.
 

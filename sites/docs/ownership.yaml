@@ -8,8 +8,6 @@ concepts:
   setup_flow: setup.md
   doctor_contract: api/doctor.md#doctor-report-contract
   recording_workflow: api/recording.md
-  skills_cli:
-    path: skills/cli.md
 
 command_details:
   notifications:
@@ -135,9 +133,6 @@ command_details:
     href: actions.md#action-read-key-value-pair
     label: "Action: read_key_value_pair"
     action: read_key_value_pair
-  skills:
-    href: ../skills/cli.md
-    label: Skills CLI
   bundled-skills:
     href: ../host-agents.md
     label: Host agent orientation
@@ -188,8 +183,3 @@ owners:
     canonical: setup.md
     summaries:
       - api/doctor.md
-  skills_cli:
-    canonical: skills/cli.md
-    summaries:
-      - api/cli.md
-      - skills/overview.md

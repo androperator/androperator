@@ -9,7 +9,6 @@ import {
   UsageError,
   didYouMean,
   generateTopLevelHelp,
-  isRemovedTopLevelCommand,
   resolveHelpFromRegistry,
   resolveSupportedFlagsFromRegistry,
   type HandlerContext,
@@ -184,7 +183,7 @@ function getGlobalOpts(argv: string[]): {
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === "--") {
       // Stop scanning for global flags. Push `--` and all remaining tokens to `rest` verbatim so
-      // callers like `skills run` can forward them to subprocess scripts.
+      // callers can forward them to subprocess scripts.
       rest.push(...argv.slice(i));
       break;
     } else if (argv[i] === "--device" && argv[i + 1]) {
@@ -308,17 +307,14 @@ async function main(): Promise<void> {
     global = getGlobalOpts(argv);
   } catch (error) {
     if (error instanceof UsageError) {
-      const skillRunRequested = argvForGlobalMeta.some((token, index) => token === "skills" && argvForGlobalMeta[index + 1] === "run");
-      console.log(JSON.stringify({ code: "USAGE", message: error.message,
-        ...(skillRunRequested ? { status: "failed" } : {}),
-      }));
+      console.log(JSON.stringify({ code: "USAGE", message: error.message }));
       process.exit(1);
     }
     throw error;
   }
   if (argvForGlobalMeta.includes("--help")) {
-    const [requestedHelpCommand] = global.rest;
-    if (requestedHelpCommand && isRemovedTopLevelCommand(requestedHelpCommand)) {
+    const requestedHelpCommand = global.rest.find(token => !token.startsWith("--"));
+    if (requestedHelpCommand && !COMMANDS[requestedHelpCommand] && !Object.values(COMMANDS).some(def => def.synonyms?.includes(requestedHelpCommand))) {
       console.error(didYouMean(requestedHelpCommand, global.rest.slice(1), COMMANDS));
       process.exit(1);
     }
@@ -333,12 +329,12 @@ async function main(): Promise<void> {
     process.exit(0);
   }
   const out = { format: global.output as "json" | "pretty", verbose: global.verbose };
-  const disableAmbientSkillRunId = cmd === "daemon" && rest[0] === "run";
+  const disableAmbientRunId = cmd === "daemon" && rest[0] === "run";
   const logger = createAndroperatorLogger({
     logDir: process.env.ANDROPERATOR_LOG_DIR,
     logLevel: global.logLevel ?? process.env.ANDROPERATOR_LOG_LEVEL,
     outputFormat: global.output,
-    inheritSkillRunId: !disableAmbientSkillRunId,
+    inheritRunId: !disableAmbientRunId,
   });
 
   let result: string | undefined;
@@ -372,10 +368,6 @@ async function main(): Promise<void> {
           if (arg === "--") {
             break;
           }
-          const allowForwardedSkillRunFlag =
-            def.name === "skills"
-            && rest[0] === "run"
-            && i >= 2;
           if (def.name === "exec" && rest[0] !== "best-effort" && arg === "--goal") {
             firstUnknownFlag = arg;
             break;
@@ -394,17 +386,6 @@ async function main(): Promise<void> {
             continue;
           }
           if (arg.startsWith("--")) {
-            if (!knownFlags.has(arg) && allowForwardedSkillRunFlag) {
-              const { match, score } = findClosestFlagMatch(arg, knownFlags);
-              if (match && score > 0.75) {
-                firstUnknownFlag = arg;
-                break;
-              }
-              if (restBeforeForward[i + 1] !== undefined && !restBeforeForward[i + 1].startsWith("--")) {
-                i += 1;
-              }
-              continue;
-            }
             if (!knownFlags.has(arg) && allowsLeadingPositional && !consumedPositional) {
               const nextArg = restBeforeForward[i + 1];
               if (nextArg !== undefined && !nextArg.startsWith("--")) {
@@ -463,35 +444,16 @@ async function main(): Promise<void> {
     }
   }
 
-  if (cmd === "skills" && rest[0] === "run" && result !== undefined) {
-    const parsed = JSON.parse(result) as Record<string, unknown>;
-    if (typeof parsed.code === "string" && parsed.status === undefined) {
-      result = JSON.stringify({ ...parsed, status: "failed" }, null, global.output === "pretty" ? 2 : undefined);
-      process.exitCode = 1;
-    }
-  }
   if (result !== undefined) {
     console.log(result);
   }
   if (!usageParseError && (process.exitCode ?? 0) === 0) {
-    // Helper to detect successful skills run by heuristic (success envelopes lack top-level `code`)
-    function isSuccessfulSkillsRunResult(r: string | undefined): boolean {
-      try {
-        return !((JSON.parse(r ?? "{}") as { code?: string }).code);
-      } catch {
-        return false;
-      }
-    }
     // Determine CLI success using the same logic as exit-code selection (single source of truth)
     const cliSucceeded =
       result === undefined || !shouldCliStdoutForceExitCode1(result, usageParseError);
     // Doctor trigger: cmdDoctor sets process.exitCode before returning - relied on here
     if (cmd === "doctor" && (process.exitCode ?? 0) === 0) {
       await maybeShowStarHint("doctor");
-    }
-    // Skill trigger: fires after first successful skills run
-    if (cmd === "skills" && rest[0] === "run" && isSuccessfulSkillsRunResult(result)) {
-      await maybeShowStarHint("skill");
     }
     // Upgrade trigger: fires once per version after any successful command or --version
     if (cliSucceeded) {

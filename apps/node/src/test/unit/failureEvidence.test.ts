@@ -12,7 +12,6 @@ import { androperatorEvents, ANDROPERATOR_EVENT_TYPES } from "../../domain/obser
 import { FakeProcessRunner } from "./fakes/FakeProcessRunner.js";
 import { executionRunner } from "./fakes/executionResultRunner.js";
 import type { Execution } from "../../contracts/execution.js";
-import { emittedSkillResultSchema } from "../../contracts/skillResult.js";
 import type { ResultEnvelope } from "../../contracts/result.js";
 
 const execution: Execution = { commandId: "requested", taskId: "requested-task", source: "test", expectedFormat: "android-ui-automator", timeoutMs: 1000, actions: [{ id: "snap", type: "snapshot" }] };
@@ -126,7 +125,7 @@ it("attaches complete host evidence to a real envelope on post-processing failur
     const evidence = result.envelope.failureEvidence;
     if (valid) { assert.equal(evidence, undefined); assert.equal(result.envelope.status, "success"); continue; }
     assert.equal(result.envelope.status, "failed");
-    const retainedEnvelope = emittedSkillResultSchema.shape.execEnvelopes.parse([result.envelope])?.[0];
+    const retainedEnvelope = JSON.parse(JSON.stringify(result.envelope));
     assert.deepEqual(retainedEnvelope?.failureEvidence, evidence);
     assert.deepEqual(retainedEnvelope?.stepResults[0].data.extractionDiagnostics, result.envelope.stepResults[0].data.extractionDiagnostics);
     assert.deepEqual(retainedEnvelope?.diagnostics, result.envelope.diagnostics);

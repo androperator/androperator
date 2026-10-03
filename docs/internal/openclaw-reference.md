@@ -118,8 +118,8 @@ likely fit best as:
 2. an MCP server
 3. or a plugin/tool bridge
 
-It is less natural to treat Androperator runtime skills as if they were already
-native OpenClaw prompt-skills.
+Androperator supplies execution and evidence. Host-native instructions provide
+app-specific strategy and may invoke ordinary helpers.
 
 Relevant docs:
 
@@ -128,14 +128,11 @@ Relevant docs:
 
 ### 5. Skills exist in OpenClaw too, but they are a different model
 
-OpenClaw has its own skill ecosystem and installation flows. That does not mean
-Androperator runtime skills are directly interchangeable with OpenClaw skills.
-
-For this repo, keep the distinction clear:
-
-1. OpenClaw skills are part of the host assistant ecosystem
-2. Androperator runtime skills are part of the Android automation runtime
-3. a bridge may connect them, but they are not the same abstraction
+OpenClaw has its own skill ecosystem and installation flows. Androperator does
+not define a separate runtime skill package or registry. Agents follow
+host-native instructions and invoke Androperator's execution APIs directly or
+through optional executable helpers. See [skill overview](../skills/overview.md)
+for the Androperator-side boundary.
 
 Relevant docs:
 

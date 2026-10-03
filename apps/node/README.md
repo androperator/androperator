@@ -5,8 +5,8 @@ Deterministic Node.js CLI and API for Android automation, designed for AI agents
 This npm package ships the built Node API and CLI entrypoint for installation and runtime use.
 The full source tree, including the Android operator app, docs, and build tooling, lives in the public GitHub repository:
 [github.com/androperator/androperator](https://github.com/androperator/androperator).
-Agents create and run local skills. No companion catalog is required; optional
-bundled examples will be added separately. See [skill authoring](https://docs.androperator.com/skills/authoring/).
+The current agent follows reusable instructions and optional helpers.
+Settings examples are included in the repository; no runtime package is required. See [skill authoring](https://docs.androperator.com/skills/authoring/).
 
 ## Install
 

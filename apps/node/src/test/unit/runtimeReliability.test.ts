@@ -4,7 +4,6 @@ import { createAndroperatorLogger } from "../../adapters/logger.js";
 import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { cmdSkillsRun } from "../../cli/commands/skills.js";
 import { cmdObserveSnapshot } from "../../cli/commands/observe.js";
 import { shouldCliStdoutForceExitCode1 } from "../../cli/stdoutExitCode.js";
 import { executionRunner } from "./fakes/executionResultRunner.js";
@@ -205,15 +204,6 @@ describe("unusable device readiness evidence", () => {
         assert.equal(details.deviceLocked, undefined);
         assert.equal(details.userUnlocked, undefined);
       };
-      const wrapper = JSON.parse(await cmdSkillsRun("test-skill", [], undefined, undefined, undefined, {
-        format: "json", skipValidate: true,
-        resolveInteractiveSkillTargetImpl: async () => ({ ok: false, error: readiness.error }),
-        runSkillImpl: async () => { throw new Error("Skill must not run"); },
-      }));
-      assert.equal(wrapper.status, "failed");
-      assert.equal(wrapper.code, "DEVICE_NOT_INTERACTIVE");
-      assertEvidence(wrapper.details);
-
       const executionProcess = new FakeProcessRunner();
       executionProcess.queueResult({ code: 0, stdout: "List of devices attached\ntest-device\tdevice\n", stderr: "" });
       executionProcess.queueResult({ code: 0, stdout: "package:com.test.operator\n", stderr: "" });

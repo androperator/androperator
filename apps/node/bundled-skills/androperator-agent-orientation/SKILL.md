@@ -29,13 +29,23 @@ goal was achieved.
 
 ## Find the relevant API
 
-Inspect `androperator --help`, then the help for commands relevant to the task.
-The CLI returns JSON by default. Start with the
+Project documentation is available at [docs.androperator.com](https://docs.androperator.com/).
+Fetch the [agent documentation index](https://docs.androperator.com/llms.txt)
+with the host's web or HTTP-fetch tool, then read the linked pages relevant to
+the task. The [complete Markdown documentation](https://docs.androperator.com/llms-full.txt)
+is available when broader context is needed; prefer the index and selected
+pages for focused work. Start with the
 [API overview](https://docs.androperator.com/api/overview/) for execution inputs,
-result envelopes and success/error semantics. Use the
-[documentation index](https://docs.androperator.com/llms.txt) to find additional
-capabilities rather than assuming every transport has identical coverage.
-In a checkout, prefer the local docs and build and invoke
+result envelopes and success/error semantics. Do not assume every transport has
+identical coverage.
+
+In a repository checkout, canonical documentation lives in `docs/`: start with
+`docs/api/overview.md`, use `docs/api/` for command and contract details,
+`docs/setup.md` for installation, and `docs/host-agents.md` for host integration.
+Prefer these local sources when working against an unreleased branch.
+
+Inspect `androperator --help`, then the help for commands relevant to the task;
+the CLI returns JSON by default. In a checkout, build `apps/node` and invoke
 `node apps/node/dist/cli/index.js` rather than an older global install.
 
 | Need | Starting points |

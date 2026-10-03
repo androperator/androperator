@@ -77,10 +77,12 @@ unauthorized/offline device is not ready.
 
 `androperator install` handles Operator remediation, bundled authoring skills,
 and host-local orientation. Use this route rather than substituting a raw
-`adb install`. Agents create their own local runtime skills; installation initializes a local
-workspace rather than downloading a companion catalog. Follow the current
+`adb install`. Installation initializes a local workspace rather than downloading
+a companion catalog. Agents create their own local runtime skills; no companion
+catalog or skills registry file is required. Optional examples are source
+references, not an installation prerequisite. Follow the
 [skills documentation](https://docs.androperator.com/skills/overview/) for local
-metadata and discovery requirements.
+metadata and discovery rules.
 
 Stable release APK aliases `/operator.apk`, `/install.apk`, and `/apk` on
 `androperator.com` resolve the latest published APK through release metadata.

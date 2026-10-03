@@ -23,9 +23,6 @@ compose = "1.7.5"
 composeUi = "1.7.5"
 composeActivity = "1.9.3"
 espresso = "3.5.1"
-firebaseBom = "32.3.1"
-firebaseCrashlyticsGradle = "3.0.6"
-googleServices = "4.4.4"
 koin = "3.5.6"
 ksp = "2.1.10-1.0.31"
 ktor = "2.3.12"
@@ -45,8 +42,6 @@ turbine = "1.1.0"
 [libraries]
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }
 compose_compiler_gradlePlugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
-firebase-crashlytics-gradlePlugin = { group = "com.google.firebase", name = "firebase-crashlytics-gradle", version.ref = "firebaseCrashlyticsGradle" }
-gms-google-services-gradlePlugin = { group = "com.google.gms", name = "google-services", version.ref = "googleServices" }
 kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 # Code quality tools
 ktlint-gradlePlugin = { group = "org.jlleitschuh.gradle", name = "ktlint-gradle", version.ref = "ktlintGradlePlugin" }

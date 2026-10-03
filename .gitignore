@@ -72,9 +72,6 @@ fastlane/readme.md
 .DS_Store
 main/release/output.json
 
-# Firebase
-.firebase/
-firebase/functions/node_modules/
 /apps/node/node_modules/
 /apps/node/dist/
 /apps/node/*.tgz

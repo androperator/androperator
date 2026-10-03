@@ -1,7 +1,7 @@
 package clawperator.operator.task
 
 /**
- * Service for reporting task status updates back to the server.
+ * Service for reporting task status updates to local agent-observable logs.
  */
 interface TaskStatusReporter {
     /**

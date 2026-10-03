@@ -2284,16 +2284,62 @@ Android live-route verification:
 | Field | Valid values |
 | --- | --- |
 | Required | `key` |
-| `key` | case-insensitive string in `back`, `home`, `recents` |
+| `key` | case-insensitive string in `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv` |
 | `retry` | optional retry object in raw `exec` JSON; Android defaults to `None` |
+
+Back, Home, and Recents retain Android accessibility global actions. The new
+TV remote buttons execute through the Node bridge, including CLI `press`, raw
+`exec`, HTTP `/execute`, MCP `press`/`execute`, and daemon execution. They run in
+order with surrounding Android actions under the same device lock. A failed
+button stops the remaining sequence. The returned envelope keeps the caller's
+`commandId`, `taskId`, and action IDs; internal runtime segments use distinct
+transport command IDs to avoid stale result reuse.
+
+The icon buttons match the Android Emulator remote, as verified against its
+[remote implementation](https://android.googlesource.com/platform/external/qemu/+/refs/heads/emu-master-dev/android/android-ui/modules/aemu-ext-pages/tv-remote/src/android/skin/qt/extended-pages/tv-remote-page.cpp)
+and [button layout](https://android.googlesource.com/platform/external/qemu/+/refs/heads/emu-master-dev/android/android-ui/modules/aemu-ext-pages/tv-remote/src/android/skin/qt/extended-pages/tv-remote-page.ui).
+
+| Button value | Android dispatch | Meaning |
+| --- | --- | --- |
+| `dpad_up` | `KEYCODE_DPAD_UP` (19) | Move focus up |
+| `dpad_down` | `KEYCODE_DPAD_DOWN` (20) | Move focus down |
+| `dpad_left` | `KEYCODE_DPAD_LEFT` (21) | Move focus left |
+| `dpad_right` | `KEYCODE_DPAD_RIGHT` (22) | Move focus right |
+| `dpad_center` | `KEYCODE_DPAD_CENTER` (23) | Select the focused item |
+| `bookmark` | `KEYCODE_BOOKMARK` (174) | Watchlist/bookmark icon |
+| `profile` | `KEYCODE_NOTIFICATION` (83) | Person icon opens the emulator dashboard; not `KEYCODE_PROFILE_SWITCH` |
+| `settings` | Start `com.android.tv.settings/com.android.tv.settings.MainSettings` | Settings icon launches an activity; not `KEYCODE_SETTINGS` |
+| `tv` | Start `com.android.tv/com.android.tv.MainActivity` on API 34+, or `com.google.android.tv/com.android.tv.MainActivity` below API 34 | TV icon opens Live Channels; not `KEYCODE_TV` |
+
+These activities must be installed on the target. Key dispatch acceptance does
+not prove focus moved, a watchlist changed, or a dashboard opened. Android TV
+images and apps may ignore keys. Use a fresh snapshot to verify the intended
+screen or focused item. Buttons are single presses, with no hold or repeat
+parameter.
 
 Success data:
 
-- no Node-guaranteed success keys
+- `key`: canonical button name
+- TV remote buttons also return `dispatchSource: "host"` and either `keyCode`
+  or `activity`
 
 Common failures:
 
 - `EXECUTION_VALIDATION_FAILED` for missing or unsupported key
+- failed `press_key` step with `TV_REMOTE_KEY_FAILED` or
+  `TV_REMOTE_ACTIVITY_FAILED` when host dispatch fails, including unresolved
+  activities even when Android's `am start` exits with code zero
+- `UNSUPPORTED_RUNTIME_TV_REMOTE` for TV buttons sent directly to the APK
+  without the Node bridge
+
+CLI examples:
+
+```bash
+androperator press dpad_up --device <device_serial>
+androperator press --key dpad_center --device <device_serial>
+androperator press profile --device <device_serial>
+androperator press settings --device <device_serial>
+```
 
 Example:
 
@@ -4043,7 +4089,7 @@ Use this page as a command index. Detailed behavior, output shapes, and recovery
 | [`query`](#command-query) | Device Interaction | - | `--matcher-json`, `--text`, `--id`, `--role`, `--visibility`, `--limit`, `--no-daemon` | [Action: query_ui](actions.md#action-query-ui) | Inspect matching nodes and their current state |
 | [`read`](#command-read) | Device Interaction | `read --text <text> \| --id <id> \| --role <role> [--device <id>] [--operator-package <pkg>]` | `--strict`, `--container-json`, `--text`, `--id`, `--desc`, `--role`, `--all`, `--validate-only`, `--dry-run`, `--no-daemon` | [Action: read_text](actions.md#action-read-text) | Read text from the first matching UI element |
 | [`wait`](#command-wait) | Device Interaction | `wait --text <text> \| --id <id> \| --role <role> [--device <id>] [--operator-package <pkg>] [--timeout <ms>]` | `--strict`, `--container-json`, `--text`, `--id`, `--desc`, `--role`, `--no-daemon` | [Action: wait_for_node](actions.md#action-wait-for-node) | Wait until a matching UI element appears |
-| [`press`](#command-press) | Device Interaction | `press <back\|home\|recents> [--device <id>] [--operator-package <pkg>]` | `--key`, `--no-daemon` | [Action: press_key](actions.md#action-press-key) | Press a hardware key on the device |
+| [`press`](#command-press) | Device Interaction | `press <key> [--device <id>] [--operator-package <pkg>]` | `--key`, `--no-daemon` | [Action: press_key](actions.md#action-press-key) | Press a navigation key or TV remote button |
 | [`back`](#command-back) | Device Interaction | `back [--device <id>] [--operator-package <pkg>]` | `--no-daemon` | [Action: press_key](actions.md#action-press-key) | Press the Android back key |
 | [`close`](#command-close) | Device Interaction | `close <package> [--device <id>] [--operator-package <pkg>]` | `--app`, `--no-daemon` | [Action: close_app](actions.md#action-close-app) | Force-stop an Android application |
 | [`toast`](#command-toast) | Device Interaction | `toast <text> [--duration short\|long] \| toast --cancel` | `--duration`, `--cancel`, `--no-daemon` | [Toast actions](actions.md#action-show-toast) | Show or cancel an Operator-owned text toast |
@@ -4276,10 +4322,10 @@ Wait until a matching UI element appears
 <a id="command-press"></a>
 ### `press`
 
-Press a hardware key on the device
+Press a navigation key or TV remote button
 
 - Group: Device Interaction
-- Syntax: `press <back|home|recents> [--device <id>] [--operator-package <pkg>]`
+- Syntax: `press <key> [--device <id>] [--operator-package <pkg>]`
 - Primary flags: `--key`, `--no-daemon`
 - Details: [Action: press_key](actions.md#action-press-key)
 - Action links: [`press_key`](actions.md#action-press-key)
@@ -9326,7 +9372,7 @@ For the underlying selector contract, see [Selectors](selectors.md).
 | `click` | Click a matching node or absolute screen coordinate. |
 | `type` | Type text into a matching field, optionally clearing first or submitting after. Step data reports text_entry, submission, and submit_method separately; accepted submission does not verify navigation. Observe the destination before declaring success. |
 | `read` | Read text from a matching node, optionally returning all matches. Supports regex validation via validator and validatorPattern. |
-| `press` | Press one of the supported Android navigation keys. |
+| `press` | Press an Android navigation key or TV remote button. TV icon buttons match the emulator remote: profile sends notification; settings and tv launch activities. |
 | `wait` | Wait until a matching node appears. |
 | `scroll` | Perform one scroll in a freshly resolved container. Strict mode requires unique selection. |
 | `scroll_until` | Scroll in the given direction until a matching node is visible, optionally clicking it afterward. |
@@ -9796,13 +9842,13 @@ Example regex-validated read:
 <a id="mcp-tool-press"></a>
 ### `press`
 
-Press a supported Android navigation key.
+Press a supported Android navigation key or TV remote button.
 
 Parameters:
 
 | Field | Required | Notes |
 | --- | --- | --- |
-| `key` | yes | One of `back`, `home`, `recents` |
+| `key` | yes | One of `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv`. See [button mappings and dispatch behavior](actions.md#action-press-key). |
 | `deviceId` | no | Explicit target device |
 | `operatorPackage` | no | Explicit operator package |
 | `timeoutMs` | no | Execution timeout. Defaults to `10000`. |

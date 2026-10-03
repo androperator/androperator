@@ -1,4 +1,4 @@
 interface:
-  display_name: "androperator-agent-orientation"
-  short_description: "Orient an unfamiliar host for Android execution with Androperator."
-  default_prompt: "Follow this guidance in the current agent for the authorized Android goal."
+  display_name: "Androperator Orientation"
+  short_description: "Select and verify the CLI, device and Operator"
+  default_prompt: "Use $androperator-agent-orientation to establish a verified execution route for the authorized Android goal, or report the concrete readiness blocker."

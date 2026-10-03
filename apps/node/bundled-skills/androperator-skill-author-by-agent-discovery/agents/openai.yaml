@@ -1,4 +1,4 @@
 interface:
-  display_name: "androperator-skill-author-by-agent-discovery"
-  short_description: "Explore an authorized Android workflow and optionally save adaptive instructions."
-  default_prompt: "Follow this guidance in the current agent for the authorized Android goal."
+  display_name: "Androperator Author by Discovery"
+  short_description: "Author reusable instructions from live Android exploration"
+  default_prompt: "Use $androperator-skill-author-by-agent-discovery to save adaptive instructions for the requested workflow, verify them on the selected device and report untested limits."

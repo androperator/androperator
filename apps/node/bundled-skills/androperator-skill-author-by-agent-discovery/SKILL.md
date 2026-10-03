@@ -1,25 +1,35 @@
 ---
 name: androperator-skill-author-by-agent-discovery
-description: Explore an authorized Android workflow and optionally save adaptive instructions.
+description: Author reusable Android instructions by exploring an authorized workflow with Androperator.
 ---
 
-# Explore and author adaptive instructions
+# Author instructions from live discovery
 
-Use the current agent to explore the authorized goal. Check readiness and select
-an explicit device and Operator. Define observation, action, recovery and time
-budgets. Follow the control-loop skill one step at a time from current evidence.
+Deliver host-native instructions grounded in observed app behavior, with verified
+outcomes and explicit limits. Use this skill when reusable authoring is requested;
+for a one-off Android goal, use `androperator-agent-control-loop` directly.
 
-Record the goal, inputs, likely route, observations that justify actions,
-supported deviations, recovery limits and independent outcome verification.
-Save reusable instructions in the host's normal format when requested or useful.
-Optional ordinary helpers can parse or retain evidence. No manifest, registry,
-required entrypoint, new result format or child-agent launcher is needed.
+Use `androperator-agent-orientation` when readiness is unknown. Follow the control
+loop on an explicit device and matching Operator, with bounded observation,
+action, recovery and elapsed-time budgets. Let current evidence determine the
+next action; app-specific routes belong in instructions, not in the runtime.
 
-If missing app knowledge blocks progress, ask a specific question or request an
-optional demonstration when it would supply that evidence. Use the recording
-skill then; a demonstration is never required merely because a route is unfamiliar.
-Do not turn a one-off task into mandatory durable authoring.
+Save the goal, inputs, likely route, observations that justify actions, supported
+deviations, recovery limits and independent outcome verification in the host's
+normal skill format. Optional ordinary helpers can parse or retain evidence.
+No manifest, registry, required entrypoint, new result format or child-agent
+launcher is needed.
 
-Prove the requested values on a selected device and exercise a bounded unexpected
-state or report a truthful blocker. Retain failures alongside successful recovery.
-Read https://docs.androperator.com/skills/authoring/ and the Settings examples.
+If missing app knowledge blocks progress, ask a specific question. Use
+`androperator-skill-author-by-recording` when an optional demonstration would
+supply that evidence; unfamiliarity alone does not require human intervention.
+
+Follow the authored instructions on the selected device and verify the requested
+outcomes. Exercise a bounded unexpected state within the authorized scope, or
+report which recovery behavior remains untested. Preserve failures alongside
+successful recovery. Finish with the saved location, observed proof and remaining
+limits; do not label blocked or untested instructions as proven.
+
+Consult [authoring](https://docs.androperator.com/skills/authoring/) for writing
+conventions and [examples](https://docs.androperator.com/skills/examples/) when
+an example would help structure instructions or an optional helper.

@@ -1,19 +1,33 @@
 ---
 name: androperator-agent-orientation
-description: Orient an unfamiliar host for Android execution with Androperator.
+description: Select and verify an Androperator CLI, Android device and Operator on an unfamiliar host.
 ---
 
 # Orient the current agent
 
-1. Locate the CLI and inspect `--help`; in a checkout build and use the branch-local CLI.
-2. Run `devices`, select an explicit target and matching Operator package.
-3. Run doctor for that pair. Resolve readiness failures before acting.
-4. Define the authorized goal and evidence needed for each requested result.
-5. Choose CLI, HTTP or MCP according to the current host's capabilities.
-6. Follow `androperator-agent-control-loop`: observe, choose one action, execute,
-   observe again and independently verify. Report blocked or partial outcomes.
+Establish a usable execution route for the authorized Android goal. Finish with
+an explicit device, matching Operator package and successful readiness check,
+or report the concrete blocker and its supported repair route.
 
-Inspect `bundled-skills list` for installed host guidance. Use the upgrade skill
-for a whole-product refresh. Save reusable instructions only when requested or
-worthwhile; one-off tasks need no authoring step. Ordinary helpers are optional.
-Read https://docs.androperator.com/host-agents/ and the command help for exact flags.
+1. Locate `androperator` and inspect `--help`. In a checkout, build and use
+   `apps/node/dist/cli/index.js` rather than a potentially older global install.
+2. Run `devices`, select an explicit target, and use the matching Operator:
+   `com.androperator.operator.dev` for local development or
+   `com.androperator.operator` for release validation.
+3. Run `doctor --device <device_serial> --operator-package <operator_package>`.
+   Resolve readiness failures within the authorized scope before device actions.
+   A successful check for another device or package does not establish readiness.
+4. Choose CLI, HTTP or MCP according to the host's capabilities. Keep device and
+   package selection explicit through subsequent calls.
+5. For the Android goal, follow `androperator-agent-control-loop`: observe, choose
+   a bounded action, execute, observe again and independently verify the result.
+
+`bundled-skills list` shows installed host guidance. Use `androperator-upgrade`
+only for an explicitly requested whole-product refresh. One-off tasks need no
+saved skill; route explicit authoring requests to discovery or recording guidance.
+
+The current command, environment prefix and local state are `androperator`,
+`ANDROPERATOR_*` and `~/.androperator/`. An old `clawperator` binary or Operator
+is not proof that the renamed installation is ready. Use
+[host integration](https://docs.androperator.com/host-agents/) for transport setup
+and command help for exact flags.

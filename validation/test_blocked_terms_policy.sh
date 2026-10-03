@@ -128,6 +128,22 @@ git -C "$test_repo" add text.png
 assert_rejected git -C "$test_repo" commit -m "test: PNG extension alone is not exempt"
 git -C "$test_repo" reset --hard --quiet HEAD
 
+# WebP requires both RIFF and WEBP signatures, including uppercase extensions.
+for path in image.webp uppercase.WEBP; do
+  printf 'RIFF\024\000\000\000WEBP\000%s\000' "$blocked_lower" > "$test_repo/$path"
+  git -C "$test_repo" add "$path"
+  git -C "$test_repo" commit -m "test: new WebP payload" --quiet
+  printf '%s' "$blocked_upper" >> "$test_repo/$path"
+  git -C "$test_repo" add "$path"
+  git -C "$test_repo" commit -m "test: modified WebP payload" --quiet
+done
+for payload in "$blocked_lower" "RIFF0000WAVE $blocked_lower" "TEXT0000WEBP $blocked_lower" "RIFF $blocked_lower"; do
+  printf '%s' "$payload" > "$test_repo/text.webp"
+  git -C "$test_repo" add text.webp
+  assert_rejected git -C "$test_repo" commit -m "test: invalid WebP signature is not exempt"
+  git -C "$test_repo" reset --hard --quiet HEAD
+done
+
 # Exclude the app catalog file family, without exempting other Kotlin files.
 for path in KnownAppsRepository.kt KnownAppsRepositoryDefault.kt; do
   printf '%s\n' "$blocked_lower" > "$test_repo/$path"

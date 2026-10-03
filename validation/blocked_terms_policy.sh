@@ -197,11 +197,17 @@ blocked_terms_policy_scan_staged_content() {
     case "${path##*/}" in
       KnownAppsRepository*) continue ;;
     esac
-    # PNG payloads are compressed bytes, not searchable prose. Verify the format
-    # signature so a text file named .png still receives the content scan.
+    # PNG and WebP payloads are compressed bytes, not searchable prose. Verify
+    # format signatures so text disguised with an image extension is scanned.
     case "$path" in
       *.png|*.PNG)
         if [[ "$(od -An -tx1 -N8 "$staged_file" | tr -d ' \n')" == "89504e470d0a1a0a" ]]; then
+          continue
+        fi
+        ;;
+      *.webp|*.WEBP)
+        if [[ "$(od -An -tx1 -N4 "$staged_file" | tr -d ' \n')" == "52494646" ]] &&
+           [[ "$(od -An -tx1 -j8 -N4 "$staged_file" | tr -d ' \n')" == "57454250" ]]; then
           continue
         fi
         ;;

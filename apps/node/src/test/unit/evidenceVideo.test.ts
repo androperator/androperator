@@ -8,7 +8,7 @@ import { randomUUID } from "node:crypto";
 import { EventEmitter } from "node:events";
 import { chooseVideoSize, verifyScreenrecordHelp, verifyRemote, atomicJson, type VideoState } from "../../domain/evidence/videoSupport.js";
 import { validateVideoStart, videoStatus, stopVideo, managedVideoSession } from "../../domain/evidence/video.js";
-import { runVideoWorker, verifyVideo } from "../../domain/evidence/videoWorker.js";
+import { runVideoWorker, verifyVideo, type VideoWorkerClock } from "../../domain/evidence/videoWorker.js";
 import { evidenceManifestSchema, type EvidenceManifest } from "../../contracts/evidence.js";
 import type { ProcessRunner } from "../../adapters/android-bridge/processRunner.js";
 import { getVideoMcpTools } from "../../mcp/tools/evidence.js";
@@ -40,7 +40,6 @@ export async function videoFixture(options: { failure?: string; stopped?: boolea
       calls.push(args);
       child = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill: () => { child.emit("close", null); return true; } });
       queueMicrotask(() => { child.stdout.emit("data", Buffer.from("123\n")); if (options.failure === "startup") child.stderr.emit("data", Buffer.from("encoder failed")); if (options.failure === "stderr-limit") child.stderr.emit("data", Buffer.alloc(1024 * 1024 + 5, 120)); });
-      if (!options.stopped) setTimeout(() => child.emit("close", options.failure === "disconnect" ? null : 0), 400);
       return child;
     },
     run: async (command, args) => {
@@ -68,7 +67,21 @@ export async function videoFixture(options: { failure?: string; stopped?: boolea
       return { code: 0, stderr: "", stdout: "" };
     },
   };
-  return { state, manifest, runner, calls, outputDir, path: join(outputDir, "manifest.json"), cleanup: () => fs.rm(outputDir, { recursive: true, force: true }) };
+  const clock: VideoWorkerClock = {
+    now: () => Date.now(),
+    monotonic: () => performance.now(),
+    sleep: async ms => {
+      // Complete the mock recorder only after startup has persisted recording.
+      // A wall-clock timer can fire during startup on a busy CI runner.
+      const current = JSON.parse(await fs.readFile(join(outputDir, "manifest.json"), "utf8"));
+      if (!options.stopped && current.status === "recording") {
+        child.emit("close", options.failure === "disconnect" ? null : 0);
+        return;
+      }
+      await new Promise(resolve => setTimeout(resolve, ms));
+    },
+  };
+  return { state, manifest, runner, clock, calls, outputDir, path: join(outputDir, "manifest.json"), cleanup: () => fs.rm(outputDir, { recursive: true, force: true }) };
 }
 
 describe("video contracts and geometry", () => {
@@ -108,7 +121,7 @@ describe("video worker and persistent lifecycle", () => {
   for (const stopped of [false, true]) it(`finalizes ${stopped ? "explicit stop" : "duration cap"} and repeated stop is immutable`, async () => {
     const f = await videoFixture({ stopped });
     try {
-      await runVideoWorker(f.outputDir, f.runner);
+      await runVideoWorker(f.outputDir, f.runner, f.clock);
       const before = await fs.readFile(f.path, "utf8");
       const manifest = evidenceManifestSchema.parse(JSON.parse(before));
       assert.equal(manifest.status, "complete");
@@ -124,7 +137,7 @@ describe("video worker and persistent lifecycle", () => {
   for (const failure of ["startup", "disconnect", "pull", "dimensions", "decode", "identity", "idle-zero", "stderr-limit"]) it(`retains truthful failure for ${failure}`, async () => {
     const f = await videoFixture({ failure });
     try {
-      await runVideoWorker(f.outputDir, f.runner);
+      await runVideoWorker(f.outputDir, f.runner, f.clock);
       const manifest = evidenceManifestSchema.parse(JSON.parse(await fs.readFile(f.path, "utf8")));
       assert.notEqual(manifest.status, "complete");
       assert.ok(manifest.errors.length);
@@ -240,7 +253,7 @@ describe("video start preflight and CLI", () => {
     const f = await videoFixture();
     const cli = (args: string[]) => spawnSync(process.execPath, ["dist/cli/index.js", ...args], { encoding: "utf8" });
     try {
-      await runVideoWorker(f.outputDir, f.runner);
+      await runVideoWorker(f.outputDir, f.runner, f.clock);
       for (const args of [
         ["evidence", "video", "start"], ["evidence", "video", "start", "--duration-seconds"],
         ["evidence", "video", "start", "--output-dir", "/tmp/example", "--duration-seconds", "1.5"],
@@ -283,7 +296,7 @@ for (const failure of ["stop-cap-race", "stop-signal-race"]) {
   it(`finalizes an observed normal recorder exit during ${failure}`, async () => {
     const f = await videoFixture({ failure, stopped: true });
     try {
-      await runVideoWorker(f.outputDir, f.runner);
+      await runVideoWorker(f.outputDir, f.runner, f.clock);
       const manifest = JSON.parse(await fs.readFile(f.path, "utf8"));
       assert.equal(manifest.status, "complete");
       assert.equal(manifest.video.stopReason, "duration_cap");
@@ -296,12 +309,17 @@ for (const failure of ["stop-cap-race", "stop-signal-race"]) {
 for (const filename of ["video.mp4", "encoder.stderr.txt", "captures.json"]) {
   it(`never reports complete when final ${filename} cannot be read`, async () => {
     const f = await videoFixture();
+    const originalRun = f.runner.run;
+    f.runner.run = async (command, args, options) => {
+      if (args.some(arg => arg.endsWith("/stat"))) await new Promise(resolve => setTimeout(resolve, 450));
+      return originalRun(command, args, options);
+    };
     try {
       const readArtifact = (async (path: Parameters<typeof fs.readFile>[0]) => {
         if (String(path).endsWith(filename)) throw Object.assign(new Error("Artifact read denied"), { code: "EACCES" });
         return fs.readFile(path);
       }) as typeof fs.readFile;
-      await runVideoWorker(f.outputDir, f.runner, undefined, readArtifact);
+      await runVideoWorker(f.outputDir, f.runner, f.clock, readArtifact);
       const manifest = JSON.parse(await fs.readFile(f.path, "utf8"));
       assert.equal(manifest.status, filename === "video.mp4" ? "failed" : "partial");
       assert.ok(manifest.errors.some((error: any) => error.code === "EACCES" && error.stage === "artifact"));
@@ -348,7 +366,7 @@ for (const failure of ["late-decode", "decode-timeout"]) it(`preserves partial e
       return { code: failure === "late-decode" ? 1 : null, stdout: "frame=42\nprogress=continue\n",
         stderr: failure === "late-decode" ? "Invalid NAL unit at tail" : "Video subprocess timed out" };
     };
-    await runVideoWorker(f.outputDir, f.runner);
+    await runVideoWorker(f.outputDir, f.runner, f.clock);
     const before = await fs.readFile(f.path, "utf8");
     const manifest = JSON.parse(before);
     assert.equal(manifest.status, "partial");
@@ -404,7 +422,7 @@ it("keeps heartbeats alive during full decoding and final artifact persistence",
       if (String(path).endsWith("video.mp4")) await checkHeartbeat();
       return fs.readFile(path);
     }) as typeof fs.readFile;
-    await runVideoWorker(f.outputDir, f.runner, undefined, readArtifact);
+    await runVideoWorker(f.outputDir, f.runner, f.clock, readArtifact);
     assert.equal((await videoStatus({ session: f.path })).status, "complete");
   } finally { await f.cleanup(); }
 });

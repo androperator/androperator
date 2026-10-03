@@ -316,7 +316,7 @@ const executionSchema = z.object({
           if (!params?.validatorPattern || params.validatorPattern.trim() === "") {
             addIssue(index, "read_text with validator='regex' requires params.validatorPattern", ["params", "validatorPattern"]);
           } else {
-            // Validate that validatorPattern is a valid regex
+            // Compile only to check syntax here; this does not match the pattern against text on the host.
             try {
               new RegExp(params.validatorPattern);
             } catch {

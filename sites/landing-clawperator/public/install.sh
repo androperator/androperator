@@ -260,7 +260,33 @@ install_or_upgrade_node_with_nvm() {
             return 1
         fi
 
-        curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+        # Verify the pinned installer before executing downloaded code.
+        local nvm_installer nvm_digest
+        nvm_installer="$(mktemp)" || return 1
+        if ! curl --proto '=https' --tlsv1.2 -fsSL \
+            https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh -o "$nvm_installer"; then
+            rm -f "$nvm_installer"
+            return 1
+        fi
+        if command -v sha256sum &> /dev/null; then
+            nvm_digest="$(sha256sum "$nvm_installer")" || { rm -f "$nvm_installer"; return 1; }
+        elif command -v shasum &> /dev/null; then
+            nvm_digest="$(shasum -a 256 "$nvm_installer")" || { rm -f "$nvm_installer"; return 1; }
+        else
+            echo "A SHA-256 checksum tool is required to install nvm." >&2
+            rm -f "$nvm_installer"
+            return 1
+        fi
+        if [ "${nvm_digest%% *}" != "abdb525ee9f5b48b34d8ed9fc67c6013fb0f659712e401ecd88ab989b3af8f53" ]; then
+            echo "nvm installer checksum mismatch; refusing to execute." >&2
+            rm -f "$nvm_installer"
+            return 1
+        fi
+        if ! bash "$nvm_installer"; then
+            rm -f "$nvm_installer"
+            return 1
+        fi
+        rm -f "$nvm_installer"
         if ! load_nvm; then
             echo -e "${RED}❌ nvm installation completed but nvm could not be loaded.${NC}"
             return 1

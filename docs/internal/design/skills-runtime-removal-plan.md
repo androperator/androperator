@@ -1,8 +1,8 @@
 # Remove the runtime skills framework
 
-Date: 4 October 2026. Status: revised plan following the project owner's explicit
-scope clarification. This is documentation of proposed work, not implementation
-or authorization to push, publish or open a PR.
+Date: 4 October 2026. Status: implemented locally in commit `f8953719`.
+The [validation record](skills-runtime-removal-validation.md) documents retained
+behavior, checks and limitations. No push, publication or PR was performed.
 
 ## Decision and authority
 
@@ -137,7 +137,8 @@ tracing, not a migration phase or external-user gate.
 
 These steps organize implementation dependencies; they are not public transition
 phases. One coherent removal change is preferred over a compatibility rollout.
-No product changes are included in the current documentation-only request.
+The implementation follows this order. The validation record describes the
+completed checks and the remaining limits of the evidence.
 
 ## Acceptance
 

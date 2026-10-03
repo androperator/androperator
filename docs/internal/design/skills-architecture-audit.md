@@ -1,6 +1,6 @@
 # Skills API and architecture audit
 
-Audit date: 4 October 2026. Baseline: freshly fetched `origin/main`, commit `627e128f` (CLI 1.0.1). This is a recommendation, not an implementation plan approved for execution. Product behavior is unchanged.
+Audit date: 4 October 2026. Baseline: freshly fetched `origin/main`, commit `627e128f` (CLI 1.0.1). This records the historical source baseline. The direct removal was subsequently implemented locally; see the [validation record](skills-runtime-removal-validation.md).
 
 ## Revised recommendation
 
@@ -14,7 +14,7 @@ recommendation and implementation scope. It supersedes this audit's original
 proposal to retain a smaller runner and stage a compatibility migration, and the
 compatibility phases proposed by the independent V2 audit. The source findings
 below remain evidence about the audited implementation, not requirements to
-preserve it. This document update does not implement the removal.
+preserve it. The findings describe the pre-removal implementation.
 
 Keep Android execution and structured evidence, bundled host-agent guidance,
 agent-followed examples and useful recording tools. Existing internal consumers

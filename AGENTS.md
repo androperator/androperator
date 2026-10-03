@@ -160,9 +160,9 @@ non-empty line and `#` comments. `ANDROPERATOR_BLOCKED_TERMS_FILE` overrides
 its location. A missing file permits commits; an unreadable configured file
 blocks them. The hooks scan effective author and committer identities, staged
 content, and the sanitized commit message, case-insensitively, matching identifiers
-or literal phrases as appropriate. Staged-content scans exempt PNG payloads with
+or literal phrases as appropriate. Staged-content scans exempt PNG and WebP payloads with
 a verified format signature and files named `KnownAppsRepository*`; text disguised
-with a PNG extension is still scanned. Before pushing, the hooks also scan raw author
+with a PNG or WebP extension is still scanned. Before pushing, the hooks also scan raw author
 and committer identities and messages in the outgoing history.
 Verify changes to this policy with `./validation/test_blocked_terms_policy.sh`.
 Before release or force-push events, scan for blocked terms and verify history.

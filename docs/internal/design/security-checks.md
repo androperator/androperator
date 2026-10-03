@@ -75,13 +75,19 @@ installing the scanner or any third-party Python packages:
 
 ```bash
 python3 validation/security/check_distribution.py --npm
+python3 validation/security/check_distribution.py --npm --output <release_tgz>
+python3 validation/security/check_distribution.py --npm-archive <release_tgz>
 python3 validation/security/check_distribution.py --apk <operator_apk>
 python3 validation/security/check_distribution.py --directory <built_site_directory>
 python3 validation/security/check_distribution.py --public-docs <built_docs_directory>
 ```
 
-The npm mode inspects the built package's dry-run file list and file contents,
-including bundled skills; it does not execute packaging lifecycle hooks. APK mode
+The npm mode runs `npm pack` with packaging lifecycle hooks enabled, then reads
+the actual tarball entries, including bundled skills, without extracting them.
+`--output` retains the checked tarball for publication; otherwise it is temporary.
+The release workflow publishes that same tarball with `--ignore-scripts=true`,
+so no later lifecycle hook or repacking can change its contents. Existing tarballs
+can be inspected directly with `--npm-archive`. APK mode
 reads archive entries without extracting them. Directory mode checks all built
 website files, including installers. Nested ZIP and gzip content is inspected;
 unreadable, malformed, missing, or empty expected output fails the check. Scanner

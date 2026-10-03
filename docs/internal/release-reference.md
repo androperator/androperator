@@ -41,6 +41,9 @@ For every tagged release, GitHub Actions should:
 
 Semgrep, reviewdog, and their rules must never ship in product distributions.
 Keep the distribution checks enabled in npm/APK publication and website builds.
+npm publication packs with lifecycle hooks enabled, checks the resulting archive,
+then publishes that exact archive with lifecycle scripts disabled. Do not replace
+this with a source-tree check followed by a directory-based publish.
 Our own suppression comments are permitted. See
 [the security tooling policy](design/security-checks.md) for scope and checks.
 

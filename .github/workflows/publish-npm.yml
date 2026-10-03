@@ -114,9 +114,9 @@ jobs:
       - name: Test package
         run: npm --prefix apps/node run test
 
-      - name: Verify repository security tools are excluded from npm
-        run: python3 validation/security/check_distribution.py --npm
+      - name: Pack and verify the npm release archive
+        run: python3 validation/security/check_distribution.py --npm --output "$RUNNER_TEMP/androperator-release.tgz"
 
       - name: Publish package
         working-directory: apps/node
-        run: npm publish --access public --tag latest
+        run: npm publish "$RUNNER_TEMP/androperator-release.tgz" --ignore-scripts=true --access public --tag latest

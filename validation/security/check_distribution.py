@@ -8,6 +8,9 @@ import os
 from pathlib import Path, PurePosixPath
 import re
 import subprocess
+import shutil
+import tarfile
+import tempfile
 import sys
 import zipfile
 
@@ -85,38 +88,64 @@ def check_directory(directory, public_docs=False):
     return files
 
 
-def check_package_files(package_root, files):
-    if not any(file['path'] == 'dist/cli/index.js' for file in files):
-        raise ValueError('Build the Node package before checking its contents.')
-    for file in files:
-        name = file['path']
-        relative = PurePosixPath(name)
-        if relative.is_absolute() or '..' in relative.parts:
-            raise ValueError(f"Invalid npm package path: {name}")
-        check_file(name, (package_root / name).read_bytes())
+def check_npm_archive(archive_path):
+    names = set()
+    with tarfile.open(archive_path, 'r:gz') as archive:
+        for entry in archive:
+            relative = PurePosixPath(entry.name)
+            if (relative.is_absolute() or '..' in relative.parts
+                    or not relative.parts or relative.parts[0] != 'package'):
+                raise ValueError(f"Invalid npm archive path: {entry.name}")
+            if entry.isdir():
+                continue
+            if not entry.isfile():
+                raise ValueError(f"Unsupported npm archive entry: {entry.name}")
+            if entry.name in names:
+                raise ValueError(f"Duplicate npm archive entry: {entry.name}")
+            names.add(entry.name)
+            with archive.extractfile(entry) as content:
+                check_file(entry.name, content.read())
+    if not {'package/package.json', 'package/dist/cli/index.js'} <= names:
+        raise ValueError('npm archive must contain package.json and the built CLI entry point.')
+    return len(names)
 
 
-def check_npm():
-    package_root = ROOT / 'apps/node'
-    # This is a packaging regression guard. No package lifecycle script is executed.
-    packed = subprocess.run(['npm', 'pack', '--dry-run', '--json', '--ignore-scripts'],
-                            cwd=package_root, check=True, capture_output=True, text=True)
-    files = json.loads(packed.stdout)[0]['files']
-    check_package_files(package_root, files)
-    return len(files)
+def check_npm(output=None, package_root=None):
+    package_root = package_root or ROOT / 'apps/node'
+    with tempfile.TemporaryDirectory(prefix='androperator-npm-pack-') as temporary:
+        # Run packaging hooks before inspecting bytes. Postpack may change the source
+        # tree, so neither a dry-run list nor source-file reads prove archive contents.
+        packed = subprocess.run(['npm', 'pack', '--json', '--ignore-scripts=false',
+                                 '--pack-destination', temporary], cwd=package_root,
+                                check=True, capture_output=True, text=True)
+        filename = json.loads(packed.stdout)[0]['filename']
+        if not isinstance(filename, str) or Path(filename).name != filename or not filename.endswith('.tgz'):
+            raise ValueError('npm pack returned an invalid archive filename.')
+        archive = Path(temporary) / filename
+        count = check_npm_archive(archive)
+        if output is not None:
+            # Preserve the checked archive for publication; never repack it.
+            shutil.copyfile(archive, output)
+        return count
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     target = parser.add_mutually_exclusive_group(required=True)
-    target.add_argument('--npm', action='store_true', help='Inspect the built npm package file list and contents')
+    target.add_argument('--npm', action='store_true', help='Pack with lifecycle hooks enabled and inspect the resulting npm archive')
+    target.add_argument('--npm-archive', type=Path, help='Inspect an existing npm tarball without running hooks')
+    parser.add_argument('--output', type=Path, help='With --npm, retain the checked tarball at this path')
     target.add_argument('--directory', type=Path, help='Inspect a built website directory')
     target.add_argument('--public-docs', type=Path, help='Inspect published docs, rejecting even suppression comments and internal security references')
     target.add_argument('--apk', type=Path, help='Inspect the APK archive before publication')
     args = parser.parse_args(argv)
+    if args.output is not None and not args.npm:
+        parser.error("--output requires --npm")
     try:
         if args.npm:
-            label = f"npm package ({check_npm()} files)"
+            label = f"npm package ({check_npm(args.output)} files)"
+        elif args.npm_archive is not None:
+            label = f"{args.npm_archive} ({check_npm_archive(args.npm_archive)} files)"
         elif args.public_docs is not None:
             label = f"{args.public_docs} ({check_directory(args.public_docs, public_docs=True)} files; public docs)"
         elif args.directory is not None:
@@ -125,7 +154,7 @@ def main(argv=None):
             check_file(args.apk.name, b'')
             check_zip(args.apk, str(args.apk), require_apk=True)
             label = str(args.apk)
-    except (OSError, ValueError, RuntimeError, EOFError, zipfile.BadZipFile,
+    except (OSError, ValueError, RuntimeError, EOFError, zipfile.BadZipFile, tarfile.TarError,
             subprocess.CalledProcessError) as error:
         print(f"Distribution check failed: {error}", file=sys.stderr)
         return 1

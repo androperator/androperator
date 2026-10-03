@@ -841,8 +841,8 @@ describe("Doctor: hostChecks", () => {
             const root = await makeTempRoot("androperator-doctor-agent-skills-unreadable-version-");
             const installedDir = join(root, "bundled-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            await mkdir(join(installedDir, "androperator-skill-author-by-recording"), { recursive: true });
-            await writeFile(join(installedDir, "androperator-skill-author-by-recording", "SKILL.md"), "# androperator-skill-author-by-recording\n", "utf8");
+            await mkdir(join(installedDir, "androperator-learn-from-recording"), { recursive: true });
+            await writeFile(join(installedDir, "androperator-learn-from-recording", "SKILL.md"), "# androperator-learn-from-recording\n", "utf8");
             await mkdir(join(installedDir, "version.txt"), { recursive: true });
 
             const result = await checkBundledSkillsStaleness(config, { installedDir });

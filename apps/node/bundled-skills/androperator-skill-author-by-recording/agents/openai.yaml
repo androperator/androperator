@@ -1,4 +1,0 @@
-interface:
-  display_name: "Androperator Author by Recording"
-  short_description: "Learn adaptive instructions from a human demonstration"
-  default_prompt: "Use $androperator-skill-author-by-recording to capture and inspect demonstration evidence, save adaptive instructions and verify the authorized workflow without treating the recording as a replay program."

@@ -21,7 +21,7 @@ No manifest, registry, required entrypoint, new result format or child-agent
 launcher is needed.
 
 If missing app knowledge blocks progress, ask a specific question. Use
-`androperator-skill-author-by-recording` when an optional demonstration would
+`androperator-learn-from-recording` when an optional demonstration would
 supply that evidence. A demonstration is never required merely because a route
 is unfamiliar.
 

@@ -72,8 +72,8 @@ describe("copyBundledSkills", () => {
     const sourceDir = await createSourceSkills(root, [
       "androperator-agent-orientation",
       "androperator-upgrade",
+      "androperator-learn-from-recording",
       "androperator-skill-author-by-agent-discovery",
-      "androperator-skill-author-by-recording",
     ]);
     const installedDir = join(root, "home", ".androperator", "bundled-skills");
     const claudeSkillsDir = join(root, "home", ".claude", "skills");
@@ -95,30 +95,30 @@ describe("copyBundledSkills", () => {
     }
     assert.deepEqual(result.skills, [
       "androperator-agent-orientation",
+      "androperator-learn-from-recording",
       "androperator-skill-author-by-agent-discovery",
-      "androperator-skill-author-by-recording",
       "androperator-upgrade",
     ]);
     assert.equal(await readFile(join(installedDir, "androperator-agent-orientation", "SKILL.md"), "utf8"), "# androperator-agent-orientation\n");
     assert.equal(await readFile(join(installedDir, "androperator-upgrade", "SKILL.md"), "utf8"), "# androperator-upgrade\n");
     assert.equal(await readFile(join(installedDir, "androperator-skill-author-by-agent-discovery", "SKILL.md"), "utf8"), "# androperator-skill-author-by-agent-discovery\n");
-    assert.equal(await readFile(join(installedDir, "androperator-skill-author-by-recording", "SKILL.md"), "utf8"), "# androperator-skill-author-by-recording\n");
+    assert.equal(await readFile(join(installedDir, "androperator-learn-from-recording", "SKILL.md"), "utf8"), "# androperator-learn-from-recording\n");
     assert.equal(await readFile(join(installedDir, "androperator-agent-orientation", "agents", "openai.yaml"), "utf8"), "name: demo\n");
     assert.equal(await readFile(join(installedDir, "androperator-upgrade", "agents", "openai.yaml"), "utf8"), "name: demo\n");
     assert.equal(await readFile(join(installedDir, "androperator-skill-author-by-agent-discovery", "agents", "openai.yaml"), "utf8"), "name: demo\n");
-    assert.equal(await readFile(join(installedDir, "androperator-skill-author-by-recording", "agents", "openai.yaml"), "utf8"), "name: demo\n");
+    assert.equal(await readFile(join(installedDir, "androperator-learn-from-recording", "agents", "openai.yaml"), "utf8"), "name: demo\n");
     assert.equal(await readlink(join(claudeSkillsDir, "androperator-agent-orientation")), join(installedDir, "androperator-agent-orientation"));
     assert.equal(await readlink(join(claudeSkillsDir, "androperator-upgrade")), join(installedDir, "androperator-upgrade"));
     assert.equal(await readlink(join(claudeSkillsDir, "androperator-skill-author-by-agent-discovery")), join(installedDir, "androperator-skill-author-by-agent-discovery"));
-    assert.equal(await readlink(join(claudeSkillsDir, "androperator-skill-author-by-recording")), join(installedDir, "androperator-skill-author-by-recording"));
+    assert.equal(await readlink(join(claudeSkillsDir, "androperator-learn-from-recording")), join(installedDir, "androperator-learn-from-recording"));
     await assert.rejects(lstat(join(codexSkillsDir, "androperator-agent-orientation")), { code: "ENOENT" });
     await assert.rejects(lstat(join(codexSkillsDir, "androperator-upgrade")), { code: "ENOENT" });
     await assert.rejects(lstat(join(codexSkillsDir, "androperator-skill-author-by-agent-discovery")), { code: "ENOENT" });
-    await assert.rejects(lstat(join(codexSkillsDir, "androperator-skill-author-by-recording")), { code: "ENOENT" });
+    await assert.rejects(lstat(join(codexSkillsDir, "androperator-learn-from-recording")), { code: "ENOENT" });
     await assertManagedAgentsCopy(agentsSkillsDir, "androperator-agent-orientation", "# androperator-agent-orientation\n");
     await assertManagedAgentsCopy(agentsSkillsDir, "androperator-upgrade", "# androperator-upgrade\n");
     await assertManagedAgentsCopy(agentsSkillsDir, "androperator-skill-author-by-agent-discovery", "# androperator-skill-author-by-agent-discovery\n");
-    await assertManagedAgentsCopy(agentsSkillsDir, "androperator-skill-author-by-recording", "# androperator-skill-author-by-recording\n");
+    await assertManagedAgentsCopy(agentsSkillsDir, "androperator-learn-from-recording", "# androperator-learn-from-recording\n");
   });
 
   it("ignores subdirectories without SKILL.md", async () => {
@@ -148,7 +148,7 @@ describe("copyBundledSkills", () => {
 
   it("writes version.txt with the current CLI version", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const installedDir = join(root, "home", ".androperator", "bundled-skills");
 
     const result = await copyBundledSkills({
@@ -165,7 +165,7 @@ describe("copyBundledSkills", () => {
 
   it("creates ~/.claude/skills even when it does not exist", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const claudeSkillsDir = join(root, "home", ".claude", "skills");
 
     const result = await copyBundledSkills({
@@ -183,7 +183,7 @@ describe("copyBundledSkills", () => {
 
   it("does not create the redundant default Codex skills dir", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const homeDir = join(root, "home");
 
     const result = await copyBundledSkills({
@@ -200,7 +200,7 @@ describe("copyBundledSkills", () => {
 
   it("does not create a redundant discovery dir under CODEX_HOME", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const codexHome = join(root, "custom-codex-home");
 
     const result = await copyBundledSkills({
@@ -218,7 +218,7 @@ describe("copyBundledSkills", () => {
 
   it("places a symlink in ~/.claude/skills/<skill-name> pointing to the installed skill dir", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const installedDir = join(root, "home", ".androperator", "bundled-skills");
     const claudeSkillsDir = join(root, "home", ".claude", "skills");
 
@@ -233,14 +233,14 @@ describe("copyBundledSkills", () => {
 
     assert.equal(result.ok, true);
     assert.equal(
-      await readlink(join(claudeSkillsDir, "androperator-skill-author-by-recording")),
-      join(installedDir, "androperator-skill-author-by-recording")
+      await readlink(join(claudeSkillsDir, "androperator-learn-from-recording")),
+      join(installedDir, "androperator-learn-from-recording")
     );
   });
 
   it("is idempotent - running twice does not error and result is the same as running once", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const options = {
       sourceDir,
       installedDir: join(root, "home", ".androperator", "bundled-skills"),
@@ -254,13 +254,13 @@ describe("copyBundledSkills", () => {
     const second = await copyBundledSkills(options);
 
     assert.deepEqual(second, first);
-    assert.equal(await readFile(join(options.installedDir, "androperator-skill-author-by-recording", "SKILL.md"), "utf8"), "# androperator-skill-author-by-recording\n");
-    await assertManagedAgentsCopy(options.agentsSkillsDir, "androperator-skill-author-by-recording", "# androperator-skill-author-by-recording\n");
+    assert.equal(await readFile(join(options.installedDir, "androperator-learn-from-recording", "SKILL.md"), "utf8"), "# androperator-learn-from-recording\n");
+    await assertManagedAgentsCopy(options.agentsSkillsDir, "androperator-learn-from-recording", "# androperator-learn-from-recording\n");
   });
 
   it("normalizes relative directory overrides so managed symlinks remain idempotent", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const installedDir = join(root, "home", ".androperator", "bundled-skills");
     const claudeSkillsDir = join(root, "home", ".claude", "skills");
     const codexSkillsDir = join(root, "home", ".codex", "skills");
@@ -279,7 +279,7 @@ describe("copyBundledSkills", () => {
 
     assert.equal(first.ok, true);
     assert.deepEqual(second, first);
-    assert.equal(await readlink(join(claudeSkillsDir, "androperator-skill-author-by-recording")), resolve(installedDir, "androperator-skill-author-by-recording"));
+    assert.equal(await readlink(join(claudeSkillsDir, "androperator-learn-from-recording")), resolve(installedDir, "androperator-learn-from-recording"));
   });
 
   it("returns an error result when the npm package source dir does not exist", async () => {
@@ -324,7 +324,7 @@ describe("copyBundledSkills", () => {
 
   it("removes stale installed skills that are no longer present in the packaged source", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const installedDir = join(root, "home", ".androperator", "bundled-skills");
     const staleSkillDir = join(installedDir, "old-skill");
     await mkdir(staleSkillDir, { recursive: true });
@@ -348,8 +348,8 @@ describe("copyBundledSkills", () => {
     const sourceDir = await createSourceSkills(root, [
       "androperator-agent-orientation",
       "androperator-upgrade",
+      "androperator-learn-from-recording",
       "androperator-skill-author-by-agent-discovery",
-      "androperator-skill-author-by-recording",
     ]);
     const installedDir = join(root, "home", ".androperator", "bundled-skills");
     const claudeSkillsDir = join(root, "home", ".claude", "skills");
@@ -390,7 +390,7 @@ describe("copyBundledSkills", () => {
       await assert.rejects(() => stat(join(dir, "skill-author-by-recording")));
       if (dir === codexSkillsDir) {
         await assert.rejects(lstat(join(dir, "androperator-skill-author-by-agent-discovery")), { code: "ENOENT" });
-        await assert.rejects(lstat(join(dir, "androperator-skill-author-by-recording")), { code: "ENOENT" });
+        await assert.rejects(lstat(join(dir, "androperator-learn-from-recording")), { code: "ENOENT" });
         continue;
       }
       assert.equal(
@@ -398,19 +398,19 @@ describe("copyBundledSkills", () => {
         join(installedDir, "androperator-skill-author-by-agent-discovery")
       );
       assert.equal(
-        await readlink(join(dir, "androperator-skill-author-by-recording")),
-        join(installedDir, "androperator-skill-author-by-recording")
+        await readlink(join(dir, "androperator-learn-from-recording")),
+        join(installedDir, "androperator-learn-from-recording")
       );
     }
     await assert.rejects(() => stat(join(agentsSkillsDir, "skill-author-by-agent-discovery")));
     await assert.rejects(() => stat(join(agentsSkillsDir, "skill-author-by-recording")));
     await assertManagedAgentsCopy(agentsSkillsDir, "androperator-skill-author-by-agent-discovery", "# androperator-skill-author-by-agent-discovery\n");
-    await assertManagedAgentsCopy(agentsSkillsDir, "androperator-skill-author-by-recording", "# androperator-skill-author-by-recording\n");
+    await assertManagedAgentsCopy(agentsSkillsDir, "androperator-learn-from-recording", "# androperator-learn-from-recording\n");
   });
 
   it("does not delete unrelated user-managed symlinks from shared agent skill directories", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const claudeSkillsDir = join(root, "home", ".claude", "skills");
     const codexSkillsDir = join(root, "home", ".codex", "skills");
     const agentsSkillsDir = join(root, "home", ".agents", "skills");
@@ -440,9 +440,9 @@ describe("copyBundledSkills", () => {
 
   it("refuses to overwrite an existing non-Androperator generic agents entry with the same basename", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const agentsSkillsDir = join(root, "home", ".agents", "skills");
-    const userSkillDir = join(agentsSkillsDir, "androperator-skill-author-by-recording");
+    const userSkillDir = join(agentsSkillsDir, "androperator-learn-from-recording");
     await mkdir(userSkillDir, { recursive: true });
     await writeFile(join(userSkillDir, "SKILL.md"), "# user-owned\n", "utf8");
 
@@ -465,9 +465,9 @@ describe("copyBundledSkills", () => {
 
   it("refuses to overwrite a generic agents entry with an invalid managed marker", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const agentsSkillsDir = join(root, "home", ".agents", "skills");
-    const userSkillDir = join(agentsSkillsDir, "androperator-skill-author-by-recording");
+    const userSkillDir = join(agentsSkillsDir, "androperator-learn-from-recording");
     await mkdir(userSkillDir, { recursive: true });
     await writeFile(join(userSkillDir, "SKILL.md"), "# user-owned\n", "utf8");
     await writeFile(join(userSkillDir, MANAGED_BUNDLED_SKILL_COPY_MARKER), "managed-by=someone-else\n", "utf8");
@@ -491,9 +491,9 @@ describe("copyBundledSkills", () => {
 
   it("refuses to overwrite a generic agents entry with a symlinked managed marker", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const agentsSkillsDir = join(root, "home", ".agents", "skills");
-    const userSkillDir = join(agentsSkillsDir, "androperator-skill-author-by-recording");
+    const userSkillDir = join(agentsSkillsDir, "androperator-learn-from-recording");
     const markerTarget = join(root, "marker-target");
     await mkdir(userSkillDir, { recursive: true });
     await writeFile(join(userSkillDir, "SKILL.md"), "# user-owned\n", "utf8");
@@ -519,11 +519,11 @@ describe("copyBundledSkills", () => {
 
   it("refuses to overwrite an existing non-Androperator skill entry with the same basename", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const claudeSkillsDir = join(root, "home", ".claude", "skills");
     const codexSkillsDir = join(root, "home", ".codex", "skills");
     const agentsSkillsDir = join(root, "home", ".agents", "skills");
-    await mkdir(join(claudeSkillsDir, "androperator-skill-author-by-recording"), { recursive: true });
+    await mkdir(join(claudeSkillsDir, "androperator-learn-from-recording"), { recursive: true });
     await mkdir(codexSkillsDir, { recursive: true });
     await mkdir(agentsSkillsDir, { recursive: true });
 
@@ -540,26 +540,26 @@ describe("copyBundledSkills", () => {
     assert.deepEqual(result, {
       ok: false,
       code: "BUNDLED_SKILLS_INSTALL_FAILED",
-      message: `Refusing to overwrite non-Androperator skill entry: ${join(claudeSkillsDir, "androperator-skill-author-by-recording")}`,
+      message: `Refusing to overwrite non-Androperator skill entry: ${join(claudeSkillsDir, "androperator-learn-from-recording")}`,
     });
-    assert.equal((await stat(join(claudeSkillsDir, "androperator-skill-author-by-recording"))).isDirectory(), true);
+    assert.equal((await stat(join(claudeSkillsDir, "androperator-learn-from-recording"))).isDirectory(), true);
   });
 
   it("replaces a broken managed symlink instead of failing with EEXIST", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const installedDir = join(root, "home", ".androperator", "bundled-skills");
     const claudeSkillsDir = join(root, "home", ".claude", "skills");
     const codexSkillsDir = join(root, "home", ".codex", "skills");
     const agentsSkillsDir = join(root, "home", ".agents", "skills");
-    const targetSkillDir = join(installedDir, "androperator-skill-author-by-recording");
+    const targetSkillDir = join(installedDir, "androperator-learn-from-recording");
 
     await mkdir(claudeSkillsDir, { recursive: true });
     await mkdir(codexSkillsDir, { recursive: true });
     await mkdir(agentsSkillsDir, { recursive: true });
-    await symlink(targetSkillDir, join(claudeSkillsDir, "androperator-skill-author-by-recording"), directorySymlinkType);
-    await symlink(targetSkillDir, join(codexSkillsDir, "androperator-skill-author-by-recording"), directorySymlinkType);
-    await symlink(targetSkillDir, join(agentsSkillsDir, "androperator-skill-author-by-recording"), directorySymlinkType);
+    await symlink(targetSkillDir, join(claudeSkillsDir, "androperator-learn-from-recording"), directorySymlinkType);
+    await symlink(targetSkillDir, join(codexSkillsDir, "androperator-learn-from-recording"), directorySymlinkType);
+    await symlink(targetSkillDir, join(agentsSkillsDir, "androperator-learn-from-recording"), directorySymlinkType);
 
     const result = await copyBundledSkills({
       sourceDir,
@@ -571,31 +571,31 @@ describe("copyBundledSkills", () => {
     });
 
     assert.equal(result.ok, true);
-    assert.equal(await readlink(join(claudeSkillsDir, "androperator-skill-author-by-recording")), targetSkillDir);
-    await assert.rejects(lstat(join(codexSkillsDir, "androperator-skill-author-by-recording")), { code: "ENOENT" });
-    await assertManagedAgentsCopy(agentsSkillsDir, "androperator-skill-author-by-recording", "# androperator-skill-author-by-recording\n");
-    assert.equal(await readFile(join(targetSkillDir, "SKILL.md"), "utf8"), "# androperator-skill-author-by-recording\n");
+    assert.equal(await readlink(join(claudeSkillsDir, "androperator-learn-from-recording")), targetSkillDir);
+    await assert.rejects(lstat(join(codexSkillsDir, "androperator-learn-from-recording")), { code: "ENOENT" });
+    await assertManagedAgentsCopy(agentsSkillsDir, "androperator-learn-from-recording", "# androperator-learn-from-recording\n");
+    assert.equal(await readFile(join(targetSkillDir, "SKILL.md"), "utf8"), "# androperator-learn-from-recording\n");
   });
 
   it("replaces legacy managed symlinks that still point at the old install dir", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const installedDir = join(root, "home", ".androperator", "bundled-skills");
     const legacyInstalledDir = join(root, "home", ".androperator", "agent-skills");
     const claudeSkillsDir = join(root, "home", ".claude", "skills");
     const codexSkillsDir = join(root, "home", ".codex", "skills");
     const agentsSkillsDir = join(root, "home", ".agents", "skills");
-    const legacyTargetSkillDir = join(legacyInstalledDir, "androperator-skill-author-by-recording");
-    const targetSkillDir = join(installedDir, "androperator-skill-author-by-recording");
+    const legacyTargetSkillDir = join(legacyInstalledDir, "androperator-learn-from-recording");
+    const targetSkillDir = join(installedDir, "androperator-learn-from-recording");
 
     await mkdir(legacyTargetSkillDir, { recursive: true });
-    await writeFile(join(legacyTargetSkillDir, "SKILL.md"), "# old-androperator-skill-author-by-recording\n", "utf8");
+    await writeFile(join(legacyTargetSkillDir, "SKILL.md"), "# old-androperator-learn-from-recording\n", "utf8");
     await mkdir(claudeSkillsDir, { recursive: true });
     await mkdir(codexSkillsDir, { recursive: true });
     await mkdir(agentsSkillsDir, { recursive: true });
-    await symlink(legacyTargetSkillDir, join(claudeSkillsDir, "androperator-skill-author-by-recording"), directorySymlinkType);
-    await symlink(legacyTargetSkillDir, join(codexSkillsDir, "androperator-skill-author-by-recording"), directorySymlinkType);
-    await symlink(legacyTargetSkillDir, join(agentsSkillsDir, "androperator-skill-author-by-recording"), directorySymlinkType);
+    await symlink(legacyTargetSkillDir, join(claudeSkillsDir, "androperator-learn-from-recording"), directorySymlinkType);
+    await symlink(legacyTargetSkillDir, join(codexSkillsDir, "androperator-learn-from-recording"), directorySymlinkType);
+    await symlink(legacyTargetSkillDir, join(agentsSkillsDir, "androperator-learn-from-recording"), directorySymlinkType);
 
     const result = await copyBundledSkills({
       sourceDir,
@@ -607,16 +607,16 @@ describe("copyBundledSkills", () => {
     });
 
     assert.equal(result.ok, true);
-    assert.equal(await readlink(join(claudeSkillsDir, "androperator-skill-author-by-recording")), targetSkillDir);
-    await assert.rejects(lstat(join(codexSkillsDir, "androperator-skill-author-by-recording")), { code: "ENOENT" });
-    await assertManagedAgentsCopy(agentsSkillsDir, "androperator-skill-author-by-recording", "# androperator-skill-author-by-recording\n");
-    assert.equal(await readFile(join(targetSkillDir, "SKILL.md"), "utf8"), "# androperator-skill-author-by-recording\n");
-    assert.equal(await readFile(join(legacyTargetSkillDir, "SKILL.md"), "utf8"), "# old-androperator-skill-author-by-recording\n");
+    assert.equal(await readlink(join(claudeSkillsDir, "androperator-learn-from-recording")), targetSkillDir);
+    await assert.rejects(lstat(join(codexSkillsDir, "androperator-learn-from-recording")), { code: "ENOENT" });
+    await assertManagedAgentsCopy(agentsSkillsDir, "androperator-learn-from-recording", "# androperator-learn-from-recording\n");
+    assert.equal(await readFile(join(targetSkillDir, "SKILL.md"), "utf8"), "# androperator-learn-from-recording\n");
+    assert.equal(await readFile(join(legacyTargetSkillDir, "SKILL.md"), "utf8"), "# old-androperator-learn-from-recording\n");
   });
 
   it("removes stale managed generic agents copies that are no longer packaged", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const agentsSkillsDir = join(root, "home", ".agents", "skills");
     const staleSkillDir = join(agentsSkillsDir, "old-skill");
     await mkdir(staleSkillDir, { recursive: true });
@@ -638,9 +638,9 @@ describe("copyBundledSkills", () => {
 
   it("preflights discovery conflicts before replacing an already installed skill", async () => {
     const root = await makeTempRoot();
-    const sourceDir = await createSourceSkill(root, "androperator-skill-author-by-recording");
+    const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const installedDir = join(root, "home", ".androperator", "bundled-skills");
-    const targetSkillDir = join(installedDir, "androperator-skill-author-by-recording");
+    const targetSkillDir = join(installedDir, "androperator-learn-from-recording");
     const claudeSkillsDir = join(root, "home", ".claude", "skills");
     const codexSkillsDir = join(root, "home", ".codex", "skills");
     const agentsSkillsDir = join(root, "home", ".agents", "skills");
@@ -650,7 +650,7 @@ describe("copyBundledSkills", () => {
     await mkdir(claudeSkillsDir, { recursive: true });
     await mkdir(codexSkillsDir, { recursive: true });
     await mkdir(agentsSkillsDir, { recursive: true });
-    await mkdir(join(agentsSkillsDir, "androperator-skill-author-by-recording"), { recursive: true });
+    await mkdir(join(agentsSkillsDir, "androperator-learn-from-recording"), { recursive: true });
 
     const result = await copyBundledSkills({
       sourceDir,
@@ -664,7 +664,7 @@ describe("copyBundledSkills", () => {
     assert.deepEqual(result, {
       ok: false,
       code: "BUNDLED_SKILLS_INSTALL_FAILED",
-      message: `Refusing to overwrite non-Androperator skill entry: ${join(agentsSkillsDir, "androperator-skill-author-by-recording")}`,
+      message: `Refusing to overwrite non-Androperator skill entry: ${join(agentsSkillsDir, "androperator-learn-from-recording")}`,
     });
     assert.equal(await readFile(join(targetSkillDir, "SKILL.md"), "utf8"), "# existing-installed-version\n");
   });
@@ -716,8 +716,8 @@ describe("cmdBundledSkillsInstall", () => {
     const sourceDir = await createSourceSkills(root, [
       "androperator-agent-orientation",
       "androperator-upgrade",
+      "androperator-learn-from-recording",
       "androperator-skill-author-by-agent-discovery",
-      "androperator-skill-author-by-recording",
     ]);
     const installedDir = join(root, "home", ".androperator", "bundled-skills");
     const claudeSkillsDir = join(root, "home", ".claude", "skills");
@@ -744,8 +744,8 @@ describe("cmdBundledSkillsInstall", () => {
 
     assert.deepEqual(parsed.skills, [
       "androperator-agent-orientation",
+      "androperator-learn-from-recording",
       "androperator-skill-author-by-agent-discovery",
-      "androperator-skill-author-by-recording",
       "androperator-upgrade",
     ]);
     assert.equal(parsed.installedDir, installedDir);
@@ -771,7 +771,7 @@ describe("cmdBundledSkillsList", () => {
       skills: [],
       count: 0,
       installedDir: join(root, "missing-install-dir"),
-      message: "No installed bundled-skills found. Run androperator bundled-skills install to get androperator-agent-orientation, androperator-agent-control-loop, androperator-upgrade, androperator-skill-author-by-agent-discovery, and androperator-skill-author-by-recording.",
+      message: "No installed bundled-skills found. Run androperator bundled-skills install to get androperator-agent-orientation, androperator-agent-control-loop, androperator-upgrade, androperator-skill-author-by-agent-discovery, and androperator-learn-from-recording.",
     });
   });
 
@@ -781,7 +781,7 @@ describe("cmdBundledSkillsList", () => {
     const orientationDir = join(installDir, "androperator-agent-orientation");
     const upgradeDir = join(installDir, "androperator-upgrade");
     const discoveryDir = join(installDir, "androperator-skill-author-by-agent-discovery");
-    const skillDir = join(installDir, "androperator-skill-author-by-recording");
+    const skillDir = join(installDir, "androperator-learn-from-recording");
     await mkdir(orientationDir, { recursive: true });
     await mkdir(upgradeDir, { recursive: true });
     await mkdir(discoveryDir, { recursive: true });
@@ -789,7 +789,7 @@ describe("cmdBundledSkillsList", () => {
     await writeFile(join(orientationDir, "SKILL.md"), "# androperator-agent-orientation\n", "utf8");
     await writeFile(join(upgradeDir, "SKILL.md"), "# androperator-upgrade\n", "utf8");
     await writeFile(join(discoveryDir, "SKILL.md"), "# androperator-skill-author-by-agent-discovery\n", "utf8");
-    await writeFile(join(skillDir, "SKILL.md"), "# androperator-skill-author-by-recording\n", "utf8");
+    await writeFile(join(skillDir, "SKILL.md"), "# androperator-learn-from-recording\n", "utf8");
 
     const output = await cmdBundledSkillsList({
       format: "json",
@@ -803,12 +803,12 @@ describe("cmdBundledSkillsList", () => {
           skillPath: join(orientationDir, "SKILL.md"),
         },
         {
-          name: "androperator-skill-author-by-agent-discovery",
-          skillPath: join(discoveryDir, "SKILL.md"),
+          name: "androperator-learn-from-recording",
+          skillPath: join(skillDir, "SKILL.md"),
         },
         {
-          name: "androperator-skill-author-by-recording",
-          skillPath: join(skillDir, "SKILL.md"),
+          name: "androperator-skill-author-by-agent-discovery",
+          skillPath: join(discoveryDir, "SKILL.md"),
         },
         {
           name: "androperator-upgrade",
@@ -845,8 +845,8 @@ describe("listPackagedBundledSkills", () => {
     assert.deepEqual(skills, [
       "androperator-agent-control-loop",
       "androperator-agent-orientation",
+      "androperator-learn-from-recording",
       "androperator-skill-author-by-agent-discovery",
-      "androperator-skill-author-by-recording",
       "androperator-upgrade",
     ]);
   });

@@ -75,7 +75,7 @@ export async function cmdBundledSkillsList(
         skills: [],
         count: 0,
         installedDir: installDir,
-        message: "No installed bundled-skills found. Run androperator bundled-skills install to get androperator-agent-orientation, androperator-agent-control-loop, androperator-upgrade, androperator-skill-author-by-agent-discovery, and androperator-skill-author-by-recording.",
+        message: "No installed bundled-skills found. Run androperator bundled-skills install to get androperator-agent-orientation, androperator-agent-control-loop, androperator-upgrade, androperator-skill-author-by-agent-discovery, and androperator-learn-from-recording.",
       }, options);
     }
 

@@ -379,7 +379,7 @@ Notes:
   - 'androperator-agent-control-loop' guides bounded adaptive execution and optional authoring of reusable instructions
   - 'androperator-upgrade' is the whole-product upgrade route that checks androperator --version, verifies Node 24+, npm reachability, and Java 17/21, then uses npm install -g androperator@latest, androperator install, and androperator doctor when the CLI is already viable
   - 'androperator-skill-author-by-agent-discovery' supports bounded exploration and optional instruction authoring
-  - 'androperator-skill-author-by-recording' uses optional human demonstration as evidence for adaptive instructions
+  - 'androperator-learn-from-recording' uses optional human demonstration as evidence for adaptive instructions
 `;
 
 const HELP_HOST = `androperator host
@@ -2722,7 +2722,7 @@ Notes:
   - 'androperator-agent-orientation' is the first-run orientation skill when the current host is unfamiliar.
   - 'androperator-upgrade' is the packaged whole-product upgrade route: check androperator --version, verify Node 24+, npm reachability, and Java 17/21, then use npm install -g androperator@latest, androperator install, and androperator doctor. Use install.sh only when the CLI is not reachable or the bootstrap prerequisites need repair.
   - 'androperator-skill-author-by-agent-discovery' supports bounded exploration and optional instruction authoring.
-  - 'androperator-skill-author-by-recording' uses optional human demonstration as evidence for adaptive instructions.
+  - 'androperator-learn-from-recording' uses optional human demonstration as evidence for adaptive instructions.
   - Post-install authoring guidance: https://docs.androperator.com/skills/authoring/
 `,
   subtopics: {
@@ -3234,7 +3234,7 @@ export function generateTopLevelHelp(commands: Record<string, CommandDef>): stri
     "  - If the current host is unfamiliar, inspect 'androperator bundled-skills list' and start with 'androperator-agent-orientation' before choosing MCP or CLI actions.",
     "  - If this installed Androperator environment needs a whole-product refresh, inspect 'androperator bundled-skills list' and use 'androperator-upgrade' before trying component-level repair commands. androperator-upgrade checks androperator --version, verifies Node 24+, npm reachability, and Java 17/21, then uses npm install -g androperator@latest, androperator install, and androperator doctor when the CLI is already viable.",
     "  - Use 'androperator-skill-author-by-agent-discovery' for bounded exploration and optional reusable instructions.",
-    "  - Use 'androperator-skill-author-by-recording' when a demonstration supplies missing evidence.",
+    "  - Use 'androperator-learn-from-recording' when a demonstration supplies missing evidence.",
     "  - Use 'androperator mcp serve' when the host already supports stdio MCP and wants registered Androperator tools.",
     "  - install is the canonical post-bootstrap route. operator setup remains the APK-specific setup command, and operator install remains its alias.",
     "  - recording is the canonical command family; 'record' is a supported short alias.",

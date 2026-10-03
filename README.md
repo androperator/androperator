@@ -1,128 +1,131 @@
 # Androperator
 
-![Androperator logo](assets/androperator-logo.png)
+<img src="assets/androperator-logo.png" width="200" height="200" alt="Androperator logo" />
 
-Androperator, formerly known as Clawperator, is preparing its first release as
-version 1.0.0. See [migration guidance](docs/migration-to-androperator.md).
+Androperator is a deterministic Android automation tool for AI agents to
+navigate, observe, and control apps. It connects an agent running on your computer to an Android phone or
+emulator, so the agent can inspect the screen, tap controls, enter text, and
+check what happened.
 
-<img src="docs/img/androperator-logo.png" width="200" height="200" alt="Androperator logo" />
+It is especially useful for **agentic development**: giving a coding agent a
+way to exercise an app, investigate a bug, and verify its changes against a
+running Android UI.
 
-Androperator ("Claw Operator") is a deterministic Android automation runtime for AI agents. It is the actuator layer: the external agent or LLM owns reasoning and planning, and Androperator executes validated Android actions on behalf of a user.
+Androperator was formerly known as Clawperator. Version **1.0.0** is available
+as `androperator` on npm. See [migration guidance](docs/migration-to-androperator.md)
+if you previously used Clawperator.
 
 ## Why Androperator?
 
-Many consumer services only expose critical data in mobile apps, not public web APIs.
+A coding agent can read your source and run tests, but working on an Android
+app also means using it. Androperator gives the agent a way to navigate the
+running app and bring observations back into its development loop.
 
-Examples include:
-- Family tracking/location apps
-- Home automation apps
-- Grocery/shopping apps
-- Ride-hailing apps
+An agent can use it to:
 
-Androperator lets AI agents interact with these apps on your behalf. Its API is predictable and stable, so skills can be created, reused, and shared.
+- Explore an unfamiliar app and find the controls needed for a task.
+- Reproduce a reported UI problem and capture evidence of the result.
+- Check a user flow after changing code, including navigation and text entry.
+- Turn a verified sequence of actions into a reusable local skill.
+- Operate existing Android apps as part of a larger agent workflow.
 
-## What is Androperator?
+You choose the goal. Your agent decides what to do next. Androperator executes
+the requested actions and returns evidence for the agent to inspect.
 
-Androperator is the execution layer for LLM-driven Android automation. It provides a deterministic Node.js CLI and HTTP API - the "hand" for an LLM "brain."
+## How it works
 
-**What agents can do:**
-- Connect to a real Android device
-- Run deterministic UI actions (tap, scroll, type, read)
-- Observe screen state via structured snapshots
-- Get canonical terminal results (`[Androperator-Result]`)
-- Compose primitives into repeatable skills
+Androperator is the **hand** for the agent's **brain**. The agent or LLM owns
+reasoning, planning, and app-specific strategy; Androperator executes validated
+Android actions and returns structured evidence. This separation lets agents
+adapt their plans while keeping the execution interface predictable.
+
+Androperator has two parts: a Node.js CLI on the host and an Operator app on the
+Android target. The host communicates with the device through `adb`; the
+Operator uses Android accessibility to observe and interact with app UI.
+
+Agents can use the CLI, MCP server, or HTTP API. The same execution contracts
+support individual actions and validated sequences. Results include structured
+status and errors, with `commandId` and `taskId` for correlation. Canonical
+terminal results from the Operator use the `[Androperator-Result]` envelope.
 
 **Design principles:**
-- **Deterministic:** Strict contracts, no hidden retries, one result envelope per command
-- **Observable:** Structured UI snapshots and machine-readable error codes
-- **Agent-first:** JSON output, typed errors, single-flight concurrency
 
-**Typical setup:** A dedicated Android device (any cheap/old phone) stays connected to your agent's host machine as a permanent actuator. The agent sends commands via the Androperator API; Androperator executes and reports results.
+- **Deterministic:** explicit actions and strict validation contracts; app-specific decisions stay with the agent.
+- **Observable:** structured UI snapshots, machine-readable errors, and correlated execution results.
+- **Agent-first:** JSON output, CLI/MCP/HTTP interfaces, and single-flight execution per device.
 
+A typical setup keeps a phone connected to the agent's host machine, or uses
+an emulator during development. The agent sends actions, reads the evidence,
+and chooses its next step.
 
-## Install
+Available tools include:
+
+- **Observation:** UI hierarchy snapshots, node queries, screenshots, and video evidence.
+- **Control:** opening apps, tapping, scrolling, swiping, dragging, and entering text.
+- **Skill authoring:** recordings and local skill tooling for agents to build and validate their own workflows.
+
+UI visibility depends on what the app exposes through Android accessibility.
+Agents should inspect the returned state and verify the outcome before moving
+on. App-specific reasoning and recovery remain with the agent.
+
+## Get started
+
+Install the CLI with Node.js 24+:
+
+```bash
+npm install -g androperator@1.0.0
+androperator install
+```
+
+The install command prepares the host and connected Android targets, including
+Operator APK setup and readiness checks. You need a phone with USB debugging
+enabled or an emulator visible to `adb`. Follow the [setup guide](docs/setup.md)
+for prerequisites, device authorization, and permissions.
+
+Choose a target and try a simple flow:
+
+```bash
+androperator devices
+androperator doctor --device <device_serial>
+androperator open com.android.settings --device <device_serial>
+androperator snapshot --device <device_serial>
+```
+
+The snapshot returns the UI hierarchy for the agent to inspect. Choose the next
+action from that evidence, execute it, and inspect the result again. Pass
+`--device` explicitly when several targets are connected.
+
+For the full bootstrap installer, including host prerequisites:
 
 ```bash
 curl -fsSL https://androperator.com/install.sh | bash
 ```
 
-The installer:
-- installs or upgrades the CLI prerequisites
-- downloads the current stable operator APK via `latest.json`
-- verifies the APK checksum
-- offers to install the APK to a single connected Android device, even when run via `curl ... | bash`
+## Documentation for agents
 
-Or install the CLI directly:
+- [Quickstart](docs/quickstart.md) - first device interaction.
+- [Setup](docs/setup.md) - host requirements, APK installation, and permissions.
+- [API overview](docs/api/overview.md) - CLI, HTTP API, actions, and result contracts.
+- [Operator automation playbook](docs/internal/design/operator-llm-playbook.md) - runtime conventions and the agent/runtime boundary.
+- [Local skills](docs/skills/overview.md) - create and run your own workflows.
+- [Recording](docs/api/recording.md) - capture observations for skill authoring.
+- [Troubleshooting](docs/troubleshooting/operator.md) - diagnose setup and runtime failures.
 
-```bash
-npm install -g androperator
-```
+Androperator does not require a companion skills catalog. Agents create and
+maintain local skills; optional bundled examples are planned separately.
 
-## Quick Start
+Technical documentation is built from `docs/` and code-derived inputs in
+`apps/node/src/`, through `sites/docs/`. The former landing site is preserved
+separately in `sites/landing-clawperator/`.
 
-```bash
-androperator doctor                              # Verify setup
-androperator devices                             # List connected devices
-androperator snapshot --device <device_id>       # Capture UI tree
-androperator exec payload.json --device <device_id>   # Run an execution (`execute` synonym; `--payload` / `--execution` optional)
-```
-
-CLI device commands are flat (`snapshot`, `screenshot`, `click`, `open`, `type`, ...). When several devices are connected, pass `--device` (alias: `--device-id`). See [API Overview](docs/api/overview.md) for flags, HTTP routes, and error codes.
-
-## Requirements
-
-- Node.js >= 24
-- `adb` in PATH
-- Android device with USB debugging enabled
-- Androperator APK installed ([stable download](https://androperator.com/operator.apk), [historical releases](https://github.com/androperator/androperator/releases))
-
-## For AI Agents
-
-Androperator is an actuator, not an autonomous planner. Use these entrypoints first:
-
-- [Agent Quickstart](https://docs.androperator.com/ai-agents/agent-quickstart/) - fastest path from install to first successful execution
-- [Node API for Agents](https://docs.androperator.com/ai-agents/node-api-for-agents/) - action contracts, result envelopes, and error codes
-- [Execution Model](https://docs.androperator.com/reference/execution-model/) - required fields, timeout policy, and status semantics
-- [Operator Automation Playbook](https://docs.androperator.com/design/operator-llm-playbook/) - background runtime conventions and deeper rationale
-- [llms.txt](https://androperator.com/llms.txt) - root machine-readable index
-- [llms-full.txt](https://androperator.com/llms-full.txt) - full compiled technical corpus in one fetch
-
-## Documentation
-
-Full docs at [docs.androperator.com](https://docs.androperator.com)
-
-[Release notes](https://github.com/androperator/androperator/blob/main/CHANGELOG.md) cover changes in each version.
-
-Website surfaces in this repo:
-- `sites/landing-clawperator/` preserves the legacy site at [clawperator.com](https://clawperator.com)
-- `sites/docs/` builds the technical documentation site at [docs.androperator.com](https://docs.androperator.com)
-
-When updating website content, make sure you are editing the correct surface. The docs content itself is sourced from `docs/`, `apps/node/src/`, , then published through `sites/docs/`.
-
-Both public sites deploy automatically to Cloudflare after changes are merged to `main`.
-
-- [Setup](docs/setup.md) - Device prep, APK install, accessibility
-- [API Overview](docs/api/overview.md) - CLI, HTTP API, execution contract
-- [Runtime Architecture](docs/internal/design/node-api-design.md) - System design
-- [Operator Troubleshooting](docs/troubleshooting/operator.md) - Common issues
-
-## For Developers
-
-```bash
-git clone https://github.com/androperator/androperator.git
-cd androperator
-npm --prefix apps/node ci && npm --prefix apps/node run build && npm --prefix apps/node link
-```
-
-For clone-local git defaults (including tracked hooks), use `.agents/skills/repo-setup/SKILL.md`.
-
-If Androperator is useful to your project, consider [starring the repo on GitHub](https://github.com/androperator/androperator).
+[Repository setup](.agents/skills/repo-setup/SKILL.md) enables the tracked Git
+hooks. [Release notes](CHANGELOG.md) describe changes in each version.
 
 ## License
 
-Apache 2.0
+Apache 2.0. See [LICENSE](LICENSE).
 
-Built with human claws by [@chrismlacy](https://x.com/chrismlacy), with a scrappy crew of bots.  
+Built by [@chrismlacy](https://x.com/chrismlacy), with help from ever-nondeterministic agents.\
 GitHub: [chrislacy](https://github.com/chrislacy) · X: [@chrismlacy](https://x.com/chrismlacy) · Email: [chris@actionlauncher.com](mailto:chris@actionlauncher.com)
 
 Copyright (c) 2026 Action Launcher Pty Ltd

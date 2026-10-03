@@ -5,21 +5,38 @@ on:
     tags:
       - "v*"
 
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag to publish
+        required: true
+        type: string
+
 permissions:
   contents: read
   id-token: write
 
 concurrency:
-  group: publish-npm-${{ github.ref }}
+  group: publish-npm-${{ inputs.release_tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
   publish-npm:
     name: Publish Node Package
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
     steps:
-      - name: Checkout code
+      - name: Validate release tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Expected a stable release tag." >&2; exit 1; }
+
+      - name: Checkout release tag
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Set up Node.js 24.14.1
         uses: actions/setup-node@v4
@@ -40,7 +57,7 @@ jobs:
             exit 1
           fi
 
-          tag_version="${GITHUB_REF_NAME#v}"
+          tag_version="${RELEASE_TAG#v}"
           package_version="$(node -p "require('./apps/node/package.json').version")"
 
           if [[ "$tag_version" != "$package_version" ]]; then
@@ -53,7 +70,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          version="${GITHUB_REF_NAME#v}"
+          version="${RELEASE_TAG#v}"
           python3 - "$version" <<'PY'
           import re
           import sys
@@ -93,4 +110,5 @@ jobs:
         working-directory: apps/node
         run: npm publish --access public --tag latest
         env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "false"

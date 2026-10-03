@@ -11,10 +11,9 @@ It is especially useful for **agentic development**: giving a coding agent a
 way to exercise an app, investigate a bug, and verify its changes against a
 running Android UI.
 
-Androperator was formerly known as Clawperator. Its first release under the new
-name will be **1.0.0**. The renamed package and public installation endpoints
-are being prepared; use the source checkout until release and domain cutover
-are complete. See [migration guidance](docs/migration-to-androperator.md).
+Androperator was formerly known as Clawperator. Version **1.0.0** is available
+as `androperator` on npm. See [migration guidance](docs/migration-to-androperator.md)
+if you previously used Clawperator.
 
 ## Why Androperator?
 
@@ -71,33 +70,36 @@ on. App-specific reasoning and recovery remain with the agent.
 
 ## Get started
 
-For development before the 1.0.0 release, build from source:
+Install the CLI with Node.js 24+:
 
 ```bash
-git clone https://github.com/androperator/androperator.git
-cd androperator
-npm --prefix apps/node ci
-npm --prefix apps/node run build
+npm install -g androperator@1.0.0
+androperator install
 ```
 
-You need Node.js 24+, `adb` on your PATH, and an Android device or emulator.
-Install the matching Operator APK and grant its permissions using the
-[setup guide](docs/setup.md). For a local debug build, select
-`com.androperator.operator.dev` explicitly:
+The install command prepares the host and connected Android targets, including
+Operator APK setup and readiness checks. You need a phone with USB debugging
+enabled or an emulator visible to `adb`. Follow the [setup guide](docs/setup.md)
+for prerequisites, device authorization, and permissions.
+
+Choose a target and try a simple flow:
 
 ```bash
-node apps/node/dist/cli/index.js devices
-node apps/node/dist/cli/index.js doctor --device <device_serial> --operator-package com.androperator.operator.dev
-node apps/node/dist/cli/index.js open com.android.settings --device <device_serial> --operator-package com.androperator.operator.dev
-node apps/node/dist/cli/index.js snapshot --device <device_serial> --operator-package com.androperator.operator.dev
+androperator devices
+androperator doctor --device <device_serial>
+androperator open com.android.settings --device <device_serial>
+androperator snapshot --device <device_serial>
 ```
 
 The snapshot returns the UI hierarchy for the agent to inspect. Choose the next
 action from that evidence, execute it, and inspect the result again. Pass
 `--device` explicitly when several targets are connected.
 
-After publication, the CLI will be available as `androperator@1.0.0` on npm,
-with the matching APK and installer at `androperator.com`.
+For the full bootstrap installer, including host prerequisites:
+
+```bash
+curl -fsSL https://androperator.com/install.sh | bash
+```
 
 ## Documentation for agents
 
@@ -116,7 +118,6 @@ Technical documentation is built from `docs/` and code-derived inputs in
 `apps/node/src/`, through `sites/docs/`. The former landing site is preserved
 separately in `sites/landing-clawperator/`.
 
-For development, use the branch-local CLI build and matching Operator APK.
 [Repository setup](.agents/skills/repo-setup/SKILL.md) enables the tracked Git
 hooks. [Release notes](CHANGELOG.md) describe changes in each version.
 

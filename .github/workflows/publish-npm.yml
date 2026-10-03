@@ -42,9 +42,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24.14.1"
-          registry-url: https://registry.npmjs.org
           cache: npm
           cache-dependency-path: apps/node/package-lock.json
+
+      - name: Validate npm supports Trusted Publishing
+        run: |
+          node - "$(npm --version)" <<'JS'
+          const [major, minor, patch] = process.argv[2].split('.').map(Number);
+          if (!(major > 11 || (major === 11 && (minor > 5 || (minor === 5 && patch >= 1))))) {
+            throw new Error('Trusted Publishing requires npm 11.5.1 or newer.');
+          }
+          JS
 
       - name: Validate tag matches package version
         shell: bash
@@ -109,6 +117,3 @@ jobs:
       - name: Publish package
         working-directory: apps/node
         run: npm publish --access public --tag latest
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: "false"

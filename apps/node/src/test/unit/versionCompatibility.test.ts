@@ -14,7 +14,7 @@ import {
 
 describe("version compatibility", () => {
   it("normalizes the debug suffix before compatibility parsing", () => {
-    assert.strictEqual(normalizeCompatibilityVersion("0.1.4-d"), "0.1.4");
+    assert.strictEqual(normalizeCompatibilityVersion("1.0.0-d"), "1.0.0");
   });
 
   it("maps receiver packages to their APK download paths", () => {
@@ -24,12 +24,12 @@ describe("version compatibility", () => {
 
   it("builds versioned APK download URLs", () => {
     assert.strictEqual(
-      getOperatorApkDownloadUrl("0.1.4"),
-      "https://downloads.androperator.com/operator/v0.1.4/operator-v0.1.4.apk"
+      getOperatorApkDownloadUrl("1.0.0"),
+      "https://downloads.androperator.com/operator/v1.0.0/operator-v1.0.0.apk"
     );
     assert.strictEqual(
-      getOperatorApkSha256Url("0.1.4"),
-      "https://downloads.androperator.com/operator/v0.1.4/operator-v0.1.4.apk.sha256"
+      getOperatorApkSha256Url("1.0.0"),
+      "https://downloads.androperator.com/operator/v1.0.0/operator-v1.0.0.apk.sha256"
     );
   });
 
@@ -51,80 +51,32 @@ describe("version compatibility", () => {
   });
 
   it("rejects non-simple versions", () => {
-    assert.throws(() => parseCompatibilityVersion("0.1.4.1"), /Unsupported Androperator version format/);
+    assert.throws(() => parseCompatibilityVersion("1.0.0.1"), /Unsupported Androperator version format/);
   });
 
   it("requires the same normalized version", () => {
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.1.4"), true);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.1.4-d"), true);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.1.9"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.2.1"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.4.0"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.4.1"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.5.0"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.5.1"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.5.2"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.5.3"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.5.4"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.5.5"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.5.6"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.6.0"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.6.1"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.6.2"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.6.3"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.6.4"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.6.5"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.6.6"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.7.0"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.7.1"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.7.2"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.7.3"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.7.4"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.7.5"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.7.6"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.7.7"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.7.8"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.7.9"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.8.0"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.8.1"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.9.0"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.9.1"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.9.2"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.9.3"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.9.4"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.9.5"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.9.6"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.10.0"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.10.1"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.11.0"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.11.1"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.11.2"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.11.3"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.11.4"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.12.0"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.12.1"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.12.2"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.12.3"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.12.4"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.12.5"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "0.12.6"), false);
-    assert.strictEqual(isVersionCompatible("0.1.4", "1.0.1"), false);
+    assert.strictEqual(isVersionCompatible("1.0.0", "1.0.0"), true);
+    assert.strictEqual(isVersionCompatible("1.0.0", "1.0.0-d"), true);
+    assert.strictEqual(isVersionCompatible("1.0.0-d", "1.0.0"), true);
+    assert.strictEqual(isVersionCompatible("1.0.0", "1.0.1"), false);
+    assert.strictEqual(isVersionCompatible("1.0.0", "1.1.0"), false);
+    assert.strictEqual(isVersionCompatible("1.0.0", "2.0.0"), false);
   });
 
   it("rejects prerelease-style versions in compatibility checks", () => {
-    assert.throws(() => parseCompatibilityVersion("0.1.4-alpha"), /Unsupported Androperator version format/);
-    assert.throws(() => parseCompatibilityVersion("0.1.4-rc.1"), /Unsupported Androperator version format/);
-    assert.throws(() => isVersionCompatible("0.1.4-alpha", "0.1.4"), /Unsupported Androperator version format/);
+    assert.throws(() => parseCompatibilityVersion("1.0.0-alpha"), /Unsupported Androperator version format/);
+    assert.throws(() => parseCompatibilityVersion("1.0.0-rc.1"), /Unsupported Androperator version format/);
+    assert.throws(() => isVersionCompatible("1.0.0-alpha", "1.0.0"), /Unsupported Androperator version format/);
   });
 
   it("parses installed APK metadata from dumpsys output", () => {
     const parsed = parseInstalledApkVersion(`
       Package [com.androperator.operator] (abcd):
-        versionCode=104900 minSdk=21 targetSdk=35
-        versionName=0.1.4-d
+        versionCode=10000900 minSdk=21 targetSdk=35
+        versionName=1.0.0-d
     `);
 
-    assert.deepStrictEqual(parsed, { versionName: "0.1.4-d", versionCode: 104900 });
+    assert.deepStrictEqual(parsed, { versionName: "1.0.0-d", versionCode: 10000900 });
   });
 
   it("throws when versionName is missing from dumpsys output", () => {

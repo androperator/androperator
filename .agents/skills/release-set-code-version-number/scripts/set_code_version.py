@@ -50,28 +50,6 @@ def replace_in_file(path: Path, pattern: str, replacement: str, *, count: int = 
     return True
 
 
-def insert_incompatibility_case(path: Path, new_version: str) -> bool:
-    content = path.read_text(encoding="utf-8")
-    target_line = f'    assert.strictEqual(isVersionCompatible("0.1.4", "{new_version}"), false);'
-    if target_line in content:
-        return False
-
-    matches = list(
-        re.finditer(
-            r'^(    assert\.strictEqual\(isVersionCompatible\("0\.1\.4", "[0-9]+\.[0-9]+\.[0-9]+"\), false\);\n)+',
-            content,
-            flags=re.MULTILINE,
-        )
-    )
-    if not matches:
-        die(f"could not find compatibility assertion block in {path}")
-
-    block = matches[0].group(0)
-    updated_block = block + target_line + "\n"
-    path.write_text(content.replace(block, updated_block, 1), encoding="utf-8")
-    return True
-
-
 def remove_bundled_skill_artifacts(repo_root: Path) -> list[str]:
     bundled_skills_root = repo_root / "apps" / "node" / "bundled-skills"
     removed: list[str] = []
@@ -142,11 +120,6 @@ def main() -> None:
         if replace_in_file(path, pattern, replacement):
             updated_files.append(relative_path)
 
-    if insert_incompatibility_case(
-        repo_root / "apps" / "node" / "src" / "test" / "unit" / "versionCompatibility.test.ts",
-        new_version,
-    ):
-        updated_files.append("apps/node/src/test/unit/versionCompatibility.test.ts")
 
     package_lock_path = repo_root / "apps" / "node" / "package-lock.json"
     update_package_lock(package_lock_path, old_version, new_version)

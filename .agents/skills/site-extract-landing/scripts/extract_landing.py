@@ -10,12 +10,11 @@ from pathlib import Path
 def main():
     parser = argparse.ArgumentParser(description='Extract a landing page as markdown.')
     parser.add_argument('--output', help='Output file path')
-    parser.add_argument('--site', choices=['androperator', 'clawperator'], default='androperator', help='Site ownership for URL and export defaults')
     parser.add_argument('--url', help='Explicit URL to extract')
     args = parser.parse_args()
 
-    site_dir = "sites/landing" if args.site == "androperator" else "sites/landing-clawperator"
-    args.url = args.url or ("https://androperator.com" if args.site == "androperator" else "https://clawperator.com")
+    site_dir = "sites/landing"
+    args.url = args.url or "https://androperator.com"
 
     # Determine paths
     script_dir = Path(__file__).parent.resolve()

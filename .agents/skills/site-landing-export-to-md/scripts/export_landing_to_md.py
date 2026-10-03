@@ -9,9 +9,8 @@ def main():
     parser = argparse.ArgumentParser(description='Export local landing page build to markdown.')
     parser.add_argument('--input', help='Path to index.html (default: sites/landing/out/index.html)')
     parser.add_argument('--output', help='Output MD file')
-    parser.add_argument('--site', choices=['androperator', 'clawperator'], default='androperator', help='Site to inspect (default: androperator)')
     args = parser.parse_args()
-    site_dir = 'sites/landing' if args.site == 'androperator' else 'sites/landing-clawperator'
+    site_dir = 'sites/landing'
 
     # Determine paths
     script_dir = Path(__file__).parent.resolve()
@@ -34,7 +33,7 @@ def main():
 
     if not html_path.exists():
         print(f"Error: Landing page build not found at {html_path}")
-        print("Please run ./scripts/site_build.sh first." if args.site == "androperator" else "Please run ./scripts/site_build_clawperator.sh first.")
+        print("Please run ./scripts/site_build.sh first.")
         sys.exit(1)
 
     try:

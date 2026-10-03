@@ -1,6 +1,6 @@
 ---
 name: site-landing-export-to-md
-description: Export a locally built landing page to Markdown, defaulting to Androperator with an explicit preserved-site option.
+description: Export a locally built landing page to Markdown, with Androperator defaults.
 ---
 
 # Site Landing Export to MD
@@ -16,6 +16,4 @@ The helper reads `sites/landing/out/index.html` and writes
 visible agent guidance. Inspect resolved links and setup examples. Dependencies
 are in this skill's `requirements.txt` (BeautifulSoup and markdownify).
 
-For the preserved site, build with `./scripts/site_build_clawperator.sh` and
-pass `--site clawperator`; defaults then use `sites/landing-clawperator`.
-Use `--input` or `--output` for explicit paths. Do not mix the two sites' exports.
+Use `--input` or `--output` for explicit paths.

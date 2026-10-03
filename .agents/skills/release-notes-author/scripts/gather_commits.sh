@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# Retain former landing-clawperator paths to classify historical release commits.
 set -euo pipefail
 
 usage() {

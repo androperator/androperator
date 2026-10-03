@@ -14,16 +14,12 @@ SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
 NS = {"sm": SITEMAP_NS}
 ET.register_namespace("", SITEMAP_NS)
 
-LANDING_BASE_URL = "https://clawperator.com"  # Preserved legacy landing surface.
 DOCS_BASE_URL = "https://docs.androperator.com"
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command", required=True)
-
-    landing = subparsers.add_parser("landing")
-    landing.add_argument("--repo-root", default=".")
 
     docs = subparsers.add_parser("docs")
     docs.add_argument("--repo-root", default=".")
@@ -91,76 +87,6 @@ def format_iso(dt):
     return dt.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "+00:00")
 
 
-def landing_manifest():
-    return [
-        {
-            "loc": f"{LANDING_BASE_URL}/",
-            "priority": "1.0",
-            "sources": [
-                "sites/landing-clawperator/app/page.js",
-                "sites/landing-clawperator/app/layout.js",
-            ],
-        },
-        {
-            "loc": f"{LANDING_BASE_URL}/agents",
-            "priority": "0.9",
-            "sources": [
-                "sites/landing-clawperator/app/agents/page.js",
-                "sites/landing-clawperator/app/layout.js",
-            ],
-        },
-        {
-            "loc": f"{LANDING_BASE_URL}/index.md",
-            "priority": "0.9",
-            "sources": [
-                "sites/landing-clawperator/public/index.md",
-            ],
-        },
-        {
-            "loc": f"{LANDING_BASE_URL}/skill.md",
-            "priority": "0.9",
-            "sources": [
-                "sites/landing-clawperator/public/skill.md",
-            ],
-        },
-        {
-            "loc": f"{LANDING_BASE_URL}/agents.md",
-            "priority": "0.8",
-            "sources": [
-                "sites/landing-clawperator/public/agents.md",
-            ],
-        },
-        {
-            "loc": f"{LANDING_BASE_URL}/install.sh",
-            "priority": "0.8",
-            "sources": [
-                "sites/androperator-public/install.sh",
-            ],
-        },
-        {
-            "loc": f"{LANDING_BASE_URL}/llms.txt",
-            "priority": "0.9",
-            "sources": [
-                "sites/landing-clawperator/public/llms.txt",
-            ],
-        },
-        {
-            "loc": f"{LANDING_BASE_URL}/llms-full.txt",
-            "priority": "0.8",
-            "sources": [
-                "sites/landing-clawperator/public/llms-full.txt",
-            ],
-        },
-        {
-            "loc": f"{LANDING_BASE_URL}/operator.apk",
-            "priority": "0.7",
-            "sources": [
-                "docs/setup.md",
-            ],
-        },
-    ]
-
-
 def write_xml(tree, path):
     ET.indent(tree, space="  ")
     tree.write(path, encoding="utf-8", xml_declaration=True)
@@ -173,39 +99,6 @@ def set_child_text(parent, tag, text):
     if node is None:
         node = ET.SubElement(parent, f"{{{SITEMAP_NS}}}{tag}")
     node.text = text
-
-
-def generate_landing_sitemaps(repo_root):
-    public_dir = repo_root / "sites/landing-clawperator/public"
-    landing_path = public_dir / "landing-sitemap.xml"
-    sitemap_index_path = public_dir / "sitemap.xml"
-
-    manifest = landing_manifest()
-
-    landing_root = ET.Element(f"{{{SITEMAP_NS}}}urlset")
-    for entry in manifest:
-        url_node = ET.SubElement(landing_root, f"{{{SITEMAP_NS}}}url")
-        ET.SubElement(url_node, f"{{{SITEMAP_NS}}}loc").text = entry["loc"]
-        lastmod = max_git_last_modified(repo_root, entry["sources"])
-        ET.SubElement(url_node, f"{{{SITEMAP_NS}}}lastmod").text = format_iso(lastmod)
-        ET.SubElement(url_node, f"{{{SITEMAP_NS}}}priority").text = entry["priority"]
-    write_xml(ET.ElementTree(landing_root), landing_path)
-
-    landing_lastmod = max_git_last_modified(repo_root, [source for entry in manifest for source in entry["sources"]])
-    docs_lastmod = max_git_last_modified(
-        repo_root,
-        docs_source_inputs(repo_root, repo_root / "sites/docs/source-map.yaml") + ["sites/docs/mkdocs.yml"],
-    )
-
-    index_root = ET.Element(f"{{{SITEMAP_NS}}}sitemapindex")
-    for loc, lastmod in [
-        (f"{LANDING_BASE_URL}/landing-sitemap.xml", landing_lastmod),
-        ("https://docs.clawperator.com/sitemap.xml", docs_lastmod),
-    ]:
-        sitemap_node = ET.SubElement(index_root, f"{{{SITEMAP_NS}}}sitemap")
-        ET.SubElement(sitemap_node, f"{{{SITEMAP_NS}}}loc").text = loc
-        ET.SubElement(sitemap_node, f"{{{SITEMAP_NS}}}lastmod").text = format_iso(lastmod)
-    write_xml(ET.ElementTree(index_root), sitemap_index_path)
 
 
 def parse_source_map(source_map_path):
@@ -316,10 +209,6 @@ def patch_docs_sitemap(repo_root, sitemap_path, source_map_path):
 def main():
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
-
-    if args.command == "landing":
-        generate_landing_sitemaps(repo_root)
-        return
 
     if args.command == "docs":
         patch_docs_sitemap(

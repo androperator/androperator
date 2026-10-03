@@ -40,7 +40,11 @@ Compared against Cloudflare's Browser Rendering guidance on February 25, 2026:
 The remaining gaps are mostly about sitemap metadata quality, not discoverability
 breakage.
 
-Observed gaps at the time of review:
+Observed gaps at the time of review (historical):
+
+The preserved landing site now belongs to
+[clawperator/clawperator.com](https://github.com/clawperator/clawperator.com);
+its former paths below describe the original audit, not current local inputs.
 
 - `sites/landing-clawperator/public/landing-sitemap.xml` includes only `<loc>` entries
   without `<lastmod>`

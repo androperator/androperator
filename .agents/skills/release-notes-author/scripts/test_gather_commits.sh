@@ -302,7 +302,7 @@ release_fixture_err="$(mktemp)"
   git init -q
   git config user.name "Release Notes Test"
   git config user.email "release-notes-test@example.com"
-  mkdir -p docs/troubleshooting sites/landing-clawperator/public
+  mkdir -p docs/troubleshooting sites/androperator-public
   printf 'Compatibility guide.\n' > docs/troubleshooting/compatibility.md
   printf '#!/usr/bin/env bash\n' > sites/androperator-public/install.sh
   git add docs/troubleshooting/compatibility.md sites/androperator-public/install.sh

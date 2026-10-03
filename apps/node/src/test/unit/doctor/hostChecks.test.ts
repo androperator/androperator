@@ -1,6 +1,6 @@
 import { afterEach, describe, it } from "node:test";
 import assert from "node:assert";
-import { cp, mkdtemp, realpath, mkdir, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, lstat, mkdtemp, realpath, mkdir, rm, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import {
@@ -61,8 +61,7 @@ describe("Doctor: hostChecks", () => {
             await mkdir(skillDir, { recursive: true });
             await writeFile(join(skillDir, "SKILL.md"), `# ${skillName}\n`, "utf8");
             await createDirectorySymlink(skillDir, join(discoveryDirs[0], skillName));
-            await createDirectorySymlink(skillDir, join(discoveryDirs[1], skillName));
-            await createManagedAgentsCopy(skillDir, join(discoveryDirs[2], skillName));
+            await createManagedAgentsCopy(skillDir, join(discoveryDirs[1], skillName));
         }
         await writeFile(join(installedDir, "version.txt"), `${version}\n`, "utf8");
         return skillNames;
@@ -281,7 +280,7 @@ describe("Doctor: hostChecks", () => {
             const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir]);
+            await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
 
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
@@ -307,7 +306,7 @@ describe("Doctor: hostChecks", () => {
             const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir]);
+            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
             await rm(join(claudeSkillsDir, targetSkill), { force: true });
 
             const result = await checkBundledSkillsStaleness(config, {
@@ -338,40 +337,18 @@ describe("Doctor: hostChecks", () => {
             });
         });
 
-        it("warns when the Codex discovery link is missing", async () => {
-            const root = await makeTempRoot("androperator-doctor-agent-skills-missing-codex-link-");
+        it("passes without a Codex directory when shared and Claude discovery are healthy", async () => {
+            const root = await makeTempRoot("androperator-doctor-shared-discovery-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
-            const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
-            const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir]);
-            await rm(join(codexSkillsDir, targetSkill), { force: true });
-
-            const result = await checkBundledSkillsStaleness(config, {
-                installedDir,
-                claudeSkillsDir,
-                codexSkillsDir,
-                agentsSkillsDir,
+            const codexSkillsDir = join(root, "absent-codex-skills");
+            await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
+            const result = await checkBundledSkillsStaleness(getDefaultRuntimeConfig(), {
+                installedDir, claudeSkillsDir, agentsSkillsDir, codexSkillsDir,
             });
-
-            assert.strictEqual(result.status, "warn");
-            assert.strictEqual(result.summary, "Bundled-skills discovery links are incomplete or invalid.");
-            assert.deepStrictEqual(result.evidence, {
-                installedDir,
-                installedVersion: getCliVersion(),
-                cliVersion: getCliVersion(),
-                brokenDiscoveryByDir: {
-                    codex: [{
-                        actualTarget: undefined,
-                        dirLabel: "codex",
-                        discoveryDir: codexSkillsDir,
-                        skillName: targetSkill,
-                        issue: "missing",
-                        expectedTarget: join(installedDir, targetSkill),
-                    }],
-                },
-            });
+            assert.strictEqual(result.status, "pass");
+            await assert.rejects(lstat(codexSkillsDir), { code: "ENOENT" });
         });
 
         it("warns when the generic agents managed copy is missing", async () => {
@@ -381,7 +358,7 @@ describe("Doctor: hostChecks", () => {
             const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir]);
+            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
             await rm(join(agentsSkillsDir, targetSkill), { recursive: true, force: true });
 
             const result = await checkBundledSkillsStaleness(config, {
@@ -417,7 +394,7 @@ describe("Doctor: hostChecks", () => {
             const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir]);
+            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
             await rm(join(agentsSkillsDir, targetSkill, MANAGED_BUNDLED_SKILL_COPY_MARKER), { force: true });
 
             const result = await checkBundledSkillsStaleness(config, {
@@ -453,7 +430,7 @@ describe("Doctor: hostChecks", () => {
             const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir]);
+            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
             await rm(join(agentsSkillsDir, targetSkill, "SKILL.md"), { force: true });
 
             const result = await checkBundledSkillsStaleness(config, {
@@ -489,7 +466,7 @@ describe("Doctor: hostChecks", () => {
             const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir]);
+            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
             await rm(join(agentsSkillsDir, targetSkill), { recursive: true, force: true });
             await createDirectorySymlink(join(installedDir, targetSkill), join(agentsSkillsDir, targetSkill));
 
@@ -526,7 +503,7 @@ describe("Doctor: hostChecks", () => {
             const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir]);
+            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
             const wrongTargetRoot = join(root, "wrong-target", targetSkill);
             await mkdir(wrongTargetRoot, { recursive: true });
             await rm(join(claudeSkillsDir, targetSkill), { force: true });
@@ -565,7 +542,7 @@ describe("Doctor: hostChecks", () => {
             const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir]);
+            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
             await rm(join(claudeSkillsDir, targetSkill), { force: true });
             await writeFile(join(claudeSkillsDir, targetSkill), "not a symlink\n", "utf8");
 
@@ -602,7 +579,7 @@ describe("Doctor: hostChecks", () => {
             const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir]);
+            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
             await rm(join(agentsSkillsDir, targetSkill), { recursive: true, force: true });
             await writeFile(join(agentsSkillsDir, targetSkill), "not a managed copy\n", "utf8");
 
@@ -640,7 +617,7 @@ describe("Doctor: hostChecks", () => {
             const agentsSkillsDir = join(root, "agents-skills");
             const missingTarget = join(root, "missing-target");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir]);
+            const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
             await rm(join(claudeSkillsDir, targetSkill), { force: true });
             await createDirectorySymlink(missingTarget, join(claudeSkillsDir, targetSkill));
 
@@ -677,7 +654,7 @@ describe("Doctor: hostChecks", () => {
             const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir], "0.0.1");
+            await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir], "0.0.1");
 
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
@@ -727,7 +704,7 @@ describe("Doctor: hostChecks", () => {
             const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const expectedSkills = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir]);
+            const expectedSkills = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
 
             await rm(join(installedDir, "androperator-upgrade"), { recursive: true, force: true });
 
@@ -801,7 +778,7 @@ describe("Doctor: hostChecks", () => {
 
             await mkdir(join(sourceDir, customSkill), { recursive: true });
             await writeFile(join(sourceDir, customSkill, "SKILL.md"), `# ${customSkill}\n`, "utf8");
-            await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir]);
+            await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
 
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
@@ -834,7 +811,7 @@ describe("Doctor: hostChecks", () => {
             const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const expectedSkills = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir]);
+            const expectedSkills = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
 
             await mkdir(join(sourceDir, "legacy-agent-skill"), { recursive: true });
             await writeFile(join(sourceDir, "legacy-agent-skill", "SKILL.md"), "# legacy-agent-skill\n", "utf8");

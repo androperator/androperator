@@ -346,9 +346,9 @@ Usage:
 Notes:
   - Copies packaged first-party bundled skills to ~/.androperator/bundled-skills/
   - Installs the packaged bundled-skill front doors that help host agents operate Androperator
-  - Creates Claude Code, Codex, and generic agents discovery directories unconditionally
-  - Symlinks each installed skill into ~/.claude/skills/ and the Codex skills dir
-  - Copies each installed skill into ~/.agents/skills/ for generic agent runtimes
+  - Symlinks each installed skill into ~/.claude/skills/ for Claude Code
+  - Copies each installed skill into ~/.agents/skills/ for Codex and shared agent discovery
+  - Removes redundant installer-owned Codex links after verifying the active install; preserves unrelated entries
   - Use 'androperator bundled-skills list' after install to inspect the available host-agent helpers on this machine
 `;
 

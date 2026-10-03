@@ -9,8 +9,8 @@ Deliver host-native instructions grounded in observed app behavior, with verifie
 outcomes and explicit limits. Use this skill when reusable authoring is requested;
 for a one-off Android goal, use `androperator-agent-control-loop` directly.
 
-Use `androperator-agent-orientation` when readiness is unknown. Follow the control
-loop on an explicit device and matching Operator, with bounded observation,
+Use `androperator-agent-orientation` when readiness is unknown. The current agent
+follows the control loop on an explicit device and matching Operator, with bounded observation,
 action, recovery and elapsed-time budgets. Let current evidence determine the
 next action; app-specific routes belong in instructions, not in the runtime.
 
@@ -22,7 +22,8 @@ launcher is needed.
 
 If missing app knowledge blocks progress, ask a specific question. Use
 `androperator-skill-author-by-recording` when an optional demonstration would
-supply that evidence; unfamiliarity alone does not require human intervention.
+supply that evidence. A demonstration is never required merely because a route
+is unfamiliar.
 
 Follow the authored instructions on the selected device and verify the requested
 outcomes. Exercise a bounded unexpected state within the authorized scope, or

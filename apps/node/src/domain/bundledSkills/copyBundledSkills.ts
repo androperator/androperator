@@ -36,6 +36,7 @@ export interface CopyBundledSkillsOptions {
   sourceDir?: string;
   installedDir?: string;
   claudeSkillsDir?: string;
+  /** Former discovery directory, used only to remove redundant managed links. */
   codexSkillsDir?: string;
   agentsSkillsDir?: string;
   codexHome?: string;
@@ -101,7 +102,6 @@ export function resolveAgentsSkillsDir(options: CopyBundledSkillsOptions): strin
 function resolveAgentDiscoveryDirs(options: CopyBundledSkillsOptions): BundledSkillDiscoveryDirEntry[] {
   return [
     { label: "claude", dir: resolveClaudeSkillsDir(options) },
-    { label: "codex", dir: resolveCodexSkillsDir(options) },
     { label: "agents", dir: resolveAgentsSkillsDir(options) },
   ];
 }
@@ -544,6 +544,32 @@ async function removeStaleBundledSkillSymlinks(agentDir: string, activeSkills: S
   }
 }
 
+// Codex discovers ~/.agents/skills itself. Retire only links owned by this
+// installer, after the active discovery entries have passed verification.
+async function removeRedundantCodexLinks(
+  options: CopyBundledSkillsOptions,
+  groups: BundledSkillDiscoveryGroup[],
+  installedDir: string,
+  sourceDir: string,
+): Promise<void> {
+  const codexDir = await resolvePhysicalPath(resolveCodexSkillsDir(options));
+  const protectedDirs = [
+    ...groups.map(group => group.dir),
+    await resolvePhysicalPath(installedDir),
+    await resolvePhysicalPath(sourceDir),
+  ];
+  // A user may alias discovery roots to each other or to storage. Never clean
+  // through an alias that would remove a retained entry or packaged content.
+  if (protectedDirs.some(path => path === codexDir || path.startsWith(codexDir + sep) || codexDir.startsWith(path + sep))) {
+    return;
+  }
+  try {
+    await removeStaleBundledSkillSymlinks(codexDir, new Set(), installedDir);
+  } catch (error) {
+    if (!isMissingPathError(error)) throw error;
+  }
+}
+
 async function removeStaleBundledSkillCopies(agentDir: string, activeSkills: Set<string>, installedDir: string): Promise<void> {
   const entries = await readdir(agentDir);
   for (const entry of entries) {
@@ -695,6 +721,7 @@ export async function copyBundledSkills(
         if (!inspection.ok) throw new Error(`Post-install verification failed: ${join(group.dir, skillName)} (${group.representation}, ${inspection.status})`);
       }
     }
+    await removeRedundantCodexLinks(options, discoveryGroups, installedDir, sourceDir);
     await writeFile(join(installedDir, VERSION_FILENAME), `${options.cliVersion ?? getCliVersion()}\n`, "utf8");
 
     return {

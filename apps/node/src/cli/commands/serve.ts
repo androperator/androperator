@@ -529,7 +529,7 @@ export function createServeApp(options: ServeAppOptions): express.Application {
     }
   });
 
-  // REST: Get skill by ID
+  // SSE: Observe execution outcomes in this process
   app.get("/events", (req, res) => {
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");

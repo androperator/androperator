@@ -32,8 +32,11 @@ there is no Androperator runtime registry or child-agent requirement.
 
 ## Choose the transport
 
-Use MCP when the host supports stdio tools; use CLI or [HTTP](api/serve.md) where
-those interfaces are available. The same execution and evidence contracts apply.
+Use CLI when the caller can launch shell commands on the adb/emulator host.
+Use stdio MCP when the client supports local MCP processes. Use
+[HTTP](api/serve.md#choose-the-transport) to reach a separate device host where
+the caller cannot launch CLI processes. See the Serve page for access control,
+completion, SSE scope and artifact locality. The same execution contracts apply.
 Optional shell helpers require suitable host execution support.
 
 ## Author when useful

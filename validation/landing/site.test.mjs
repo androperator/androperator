@@ -102,3 +102,9 @@ test('APK aliases resolve metadata for GET/HEAD and reject invalid metadata and 
     globalThis.fetch = originalFetch;
   }
 });
+
+test('www redirects to HTTPS apex while retaining path and query', () => {
+  const response = worker.fetch(new Request('https://www.androperator.com/agents.md?source=test'), {});
+  assert.equal(response.status, 308);
+  assert.equal(response.headers.get('location'), 'https://androperator.com/agents.md?source=test');
+});

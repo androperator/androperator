@@ -1,4 +1,4 @@
 interface:
   display_name: "Androperator Orientation"
-  short_description: "Select and verify the CLI, device and Operator"
-  default_prompt: "Use $androperator-agent-orientation to establish a verified execution route for the authorized Android goal, or report the concrete readiness blocker."
+  short_description: "Learn Android automation capabilities and API usage"
+  default_prompt: "Use $androperator-agent-orientation to learn what Androperator does, identify the API capabilities relevant to my goal, and establish any prerequisites needed to proceed."

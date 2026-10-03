@@ -716,7 +716,7 @@ Examples:
   androperator wait-for-nav --text "Settings" --timeout 5000
 `;
 
-const HELP_PRESS = `androperator press — Send a system key event
+const HELP_PRESS = `androperator press — Send navigation keys and TV remote buttons
 
 Usage:
   androperator press <key> [--device <id>] [--operator-package <pkg>]
@@ -725,6 +725,12 @@ Valid keys:
   back       Navigate to previous screen
   home       Return to home screen
   recents    Open recent apps
+  dpad_up, dpad_down, dpad_left, dpad_right  Move TV focus
+  dpad_center Select the focused item
+  bookmark   Send the TV watchlist/bookmark key
+  profile    Send the emulator dashboard key (notification)
+  settings   Open Android TV settings
+  tv         Open the emulator Live Channels activity
 
 Options:
   --key <name>           System key to press (alias for positional arg)
@@ -1988,10 +1994,10 @@ COMMANDS["press"] = {
   flagAliases: PRESS_FLAG_ALIASES,
   documentedFlags: ["--key", "--no-daemon"],
   supportedFlags: ["--key", "--no-daemon"],
-  summary: "Press a hardware key on the device",
+  summary: "Press a navigation key or TV remote button",
   help: HELP_PRESS,
-  topLevelBlock: `  press <back|home|recents> [--device <id>] [--operator-package <pkg>]
-                                            Press a hardware key on the device`,
+  topLevelBlock: `  press <key> [--device <id>] [--operator-package <pkg>]
+                                            Press a navigation key or TV remote button`,
   handler: async (ctx) => {
     const { rest, format, logger, deviceId, operatorPackage, noDaemon } = ctx;
     const keyFlag = getOpt(rest, "--key");
@@ -2010,7 +2016,7 @@ COMMANDS["press"] = {
     if (!key) {
       return JSON.stringify({
         code: "MISSING_ARGUMENT",
-        message: "press requires a key name.\n\nValid keys: back, home, recents\n\nExample:\n  androperator press back",
+        message: "press requires a key name.\n\nValid keys: back, home, recents, dpad_up, dpad_down, dpad_left, dpad_right, dpad_center, bookmark, profile, settings, tv\n\nExample:\n  androperator press back",
       });
     }
     return (await import("./commands/action.js")).cmdActionPressKey({

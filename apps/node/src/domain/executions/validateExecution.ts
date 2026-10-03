@@ -1,3 +1,4 @@
+import { SYSTEM_KEYS } from "../../contracts/keys.js";
 import { validateOnScreenLogTemplate } from "../../contracts/onScreenLogTemplate.js";
 import { notificationMediaParamsSchema } from "../../contracts/notifications.js";
 import { dragParamsSchema } from "../../contracts/drag.js";
@@ -474,7 +475,7 @@ const executionSchema = z.object({
         break;
       }
       case "press_key": {
-        const SUPPORTED_KEYS = ["back", "home", "recents"] as const;
+        const SUPPORTED_KEYS = SYSTEM_KEYS;
         const normalizedKey = params?.key?.trim().toLowerCase();
         if (!normalizedKey) {
           addIssue(index, "press_key requires params.key", ["params", "key"]);

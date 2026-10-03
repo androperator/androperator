@@ -1,3 +1,4 @@
+import { SYSTEM_KEYS } from "../../contracts/keys.js";
 import { dragParamsSchema } from "../../contracts/drag.js";
 import { buildDragExecution } from "../../domain/actions/drag.js";
 import { swipeParamsSchema } from "../../contracts/swipe.js";
@@ -121,7 +122,7 @@ const readArgsSchema = executionToolOptionsSchema.extend({
 });
 
 const pressArgsSchema = executionToolOptionsSchema.extend({
-  key: z.enum(["back", "home", "recents"]),
+  key: z.enum(SYSTEM_KEYS),
 }).strict();
 
 const waitArgsSchema = executionToolOptionsSchema.extend({
@@ -374,9 +375,9 @@ export function getNamedMcpTools(
     },
     {
       name: "press",
-      description: "Press one of the supported Android navigation keys.",
+      description: "Press an Android navigation key or TV remote button. TV icon buttons match the emulator remote: profile sends notification; settings and tv launch activities.",
       inputSchema: buildCommonExecutionSchema({
-        key: { type: "string", enum: ["back", "home", "recents"] },
+        key: { type: "string", enum: [...SYSTEM_KEYS] },
       }, ["key"]),
       handler: async (args) => {
         const parsed = parseToolArguments(pressArgsSchema, args);

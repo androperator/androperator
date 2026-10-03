@@ -1,3 +1,4 @@
+import { SYSTEM_KEYS } from "../../contracts/keys.js";
 import assert from "node:assert";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
@@ -625,7 +626,7 @@ describe("mcp stdio integration", () => {
   it("accepts press with each supported key", async () => {
     await client.initialize();
 
-    for (const key of ["back", "home", "recents"] as const) {
+    for (const key of SYSTEM_KEYS) {
       const result = await client.callTool("press", {
         ...(await getPreferredExecutionArgs()),
         key,

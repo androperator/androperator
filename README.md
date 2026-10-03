@@ -125,7 +125,7 @@ hooks. [Release notes](CHANGELOG.md) describe changes in each version.
 
 Apache 2.0. See [LICENSE](LICENSE).
 
-Built with human claws by [@chrismlacy](https://x.com/chrismlacy), with a scrappy crew of bots.\
+Built by [@chrismlacy](https://x.com/chrismlacy), with help from ever-nondeterministic agents.\
 GitHub: [chrislacy](https://github.com/chrislacy) · X: [@chrismlacy](https://x.com/chrismlacy) · Email: [chris@actionlauncher.com](mailto:chris@actionlauncher.com)
 
 Copyright (c) 2026 Action Launcher Pty Ltd

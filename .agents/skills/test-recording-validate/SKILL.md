@@ -71,3 +71,12 @@ All artifacts are written to `$HOME/src/androperator-dumps/runs/<timestamp>/`
 - `5` - Recording pull failed
 - `6` - Recording export failed
 - `7` - Validation failed (check report for details)
+
+## Readiness failures and evidence gaps
+
+If the interaction helper reports `DEVICE_ACCESSIBILITY_NOT_RUNNING`, run the
+branch-local `doctor` on the same explicit device and Operator package. Repair
+accessibility readiness, then repeat the smoke and inspect its raw event export.
+A successful stop, pull or export with zero events does not validate interaction
+capture. Keep the failed recording and report the missing click, window-change
+or XML evidence; do not claim live input-event coverage until a repeat passes.

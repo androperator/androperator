@@ -13,5 +13,5 @@ bridge failures as warnings when the core host artifacts succeed.
 Do not recreate runtime manifests, registries, recipe compilation, child-agent
 launchers or result wrappers in core. Scheduling and optional delegation belong
 to caller-owned tooling. Recordings are optional evidence for adaptive guidance.
-See [agent instructions](agent-instructions.md) and
-[the removal decision](skills-runtime-removal-plan.md).
+See [agent instructions](agent-instructions.md) for the maintained instruction
+and helper boundaries.

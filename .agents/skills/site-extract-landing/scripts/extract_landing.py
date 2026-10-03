@@ -8,9 +8,9 @@ import argparse
 from pathlib import Path
 
 def main():
-    parser = argparse.ArgumentParser(description='Extract androperator.com landing page as markdown.')
+    parser = argparse.ArgumentParser(description='Extract clawperator.com landing page as markdown.')
     parser.add_argument('--output', help='Output file path')
-    parser.add_argument('--url', default='https://androperator.com', help='URL to extract (default: https://androperator.com)')
+    parser.add_argument('--url', default='https://clawperator.com', help='URL to extract (default: https://clawperator.com)')
     args = parser.parse_args()
 
     # Determine paths

@@ -1,11 +1,11 @@
 ---
 name: site-extract-landing
-description: Extract rendered Androperator landing-page Markdown through Cloudflare Browser Rendering.
+description: Extract rendered preserved Clawperator landing-page Markdown through Cloudflare Browser Rendering.
 ---
 
 # Site Extract Landing
 
-Extract the fully rendered markdown content of `https://androperator.com` using Cloudflare's Browser Rendering API. This is useful for Generative Engine Optimization (GEO) audits and ensuring the site is correctly perceived by AI agents.
+Extract the fully rendered markdown content of `https://clawperator.com` using Cloudflare's Browser Rendering API. This is useful for Generative Engine Optimization (GEO) audits and ensuring the site is correctly perceived by AI agents.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ The following environment variables must be set:
 ## Workflow
 
 1.  **Run the extraction script**:
-    -   To extract the default landing page (`https://androperator.com`) to `sites/landing-clawperator/export/landing-export-cloudflare.md`:
+    -   To extract the default landing page (`https://clawperator.com`) to `sites/landing-clawperator/export/landing-export-cloudflare.md`:
         ```bash
         python3 .agents/skills/site-extract-landing/scripts/extract_landing.py
         ```
@@ -27,7 +27,7 @@ The following environment variables must be set:
         ```
     -   To extract a different URL (within the Cloudflare account's scope):
         ```bash
-        python3 .agents/skills/site-extract-landing/scripts/extract_landing.py --url https://androperator.com/agents --output agents.md
+        python3 .agents/skills/site-extract-landing/scripts/extract_landing.py --url https://clawperator.com/agents --output agents.md
         ```
 
 2.  **Verify the output**:

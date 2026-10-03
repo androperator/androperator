@@ -41,7 +41,35 @@ patterns and languages those rules declare and the CE engine's analysis
 capabilities. This check does not provide dependency auditing or a review of
 application logic.
 
+The blocking policy selects rules labeled `security` or `audit` with the
+`vuln` or `secure default` subcategory, plus `curl-pipe-bash` and `spawn-shell-true`. General lint,
+portability, and manual audit suggestions do not block PRs. This is a security
+gate, not a replacement for a manual review of command execution or dependencies.
+
+`validation/security/reviewed-findings.json` records 20 reviewed exceptions,
+with a reason for each. They cover required launcher activities and permission
+protected debug activities, trusted local validation commands, intentionally
+exposed agent capabilities, fixed-field video metadata, and documentation or
+test fixtures. Each exception matches the rule, exact source location, and
+SHA-256 of the entire file. A change anywhere in that file invalidates it.
+Updating the rules commit also invalidates all exceptions. The command prints
+the number of matched exceptions; new locations and new rules remain blocking.
+Do not regenerate this file automatically or add exceptions without inspecting
+the owning implementation and its callers.
+
 The scan respects Semgrep CE's Git exclusions and excludes nested `.worktrees`.
+Two exact paths are also excluded because their valid source syntax is not
+supported by the scanner:
+
+- `gradlew`: the generated Gradle wrapper, checked with `sh -n gradlew`.
+- `sites/docs/overrides/main.html`: the Jinja template, checked by the docs build.
+
+The command prints each applicable exclusion. These files receive no Semgrep
+coverage; their names are not blanket exclusions for other wrappers or templates.
+Keep these exceptions narrow and revisit them when updating the scanner.
+GitHub workflow commands pass expression values through environment variables,
+so those workflow files remain scanned without parser exceptions.
+
 The default scans changed files in the working tree, including local tracked
 edits, then reviewdog reports
 only findings on added or modified lines in the diff. Untracked files have no

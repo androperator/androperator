@@ -41,11 +41,41 @@ class SecurityCheckTests(unittest.TestCase):
         report = check.diagnostics({"results": [{
             "path": "sample.py", "start": {"line": 2, "col": 3},
             "end": {"line": 2, "col": 9}, "check_id": "insecure-call",
-            "extra": {"message": "Unsafe call", "severity": "ERROR"}}]})
+            "extra": {"message": "Unsafe call", "severity": "ERROR",
+                      "metadata": {"category": "security", "subcategory": ["vuln"]}}}]})
         finding = report["diagnostics"][0]
         self.assertEqual(finding["location"]["range"]["start"], {"line": 2, "column": 3})
         self.assertEqual(finding["severity"], "ERROR")
         self.assertEqual(finding["code"]["value"], "insecure-call")
+
+    def test_rule_policy_keeps_security_and_discards_lint(self):
+        for category, subcategory, rule, expected in [
+            ("security", ["vuln"], "command-injection", True),
+            ("security", ["secure default"], "subprocess-shell-true", True),
+            ("audit", ["vuln"], "unpinned-action", True),
+            ("security", ["audit"], "curl-pipe-bash", True),
+            ("security", ["audit"], "dangerous-subprocess-use-audit", False),
+            ("correctness", [], "style", False),
+            ("portability", [], "internationalization", False),
+        ]:
+            result = {"check_id": rule, "extra": {"metadata": {"category": category, "subcategory": subcategory}}}
+            self.assertEqual(check.security_rule(result), expected)
+
+    def test_review_exceptions_require_exact_rule_location_and_whole_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "sample.py"
+            source.write_text("reviewed source\n")
+            result = {"path": "sample.py", "check_id": "rule", "start": {"line": 1, "col": 1},
+                      "end": {"line": 1, "col": 5}}
+            review = {"path": "sample.py", "rule": "rule", "start": result["start"], "end": result["end"],
+                      "file_sha256": hashlib.sha256(source.read_bytes()).hexdigest()}
+            with patch.object(check, "ROOT", root):
+                self.assertTrue(check.reviewed_finding(result, [review]))
+                self.assertFalse(check.reviewed_finding(dict(result, check_id="new-rule"), [review]))
+                self.assertFalse(check.reviewed_finding(dict(result, start={"line": 2, "col": 1}), [review]))
+                source.write_text("reviewed source\nnew surrounding code\n")
+                self.assertFalse(check.reviewed_finding(result, [review]))
 
     def test_download_rejects_checksum_mismatch_and_removes_temporary(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -112,6 +142,18 @@ class SecurityCheckTests(unittest.TestCase):
                 self.assertIn("./sample.py", run.call_args_list[3].args[0])
                 self.assertIn("-diff=git diff --no-ext-diff --no-textconv -U0 merge-sha", report.call_args.args[0])
 
+    def test_only_exact_parser_exclusions_skip_a_diff_scan(self):
+        paths = "gradlew\0sites/docs/overrides/main.html\0"
+        responses = [process_result([], 0, "base-sha\n"),
+                     process_result([], 0, "merge-sha\n"), process_result([], 0, paths)]
+        with patch.object(check.sys, "argv", ["check.py"]), \
+             patch.object(check, "run", side_effect=responses), \
+             patch.object(check, "install") as install:
+            self.assertEqual(check.main(), 0)
+            install.assert_not_called()
+        # A similarly named application file is not exempt.
+        self.assertNotIn("app/gradlew", check.PARSER_EXCLUSIONS)
+
     def test_scanner_process_failure_prevents_reporter(self):
         with tempfile.TemporaryDirectory() as directory:
             with patch.object(check.sys, "argv", ["check.py", "--full"]), \
@@ -133,6 +175,12 @@ class LiveSecurityCheckTests(unittest.TestCase):
             subprocess.run(["git", "-C", directory, "-c", "user.name=Fixture",
                             "-c", "user.email=fixture@example.invalid", "commit",
                             "--allow-empty", "-qm", "Initial fixture"], check=True)
+            # Include the actual parser-incompatible files to exercise the exclusions.
+            for path in check.PARSER_EXCLUSIONS:
+                fixture = root / path
+                fixture.parent.mkdir(parents=True, exist_ok=True)
+                fixture.write_text((check.ROOT / path).read_text())
+            subprocess.run(["git", "-C", directory, "add", *check.PARSER_EXCLUSIONS], check=True)
             script = root / "sample.py"
             # This creates source text for the scanner; the fixture is never executed.
             script.write_text("import subprocess\nsubprocess.call(user_input, shell=True)\n")
@@ -149,6 +197,12 @@ class LiveSecurityCheckTests(unittest.TestCase):
                 script.write_text("print(42)\n")
                 subprocess.run(["git", "-C", directory, "add", "sample.py"], check=True)
                 self.assertEqual(check.main(), 0)
+                # The same unsupported syntax at another path must still fail the scan.
+                other_wrapper = root / "other-wrapper.sh"
+                other_wrapper.write_text((root / "gradlew").read_text())
+                subprocess.run(["git", "-C", directory, "add", "other-wrapper.sh"], check=True)
+                with self.assertRaisesRegex(ValueError, "reported errors"):
+                    check.main()
 
 
 if __name__ == "__main__":

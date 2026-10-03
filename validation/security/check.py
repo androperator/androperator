@@ -15,6 +15,14 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 LOCK = Path(__file__).with_name("tools.json")
+REVIEWS = Path(__file__).with_name("reviewed-findings.json")
+# Audit rules require manual context review; retain these concrete execution risks.
+AUDIT_RULES = {"curl-pipe-bash", "spawn-shell-true"}
+# Exact paths only: these are not supported by the scanner's shell and HTML parsers.
+PARSER_EXCLUSIONS = {
+    "gradlew": "generated Gradle wrapper; validated with sh -n",
+    "sites/docs/overrides/main.html": "Jinja template; validated by the docs build",
+}
 
 
 def run(command, **kwargs):
@@ -94,13 +102,37 @@ def install(lock, cache, temporary):
     return binaries, [str(rules_root / name) for name in rules["directories"]]
 
 
-def diagnostics(scan):
+def security_rule(result):
+    metadata = result["extra"].get("metadata", {})
+    return (metadata.get("category") in {"security", "audit"}
+            and (bool({"vuln", "secure default"} & set(metadata.get("subcategory", [])))
+                 or result["check_id"] in AUDIT_RULES))
+
+
+def reviewed_finding(result, reviews):
+    for review in reviews:
+        if (result["path"] == review["path"] and result["check_id"] == review["rule"]
+                and {key: result["start"][key] for key in ("line", "col")} == review["start"]
+                and {key: result["end"][key] for key in ("line", "col")} == review["end"]):
+            path = ROOT / result["path"]
+            if hashlib.sha256(path.read_bytes()).hexdigest() == review["file_sha256"]:
+                return True
+    return False
+
+
+def diagnostics(scan, reviews=()):
     if scan.get("errors"):
         raise ValueError(f"Semgrep reported errors: {json.dumps(scan['errors'])}")
     if "results" not in scan or not isinstance(scan["results"], list):
         raise ValueError("Semgrep did not return a results list")
     findings = []
+    reviewed_count = 0
     for result in scan["results"]:
+        if not security_rule(result):
+            continue
+        if reviewed_finding(result, reviews):
+            reviewed_count += 1
+            continue
         extra = result["extra"]
         findings.append({
             "message": extra["message"],
@@ -110,6 +142,8 @@ def diagnostics(scan):
                 "end": {"line": result["end"]["line"], "column": result["end"]["col"]}}},
             "code": {"value": result["check_id"]},
         })
+    if reviewed_count:
+        print(f"Matched {reviewed_count} reviewed exceptions with unchanged file checksums.", file=sys.stderr)
     return {"source": {"name": "Semgrep"}, "diagnostics": findings}
 
 
@@ -144,7 +178,11 @@ def main():
         base = run(["git", "merge-base", "HEAD", resolved], capture_output=True).stdout.strip()
         paths = run(["git", "diff", "--no-ext-diff", "--no-textconv", "--name-only", "-z",
                      "--diff-filter=ACMRTUXB", base, "--"], capture_output=True).stdout
-        targets = [f"./{path}" for path in paths.split("\0") if path]
+        changed_paths = [path for path in paths.split("\0") if path]
+        for path in changed_paths:
+            if path in PARSER_EXCLUSIONS:
+                print(f"Excluded {path}: {PARSER_EXCLUSIONS[path]}", file=sys.stderr)
+        targets = [f"./{path}" for path in changed_paths if path not in PARSER_EXCLUSIONS]
         if not targets:
             print("No changed files to scan.", file=sys.stderr)
             return 0
@@ -155,7 +193,11 @@ def main():
         temporary = Path(directory)
         binaries, rules = install(lock, cache, temporary)
         command = [binaries["semgrep"], "scan", "--json", "--strict", "--metrics=off",
-                   "--disable-version-check", "--no-rewrite-rule-ids", "--exclude=.worktrees"]
+                   "--disable-version-check", "--no-rewrite-rule-ids", "--timeout=15", "--exclude=.worktrees"]
+        for path, reason in PARSER_EXCLUSIONS.items():
+            command.append(f"--exclude=/{path}")
+            if args.full and (ROOT / path).exists():
+                print(f"Excluded {path}: {reason}", file=sys.stderr)
         for rule in rules:
             command.extend(["--config", rule])
         command.extend(["--", *targets])
@@ -168,7 +210,9 @@ def main():
             if error.stdout:
                 diagnostics(json.loads(error.stdout))
             raise
-        report = diagnostics(scan)
+        review_data = json.loads(REVIEWS.read_text())
+        reviews = review_data["findings"] if review_data["rules_commit"] == lock["rules"]["commit"] else []
+        report = diagnostics(scan, reviews)
         command = [binaries["reviewdog"], "-f=rdjson", f"-reporter={'rdjson' if args.reporter == 'github-annotations' else 'local'}",
                    "-name=security", "-fail-level=any"]
         if base:

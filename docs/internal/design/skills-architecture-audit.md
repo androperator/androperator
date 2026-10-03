@@ -2,13 +2,24 @@
 
 Audit date: 4 October 2026. Baseline: freshly fetched `origin/main`, commit `627e128f` (CLI 1.0.1). This is a recommendation, not an implementation plan approved for execution. Product behavior is unchanged.
 
-## Recommendation
+## Revised recommendation
 
-Make instructions followed by the current agent the default skills model. Keep a small, optional execution facility for explicitly selected local automation, preserving useful result and process supervision contracts. Stop making the runtime registry and a possible child agent part of every user's onboarding. Retire catalog-specific indexes and distribution assumptions through a deliberate compatibility migration.
+The project owner clarified after this audit that Androperator has no users and
+zero compatibility obligations. Remove the entire public `androperator skills`
+namespace and its runtime-package framework directly. No migration, deprecation
+period, legacy adapters, replacement runner or new manifest API is needed.
 
-Do not simply delete `androperator skills`, and do not equate removing its registry with completing the architectural work. The namespace currently combines discovery, package validation, scaffolding, executable supervision, result interpretation, and obsolete distribution vocabulary. Those responsibilities have different consumers and deserve separate decisions. Retain the existing namespace as a compatibility surface during migration; a rename alone offers little value.
+The [revised removal plan](skills-runtime-removal-plan.md) is the authoritative
+recommendation and implementation scope. It supersedes this audit's original
+proposal to retain a smaller runner and stage a compatibility migration, and the
+compatibility phases proposed by the independent V2 audit. The source findings
+below remain evidence about the audited implementation, not requirements to
+preserve it. This document update does not implement the removal.
 
-This conclusion follows both the actuator principle in [AGENTS.md](https://github.com/androperator/androperator/blob/627e128f/AGENTS.md) and the concrete consumers below. Running a user-selected script is compatible with deterministic execution. Choosing an app strategy or insisting that an already-running agent launch another agent is a different responsibility.
+Keep Android execution and structured evidence, bundled host-agent guidance,
+agent-followed examples and useful recording tools. Existing internal consumers
+must be updated or removed as part of implementation; they do not justify
+retaining obsolete public contracts.
 
 ## What exists today
 
@@ -72,46 +83,34 @@ The local former skills repository was inspected at `76bad61b5915e70dd53f38111ea
 
 The migration notebook's checked-off registry-removal items and PR-progress prose are historical intent. Current loader, environment references and GitHub merge metadata take precedence. No assertion here relies on those checkbox states.
 
-## Alternatives and host implications
+## Decision after comparing both audits
 
-| Approach | Benefit | Cost / reason to reject or select |
-| --- | --- | --- |
-| Retain the entire current model | Minimal compatibility work; one registry-backed package model | Empty-install discovery detours, duplicated metadata, stale catalog vocabulary and universal agent advisories persist. Not recommended. |
-| Delete all skills machinery now | Smallest core; hosts run instructions/scripts themselves | Breaks authoring, evals, HTTP clients and recording comparison; discards result supervision and replay conveniences. Too broad for the evidence. |
-| Replace registry with folder scanning only | Removes manual index maintenance | Still makes Androperator own discovery; introduces search roots, duplicate IDs and precedence questions; does not resolve orchestration/default-routing confusion. Insufficient by itself. |
-| Optional explicit local runner plus host-owned instructions | Preserves concrete executable/evidence uses while simplifying the default experience | Requires compatibility adapters and coherent migration. Recommended. |
+The independent V2 audit recommended removing the runtime framework from core;
+this audit originally recommended retaining an optional runner. Both identified
+useful process/evidence handling and internal dependencies. Neither established
+external adoption. The owner's clarification resolves the compatibility question
+and removes the main reason for a staged transition.
 
-For Codex, Claude Code and other hosts with native skill support and shell access, the host should discover/read instructions and use CLI actions or deterministic helpers. Keep host policy, model selection, authorization and optional delegation there. Installing another Codex CLI merely because a task uses Android is unnecessary.
+Choose direct removal. Do not introduce explicit-path execution, a new canonical
+manifest, legacy registry lookup, or a general goal-result format to replace the
+old framework. A host can follow skill instructions and invoke ordinary helpers;
+unattended scheduling and optional child-agent execution belong to caller-owned
+tooling. No supported scheduler or HTTP skills client needs a transition.
 
-For an agent with only MCP, direct device/evidence tools are already the usable interface. Skill instructions can be supplied by that host; shell-specific helpers require a suitable local execution facility or an adapted example. Do not promise that copying a SKILL.md makes all helpers usable in every host.
+For MCP-only hosts, the existing device/evidence tools remain available. A host
+must supply suitable execution support for optional shell helpers; skill removal
+does not make those helpers universally portable. Preserve Android execution
+routes and MCP device tools while removing only the skills-specific HTTP routes.
 
-For a scheduler, HTTP client or agent deliberately invoking executable automation, a bounded runner with stable structured results remains useful. It should accept an explicit local package/manifest, avoid ambiguous global discovery, and preserve the preflight/result behavior expected by existing callers. A child agent may be a deliberate implementation of such a package, but its host adapter belongs with the package or optional integration, not in the universal actuator prerequisites. Do not add arbitrary remote-path execution to HTTP as a side effect of a local CLI path interface; preserve an explicitly registered/allowed server execution set.
+Recording can teach an adaptive agent a likely route and expected outcome. It
+need not produce deterministic replay or require a runtime package. Keep useful
+capture/export capabilities, remove `skills new --recording-context`, and revise
+recording authoring guidance so human demonstration is optional. Assess recording
+comparison independently; preserving a saved skills-run wrapper reader is no
+longer a requirement.
 
-The recommended destination for the current commands is explicit:
-
-| Surface | Recommended destination after compatibility migration |
-| --- | --- |
-| `skills run`, `validate` | Keep for explicit local executable packages; validate structure separately from proving a live outcome. |
-| `skills new` | Keep only as an optional executable-package starter; agent-followed instructions need no manifest/scaffold ceremony. Replace fixed sleeps when modernizing the starter. |
-| `skills get` | Retain package inspection, with an explicit local target; legacy ID lookup remains transitional. |
-| `list`, `search`, `for-app` | Deprecate as universal skill discovery. Let hosts discover their instructions; retain legacy collection lookup only during migration or as a separately justified optional integration. |
-| `install`, `update`, `sync` | Retire the empty-registry lifecycle; keep distinct bundled host-guidance installation. |
-| `compile-artifact` | Preserve existing recipe users during migration; decouple input-file compilation from registry identity if it remains a supported convenience. |
-| Result contracts and recording comparison | Preserve and separate from discovery. A host-followed workflow may produce compatible evidence without using the runner. |
-
-The main cost here is architectural coupling and maintenance, not a large unique dependency download. Runner/scaffold/index code largely uses Node built-ins and schemas; shared server, MCP and validation packages also serve non-skills features. Deleting skills code would not automatically eliminate those package dependencies.
-
-## Proposed scope and order, if implementation is approved
-
-1. Correct the current story first. Align help with empty-workspace initialization; distinguish agent-followed instructions from executable packages; make discovery conditional on a known local collection; scope doctor agent checks to the chosen/installed capability. Preserve first-party bundled guidance installation. Keep ordinary install/device readiness independent of a runtime workspace.
-2. Establish one canonical local executable manifest and an explicit-path run/validate route. Preserve current ID/registry lookup as an adapter initially. Define path resolution, script working directory, argument/device handling, timeouts, versioning and result provenance before changing callers. Keep app strategy outside core. Move shared Operator/CLI configuration out of skills-specific ownership as needed. Extract result parsing/supervision without silently changing its success semantics.
-3. Migrate actual consumers together: recording-authoring instructions and fixtures, replay/live eval harnesses, CLI and HTTP adapters, host setup, environment docs and recording comparison. Let comparison consume a versioned result artifact independently of how execution was discovered, while retaining a saved-wrapper reader. Preserve command/task/run correlation and failed/indeterminate evidence. Keep a generic recipe compilation capability only where current artifact consumers need it; avoid building a new templating platform.
-4. Remove obsolete catalog responsibilities after adapters are proven: generated shard/index freshness policy, app-specific compatibility exceptions after explicit migration, misleading install/update/sync lifecycle and compulsory registry initialization. Deprecate registry configuration before removal; do not reinterpret an existing configured path as something else or delete user collections. Do not replace it with another compulsory global search-root environment contract.
-5. Validate a clean install with no registry or agent CLI, agent-followed Settings execution, an executable local replay skill, an explicitly delegated package where supported, serve invocation, recording comparison and eval replay. Use real device evidence for affected runtime behavior, plus no-match/duplicate/path failures and timeout/failure/result regressions. Only then remove compatibility in an announced breaking release if warranted.
-
-Compatibility inventory must include `ANDROPERATOR_SKILLS_REGISTRY`, registry-relative paths, IDs and duplicate resolution, `skill.json` and frontmatter, agent configuration overrides, injected argv/env, script selection, result frames, CLI JSON versus HTTP wrappers, error codes, install output fields, doctor check IDs and saved eval/recording artifacts. Keep execution variables used by examples unless individually migrated. Existing `-replay`/`-orchestrated` names should remain usable identifiers rather than being mass-renamed.
-
-Success means a fresh user can use the actuator and agent-followed examples without an empty catalog ceremony, while an existing executable skill still has a documented migration preserving its useful guarantees. It does not mean replacing every legacy abstraction in a single PR.
+The detailed scope, explicit exclusions and acceptance checks are in the
+[revised removal plan](skills-runtime-removal-plan.md).
 
 ## Validation and limits
 

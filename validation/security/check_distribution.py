@@ -13,15 +13,18 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 TOOL_PATH = re.compile(r"(?:^|/)(?:validation/security|semgrep[^/]*|reviewdog[^/]*|\.venv)(?:/|$)", re.I)
+DOCS_REFERENCE = re.compile(rb"semgrep|reviewdog|validation/security|security-checks|check_distribution", re.I)
 TOOL_CONTENT = re.compile(rb"\b(?:semgrep|reviewdog)\b|validation/security", re.I)
 
 
-def check_file(name, content, depth=0):
+def check_file(name, content, depth=0, public_docs=False):
     if TOOL_PATH.search(name):
         raise ValueError(f"Repository security tooling must not ship: {name}")
     # Also inspect UTF-16 strings in Android resources. Our own nosemgrep comments
     # are permitted: they do not contain a standalone scanner name or rule payload.
     searchable = content.replace(b"\x00", b"")
+    if public_docs and (DOCS_REFERENCE.search(name.encode()) or DOCS_REFERENCE.search(searchable)):
+        raise ValueError(f"Development security reference in published documentation: {name}")
     if TOOL_CONTENT.search(searchable):
         raise ValueError(f"Scanner integration or rules reference in distribution: {name}")
     if (re.search(rb"^rules:\s*$", content, re.M)
@@ -44,21 +47,21 @@ def check_file(name, content, depth=0):
         if depth >= 4:
             raise ValueError(f"Archive nesting exceeds inspection limit: {name}")
         if content.startswith(b"\x1f\x8b"):
-            check_file(name + "!gzip", gzip.decompress(content), depth + 1)
+            check_file(name + "!gzip", gzip.decompress(content), depth + 1, public_docs=public_docs)
         else:
-            check_zip(io.BytesIO(content), name, depth + 1)
+            check_zip(io.BytesIO(content), name, depth + 1, public_docs=public_docs)
 
 
-def check_zip(source, label, depth=0, require_apk=False):
+def check_zip(source, label, depth=0, require_apk=False, public_docs=False):
     with zipfile.ZipFile(source) as archive:
         if require_apk and 'AndroidManifest.xml' not in archive.namelist():
             raise ValueError(f"APK has no AndroidManifest.xml: {label}")
         for entry in archive.infolist():
             if not entry.is_dir():
-                check_file(f"{label}!/{entry.filename}", archive.read(entry), depth)
+                check_file(f"{label}!/{entry.filename}", archive.read(entry), depth, public_docs=public_docs)
 
 
-def check_directory(directory):
+def check_directory(directory, public_docs=False):
     if not directory.is_dir():
         raise ValueError(f"Distribution directory is missing: {directory}")
     if directory.is_symlink():
@@ -75,7 +78,7 @@ def check_directory(directory):
                 raise ValueError(f"Distribution symlinks are not supported: {path}")
         for name in filenames:
             path = Path(parent) / name
-            check_file(path.relative_to(directory).as_posix(), path.read_bytes())
+            check_file(path.relative_to(directory).as_posix(), path.read_bytes(), public_docs=public_docs)
             files += 1
     if not files:
         raise ValueError(f"Distribution directory is empty: {directory}")
@@ -108,11 +111,14 @@ def main(argv=None):
     target = parser.add_mutually_exclusive_group(required=True)
     target.add_argument('--npm', action='store_true', help='Inspect the built npm package file list and contents')
     target.add_argument('--directory', type=Path, help='Inspect a built website directory')
+    target.add_argument('--public-docs', type=Path, help='Inspect published docs, rejecting even suppression comments and internal security references')
     target.add_argument('--apk', type=Path, help='Inspect the APK archive before publication')
     args = parser.parse_args(argv)
     try:
         if args.npm:
             label = f"npm package ({check_npm()} files)"
+        elif args.public_docs is not None:
+            label = f"{args.public_docs} ({check_directory(args.public_docs, public_docs=True)} files; public docs)"
         elif args.directory is not None:
             label = f"{args.directory} ({check_directory(args.directory)} files)"
         else:

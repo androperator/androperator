@@ -20,6 +20,24 @@ class DistributionTests(unittest.TestCase):
     def test_source_suppressions_are_permitted(self):
         check_file('dist/cli/index.js', b'// nosemgrep: reviewed-rule\nexport {};')
 
+    def test_public_docs_reject_all_security_references(self):
+        for name, content in [
+            ('api/index.html', b'<code>// nosemgrep: reviewed-rule</code>'),
+            ('search/search_index.json', b'{"text":"Semgrep CE"}'),
+            ('llms-full.txt', b'Run validation/security/check.py'),
+            ('sitemap.xml', b'<loc>/internal/design/security-checks/</loc>'),
+            ('internal/design/security-checks/index.html', b'<h1>Internal</h1>'),
+            ('page.html.gz', gzip.compress(b'nosemgrep: rule')),
+        ]:
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                check_file(name, content, public_docs=True)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / 'index.html').write_text('<h1>Product docs</h1>')
+            self.assertEqual(main(['--public-docs', str(root)]), 0)
+            (root / 'llms-full.txt').write_text('// nosemgrep: reviewed-rule')
+            self.assertEqual(main(['--public-docs', str(root)]), 1)
+
     def test_tooling_and_rules_are_rejected(self):
         for name, content in [
             ('validation/security/check.py', b''),

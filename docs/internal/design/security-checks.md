@@ -77,6 +77,7 @@ installing the scanner or any third-party Python packages:
 python3 validation/security/check_distribution.py --npm
 python3 validation/security/check_distribution.py --apk <operator_apk>
 python3 validation/security/check_distribution.py --directory <built_site_directory>
+python3 validation/security/check_distribution.py --public-docs <built_docs_directory>
 ```
 
 The npm mode inspects the built package's dry-run file list and file contents,
@@ -85,7 +86,12 @@ reads archive entries without extracting them. Directory mode checks all built
 website files, including installers. Nested ZIP and gzip content is inspected;
 unreadable, malformed, missing, or empty expected output fails the check. Scanner
 names, integration references, environment paths, and recognizable rule payloads
-are rejected; our own `nosemgrep` comments are allowed.
+are rejected; our own `nosemgrep` comments are allowed in product code. Published
+documentation has a stricter `--public-docs` check: no scanner names, suppression
+markers, or internal security-tooling references may appear in any output file
+or path. The docs build applies this to the final site after adding static files,
+covering HTML, search indexes, sitemaps, and `llms-full.txt`. Internal security
+guidance stays in development sources and is not published.
 
 The npm check runs in validation CI and before npm publication. The APK check runs
 on the copied release artifact before either GitHub or R2 upload. All three site

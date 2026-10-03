@@ -63,7 +63,7 @@ The daemon directory is created with mode `0700`. The PID metadata file is JSON:
 {
   "pid": 12345,
   "startedAt": 1777176000000,
-  "daemonKey": "id-ZW11bGF0b3ItNTU1NA",
+  "daemonKey": "<device_key>",
   "cliEntryPath": "/Users/<local_user>/src/androperator/apps/node/dist/cli/index.js",
   "rawDeviceId": "emulator-5554"
 }

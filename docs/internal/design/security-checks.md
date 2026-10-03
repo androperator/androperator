@@ -52,16 +52,22 @@ The blocking policy selects rules labeled `security` or `audit` with the
 portability, and manual audit suggestions do not block PRs. This is a security
 gate, not a replacement for a manual review of command execution or dependencies.
 
-`validation/security/reviewed-findings.json` records 20 reviewed exceptions,
-with a reason for each. They cover required launcher activities and permission
-protected debug activities, trusted local validation commands, intentionally
-exposed agent capabilities, fixed-field video metadata, and documentation or
-test fixtures. Each exception matches the rule, exact source location, and
-SHA-256 of the entire file. A change anywhere in that file invalidates it.
-Updating the rules commit also invalidates all exceptions. The command prints
-the number of matched exceptions; new locations and new rules remain blocking.
-Do not regenerate this file automatically or add exceptions without inspecting
-the owning implementation and its callers.
+Reviewed exceptions use rule-specific `nosemgrep` comments next to the affected
+code, with a nearby explanation of why that operation is safe or intentional.
+Unrelated edits and line movement do not invalidate a suppression. Other rules
+and unsuppressed occurrences remain blocking. Review the rationale when changing
+the suppressed operation or its trust assumptions; do not add blanket suppressions.
+Rule updates do not automatically expire existing suppressions, so inspect relevant
+suppressions when changing rules. Semgrep strict mode is disabled because it
+reports mismatched-suppression warnings for other rules on the same line. The
+wrapper still rejects every reported scanner error, including parse failures.
+
+The scanner, downloaded rules, and reviewdog are repository development tools.
+They must not be bundled in the npm package or downloaded by its install hooks
+or runtime. `node validation/security/check-package.mjs` checks the actual npm
+pack file list and packaged text for scanner artifacts and integration references.
+It runs in validation CI and before npm publication. It is a regression guard,
+not a license audit of every dependency or arbitrary renamed rule content.
 
 The scan respects Semgrep CE's Git exclusions and excludes nested `.worktrees`.
 Two exact paths are also excluded because their valid source syntax is not

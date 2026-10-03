@@ -16,7 +16,6 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[2]
 LOCK = Path(__file__).with_name("tools.json")
 REQUIREMENTS = Path(__file__).with_name("requirements.txt")
-REVIEWS = Path(__file__).with_name("reviewed-findings.json")
 # Audit rules require manual context review; retain these concrete execution risks.
 AUDIT_RULES = {"curl-pipe-bash", "spawn-shell-true"}
 # Exact paths only: these are not supported by the scanner's shell and HTML parsers.
@@ -113,29 +112,14 @@ def security_rule(result):
                  or result["check_id"] in AUDIT_RULES))
 
 
-def reviewed_finding(result, reviews):
-    for review in reviews:
-        if (result["path"] == review["path"] and result["check_id"] == review["rule"]
-                and {key: result["start"][key] for key in ("line", "col")} == review["start"]
-                and {key: result["end"][key] for key in ("line", "col")} == review["end"]):
-            path = ROOT / result["path"]
-            if hashlib.sha256(path.read_bytes()).hexdigest() == review["file_sha256"]:
-                return True
-    return False
-
-
-def diagnostics(scan, reviews=()):
+def diagnostics(scan):
     if scan.get("errors"):
         raise ValueError(f"Semgrep reported errors: {json.dumps(scan['errors'])}")
     if "results" not in scan or not isinstance(scan["results"], list):
         raise ValueError("Semgrep did not return a results list")
     findings = []
-    reviewed_count = 0
     for result in scan["results"]:
         if not security_rule(result):
-            continue
-        if reviewed_finding(result, reviews):
-            reviewed_count += 1
             continue
         extra = result["extra"]
         findings.append({
@@ -146,8 +130,6 @@ def diagnostics(scan, reviews=()):
                 "end": {"line": result["end"]["line"], "column": result["end"]["col"]}}},
             "code": {"value": result["check_id"]},
         })
-    if reviewed_count:
-        print(f"Matched {reviewed_count} reviewed exceptions with unchanged file checksums.", file=sys.stderr)
     return {"source": {"name": "Semgrep"}, "diagnostics": findings}
 
 
@@ -197,7 +179,9 @@ def main():
     with tempfile.TemporaryDirectory(prefix="androperator-security-") as directory:
         temporary = Path(directory)
         binaries, rules = install(lock, cache, temporary)
-        command = [binaries["semgrep"], "scan", "--json", "--strict", "--metrics=off",
+        # Strict mode treats a rule-specific suppression as an error for other rules
+        # on that line. diagnostics() still rejects every reported scanner error.
+        command = [binaries["semgrep"], "scan", "--json", "--metrics=off",
                    "--disable-version-check", "--no-rewrite-rule-ids", "--timeout=15", "--exclude=.worktrees"]
         for path, reason in PARSER_EXCLUSIONS.items():
             command.append(f"--exclude=/{path}")
@@ -215,9 +199,7 @@ def main():
             if error.stdout:
                 diagnostics(json.loads(error.stdout))
             raise
-        review_data = json.loads(REVIEWS.read_text())
-        reviews = review_data["findings"] if review_data["rules_commit"] == lock["rules"]["commit"] else []
-        report = diagnostics(scan, reviews)
+        report = diagnostics(scan)
         command = [binaries["reviewdog"], "-f=rdjson", f"-reporter={'rdjson' if args.reporter == 'github-annotations' else 'local'}",
                    "-name=security", "-fail-level=any"]
         if base:

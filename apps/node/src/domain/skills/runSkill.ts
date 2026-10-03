@@ -339,6 +339,8 @@ function terminalVerificationTextMatches(expectedText: string, observedText: str
     return true;
   }
 
+  // The expected label is escaped before interpolation; only the fixed suffix is regex syntax.
+  // nosemgrep: detect-non-literal-regexp
   const decorativeSuffixPattern = new RegExp(
     `^${escapeRegexLiteral(normalizedExpected)}(?:[^\\p{L}\\p{N}]+)?$`,
     "u"

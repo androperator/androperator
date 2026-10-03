@@ -62,6 +62,8 @@ function runAndroperatorLocal(execution, deviceId, operatorPkg) {
 const MAX_QUERY_LENGTH = 256;
 
 function findAttribute(line, attrName) {
+  // Attribute names are fixed internal literals, never external regex input.
+  // nosemgrep: detect-non-literal-regexp
   const regex = new RegExp(`${attrName}="([^"]*)"`);
   const match = line.match(regex);
   if (!match) return null;

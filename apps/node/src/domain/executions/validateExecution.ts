@@ -317,6 +317,8 @@ const executionSchema = z.object({
           } else {
             // Validate that validatorPattern is a valid regex
             try {
+              // Compile only to validate syntax; this pattern is not executed on the host.
+              // nosemgrep: detect-non-literal-regexp
               new RegExp(params.validatorPattern);
             } catch {
               addIssue(index, "read_text params.validatorPattern is not a valid regex pattern", ["params", "validatorPattern"]);

@@ -25,6 +25,8 @@ try {
           if (fail) throw new Error('fixture execution failure');
           return '{}';
         }};
+        // The regression fixture wraps require to mock built-in modules; names come from the checked-in skill source, not external input.
+        // nosemgrep: detect-non-literal-require
         return require(name);
       },
     });

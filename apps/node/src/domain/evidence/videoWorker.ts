@@ -113,6 +113,8 @@ export async function runVideoWorker(outputDir: string, runner: ProcessRunner = 
     manifest.status = "finalizing";
     await writeEvidenceManifest(outputDir, manifest);
     await checked(runner, state.adbPath, ["-s", state.deviceId, "pull", state.remotePath, join(outputDir, "video.partial.mp4")]);
+    // verifyVideo constructs objects with fixed codec, actualSize, and mediaDurationMs fields; raw ffprobe objects are never assigned.
+    // nosemgrep: insecure-object-assign
     Object.assign(manifest.video!, await verifyVideo(runner, join(outputDir, "video.partial.mp4"), state.size, metadata => Object.assign(manifest.video!, metadata)));
     await fs.rename(join(outputDir, "video.partial.mp4"), join(outputDir, "video.mp4"));
     videoVerified = true;

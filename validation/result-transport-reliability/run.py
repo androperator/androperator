@@ -142,6 +142,8 @@ def main():
     (args.out / 'metadata.json').write_text(json.dumps(metadata, indent=2))
     # Keep a bounded independent stream around every attempt, including failures.
     recent = deque(maxlen=5000)
+    # The validation harness intentionally selects trusted local adb/aapt2 executables via CLI or environment; commands use argv with no host shell.
+    # nosemgrep: dangerous-subprocess-use-tainted-env-args
     logcat = subprocess.Popen([*adb, 'logcat', '-v', 'time', '-T', '1'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=environment)
     def drain():
         for line in logcat.stdout:

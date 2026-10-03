@@ -8,6 +8,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+        <!-- Launcher entry point must be exported. -->
+        <!-- nosemgrep: exported_activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

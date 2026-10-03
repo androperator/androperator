@@ -46,11 +46,15 @@ export function createMcpServer(): Server {
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request): Promise<CallToolResult> => {
+    // The rule matches tool dispatch by name, not a network request. The stdio MCP server dispatches the same validated device contracts as the local CLI.
+    // nosemgrep: mcp-ssrf-typescript
     const tool = toolsByName.get(request.params.name);
     if (!tool) {
       throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${request.params.name}`);
     }
 
+    // The rule matches tool dispatch by name, not a network request. The stdio MCP server dispatches the same validated device contracts as the local CLI.
+    // nosemgrep: mcp-ssrf-typescript
     return await tool.handler((request.params.arguments ?? {}) as Record<string, unknown>);
   });
 

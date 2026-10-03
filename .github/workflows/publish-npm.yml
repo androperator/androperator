@@ -114,6 +114,9 @@ jobs:
       - name: Test package
         run: npm --prefix apps/node run test
 
+      - name: Verify repository security tools are excluded from npm
+        run: node validation/security/check-package.mjs
+
       - name: Publish package
         working-directory: apps/node
         run: npm publish --access public --tag latest

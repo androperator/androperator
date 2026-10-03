@@ -286,6 +286,8 @@ def generated_docs_fallback(output_path):
 
 
 def patch_docs_sitemap(repo_root, sitemap_path, source_map_path):
+    # Reads the local MkDocs-generated sitemap, not downloaded or device-provided XML.
+    # nosemgrep: use-defused-xml-parse
     tree = ET.parse(sitemap_path)
     root = tree.getroot()
     source_mapping = docs_sources_by_output(source_map_path)

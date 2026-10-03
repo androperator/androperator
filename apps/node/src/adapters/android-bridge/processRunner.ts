@@ -61,6 +61,8 @@ export class NodeProcessRunner implements ProcessRunner {
   spawn(command: string, args: string[], options?: { detached?: boolean; stdio?: any; shell?: boolean; env?: NodeJS.ProcessEnv }): any {
     const detached = options?.detached ?? false;
     const stdio = options?.stdio ?? (detached ? ["ignore", "ignore", "ignore"] : ["ignore", "pipe", "pipe"]);
+    // Explicit shell selection is a trusted local ProcessRunner capability; it defaults to false and production streaming callers use argv without a shell.
+    // nosemgrep: spawn-shell-true
     return spawn(command, args, {
       detached,
       stdio,

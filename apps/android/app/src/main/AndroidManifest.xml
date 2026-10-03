@@ -26,6 +26,8 @@
         android:largeHeap="false"
         android:theme="@style/WallpaperTheme"
         >
+        <!-- Launcher entry point must be exported. -->
+        <!-- nosemgrep: exported_activity -->
         <activity android:name="androperator.activity.MainActivity"
             android:configChanges="uiMode"
             android:launchMode="singleTop"

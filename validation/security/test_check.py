@@ -67,22 +67,6 @@ class SecurityCheckTests(unittest.TestCase):
             result = {"check_id": rule, "extra": {"metadata": {"category": category, "subcategory": subcategory}}}
             self.assertEqual(check.security_rule(result), expected)
 
-    def test_review_exceptions_require_exact_rule_location_and_whole_file(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            source = root / "sample.py"
-            source.write_text("reviewed source\n")
-            result = {"path": "sample.py", "check_id": "rule", "start": {"line": 1, "col": 1},
-                      "end": {"line": 1, "col": 5}}
-            review = {"path": "sample.py", "rule": "rule", "start": result["start"], "end": result["end"],
-                      "file_sha256": hashlib.sha256(source.read_bytes()).hexdigest()}
-            with patch.object(check, "ROOT", root):
-                self.assertTrue(check.reviewed_finding(result, [review]))
-                self.assertFalse(check.reviewed_finding(dict(result, check_id="new-rule"), [review]))
-                self.assertFalse(check.reviewed_finding(dict(result, start={"line": 2, "col": 1}), [review]))
-                source.write_text("reviewed source\nnew surrounding code\n")
-                self.assertFalse(check.reviewed_finding(result, [review]))
-
     def test_download_rejects_checksum_mismatch_and_removes_temporary(self):
         with tempfile.TemporaryDirectory() as directory:
             cache = Path(directory)
@@ -257,6 +241,22 @@ class LiveSecurityCheckTests(unittest.TestCase):
                      patch.object(check.sys, "stdout", io.StringIO()) as output:
                     self.assertEqual(check.main(), 0)
                     self.assertEqual(output.getvalue(), "")
+                # A reviewed operation stays suppressed after unrelated edits and line movement.
+                reviewed = ("import subprocess\n"
+                            "# Fixture intentionally exercises a shell call.\n"
+                            "# nosemgrep: subprocess-shell-true\n"
+                            "subprocess.call(user_input, shell=True)\n")
+                script.write_text(reviewed)
+                self.assertEqual(check.main(), 0)
+                script.write_text("# Unrelated heading\n\n" + reviewed + "print(42)\n")
+                self.assertEqual(check.main(), 0)
+                # The same rule at a new occurrence must still block.
+                script.write_text(reviewed + "subprocess.call(other_input, shell=True)\n")
+                self.assertEqual(check.main(), 1)
+                # Suppressing a different rule cannot hide this finding.
+                script.write_text(reviewed.replace("subprocess-shell-true", "unrelated-rule"))
+                self.assertEqual(check.main(), 1)
+                script.write_text("print(42)\n")
                 # The same unsupported syntax at another path must still fail the scan.
                 other_wrapper = root / "other-wrapper.sh"
                 other_wrapper.write_text((root / "gradlew").read_text())

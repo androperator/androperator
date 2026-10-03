@@ -1,3 +1,4 @@
+import { EventEmitter } from "node:events";
 import { runExecution } from "../../domain/executions/runExecution.js";
 import { tryAcquire, release } from "../../domain/executions/executionStore.js";
 import { androperatorEvents, ANDROPERATOR_EVENT_TYPES } from "../../domain/observe/events.js";
@@ -110,6 +111,65 @@ describe("TV remote", () => {
 
 
 describe("TV remote execution integration", () => {
+  function sequenceRunner(deviceId: string): FakeProcessRunner {
+    const runner = new FakeProcessRunner();
+    runner.spawn = () => {
+      const proc = Object.assign(new EventEmitter(), {
+        stdout: new EventEmitter(), stderr: new EventEmitter(),
+        kill: () => { process.nextTick(() => proc.emit("close", 0, null)); },
+      });
+      return proc;
+    };
+    const devices = { ...accepted, stdout: `List of devices attached\n${deviceId}\tdevice\n` };
+    const apk = { ...accepted, stdout: "package:com.test.operator.dev\n" };
+    runner.queueResult(devices);
+    runner.queueResult(apk);
+    runner.queueResult(accepted); // bookmark
+    runner.queueResult(devices);
+    runner.queueResult(apk);
+    return runner;
+  }
+
+  it("reports the sequence deadline as a timeout during a runtime segment", async () => {
+    const deviceId = "tv-timeout-device";
+    const runner = sequenceRunner(deviceId);
+    let broadcastAccepted = false;
+    runner.queueResult(accepted, () => { broadcastAccepted = true; });
+    const input = execution(["bookmark", "back"]);
+    input.timeoutMs = 1000;
+    const result = await runExecution(input, { deviceId, operatorPackage: "com.test.operator.dev", runner,
+      logcatBroadcastDelayMs: 0,
+      ensureInteractiveAutomationReadyFn: async () => ({ ok: true, state: { screenOn: true, deviceLocked: false, userUnlocked: true } }) });
+    assert.equal(broadcastAccepted, true);
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.error.code, "COMMAND_TIMEOUT");
+      assert.equal((result.error.details as { commandId: string }).commandId, input.commandId);
+    }
+  });
+
+  it("preserves force-stop evidence when a later runtime segment transport throws", async () => {
+    const deviceId = "tv-effects-device";
+    const runner = sequenceRunner(deviceId);
+    runner.queueResult(accepted); // first force-stop
+    runner.queueResult(accepted, () => { throw new Error("second force-stop transport failed"); });
+    const input = execution(["bookmark"]);
+    input.actions.push(
+      { id: "close-first", type: "close_app", params: { applicationId: "com.example.first" } },
+      { id: "close-second", type: "close_app", params: { applicationId: "com.example.second" } },
+    );
+    const result = await runExecution(input, { deviceId, operatorPackage: "com.test.operator.dev", runner,
+      ensureInteractiveAutomationReadyFn: async () => ({ ok: true, state: { screenOn: true, deviceLocked: false, userUnlocked: true } }) });
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      const details = result.error.details as { earlierEffects: unknown[]; precedingStepResults: { id: string }[]; commandId: string; taskId: string };
+      assert.deepEqual(details.earlierEffects, [{ actionId: "close-first", effect: "force_stop" }]);
+      assert.equal(details.precedingStepResults[0].id, "key-0");
+      assert.equal(details.commandId, input.commandId);
+      assert.equal(details.taskId, input.taskId);
+    }
+  });
+
   it("holds the device lock across runtime segments and emits only the caller envelope", async () => {
     const runner = new FakeProcessRunner();
     const deviceId = "tv-lock-device";

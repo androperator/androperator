@@ -30,7 +30,10 @@ export async function runTvRemoteSequence(
   signal?: AbortSignal,
 ): Promise<RunExecutionResult> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), execution.timeoutMs);
+  const timer = setTimeout(() => controller.abort({
+    code: ERROR_CODES.COMMAND_TIMEOUT,
+    message: "TV remote execution timed out",
+  }), execution.timeoutMs);
   const sequenceSignal = signal === undefined ? controller.signal : AbortSignal.any([signal, controller.signal]);
   const deadline = Date.now() + execution.timeoutMs;
   const envelope: ResultEnvelope = {

@@ -689,7 +689,12 @@ async function performExecution(
         const segmentEvidence: ExecutionFailureEvidence = {
           phase: "readiness", dispatchState: "not_dispatched", startedAt: new Date().toISOString(),
         };
-        return (await performExecution(segment, { ...options, deviceId, signal }, segmentEvidence, true)).result;
+        const { result: segmentResult } = await performExecution(segment, { ...options, deviceId, signal }, segmentEvidence, true);
+        if (!segmentResult.ok) {
+          const details = segmentResult.error.details as Record<string, unknown> | undefined;
+          segmentResult.error.details = { ...segmentEvidence, ...details };
+        }
+        return segmentResult;
       }, options.signal);
       if (result.ok) emitResult(deviceId, result.envelope);
       return { execution, result };

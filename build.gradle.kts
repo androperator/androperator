@@ -40,8 +40,6 @@ buildscript {
     }
     dependencies {
         classpath(libs.android.gradlePlugin)
-        classpath(libs.firebase.crashlytics.gradlePlugin)
-        classpath(libs.gms.google.services.gradlePlugin)
         classpath(libs.kotlin.gradlePlugin)
         classpath("org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.1.10")
         classpath(libs.compose.compiler.gradlePlugin)

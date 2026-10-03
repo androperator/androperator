@@ -5,7 +5,7 @@ object CrashTrackingHolder {
     val crashTracking: CrashTracking
         get() {
             if (_crashTracking == null) {
-                initialize(CrashTrackingNoOp())
+                initialize(CrashTrackingLocal())
             }
             return _crashTracking!!
         }

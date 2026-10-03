@@ -35,12 +35,6 @@
 # For using GSON @Expose annotation
 -keepattributes *Annotation*
 
-# AGP 8.0 enables R8 full mode by default. When enabled, firebase has issues. Keeping this class is
-# the work around. See https://github.com/firebase/firebase-android-sdk/issues/2124#issuecomment-920922929
--keep public class com.google.firebase.** {*;}
--keep class com.google.android.gms.internal.** {*;}
--keepclasseswithmembers class com.google.firebase.FirebaseException
-
 # Prevent proguard from stripping interface information from TypeAdapter, TypeAdapterFactory,
 # JsonSerializer, JsonDeserializer instances (so they can be used in @JsonAdapter)
 -keep class * extends com.google.gson.TypeAdapter

@@ -201,6 +201,3 @@ tasks.register("runDebug") {
         check(grantResult == 0) { "permission grant command failed with exit code $grantResult" }
     }
 }
-
-apply(plugin = "com.google.gms.google-services")
-apply(plugin = "com.google.firebase.crashlytics")

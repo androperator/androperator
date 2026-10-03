@@ -2,11 +2,8 @@ package action.crashtracking
 
 import action.annotation.CheckResult
 import action.log.Log
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 
-class CrashTrackingCrashlytics : CrashTracking {
-    private val crashlytics by lazy { FirebaseCrashlytics.getInstance() }
-
+class CrashTrackingLocal : CrashTracking {
     init {
         Log.d("%s, Initialising", this::class.simpleName)
     }
@@ -15,23 +12,22 @@ class CrashTrackingCrashlytics : CrashTracking {
         exception: Exception,
         message: String,
     ): Exception {
-        log(message, true)
-        Log.e(exception, exception.localizedMessage)
+        LocalCrashLog.logWarning(message, exception)
+        Log.w(message)
+        Log.e(exception, exception.message)
         throw exception
     }
 
     override fun logNonFatalException(exception: Exception) {
-        crashlytics.recordException(exception)
-        Log.w(exception, exception.localizedMessage)
+        LocalCrashLog.logWarning("Non-fatal exception", exception)
+        Log.w(exception, exception.message)
     }
 
     override fun log(
         message: String,
         logToConsole: Boolean,
     ) {
-        crashlytics.log(message)
-        if (logToConsole) {
-            Log.i(message)
-        }
+        LocalCrashLog.logInfo(message)
+        if (logToConsole) Log.i(message)
     }
 }

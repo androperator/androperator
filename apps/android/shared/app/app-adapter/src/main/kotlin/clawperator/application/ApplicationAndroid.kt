@@ -2,9 +2,8 @@ package clawperator.application
 
 import action.buildconfig.BuildConfig
 import action.coroutine.CoroutineContextProvider
-import action.crashtracking.CrashTrackingCrashlytics
 import action.crashtracking.CrashTrackingHolder
-import action.crashtracking.CrashTrackingNoOp
+import action.crashtracking.CrashTrackingLocal
 import action.devicestate.DeviceState
 import action.devicestate.DeviceStateSystem
 import action.log.Log
@@ -67,13 +66,6 @@ open class ApplicationAndroid :
     }
 
     private fun initCrashTracking() {
-        val crashTracking =
-            try {
-                CrashTrackingCrashlytics()
-            } catch (e: Exception) {
-                Log.e(e)
-                CrashTrackingNoOp()
-            }
-        CrashTrackingHolder.initialize(crashTracking)
+        CrashTrackingHolder.initialize(CrashTrackingLocal())
     }
 }

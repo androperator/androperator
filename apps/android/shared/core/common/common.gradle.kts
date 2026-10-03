@@ -59,8 +59,6 @@ dependencies {
     implementation(libs.okhttp3.okhttp)
 
     // Monitoring dependencies
-    implementation(platform("com.google.firebase:firebase-bom:${libs.versions.firebaseBom.get()}"))
-    implementation("com.google.firebase:firebase-crashlytics")
     implementation(libs.timber)
 
     testImplementation(libs.androidx.arch.core.testing)

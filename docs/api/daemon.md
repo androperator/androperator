@@ -46,7 +46,7 @@ Sanitization from `sanitizeDaemonKey()`:
 | `""` | `default` |
 | `192.168.1.1:5555` | `id-MTkyLjE2OC4xLjE6NTU1NQ` |
 
-Nonblank device keys use base64url encoding of the raw `--device` value so similar serials such as `host:5555` and `host-5555` cannot collide.
+Nonblank device keys use base64url encoding of the raw `--device` value so similar serials such as `host:5555` and `host-5555` cannot collide. A daemon key is a filesystem identifier, not an authentication secret; its encoding is reversible. For example, `emulator-5554` becomes `id-ZW11bGF0b3ItNTU1NA`, as used in the metadata and socket-path examples below.
 
 Path formulas from `apps/node/src/domain/daemon/lifecycle.ts`:
 

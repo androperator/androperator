@@ -2892,7 +2892,7 @@ COMMANDS["serve"] = {
   documentedFlags: ["--port", "--host"],
   supportedFlags: ["--port", "--host"],
   summary: "Start local HTTP/SSE server for remote control",
-  help: "androperator serve\n\nUsage:\n  androperator serve [--port <number>] [--host <string>]\n\nNotes:\n  - Default host: 127.0.0.1\n",
+  help: "androperator serve\n\nUsage:\n  androperator serve [--port <number>] [--host <string>]\n\nNotes:\n  - Default host: 127.0.0.1; default port: 3000\n  - Run on the adb/emulator host for callers without local shell access.\n  - No built-in authentication; protect deliberate remote exposure externally.\n  - HTTP responses include execution completion; SSE observation is optional.\n  - Contract: https://docs.androperator.com/api/serve/\n",
   topLevelBlock: `  serve [--port <number>] [--host <string>]
                                             Start local HTTP/SSE server for remote control (default host: 127.0.0.1)`,
   handler: async (ctx) => {

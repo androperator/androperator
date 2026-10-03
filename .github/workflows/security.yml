@@ -1,0 +1,39 @@
+name: Security Scan
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  security:
+    name: Semgrep security rules
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/androperator-security
+          key: security-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('validation/security/tools.json') }}
+      - name: Test security check orchestration and real tools
+        env:
+          SECURITY_RUN_LIVE: '1'
+        run: python3 -m unittest discover -s validation/security -v
+      - name: Scan pull request changes
+        if: github.event_name == 'pull_request'
+        env:
+          SECURITY_BASE: ${{ github.event.pull_request.base.sha }}
+        run: python3 validation/security/check.py --base "$SECURITY_BASE" --reporter github-annotations
+      - name: Scan the full tree
+        if: github.event_name == 'workflow_dispatch'
+        run: python3 validation/security/check.py --full --reporter github-annotations

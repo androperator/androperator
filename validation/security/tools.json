@@ -1,0 +1,44 @@
+{
+  "reviewdog": {
+    "version": "0.21.2",
+    "assets": {
+      "Darwin-arm64": [
+        "reviewdog_0.21.2_Darwin_arm64.tar.gz",
+        "54497b0f3378936caa22a3a11d796acefe4d5f35d86f5cc84c622f941c3c0c68"
+      ],
+      "Darwin-x86_64": [
+        "reviewdog_0.21.2_Darwin_x86_64.tar.gz",
+        "3002ad37ee7d344de25e3c630a293aa322fc10d7b9c3fc6d4e836b616d084ae5"
+      ],
+      "Linux-arm64": [
+        "reviewdog_0.21.2_Linux_arm64.tar.gz",
+        "56854c078853ea53c73e1e4d627e6a90d6b68185c46edd46aad8beb94564b948"
+      ],
+      "Linux-x86_64": [
+        "reviewdog_0.21.2_Linux_x86_64.tar.gz",
+        "30413aa3c7443e9c3c157fe5766cad40e3bb39a32e210ee69b710a8d5c4b8e51"
+      ]
+    }
+  },
+  "rules": {
+    "repository": "semgrep/semgrep-rules",
+    "commit": "a84ff9cc2453ca91d581380de4b8b3f272f6f4be",
+    "sha256": "b227c2d234ffd9c84c4dbd6619a5897a7192637c141baeace3bfc37b0715a887",
+    "directories": [
+      "bash",
+      "generic",
+      "java",
+      "javascript",
+      "kotlin",
+      "typescript",
+      "python",
+      "yaml",
+      "json",
+      "dockerfile",
+      "html"
+    ]
+  },
+  "semgrep": {
+    "version": "1.179.0"
+  }
+}

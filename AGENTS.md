@@ -167,6 +167,10 @@ and committer identities and messages in the outgoing history.
 Verify changes to this policy with `./validation/test_blocked_terms_policy.sh`.
 Before release or force-push events, scan for blocked terms and verify history.
 
+Before opening a PR, run `python3 validation/security/check.py` against the
+intended base branch. Resolve new findings and scanner failures. See
+`docs/internal/design/security-checks.md` for setup, scope, and full scans.
+
 Create narrow local Conventional Commits when coherent work is validated,
 before returning for review. Prefer incremental commits over rewriting history.
 Keep attribution trailers out of commit messages. Breaking contracts need

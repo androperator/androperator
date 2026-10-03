@@ -62,7 +62,11 @@ the PR, publish a release, force-push, or push directly to `main` or `prod`.
    `RETRY_REQUIRED` needs a fresh review of the stable target. `BLOCKED` or
    incomplete validation stops PR creation; report the unfinished work.
 
-4. **Create the PR.** Run `$pr-create`, using branch-total context to author its
+4. **Create the PR.** Run `python3 validation/security/check.py` against the
+   intended PR base first. Resolve new security findings and scanner failures
+   before creating or updating the PR.
+
+   Run `$pr-create`, using branch-total context to author its
    required title/body JSON. Include meaningful validation and the actual
    review outcome in the PR description. Resolve routine local prerequisites
    and rerun the skill instead of treating its preflight stop as completion.

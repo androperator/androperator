@@ -31,6 +31,12 @@ class SecurityCheckTests(unittest.TestCase):
         self.assertEqual(output.getvalue(),
                          "::error file=a%2Cb%3Ac.py,line=2,col=3::[rule] unsafe%0A::error::injected%25\n")
 
+    def test_clean_reviewdog_report_without_diagnostics_emits_no_annotations(self):
+        output = io.StringIO()
+        with patch.object(check.sys, "stdout", output):
+            check.emit_annotations({"source": {"name": "security"}})
+        self.assertEqual(output.getvalue(), "")
+
     def test_scanner_errors_cannot_be_reported_as_clean(self):
         with self.assertRaisesRegex(ValueError, "reported errors"):
             check.diagnostics({"results": [], "errors": [{"message": "invalid rule"}]})
@@ -247,7 +253,10 @@ class LiveSecurityCheckTests(unittest.TestCase):
                     self.assertIn("file=sample.py,line=2", output.getvalue())
                 script.write_text("print(42)\n")
                 subprocess.run(["git", "-C", directory, "add", "sample.py"], check=True)
-                self.assertEqual(check.main(), 0)
+                with patch.object(check.sys, "argv", ["check.py", "--base", "HEAD", "--reporter", "github-annotations"]), \
+                     patch.object(check.sys, "stdout", io.StringIO()) as output:
+                    self.assertEqual(check.main(), 0)
+                    self.assertEqual(output.getvalue(), "")
                 # The same unsupported syntax at another path must still fail the scan.
                 other_wrapper = root / "other-wrapper.sh"
                 other_wrapper.write_text((root / "gradlew").read_text())

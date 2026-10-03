@@ -159,7 +159,8 @@ def escape_annotation(value, property_value=False):
 
 
 def emit_annotations(report):
-    for finding in report["diagnostics"]:
+    # Reviewdog uses protobuf JSON, which omits empty repeated fields.
+    for finding in report.get("diagnostics", []):
         location = finding["location"]
         start = location["range"]["start"]
         level = {"ERROR": "error", "WARNING": "warning", "INFO": "notice"}[finding["severity"]]

@@ -95,3 +95,6 @@ evals/runs/
 .venv/
 /.worktrees
 .claude/worktrees/
+
+# Generated Androperator machine-facing documentation
+/sites/androperator-public/llms-full.txt

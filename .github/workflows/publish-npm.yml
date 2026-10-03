@@ -114,6 +114,9 @@ jobs:
       - name: Test package
         run: npm --prefix apps/node run test
 
+      - name: Pack and validate the release archive
+        run: python3 validation/npm-release/pack.py --version "${RELEASE_TAG#v}" --output "$RUNNER_TEMP/androperator-release.tgz"
+
       - name: Publish package
         working-directory: apps/node
-        run: npm publish --access public --tag latest
+        run: npm publish "$RUNNER_TEMP/androperator-release.tgz" --ignore-scripts=true --access public --tag latest

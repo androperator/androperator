@@ -328,7 +328,7 @@ describe("CLI help", () => {
     assert.match(stdout, /recording start/);
     assert.match(stdout, /recording stop/);
     assert.match(stdout, /recording pull/);
-    assert.match(stdout, /recording parse/);
+    assert.doesNotMatch(stdout, /recording parse/);
     assert.match(stdout, /recording export/);
     assert.doesNotMatch(stdout, /recording compare/);
     assert.match(stdout, /'record' is an alias/);
@@ -339,7 +339,7 @@ describe("CLI help", () => {
     assert.strictEqual(code, 0);
     const obj = JSON.parse(stdout);
     assert.strictEqual(obj.code, "USAGE");
-    assert.match(obj.message, /recording start\|stop\|pull\|parse\|export/);
+    assert.match(obj.message, /recording start\|stop\|pull\|export/);
     assert.match(obj.message, /'record' is an alias/);
   });
 
@@ -348,17 +348,10 @@ describe("CLI help", () => {
     assert.strictEqual(code, 0);
     const obj = JSON.parse(stdout);
     assert.strictEqual(obj.code, "USAGE");
-    assert.match(obj.message, /recording start\|stop\|pull\|parse\|export/);
+    assert.match(obj.message, /recording start\|stop\|pull\|export/);
     assert.match(obj.message, /'record' is an alias/);
   });
 
-  it("returns USAGE for recording parse without --input", async () => {
-    const { stdout, code } = await runCli(["recording", "parse"]);
-    assert.strictEqual(code, 0);
-    const obj = JSON.parse(stdout);
-    assert.strictEqual(obj.code, "USAGE");
-    assert.match(obj.message, /--input/);
-  });
 
   it("returns USAGE for recording export without --input", async () => {
     const { stdout, code } = await runCli(["recording", "export"]);
@@ -382,12 +375,6 @@ describe("CLI help", () => {
     assert.match(stdout, /Use '--input -- <literal>'/);
   });
 
-  it("returns USAGE when --input is followed by another flag for recording parse", async () => {
-    const { stdout, code } = await runCli(["recording", "parse", "--input", "--out", "/tmp/demo.steps.json"]);
-    assert.notStrictEqual(code, 0);
-    assert.match(stdout, /"code":"USAGE"/);
-    assert.match(stdout, /--input requires a value/);
-  });
 
   it("returns USAGE when --snapshots is missing a value for recording export", async () => {
     const { stdout, code } = await runCli(["recording", "export", "--input", "/tmp/demo.ndjson", "--snapshots"]);
@@ -404,13 +391,6 @@ describe("CLI help", () => {
     assert.match(obj.message, /omit, include/);
   });
 
-  it("returns USAGE for record parse without --input", async () => {
-    const { stdout, code } = await runCli(["record", "parse"]);
-    assert.strictEqual(code, 0);
-    const obj = JSON.parse(stdout);
-    assert.strictEqual(obj.code, "USAGE");
-    assert.match(obj.message, /--input/);
-  });
 
   it("returns USAGE when --out flag has no value for recording pull", async () => {
     const { stdout, code } = await runCli(["recording", "pull", "--out"]);
@@ -1023,4 +1003,23 @@ describe("promoted flat commands - help and missing-arg errors", () => {
     assert.strictEqual(obj.code, "EXECUTION_VALIDATION_FAILED");
     assert.match(obj.message ?? "", /not both/);
   });
+});
+
+describe("removed recording parser", () => {
+  for (const command of ["recording", "record"]) {
+    it(`does not dispatch ${command} parse`, async () => {
+      const { stdout } = await runCli([command, "parse"]);
+      const result = JSON.parse(stdout);
+      assert.strictEqual(result.code, "USAGE");
+      assert.match(result.message, /start\|stop\|pull\|export/);
+      assert.doesNotMatch(result.message, /parse/);
+    });
+  }
+  for (const flag of ["--baseline", "--result", "--mode"]) {
+    it(`rejects removed comparison flag ${flag}`, async () => {
+      const { stdout, code } = await runCli(["recording", "export", "--input", "unused.ndjson", flag, "unused"]);
+      assert.notStrictEqual(code, 0);
+      assert.match(stdout, /USAGE/);
+    });
+  }
 });

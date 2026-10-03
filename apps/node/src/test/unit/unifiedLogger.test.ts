@@ -4,14 +4,14 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { createAndroperatorLogger, getLoggerDestination } from "../../adapters/logger.js";
-import { ANDROPERATOR_SKILL_RUN_ID_ENV_VAR, type LogEvent } from "../../contracts/logging.js";
+import { ANDROPERATOR_RUN_ID_ENV_VAR, normalizeRunId, type LogEvent } from "../../contracts/logging.js";
 
 describe("createAndroperatorLogger", () => {
   let tempRoot: string;
   let originalStderrWrite: typeof process.stderr.write;
   let originalLogDir: string | undefined;
   let originalLogLevel: string | undefined;
-  let originalSkillRunId: string | undefined;
+  let originalRunId: string | undefined;
   const stderrLines: string[] = [];
 
   beforeEach(async () => {
@@ -19,7 +19,7 @@ describe("createAndroperatorLogger", () => {
     originalStderrWrite = process.stderr.write.bind(process.stderr);
     originalLogDir = process.env.ANDROPERATOR_LOG_DIR;
     originalLogLevel = process.env.ANDROPERATOR_LOG_LEVEL;
-    originalSkillRunId = process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
+    originalRunId = process.env[ANDROPERATOR_RUN_ID_ENV_VAR];
     stderrLines.length = 0;
     process.stderr.write = ((chunk: unknown) => {
       stderrLines.push(String(chunk));
@@ -27,7 +27,7 @@ describe("createAndroperatorLogger", () => {
     }) as typeof process.stderr.write;
     delete process.env.ANDROPERATOR_LOG_DIR;
     delete process.env.ANDROPERATOR_LOG_LEVEL;
-    delete process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
+    delete process.env[ANDROPERATOR_RUN_ID_ENV_VAR];
   });
 
   afterEach(async () => {
@@ -42,10 +42,10 @@ describe("createAndroperatorLogger", () => {
     } else {
       process.env.ANDROPERATOR_LOG_LEVEL = originalLogLevel;
     }
-    if (originalSkillRunId === undefined) {
-      delete process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
+    if (originalRunId === undefined) {
+      delete process.env[ANDROPERATOR_RUN_ID_ENV_VAR];
     } else {
-      process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = originalSkillRunId;
+      process.env[ANDROPERATOR_RUN_ID_ENV_VAR] = originalRunId;
     }
     await rm(tempRoot, { recursive: true, force: true });
   });
@@ -279,28 +279,28 @@ describe("createAndroperatorLogger", () => {
       assert.strictEqual(lines[0].deviceId, "specific-device");
     });
 
-    it("inherits skillRunId from the process environment", async () => {
+    it("inherits runId from the process environment", async () => {
       const logDir = join(tempRoot, "logs");
-      process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = "skillrun_test_123";
+      process.env[ANDROPERATOR_RUN_ID_ENV_VAR] = "test-123";
       const logger = createAndroperatorLogger({ logDir, logLevel: "debug" });
 
-      logger.emit(makeEvent({ event: "test.inherited-skill-run" }));
+      logger.emit(makeEvent({ event: "test.inherited-run" }));
 
       const lines = await readLogLines(logDir);
       assert.strictEqual(lines.length, 1);
-      assert.strictEqual(lines[0].skillRunId, "skillrun_test_123");
+      assert.strictEqual(lines[0].runId, "test-123");
     });
 
-    it("can opt out of inherited skillRunId for long-lived daemon processes", async () => {
+    it("can opt out of inherited runId for long-lived daemon processes", async () => {
       const logDir = join(tempRoot, "logs");
-      process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = "skillrun_test_123";
-      const logger = createAndroperatorLogger({ logDir, logLevel: "debug", inheritSkillRunId: false });
+      process.env[ANDROPERATOR_RUN_ID_ENV_VAR] = "test-123";
+      const logger = createAndroperatorLogger({ logDir, logLevel: "debug", inheritRunId: false });
 
-      logger.emit(makeEvent({ event: "test.no-inherited-skill-run" }));
+      logger.emit(makeEvent({ event: "test.no-inherited-run" }));
 
       const lines = await readLogLines(logDir);
       assert.strictEqual(lines.length, 1);
-      assert.strictEqual(lines[0].skillRunId, undefined);
+      assert.strictEqual(lines[0].runId, undefined);
     });
 
     it("does not mutate parent logger context", async () => {
@@ -466,8 +466,8 @@ describe("createAndroperatorLogger", () => {
 
       logger.emit(
         makeEvent({
-          event: "skills.run.start",
-          message: "Skill test started",
+          event: "execution.started",
+          message: "Execution started",
         })
       );
       logger.emit(
@@ -482,9 +482,24 @@ describe("createAndroperatorLogger", () => {
 
       // No terminal output for lifecycle events
       const terminalOutput = stderrLines.filter(
-        (l) => l.includes("Skill test started") || l.includes("Broadcast dispatched")
+        (l) => l.includes("Execution started") || l.includes("Broadcast dispatched")
       );
       assert.strictEqual(terminalOutput.length, 0);
     });
+  });
+});
+
+// Run correlation is caller-owned and has no required framework prefix.
+describe("normalizeRunId", () => {
+  it("accepts safe caller identifiers and the length boundary", () => {
+    for (const value of ["settings-check", "a.b_c:d-1", "x".repeat(240)]) {
+      assert.strictEqual(normalizeRunId(value), value);
+    }
+    assert.strictEqual(normalizeRunId(" settings-check "), "settings-check");
+  });
+  it("rejects missing, blank, unsafe, non-string and oversized identifiers", () => {
+    for (const value of [undefined, null, 12, "", "  ", "a b", "a/b", "x".repeat(241)]) {
+      assert.strictEqual(normalizeRunId(value), undefined);
+    }
   });
 });

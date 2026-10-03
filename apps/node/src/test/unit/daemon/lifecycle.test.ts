@@ -20,7 +20,7 @@ import {
   withDaemonLock,
   writeDaemonPidMetadata,
 } from "../../../domain/daemon/lifecycle.js";
-import { ANDROPERATOR_SKILL_RUN_ID_ENV_VAR } from "../../../contracts/logging.js";
+import { ANDROPERATOR_RUN_ID_ENV_VAR } from "../../../contracts/logging.js";
 import {
   cmdDaemonStart,
   cmdDaemonRun,
@@ -649,15 +649,15 @@ describe("daemon command output", () => {
     assert.equal(shouldCliStdoutForceExitCode1(raw, false), true);
   });
 
-  it("spawnDaemonRun does not pass ANDROPERATOR_SKILL_RUN_ID to the spawned daemon", async () => {
+  it("spawnDaemonRun does not pass ANDROPERATOR_RUN_ID to the spawned daemon", async () => {
     const baseDir = await makeTempBaseDir();
     const envOutputPath = join(baseDir, "daemon-env.json");
     const scriptPath = join(baseDir, "fake-daemon.cjs");
     await writeFile(scriptPath, `const { writeFileSync } = require("node:fs");\nwriteFileSync(${JSON.stringify(envOutputPath)}, JSON.stringify(process.env));\n`);
 
-    const skillRunId = "skillrun_daemon_env_leak_regression";
-    const originalValue = process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
-    process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = skillRunId;
+    const runId = "run_daemon_env_leak_regression";
+    const originalValue = process.env[ANDROPERATOR_RUN_ID_ENV_VAR];
+    process.env[ANDROPERATOR_RUN_ID_ENV_VAR] = runId;
     try {
       spawnDaemonRun(undefined, undefined, { baseDir, cliEntryPath: scriptPath });
 
@@ -668,12 +668,12 @@ describe("daemon command output", () => {
 
       assert.ok(existsSync(envOutputPath), "fake daemon script did not write env output within timeout");
       const spawnedEnv = JSON.parse(readFileSync(envOutputPath, "utf8")) as Record<string, string>;
-      assert.equal(spawnedEnv[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR], undefined);
+      assert.equal(spawnedEnv[ANDROPERATOR_RUN_ID_ENV_VAR], undefined);
     } finally {
       if (originalValue === undefined) {
-        delete process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
+        delete process.env[ANDROPERATOR_RUN_ID_ENV_VAR];
       } else {
-        process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = originalValue;
+        process.env[ANDROPERATOR_RUN_ID_ENV_VAR] = originalValue;
       }
     }
   });

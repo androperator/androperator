@@ -329,12 +329,12 @@ async function main(): Promise<void> {
     process.exit(0);
   }
   const out = { format: global.output as "json" | "pretty", verbose: global.verbose };
-  const disableAmbientSkillRunId = cmd === "daemon" && rest[0] === "run";
+  const disableAmbientRunId = cmd === "daemon" && rest[0] === "run";
   const logger = createAndroperatorLogger({
     logDir: process.env.ANDROPERATOR_LOG_DIR,
     logLevel: global.logLevel ?? process.env.ANDROPERATOR_LOG_LEVEL,
     outputFormat: global.output,
-    inheritSkillRunId: !disableAmbientSkillRunId,
+    inheritRunId: !disableAmbientRunId,
   });
 
   let result: string | undefined;

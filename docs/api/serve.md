@@ -1,8 +1,14 @@
 # Serve API
 
+Optional `/execute` requests may include `runId` for caller-owned logging
+correlation. It must contain 1 to 240 safe identifier characters (letters,
+digits, dot, underscore, colon or hyphen); no prefix is required. Invalid values
+return HTTP 400 with `INVALID_RUN_ID`. It does not replace execution `commandId`
+or `taskId`.
+
 ## Purpose
 
-Define the local HTTP and SSE contract exposed by `androperator serve`, including request bodies, success responses, status-code mapping, and how the serve layer wraps `runExecution`, skill, and emulator operations.
+Define the local HTTP and SSE contract exposed by `androperator serve`, including request bodies, success responses, status-code mapping, and how the serve layer wraps `runExecution` and emulator operations.
 
 ## Sources
 
@@ -136,7 +142,7 @@ Response:
 Meaning:
 
 - the Express app is running and can answer requests
-- no adb, device, Operator APK, skill registry, or execution readiness check is performed
+- no adb, device, Operator APK, or execution readiness check is performed
 
 <a id="endpoint-get-version"></a>
 ## `GET /version`

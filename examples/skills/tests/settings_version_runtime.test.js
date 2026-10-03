@@ -7,7 +7,7 @@ const {spawnSync}=require('node:child_process');
 const {verifyEvidence}=require('../utils/settings_version_runtime');
 function fixture() {
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'version-proof-test-'));
- const env={VERSION_RUN_DIR:dir,ANDROPERATOR_DEVICE_ID:'test-device',ANDROPERATOR_SKILL_RUN_ID:'test-run',ANDROPERATOR_SKILL_ID:'test-skill'};
+ const env={VERSION_RUN_DIR:dir,ANDROPERATOR_DEVICE_ID:'test-device',ANDROPERATOR_RUN_ID:'test-run',ANDROPERATOR_SKILL_ID:'test-skill'};
  const previous=Object.fromEntries(Object.keys(env).map(k=>[k,process.env[k]]));Object.assign(process.env,env);
  const save=(name,value)=>fs.writeFileSync(path.join(dir,name),JSON.stringify(value));
  const fields={androidVersion:{label:'Android version',value:'synthetic-release',snapshotIndex:0,readIndex:1,stepResultId:'read'},buildNumber:{label:'Build number',value:'synthetic.build',snapshotIndex:0,readIndex:2,stepResultId:'read'}};

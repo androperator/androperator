@@ -165,3 +165,12 @@ completed checks and the remaining limits of the evidence.
 
 Success is a smaller, coherent actuator and a direct agent workflow, not feature
 parity with the former catalog architecture.
+
+## Approved follow-up
+
+After implementation, the owner approved removal of `recording parse` and its
+lossy inferred steps, unused recording-context validation, obsolete comparison
+flags and skills-specific logging correlation names. Raw capture/export and
+NDJSON validation remain. Caller-owned correlation uses `runId` and
+`ANDROPERATOR_RUN_ID` without a framework prefix; command/task correlation is
+unchanged. See the validation record for host and live results and limitations.

@@ -37,7 +37,7 @@ export ANDROPERATOR_DEVICE_ID="<device_serial>"
 export ANDROPERATOR_OPERATOR_PACKAGE="com.androperator.operator.dev"
 export ANDROPERATOR_SKILL_ID="com.android.settings.get-version-details"
 export VERSION_RUN_DIR="$(mktemp -d)"
-export ANDROPERATOR_SKILL_RUN_ID="skillrun_example-$(basename "$VERSION_RUN_DIR")"
+export ANDROPERATOR_RUN_ID="run_example-$(basename "$VERSION_RUN_DIR")"
 node examples/skills/utils/settings_version_tool.js open
 ```
 

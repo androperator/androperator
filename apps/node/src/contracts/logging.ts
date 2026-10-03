@@ -30,7 +30,7 @@ export interface LogEvent {
   commandId?: string;
   taskId?: string;
   deviceId?: string;
-  skillRunId?: string;
+  runId?: string;
   logPath?: string;
   status?: string;
   durationMs?: number;
@@ -54,19 +54,19 @@ export interface AndroperatorLogger {
   logPath(): string | undefined;
 }
 
-export const ANDROPERATOR_SKILL_RUN_ID_ENV_VAR = "ANDROPERATOR_SKILL_RUN_ID";
-export const SKILL_RUN_ID_PATTERN = /^skillrun_[A-Za-z0-9._:-]+$/;
-export const SKILL_RUN_ID_MAX_LENGTH = 240;
+export const ANDROPERATOR_RUN_ID_ENV_VAR = "ANDROPERATOR_RUN_ID";
+export const RUN_ID_PATTERN = /^[A-Za-z0-9._:-]+$/;
+export const RUN_ID_MAX_LENGTH = 240;
 
-export function normalizeSkillRunId(value: unknown): string | undefined {
+export function normalizeRunId(value: unknown): string | undefined {
   if (typeof value !== "string") {
     return undefined;
   }
   const trimmed = value.trim();
-  if (trimmed.length === 0 || trimmed.length > SKILL_RUN_ID_MAX_LENGTH) {
+  if (trimmed.length === 0 || trimmed.length > RUN_ID_MAX_LENGTH) {
     return undefined;
   }
-  return SKILL_RUN_ID_PATTERN.test(trimmed) ? trimmed : undefined;
+  return RUN_ID_PATTERN.test(trimmed) ? trimmed : undefined;
 }
 
 // ---------------------------------------------------------------------------

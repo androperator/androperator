@@ -22,8 +22,8 @@ example helpers use them. No replacement manifest, runner, migration tooling,
 compatibility adapter or deprecation lifecycle was introduced.
 
 Current guidance describes instructions followed by the current agent, optional
-ordinary helpers and optional human demonstration as evidence. Recording start,
-stop, pull, parse and evidence export remain. `recording compare` was removed:
+ordinary helpers and optional human demonstration as evidence. At the initial removal commit, recording start, stop, pull, parse and evidence
+export remained. The follow-up below removes the lossy parser. `recording compare` was removed:
 its concrete consumers were retired runtime-wrapper and Solax replay checks.
 There was no retained consumer justifying a new comparison contract.
 
@@ -98,3 +98,34 @@ This follow-up changed host validation and guidance, not Android behavior, so
 live-device validation was not repeated. The original live-validation limits
 above still apply. The fixes were validated by the implementing reviewer but
 have not received another independent review pass.
+
+## Follow-up API cleanup
+
+Following owner approval, removed `recording parse`, its inferred step contracts
+and the unused export-context reader. Raw NDJSON validation remains and its
+rejection regression tests now target that retained validator. Recording smoke
+validation checks exported session identity, event counts, window-change and
+click events and available XML evidence instead of inferred replay steps.
+Removed obsolete comparison flags from CLI metadata and regenerated docs.
+
+Caller-owned logging correlation now uses `runId` and `ANDROPERATOR_RUN_ID`,
+with 1 to 240 safe identifier characters and no required prefix. HTTP invalid
+values produce `INVALID_RUN_ID`; daemon requests propagate the current caller's
+ID without inheriting it for the daemon lifetime. Command/task execution
+correlation is unchanged. No old-name adapter was added.
+
+The complete Node build and suite passed with 1,416 tests. All 18 ordinary helper
+tests and 18 docs-generator tests passed. Canonical docs validation and the
+preserved landing build passed. Shell syntax validation of the recording smoke
+also passed. A focused live phone-emulator snapshot
+succeeded with command/task correlation, and its logs carried a prefix-free
+`runId`. Export of the previously preserved recording passed with one
+window-change event and included XML evidence.
+
+The updated Play Store recording smoke ran but failed its evidence assertions.
+Its interaction helper encountered `DEVICE_ACCESSIBILITY_NOT_RUNNING` during a
+readiness probe; the recording contained zero events. Stop, pull and export
+completed, and the smoke correctly rejected that empty evidence. This does not
+prove a successful live Play Store capture or human-input event diversity. The
+recording was retained, and the validation emulator was restored to its prior
+stopped state.

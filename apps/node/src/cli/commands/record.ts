@@ -1,9 +1,7 @@
-import * as fs from "node:fs/promises";
 import { runExecution } from "../../domain/executions/runExecution.js";
 import { buildStartRecordingExecution } from "../../domain/actions/startRecording.js";
 import { buildStopRecordingExecution } from "../../domain/actions/stopRecording.js";
 import { pullRecording } from "../../domain/recording/pullRecording.js";
-import { parseRecordingFile } from "../../domain/recording/parseRecording.js";
 import {
   exportRecordingFile,
 } from "../../domain/recording/exportRecording.js";
@@ -147,50 +145,6 @@ export async function cmdRecordPull(options: {
   }
 }
 
-export async function cmdRecordParse(options: {
-  format: OutputOptions["format"];
-  inputFile: string;
-  outputFile?: string;
-}): Promise<string> {
-  try {
-    const stepLog = await parseRecordingFile(options.inputFile);
-
-    // Determine output path
-    let outputFile: string;
-    if (options.outputFile) {
-      outputFile = options.outputFile;
-    } else {
-      // Replace .ndjson with .steps.json, or append .steps.json
-      if (options.inputFile.endsWith(".ndjson")) {
-        outputFile = options.inputFile.slice(0, -7) + ".steps.json";
-      } else {
-        outputFile = options.inputFile + ".steps.json";
-      }
-    }
-
-    // Write the step log JSON
-    await fs.writeFile(outputFile, JSON.stringify(stepLog, null, 2), "utf-8");
-
-    const payload: {
-      ok: true;
-      outputFile: string;
-      stepCount: number;
-      warnings?: string[];
-    } = {
-      ok: true,
-      outputFile,
-      stepCount: stepLog.steps.length,
-    };
-
-    if (stepLog._warnings && stepLog._warnings.length > 0) {
-      payload.warnings = stepLog._warnings;
-    }
-
-    return formatSuccess(payload, options);
-  } catch (e) {
-    return formatError(e, options);
-  }
-}
 
 export async function cmdRecordExport(options: {
   format: OutputOptions["format"];

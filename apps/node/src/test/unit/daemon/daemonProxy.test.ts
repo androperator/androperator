@@ -18,13 +18,13 @@ import { getDaemonLockPath, getDaemonSocketPath } from "../../../domain/daemon/l
 import { DEFAULT_OPERATOR_PACKAGE } from "../../../domain/config/resolveOperatorPackage.js";
 import { getCliBuildIdentity, getCliVersion } from "../../../domain/version/compatibility.js";
 import { ERROR_CODES } from "../../../contracts/errors.js";
-import { ANDROPERATOR_SKILL_RUN_ID_ENV_VAR } from "../../../contracts/logging.js";
+import { ANDROPERATOR_RUN_ID_ENV_VAR } from "../../../contracts/logging.js";
 import type { RunExecutionResult } from "../../../domain/executions/runExecution.js";
 
 const tempDirs: string[] = [];
 let originalNoDaemon: string | undefined;
 let originalOperatorPackage: string | undefined;
-let originalSkillRunId: string | undefined;
+let originalRunId: string | undefined;
 
 const execution = {
   commandId: "daemon-proxy-test",
@@ -78,10 +78,10 @@ afterEach(async () => {
   } else {
     process.env.ANDROPERATOR_OPERATOR_PACKAGE = originalOperatorPackage;
   }
-  if (originalSkillRunId === undefined) {
-    delete process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
+  if (originalRunId === undefined) {
+    delete process.env[ANDROPERATOR_RUN_ID_ENV_VAR];
   } else {
-    process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = originalSkillRunId;
+    process.env[ANDROPERATOR_RUN_ID_ENV_VAR] = originalRunId;
   }
 });
 
@@ -160,10 +160,10 @@ describe("tryDaemonExecution", () => {
     });
   });
 
-  it("passes inherited skillRunId to the daemon execute request", async () => {
-    const parentSkillRunId = "skillrun_parent_daemon_request";
-    originalSkillRunId = process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
-    process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = parentSkillRunId;
+  it("passes inherited runId to the daemon execute request", async () => {
+    const parentRunId = "run_parent_daemon_request";
+    originalRunId = process.env[ANDROPERATOR_RUN_ID_ENV_VAR];
+    process.env[ANDROPERATOR_RUN_ID_ENV_VAR] = parentRunId;
     let postedBody: unknown;
 
     const result = await tryDaemonExecution(execution, { rawDeviceId: "device-1" }, {
@@ -180,13 +180,13 @@ describe("tryDaemonExecution", () => {
       execution,
       deviceId: "device-1",
       operatorPackage: DEFAULT_OPERATOR_PACKAGE,
-      skillRunId: parentSkillRunId,
+      runId: parentRunId,
     });
   });
 
-  it("does not pass malformed inherited skillRunId to the daemon execute request", async () => {
-    originalSkillRunId = process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
-    process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = "not a skill run id";
+  it("does not pass malformed inherited runId to the daemon execute request", async () => {
+    originalRunId = process.env[ANDROPERATOR_RUN_ID_ENV_VAR];
+    process.env[ANDROPERATOR_RUN_ID_ENV_VAR] = "not a run id";
     let postedBody: unknown;
 
     const result = await tryDaemonExecution(execution, { rawDeviceId: "device-1" }, {

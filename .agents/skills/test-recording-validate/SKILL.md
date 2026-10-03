@@ -1,6 +1,6 @@
 ---
 name: test-recording-validate
-description: Smoke-test recording start, Play Store interaction, stop, pull, and parsing with artifact validation.
+description: Smoke-test recording start, Play Store interaction, stop, pull, and evidence export with artifact validation.
 ---
 
 # Test Recording Validate
@@ -10,15 +10,15 @@ Validates the Androperator recording API surface end-to-end by:
 2. Running the Play Store search skill (searching for "Action Launcher")
 3. Stopping the recording
 4. Pulling the recording to host
-5. Parsing and validating the step log
+5. Exporting and validating raw event evidence
 
 ## Purpose
 
 This skill provides a repeatable smoke test for the recording feature that exercises:
 - `recording start` / `recording stop` lifecycle
 - `recording pull` to retrieve NDJSON from device
-- `recording parse` to convert NDJSON to step log
-- Parser validation of the output structure
+- `recording export --snapshots include` to preserve raw events and snapshots
+- Validation of the export structure and captured evidence
 
 ## Prerequisites
 
@@ -47,19 +47,18 @@ The skill verifies:
 - Start response contains `sessionId`
 - Stop response contains non-zero `eventCount` (when flow produces interactions)
 - Pull writes a `.ndjson` file to host
-- Parse writes a `.steps.json` file
-- Parsed step log contains at least one `open_app` step
-- Parsed step log contains at least one `click` step
-- Each step has `uiStateBefore` populated
-- No structural parse errors
+- Export writes an `.export.json` file with the requested session id
+- Export event count agrees with the stopped recording
+- Export contains window-change and click events
+- Export contains at least one XML snapshot
 
 ## Output Artifacts
 
 All artifacts are written to `$HOME/src/androperator-dumps/runs/<timestamp>/`
 (or the directory named by `RECORDING_VALIDATION_RUNS_DIR`):
 - `<session_id>.ndjson` - Raw recording from device
-- `<session_id>.steps.json` - Parsed step log
-- `parse_summary.txt` - Parse stderr summary (step inference log)
+- `<session_id>.export.json` - Raw event evidence with available XML snapshots
+- `export_output.json` - Export command result
 - `validation_report.json` - Structured validation results
 
 ## Exit Codes
@@ -70,5 +69,5 @@ All artifacts are written to `$HOME/src/androperator-dumps/runs/<timestamp>/`
 - `3` - Play Store skill execution failed
 - `4` - Recording stop failed
 - `5` - Recording pull failed
-- `6` - Recording parse failed
+- `6` - Recording export failed
 - `7` - Validation failed (check report for details)

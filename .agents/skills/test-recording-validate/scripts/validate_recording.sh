@@ -142,101 +142,33 @@ FILE_SIZE=$(stat -f%z "$NDJSON_FILE" 2>/dev/null || stat -c%s "$NDJSON_FILE" 2>/
 echo "[INFO] Pulled NDJSON file: $NDJSON_FILE ($FILE_SIZE bytes)"
 update_report "steps.pull" "{\"success\": true, \"fileSize\": $FILE_SIZE, \"path\": \"$NDJSON_FILE\"}"
 
-# Step 5: Parse recording
-echo "[STEP 5] Parsing recording to step log..."
-PARSE_OUTPUT_FILE="$RUN_DIR/parse_output.json"
-PARSE_SUMMARY_FILE="$RUN_DIR/parse_summary.txt"
-
-# Capture both stdout and stderr separately
-PARSE_STDOUT=$(node "$ANDROPERATOR_CLI" recording parse --input "$NDJSON_FILE" --output json 2>"$PARSE_SUMMARY_FILE") || {
-    echo "[ERROR] Recording parse failed"
-    cat "$PARSE_SUMMARY_FILE" >&2
-    update_report "steps.parse" '{"success": false, "error": "command failed"}'
-    exit 6
-}
-
-echo "$PARSE_STDOUT" > "$PARSE_OUTPUT_FILE"
-STEPS_FILE="$RUN_DIR/${SESSION_ID}.steps.json"
-
-# Find the actual steps.json file (may have different naming)
-if [[ -f "${NDJSON_FILE%.ndjson}.steps.json" ]]; then
-    STEPS_FILE="${NDJSON_FILE%.ndjson}.steps.json"
-elif OUTPUT_REL_PATH="$(echo "$PARSE_STDOUT" | jq -r '.outputFile // empty' 2>/dev/null)" && [[ -n "$OUTPUT_REL_PATH" && -f "$RUN_DIR/$OUTPUT_REL_PATH" ]]; then
-    STEPS_FILE="$RUN_DIR/$OUTPUT_REL_PATH"
-fi
-
-if [[ ! -f "$STEPS_FILE" ]]; then
-    echo "[ERROR] Steps JSON file not found"
-    update_report "steps.parse" '{"success": false, "error": "output file not found"}'
+# Step 5: Export the raw event evidence, including available snapshots.
+echo "[STEP 5] Exporting recording evidence..."
+EXPORT_FILE="$RUN_DIR/${SESSION_ID}.export.json"
+if ! node "$ANDROPERATOR_CLI" recording export --input "$NDJSON_FILE" --out "$EXPORT_FILE" --snapshots include --output json > "$RUN_DIR/export_output.json"; then
+    update_report "steps.export" '{"success": false, "error": "command failed"}'
     exit 6
 fi
-
-STEP_COUNT=$(jq '.steps | length' "$STEPS_FILE" 2>/dev/null || echo "0")
-echo "[INFO] Parsed step log: $STEPS_FILE ($STEP_COUNT steps)"
-update_report "steps.parse" "{\"success\": true, \"stepCount\": $STEP_COUNT, \"path\": \"$STEPS_FILE\"}"
-
-# Step 6: Validate step log
-echo "[STEP 6] Validating step log structure..."
-
-VALIDATION_ERRORS=()
-
-# Check for open_app step
-OPEN_APP_COUNT=$(jq '[.steps[] | select(.type == "open_app")] | length' "$STEPS_FILE" 2>/dev/null || echo "0")
-if [[ "$OPEN_APP_COUNT" -lt 1 ]]; then
-    VALIDATION_ERRORS+=("missing open_app step")
-    echo "[FAIL] No open_app step found"
-else
-    echo "[PASS] Found $OPEN_APP_COUNT open_app step(s)"
+if [[ ! -f "$EXPORT_FILE" ]]; then
+    update_report "steps.export" '{"success": false, "error": "output file not found"}'
+    exit 6
 fi
+update_report "steps.export" "$(jq -n --arg path "$EXPORT_FILE" '{success: true, path: $path}')"
 
-# Check for click step
-CLICK_COUNT=$(jq '[.steps[] | select(.type == "click")] | length' "$STEPS_FILE" 2>/dev/null || echo "0")
-if [[ "$CLICK_COUNT" -lt 1 ]]; then
-    VALIDATION_ERRORS+=("missing click step")
-    echo "[FAIL] No click step found"
-else
-    echo "[PASS] Found $CLICK_COUNT click step(s)"
-fi
-
-# Check for uiStateBefore on all steps
-MISSING_UISTATE=$(jq '[.steps[] | select(.uiStateBefore == null)] | length' "$STEPS_FILE" 2>/dev/null || echo "0")
-if [[ "$MISSING_UISTATE" -gt 0 ]]; then
-    VALIDATION_ERRORS+=("$MISSING_UISTATE step(s) missing uiStateBefore")
-    echo "[WARN] $MISSING_UISTATE step(s) have null uiStateBefore"
-else
-    echo "[PASS] All steps have uiStateBefore"
-fi
-
-# Check for parse warnings
-WARNINGS=$(jq '._warnings // empty' "$STEPS_FILE" 2>/dev/null || true)
-if [[ -n "$WARNINGS" && "$WARNINGS" != "null" && "$WARNINGS" != "[]" ]]; then
-    echo "[INFO] Parse warnings: $WARNINGS"
-    update_report "validations.warnings" "$WARNINGS"
-fi
-
-# Check event count
-if [[ "$EVENT_COUNT" -eq 0 ]]; then
-    VALIDATION_ERRORS+=("zero events captured")
-    echo "[WARN] Recording captured zero events"
-fi
-
-# Update validation report
-update_report "validations.openAppCount" "$OPEN_APP_COUNT"
-update_report "validations.clickCount" "$CLICK_COUNT"
-update_report "validations.nullUiStateCount" "$MISSING_UISTATE"
-
-if [[ ${#VALIDATION_ERRORS[@]} -eq 0 ]]; then
-    echo "[PASS] All validations passed"
-    update_report "passed" "true"
-    update_report "validations.errors" "[]"
-    exit 0
-else
-    echo "[FAIL] Validation errors:"
-    printf '  - %s\n' "${VALIDATION_ERRORS[@]}"
-    
-    # Build JSON array of errors
-    ERRORS_JSON=$(printf '%s\n' "${VALIDATION_ERRORS[@]}" | jq -R . | jq -s .)
+# Step 6: Validate raw evidence rather than inferred replay steps.
+echo "[STEP 6] Validating exported evidence..."
+if ! jq -e --arg session "$SESSION_ID" --argjson count "$EVENT_COUNT" '
+    .exportVersion == 1 and .session.sessionId == $session and
+    .snapshotMode == "include" and .counts.totalEvents == $count and
+    (.events | length) == $count and $count > 0 and
+    any(.events[]; .type == "window_change") and
+    any(.events[]; .type == "click") and
+    any(.events[]; .snapshot.present == true and (.snapshot.xml | type) == "string")
+' "$EXPORT_FILE" > /dev/null; then
     update_report "passed" "false"
-    update_report "validations.errors" "$ERRORS_JSON"
+    update_report "validations.errors" '["missing events, snapshots, or inconsistent export metadata"]'
     exit 7
 fi
+update_report "passed" "true"
+update_report "validations.errors" "[]"
+echo "[PASS] Exported events and snapshot evidence verified"

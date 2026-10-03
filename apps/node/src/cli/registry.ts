@@ -400,7 +400,7 @@ Notes:
 const HELP_RECORDING = `androperator recording
 
 Usage:
-  androperator recording start|stop|pull|parse|export ... ('record' is an alias)
+  androperator recording start|stop|pull|export ... ('record' is an alias)
 `;
 
 const HELP_RECORDING_EXPORT = `androperator recording export
@@ -2751,12 +2751,11 @@ COMMANDS["recording"] = {
   name: "recording",
   synonyms: ["record"],
   group: "Recording",
-  documentedFlags: ["--session-id", "--out", "--input", "--snapshots", "--baseline", "--result", "--mode"],
+  documentedFlags: ["--session-id", "--out", "--input", "--snapshots"],
   supportedFlags: (rest) => {
     const sub = rest[0];
     if (sub === "start" || sub === "stop") return ["--session-id"];
     if (sub === "pull") return ["--session-id", "--out"];
-    if (sub === "parse") return ["--input", "--out"];
     if (sub === "export") return ["--input", "--out", "--snapshots"];
     return [];
   },
@@ -2771,8 +2770,6 @@ COMMANDS["recording"] = {
                                             Stop the active recording session and finalize the on-device file ('record' is an alias)
   recording pull  [--session-id <id>] [--out <dir>] [--device <serial>]
                                             Pull the on-device NDJSON recording to host (default: ./recordings/, 'record' is an alias)
-  recording parse --input <file> [--out <file>]
-                                            Parse a raw NDJSON recording into a step log JSON ('record' is an alias)
   recording export --input <file|directory> [--out <file>] [--snapshots <omit|include>]
                                             Export raw recording evidence into agent-context JSON ('record' is an alias)`,
   handler: async (ctx) => {
@@ -2804,18 +2801,6 @@ COMMANDS["recording"] = {
         outputDir,
         ...runOpts,
       });
-    } else if (sub === "parse") {
-      const inputFile = getStringOptStrict(rest, "--input", ["--input", "--out"]);
-      if (!inputFile) {
-        return JSON.stringify({ code: "USAGE", message: "recording parse --input <file> [--out <file>] ('record' is an alias)" });
-      } else {
-        const outputFileFlag = getStringOptStrict(rest, "--out", ["--input", "--out"]);
-        return (await import("./commands/record.js")).cmdRecordParse({
-          ...out,
-          inputFile,
-          outputFile: outputFileFlag,
-        });
-      }
     } else if (sub === "export") {
       const inputFile = getStringOptStrict(rest, "--input", ["--input", "--out", "--snapshots"]);
       if (!inputFile) {
@@ -2832,7 +2817,7 @@ COMMANDS["recording"] = {
         snapshotMode,
       });
     } else {
-      return JSON.stringify({ code: "USAGE", message: "recording start|stop|pull|parse|export ... ('record' is an alias)" });
+      return JSON.stringify({ code: "USAGE", message: "recording start|stop|pull|export ... ('record' is an alias)" });
     }
   },
 };

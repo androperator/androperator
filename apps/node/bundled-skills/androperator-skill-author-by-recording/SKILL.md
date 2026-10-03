@@ -14,7 +14,6 @@ The normal route is current-agent exploration of the authorized workflow.
 2. Capture with `recording start`, let the human demonstrate, then `recording stop`
    and `recording pull`. Preserve raw NDJSON privately; do not delete recordings.
 3. Read `recording export` directly. Use `--snapshots include` when useful.
-   `recording parse` provides lossy inspection, not a complete baseline.
 4. Identify likely screens, inputs, candidate selectors, branches and outcome
    evidence. A tap, coordinate or elapsed delay is not proof of current state.
 5. Draft instructions in the host's ordinary format: goal, likely route, inputs,

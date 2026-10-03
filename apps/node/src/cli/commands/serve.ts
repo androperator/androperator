@@ -11,7 +11,7 @@ import { buildDefaultEmulatorAvdName, createAvd, deleteAvd, enableEmulatorDevelo
 import { provisionEmulator } from "../../domain/android-emulators/provision.js";
 import { DEFAULT_EMULATOR_DEVICE_PROFILE, SUPPORTED_EMULATOR_API_LEVEL } from "../../domain/android-emulators/constants.js";
 import type { Logger } from "../../adapters/logger.js";
-import { normalizeSkillRunId } from "../../contracts/logging.js";
+import { normalizeRunId } from "../../contracts/logging.js";
 import { resolveOperatorPackageForRequest } from "../../domain/config/resolveOperatorPackage.js";
 import { getCliBuildIdentity, getCliVersion } from "../../domain/version/compatibility.js";
 
@@ -47,19 +47,19 @@ export function mapServeErrorCodeToStatus(code: string): number {
   }
 }
 
-function extractRequestSkillRunId(body: unknown): string | undefined {
-  if (typeof body !== "object" || body === null || !("skillRunId" in body)) {
+function extractRequestRunId(body: unknown): string | undefined {
+  if (typeof body !== "object" || body === null || !("runId" in body)) {
     return undefined;
   }
-  const value = (body as { skillRunId?: unknown }).skillRunId;
+  const value = (body as { runId?: unknown }).runId;
   if (typeof value !== "string") {
     return undefined;
   }
-  return normalizeSkillRunId(value);
+  return normalizeRunId(value);
 }
 
-function requestLoggerForSkillRun(options: ServeAppOptions, skillRunId: string | undefined): Logger | undefined {
-  return skillRunId === undefined ? options.logger : options.logger?.child({ skillRunId });
+function requestLoggerForRun(options: ServeAppOptions, runId: string | undefined): Logger | undefined {
+  return runId === undefined ? options.logger : options.logger?.child({ runId });
 }
 
 export async function cmdServe(options: ServeOptions): Promise<void> {
@@ -153,7 +153,7 @@ export function createServeApp(options: ServeAppOptions): express.Application {
   // Without a logger, fall back to console.log only when --verbose is set (legacy behavior).
   app.use((req, _res, next) => {
     const clientIp = req.socket.remoteAddress || "unknown";
-    const requestLogger = requestLoggerForSkillRun(options, extractRequestSkillRunId(req.body));
+    const requestLogger = requestLoggerForRun(options, extractRequestRunId(req.body));
     if (requestLogger) {
       requestLogger.emit({
         ts: new Date().toISOString(),
@@ -236,7 +236,7 @@ export function createServeApp(options: ServeAppOptions): express.Application {
       return;
     }
 
-    const { execution, deviceId, operatorPackage, skillRunId } = req.body;
+    const { execution, deviceId, operatorPackage, runId } = req.body;
     
     if (!execution) {
       res.status(400).json({ ok: false, error: { code: "MISSING_EXECUTION", message: "Missing 'execution' in body" } });
@@ -261,25 +261,25 @@ export function createServeApp(options: ServeAppOptions): express.Application {
       return;
     }
 
-    if (skillRunId !== undefined && typeof skillRunId !== "string") {
-      res.status(400).json({ ok: false, error: { code: "INVALID_SKILL_RUN_ID", message: "'skillRunId' must be a string when provided" } });
+    if (runId !== undefined && typeof runId !== "string") {
+      res.status(400).json({ ok: false, error: { code: "INVALID_RUN_ID", message: "'runId' must be a string when provided" } });
       return;
     }
-    if (typeof skillRunId === "string" && skillRunId.trim().length === 0) {
-      res.status(400).json({ ok: false, error: { code: "INVALID_SKILL_RUN_ID", message: "'skillRunId' must be a non-empty string when provided" } });
+    if (typeof runId === "string" && runId.trim().length === 0) {
+      res.status(400).json({ ok: false, error: { code: "INVALID_RUN_ID", message: "'runId' must be a non-empty string when provided" } });
       return;
     }
-    if (typeof skillRunId === "string" && normalizeSkillRunId(skillRunId) === undefined) {
-      res.status(400).json({ ok: false, error: { code: "INVALID_SKILL_RUN_ID", message: "'skillRunId' must start with 'skillrun_' and contain only safe identifier characters" } });
+    if (typeof runId === "string" && normalizeRunId(runId) === undefined) {
+      res.status(400).json({ ok: false, error: { code: "INVALID_RUN_ID", message: "'runId' must contain 1 to 240 safe identifier characters (letters, digits, dot, underscore, colon or hyphen)" } });
       return;
     }
 
     try {
-      const requestSkillRunId = normalizeSkillRunId(skillRunId);
+      const requestRunId = normalizeRunId(runId);
       const result = await runExecution(execution, {
         deviceId,
         operatorPackage: resolveServeOperatorPackage(operatorPackage),
-        logger: requestLoggerForSkillRun(options, requestSkillRunId),
+        logger: requestLoggerForRun(options, requestRunId),
       });
 
       if (result.ok) {

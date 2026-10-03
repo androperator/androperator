@@ -65,7 +65,7 @@ Events may include additional context fields:
 | `commandId` | string | CLI command or execution has a correlation ID |
 | `taskId` | string | Part of a larger task sequence |
 | `deviceId` | string | Event targets a specific device |
-| `skillRunId` | string | Caller-supplied helper run correlation |
+| `runId` | string | Caller-supplied helper run correlation |
 | `logPath` | string | Event points at the active daily log file |
 | `status` | string | Completion status (e.g., `pass`, `fail`) |
 | `durationMs` | number | Operation completed, measured in milliseconds |
@@ -111,8 +111,9 @@ Events use dot-separated names with prefix-based categories:
 
 ### Helper run correlation
 
-Optional caller-owned helpers can supply `ANDROPERATOR_SKILL_RUN_ID` with a
-`skillrun_` prefix and safe identifier characters. Short-lived CLI commands
+Optional caller-owned helpers can supply `ANDROPERATOR_RUN_ID` with 1 to 240
+safe identifier characters (letters, digits, dot, underscore, colon or hyphen).
+No prefix is required. Short-lived CLI commands
 inherit valid IDs. Daemon-backed commands pass the ID on each execute request;
 the long-lived daemon does not inherit ambient run context. This is logging
 metadata, not a workflow result contract. Command/task IDs remain execution

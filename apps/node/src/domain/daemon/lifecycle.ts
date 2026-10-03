@@ -2,7 +2,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { chmodSync, closeSync, mkdirSync, openSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import { ANDROPERATOR_SKILL_RUN_ID_ENV_VAR } from "../../contracts/logging.js";
+import { ANDROPERATOR_RUN_ID_ENV_VAR } from "../../contracts/logging.js";
 
 export interface DaemonPathsOptions {
   baseDir?: string;
@@ -314,9 +314,9 @@ export function spawnDaemonRun(
     }
 
     // Strip skill run correlation so the long-lived daemon does not inherit a
-    // stale skillRunId from the skill script that triggered this start.
+    // stale runId from the caller that triggered this start.
     const daemonEnv = { ...process.env };
-    delete daemonEnv[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
+    delete daemonEnv[ANDROPERATOR_RUN_ID_ENV_VAR];
 
     const child = spawn(process.execPath, args, {
       detached: true,

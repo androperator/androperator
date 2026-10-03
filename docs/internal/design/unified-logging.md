@@ -52,7 +52,7 @@ interface LogEvent {
   commandId?: string;
   taskId?: string;
   deviceId?: string;
-  skillRunId?: string;
+  runId?: string;
   logPath?: string;
   status?: string;
   durationMs?: number;
@@ -86,7 +86,7 @@ Routing determines where events go (file, terminal, or both). Terminal routing i
 - Most server events are file-only to avoid terminal noise during long-running serve
 
 Optional caller-owned helpers may correlate their CLI calls with
-`ANDROPERATOR_SKILL_RUN_ID`. This supplies logging context only; the logger does
+`ANDROPERATOR_RUN_ID`. This supplies logging context only; the logger does
 not run helpers or collect their stdout/stderr. See [public logging guidance](../../api/logging.md)
 for the current fields and propagation rules.
 
@@ -200,7 +200,7 @@ cmdLogger.emit({
 | Scenario | Pattern |
 |----------|---------|
 | Command execution | `logger.child({ commandId })` at command start |
-| Helper correlation | `logger.child({ skillRunId })` with validated caller context |
+| Helper correlation | `logger.child({ runId })` with validated caller context |
 | Device-specific operations | `logger.child({ deviceId })` when device resolved |
 | Task context | `logger.child({ taskId })` when an execution supplies one |
 

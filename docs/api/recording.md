@@ -6,15 +6,13 @@ The commands on this page record accessibility events.
 ## Purpose
 
 Document the current recording workflow, the raw NDJSON schema written by the
-Operator app, the parsed step-log format produced by `androperator record parse`,
-the agent-context export produced by `androperator recording export`. Recording start
+Operator app and the agent-context export produced by `androperator recording export`. Recording start
 and stop commands are execution-backed and return the shared
 [result envelope](overview.md#result-envelope) wrapper.
 
 ## Sources
 
 - Raw event schema: `apps/node/src/domain/recording/recordingEventTypes.ts`
-- Parser behavior: `apps/node/src/domain/recording/parseRecording.ts`
 - Pull behavior: `apps/node/src/domain/recording/pullRecording.ts`
 - CLI commands: `apps/node/src/cli/commands/record.ts`, `apps/node/src/cli/registry.ts`
 - Export builder: `apps/node/src/domain/recording/exportRecording.ts`
@@ -31,9 +29,6 @@ Current durable rules:
 - retain the pulled NDJSON as the raw capture
 - retain `androperator recording export` output as the canonical structured
   artifact for authoring
-- use `androperator record parse` as lossy human inspection only
-- do not treat a recording export or parsed step log as a reusable skill with
-  only light cleanup
 
 What the retained export gives you:
 
@@ -68,19 +63,13 @@ The current flow is:
 3. `androperator record stop [--session-id <id>]`
 4. `androperator record pull [--session-id <id>] [--out <dir>]`
 5. `androperator recording export --input <file|directory> [--out <file>] [--snapshots <omit|include>]`
-6. `androperator record parse --input <file> [--out <file>]`
 
 Notes:
 
 - `record` is a top-level alias for `recording`
 - `pull` defaults to `./recordings/` when `--out` is omitted
-- the practical authoring order is `pull`, then `export`, then optional `parse`
-  or other human inspection
-- do not treat `parse` as the only retained baseline artifact; it intentionally
-  drops event detail that `export` preserves
-- do not run `export` or `parse` against a recording directory until `pull`
-  has finished writing the local NDJSON file you plan to keep
-- `parse` writes `<input without .ndjson>.steps.json` when the input ends with `.ndjson`, otherwise `<input>.steps.json`
+- pull the recording, then export and inspect its raw evidence
+- wait for `pull` to finish before exporting the local NDJSON file
 - `record start` builder timeout is `10000`
 - `record stop` builder timeout is `15000`
 - `recording export` defaults to `--snapshots omit`
@@ -269,44 +258,6 @@ Check:
 - `ok == true`
 - `sessionId == "demo-session"`
 - `localPath` ends with `/demo-session.ndjson`
-
-<a id="command-recording-parse"></a>
-### Parse
-
-```bash
-androperator record parse --input <file> [--out <file>]
-```
-
-Successful response shape:
-
-```json
-{
-  "ok": true,
-  "outputFile": "./recordings/demo-session.steps.json",
-  "stepCount": 2,
-  "warnings": [
-    "seq 3: scroll event dropped (not extracted in v1)"
-  ]
-}
-```
-
-Exact default output-file rule from `cmdRecordParse()`:
-
-- if input ends with `.ndjson`, output is `<input without .ndjson>.steps.json`
-- otherwise output is `<input>.steps.json`
-
-Verification:
-
-```bash
-androperator record parse --input ./recordings/demo-session.ndjson
-```
-
-Check:
-
-- `ok == true`
-- `outputFile == "./recordings/demo-session.steps.json"`
-- `stepCount` matches the parsed `steps.length`
-- `stdout` contains the JSON result, while `stderr` also receives a human-readable step summary from `printStepSummary()`
 
 <a id="command-recording-export"></a>
 ### Export
@@ -566,88 +517,6 @@ Important:
 | `text` | `string` |
 | `snapshot` | `string \| null \| undefined` |
 
-## Parse Output Shape
-
-`record parse` does not replay the whole NDJSON one-to-one. It normalizes it into a smaller step log:
-
-```json
-{
-  "sessionId": "demo-session",
-  "schemaVersion": 1,
-  "steps": [
-    {
-      "seq": 0,
-      "type": "open_app",
-      "packageName": "com.android.settings",
-      "uiStateBefore": "<hierarchy .../>"
-    },
-    {
-      "seq": 1,
-      "type": "click",
-      "packageName": "com.android.settings",
-      "resourceId": "android:id/title",
-      "text": "Connected devices",
-      "contentDesc": null,
-      "bounds": {
-        "left": 216,
-        "top": 1503,
-        "right": 661,
-        "bottom": 1573
-      },
-      "uiStateBefore": "<hierarchy .../>"
-    }
-  ],
-  "_warnings": [
-    "seq 3: scroll event dropped (not extracted in v1)"
-  ]
-}
-```
-
-Important:
-
-- `parse` is intentionally lossy and step-oriented
-- `export` is intentionally evidence-preserving and event-oriented
-- the same recording can produce a small parsed step log while the export still contains multiple raw events such as `scroll`, `window_change`, or `text_change`
-
-Current parsed step types:
-
-- `open_app`
-- `click`
-
-Current normalization rules in `parseRecording.ts`:
-
-- the first `window_change` becomes one `open_app` step
-- every `click` becomes one `click` step
-- `scroll` events are dropped and produce warnings
-- `text_change` events are dropped silently
-- `press_key` events are dropped silently, but they do affect subsequent `window_change` handling
-
-Verification:
-
-```bash
-androperator record parse --input ./recordings/demo-session.ndjson
-```
-
-Then open the written `.steps.json` file and confirm:
-
-- `schemaVersion == 1`
-- `steps[0].type == "open_app"` when the first raw event was `window_change`
-- `_warnings` is present only when parser warnings were generated
-
-## Parser Warnings
-
-The parser currently emits warnings for:
-
-- `window_change` or `click` events missing `snapshot`
-- dropped `scroll` events
-
-Warnings are written into `_warnings` in the parsed step log and also surfaced by `record parse` in its success wrapper when present.
-
-This is an exact optional-field rule:
-
-- if there are no warnings, `_warnings` is omitted from the parsed JSON
-- if there are warnings, `_warnings` is present and `record parse` also copies them into the top-level `warnings` array of its success wrapper
-
 ## Pull Semantics
 
 `pullRecording()` determines the session id like this:
@@ -688,10 +557,6 @@ Only document codes that exist in `apps/node/src/contracts/errors.ts`.
 | `RECORDING_PARSE_FAILED` | malformed file, invalid header, bad event fields, bad NDJSON, or unknown event type |
 | `RECORDING_EXPORT_FAILED` | recording export input could not be inspected/read, or the output file could not be written |
 | `RECORDING_SCHEMA_VERSION_UNSUPPORTED` | header schema version was not `1` |
-
-Related CLI usage error:
-
-- `record parse` without `--input` returns a top-level `USAGE` object from `registry.ts`, not a `RECORDING_PARSE_FAILED` error code
 
 ## Common Failure Modes
 
@@ -739,7 +604,7 @@ Typical failure shape:
 Recovery:
 
 - run `androperator recording stop --session-id <active_session_id> --device <device_serial> --operator-package <package>`
-- then pull or parse the finished session before starting a new one
+- then pull and export the finished session before starting a new one
 - if your workflow uses explicit session ids, reuse the active session id instead of starting a second overlapping recording
 - use the `sessionId` and `filePath` fields in the error payload to target the exact session that is still active
 - the CLI also surfaces the same hint inside the failed `start_recording` step and the top-level envelope for easy copy/paste
@@ -871,9 +736,7 @@ Typical failure shape:
 ## What Agents Should Rely On
 
 - raw recording files are NDJSON, header first
-- `record parse` currently extracts only `open_app` and `click` steps
-- warnings are significant because they explain dropped or degraded data
-- use parsed output as a deterministic summary, not as a promise that every raw event was preserved
+- exports preserve validated raw events; snapshots may be absent and must be checked
 - verify recording state with the returned JSON wrappers instead of assuming `record start` or `record stop` worked from exit code alone
 
 ## Related Pages

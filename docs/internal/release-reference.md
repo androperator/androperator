@@ -37,6 +37,26 @@ For every tagged release, GitHub Actions should:
 6. Publish the Node package to npm via Trusted Publishing (OIDC):
    - all published releases use npm dist-tag `latest`
 
+## npm release archive
+
+After building and testing, the npm workflow runs `validation/npm-release/pack.py`
+with the tag version. Packaging hooks finish before the helper inspects the
+actual tarball. It requires the `androperator` package name, matching version,
+and a nonempty built CLI entry point, and rejects escaping paths, duplicate files,
+and nonregular file entries. This is an archive integrity and release identity
+check, not a dependency or security audit.
+
+The helper retains the validated archive in the runner temporary directory. The
+workflow publishes that exact file with `--ignore-scripts=true`; do not replace
+this with directory-based publication that packs again. Packaging work belongs
+in `prepack` or `prepare`; publication lifecycle hooks do not run. A packaging or
+validation failure stops publication. Repair the source or hook and rerun the
+workflow rather than publishing an older archive.
+
+Run `python3 -m unittest discover -s validation/npm-release -v` for offline
+regressions using real npm packaging hooks and publication dry-runs. These tests
+require Node/npm but do not publish or verify registry authentication.
+
 ## Required Secrets
 
 ### Android signing

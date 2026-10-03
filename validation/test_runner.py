@@ -45,6 +45,7 @@ def main(argv=None):
         'node': [['npm', '--prefix', 'apps/node', 'test']],
         'evals': [['uv', 'run', '--project', 'evals', '--extra', 'dev', 'pytest', 'evals/harness', '-v']],
         'validation': [
+            ['python3', '-m', 'unittest', 'discover', '-s', 'validation/npm-release'],
             ['python3', '-m', 'unittest', 'discover', '-s', 'validation/cloudflare'],
             ['node', 'validation/video-stream-verification/test-video-stream.mjs'],
             ['node', 'validation/skill-temp-files/test-play-store.mjs'],

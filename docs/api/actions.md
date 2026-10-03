@@ -919,16 +919,62 @@ Android live-route verification:
 | Field | Valid values |
 | --- | --- |
 | Required | `key` |
-| `key` | case-insensitive string in `back`, `home`, `recents` |
+| `key` | case-insensitive string in `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv` |
 | `retry` | optional retry object in raw `exec` JSON; Android defaults to `None` |
+
+Back, Home, and Recents retain Android accessibility global actions. The new
+TV remote buttons execute through the Node bridge, including CLI `press`, raw
+`exec`, HTTP `/execute`, MCP `press`/`execute`, and daemon execution. They run in
+order with surrounding Android actions under the same device lock. A failed
+button stops the remaining sequence. The returned envelope keeps the caller's
+`commandId`, `taskId`, and action IDs; internal runtime segments use distinct
+transport command IDs to avoid stale result reuse.
+
+The icon buttons match the Android Emulator remote, as verified against its
+[remote implementation](https://android.googlesource.com/platform/external/qemu/+/refs/heads/emu-master-dev/android/android-ui/modules/aemu-ext-pages/tv-remote/src/android/skin/qt/extended-pages/tv-remote-page.cpp)
+and [button layout](https://android.googlesource.com/platform/external/qemu/+/refs/heads/emu-master-dev/android/android-ui/modules/aemu-ext-pages/tv-remote/src/android/skin/qt/extended-pages/tv-remote-page.ui).
+
+| Button value | Android dispatch | Meaning |
+| --- | --- | --- |
+| `dpad_up` | `KEYCODE_DPAD_UP` (19) | Move focus up |
+| `dpad_down` | `KEYCODE_DPAD_DOWN` (20) | Move focus down |
+| `dpad_left` | `KEYCODE_DPAD_LEFT` (21) | Move focus left |
+| `dpad_right` | `KEYCODE_DPAD_RIGHT` (22) | Move focus right |
+| `dpad_center` | `KEYCODE_DPAD_CENTER` (23) | Select the focused item |
+| `bookmark` | `KEYCODE_BOOKMARK` (174) | Watchlist/bookmark icon |
+| `profile` | `KEYCODE_NOTIFICATION` (83) | Person icon opens the emulator dashboard; not `KEYCODE_PROFILE_SWITCH` |
+| `settings` | Start `com.android.tv.settings/com.android.tv.settings.MainSettings` | Settings icon launches an activity; not `KEYCODE_SETTINGS` |
+| `tv` | Start `com.android.tv/com.android.tv.MainActivity` on API 34+, or `com.google.android.tv/com.android.tv.MainActivity` below API 34 | TV icon opens Live Channels; not `KEYCODE_TV` |
+
+These activities must be installed on the target. Key dispatch acceptance does
+not prove focus moved, a watchlist changed, or a dashboard opened. Android TV
+images and apps may ignore keys. Use a fresh snapshot to verify the intended
+screen or focused item. Buttons are single presses, with no hold or repeat
+parameter.
 
 Success data:
 
-- no Node-guaranteed success keys
+- `key`: canonical button name
+- TV remote buttons also return `dispatchSource: "host"` and either `keyCode`
+  or `activity`
 
 Common failures:
 
 - `EXECUTION_VALIDATION_FAILED` for missing or unsupported key
+- failed `press_key` step with `TV_REMOTE_KEY_FAILED` or
+  `TV_REMOTE_ACTIVITY_FAILED` when host dispatch fails, including unresolved
+  activities even when Android's `am start` exits with code zero
+- `UNSUPPORTED_RUNTIME_TV_REMOTE` for TV buttons sent directly to the APK
+  without the Node bridge
+
+CLI examples:
+
+```bash
+androperator press dpad_up --device <device_serial>
+androperator press --key dpad_center --device <device_serial>
+androperator press profile --device <device_serial>
+androperator press settings --device <device_serial>
+```
 
 Example:
 

@@ -69,7 +69,7 @@ export interface ActionParams {
   validatorPattern?: string;
   /** read_text: when true, return all matches */
   all?: boolean;
-  /** press_key: back | home | recents */
+  /** press_key: canonical system/TV remote button name (see SYSTEM_KEYS). */
   key?: string;
   retry?: Record<string, unknown>;
   scrollRetry?: Record<string, unknown>;

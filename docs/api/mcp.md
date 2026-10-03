@@ -634,13 +634,13 @@ Example regex-validated read:
 <a id="mcp-tool-press"></a>
 ### `press`
 
-Press a supported Android navigation key.
+Press a supported Android navigation key or TV remote button.
 
 Parameters:
 
 | Field | Required | Notes |
 | --- | --- | --- |
-| `key` | yes | One of `back`, `home`, `recents` |
+| `key` | yes | One of `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv`. See [button mappings and dispatch behavior](actions.md#action-press-key). |
 | `deviceId` | no | Explicit target device |
 | `operatorPackage` | no | Explicit operator package |
 | `timeoutMs` | no | Execution timeout. Defaults to `10000`. |

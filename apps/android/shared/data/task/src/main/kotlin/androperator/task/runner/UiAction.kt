@@ -258,7 +258,16 @@ enum class UiTextValidator {
 enum class UiSystemKey {
     BACK,
     HOME,
-    RECENTS;
+    RECENTS,
+    DPAD_UP,
+    DPAD_DOWN,
+    DPAD_LEFT,
+    DPAD_RIGHT,
+    DPAD_CENTER,
+    BOOKMARK,
+    PROFILE,
+    SETTINGS,
+    TV;
 
     companion object {
         fun fromWire(value: String): UiSystemKey =
@@ -266,6 +275,15 @@ enum class UiSystemKey {
                 "back" -> BACK
                 "home" -> HOME
                 "recents" -> RECENTS
+                "dpad_up" -> DPAD_UP
+                "dpad_down" -> DPAD_DOWN
+                "dpad_left" -> DPAD_LEFT
+                "dpad_right" -> DPAD_RIGHT
+                "dpad_center" -> DPAD_CENTER
+                "bookmark" -> BOOKMARK
+                "profile" -> PROFILE
+                "settings" -> SETTINGS
+                "tv" -> TV
                 else -> error("unsupported key: $value")
             }
     }

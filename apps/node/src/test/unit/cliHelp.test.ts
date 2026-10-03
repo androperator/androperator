@@ -1088,6 +1088,39 @@ describe("promoted flat commands - help and missing-arg errors", () => {
     assert.match(obj.message ?? "", /not both/);
   });
 
+  it("press help lists the TV remote buttons", async () => {
+    const { stdout, code } = await runCli(["press", "--help"]);
+    assert.strictEqual(code, 0);
+    for (const key of ["dpad_up", "dpad_down", "dpad_left", "dpad_right", "dpad_center", "bookmark", "profile", "settings", "tv"]) assert.ok(stdout.includes(key), key);
+  });
+
+  it("accepts TV button arguments with global device flags before or after press", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "androperator-tv-cli-"));
+    try {
+      for (const args of [
+        ["--device", "test-device", "press", "dpad_up", "--no-daemon"],
+        ["press", "dpad_up", "--device", "test-device", "--no-daemon"],
+        ["--device", "test-device", "press", "--key", "profile", "--no-daemon"],
+        ["press", "--key", "profile", "--device", "test-device", "--no-daemon"],
+      ]) {
+        const { stdout, code } = await runCli(args, { ADB_PATH: join(directory, "absent-adb"), ANDROPERATOR_NO_DAEMON: "1" });
+        assert.strictEqual(code, 1, stdout);
+        // The unavailable selected device proves syntax validation reached device resolution.
+        assert.strictEqual(JSON.parse(stdout).code, "DEVICE_NOT_FOUND", stdout);
+      }
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("press rejects unknown and missing TV button values as structured errors", async () => {
+    for (const args of [["press", "profile_switch"], ["press", "--key", "KEYCODE_TV"], ["press", "--key"], ["press"]]) {
+      const { stdout, code } = await runCli(args);
+      assert.strictEqual(code, 1, stdout);
+      assert.ok(JSON.parse(stdout).code, stdout);
+    }
+  });
+
   it("press rejects positional key together with --key (exit 1)", async () => {
     const { stdout, code } = await runCli(["press", "back", "--key", "home"]);
     assert.strictEqual(code, 1, stdout);

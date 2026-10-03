@@ -20,6 +20,10 @@ class UiGlobalActionDispatcherAndroid(
                 UiSystemKey.BACK -> AccessibilityService.GLOBAL_ACTION_BACK
                 UiSystemKey.HOME -> AccessibilityService.GLOBAL_ACTION_HOME
                 UiSystemKey.RECENTS -> AccessibilityService.GLOBAL_ACTION_RECENTS
+                else -> throw UiActionFailure(
+                    "UNSUPPORTED_RUNTIME_TV_REMOTE",
+                    "TV remote buttons require the Androperator Node bridge",
+                )
             }
 
         return service.performGlobalAction(globalAction)

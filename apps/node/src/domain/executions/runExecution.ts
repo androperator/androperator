@@ -1,3 +1,5 @@
+import { isTvRemoteKey } from "../../contracts/keys.js";
+import { runTvRemoteSequence } from "../actions/tvRemote.js";
 import { getLoggingStatus } from "../../adapters/logger.js";
 import { verifyScreenshot } from "../observe/screenshotMetadata.js";
 import type { ScreenshotMetadata } from "../../contracts/screenshot.js";
@@ -478,7 +480,8 @@ function buildCloseAppOnlySuccessEnvelope(execution: Execution): ResultEnvelope 
 async function performExecution(
   executionInput: unknown,
   options: RunExecutionOptions,
-  evidence: ExecutionFailureEvidence
+  evidence: ExecutionFailureEvidence,
+  lockAlreadyHeld = false,
 ): Promise<PerformExecutionResult> {
   const config = getDefaultRuntimeConfig({
     deviceId: options.deviceId,
@@ -667,12 +670,31 @@ async function performExecution(
     });
   }
 
-  if (!tryAcquire(deviceId, execution.commandId)) {
+  if (!lockAlreadyHeld && !tryAcquire(deviceId, execution.commandId)) {
     cancelEarlyResultWaiter();
     return { execution, result: { ok: false, error: getConflictError(deviceId, execution.commandId), deviceId } };
   }
 
   try {
+    if (execution.actions.some(action => action.type === "press_key" && isTvRemoteKey(action.params?.key))) {
+      cancelEarlyResultWaiter();
+      const readiness = await (options.ensureInteractiveAutomationReadyFn ?? ensureInteractiveAutomationReadyCached)(config, {
+        probeInteractiveStateFn: options.probeInteractiveStateFn,
+      });
+      if (!readiness.ok) return { execution, result: { ok: false, deviceId, error: {
+        ...(readiness.error.code === ERROR_CODES.DEVICE_NOT_INTERACTIVE ? toPublicInteractiveAutomationError(readiness.error) : readiness.error),
+      } } };
+      evidence.phase = "dispatch";
+      evidence.dispatchState = "unknown";
+      const result = await runTvRemoteSequence(execution, config, async (segment, signal) => {
+        const segmentEvidence: ExecutionFailureEvidence = {
+          phase: "readiness", dispatchState: "not_dispatched", startedAt: new Date().toISOString(),
+        };
+        return (await performExecution(segment, { ...options, deviceId, signal }, segmentEvidence, true)).result;
+      }, options.signal);
+      if (result.ok) emitResult(deviceId, result.envelope);
+      return { execution, result };
+    }
     // Host-side close_app preflight is safe even when the device is not yet interactive.
     const successfulCloseActionIds = new Set<string>();
     let closeAppPreflight: Awaited<ReturnType<typeof runCloseAppPreflight>>;
@@ -693,7 +715,7 @@ async function performExecution(
     if (isCloseAppOnlyExecution(execution)) {
       cancelEarlyResultWaiter();
       const envelope = buildCloseAppOnlySuccessEnvelope(execution);
-      emitResult(deviceId, envelope);
+      if (!lockAlreadyHeld) emitResult(deviceId, envelope);
       return {
         execution,
         result: {
@@ -875,7 +897,7 @@ async function performExecution(
       }
 
       result.envelope.diagnostics = { logging: getLoggingStatus(options.logger) };
-      emitResult(deviceId, result.envelope);
+      if (!lockAlreadyHeld) emitResult(deviceId, result.envelope);
       return {
         execution,
         result: { ok: true, envelope: result.envelope, deviceId, terminalSource: result.terminalSource },
@@ -929,7 +951,7 @@ async function performExecution(
     if (!broadcastReleased) {
       cancelEarlyResultWaiter();
     }
-    release(deviceId, execution.commandId);
+    if (!lockAlreadyHeld) release(deviceId, execution.commandId);
   }
 }
 

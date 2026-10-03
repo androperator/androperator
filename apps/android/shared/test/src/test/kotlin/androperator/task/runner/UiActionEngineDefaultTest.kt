@@ -614,6 +614,18 @@ class UiActionEngineDefaultTest : ActionTest {
         }
 
     @Test
+    fun `bridge-only TV button preserves explicit unsupported runtime failure`() = actionTest {
+        val engine = UiActionEngineDefault(DeveloperOptionsManagerMock(),
+            UiGlobalActionDispatcherMock(error = UiActionFailure("UNSUPPORTED_RUNTIME_TV_REMOTE", "Use Node bridge")))
+        val result = engine.execute(RecordingTaskScope(RecordingTaskUiScope()),
+            UiActionPlan("tv-command", "tv-task", "test", listOf(UiAction.PressKey("button", UiSystemKey.BOOKMARK))))
+        assertEquals("tv-command", result.commandId)
+        assertEquals("tv-task", result.taskId)
+        assertEquals("UNSUPPORTED_RUNTIME_TV_REMOTE", result.errorCode)
+        assertFalse(result.stepResults.single().success)
+    }
+
+    @Test
     fun `execute press_key preserves typed service failure`() = actionTest {
         val engine = UiActionEngineDefault(DeveloperOptionsManagerMock(),
             UiGlobalActionDispatcherMock(error = UiActionFailure("SERVICE_UNAVAILABLE", "Service unavailable")))

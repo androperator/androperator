@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [1.0.0] - Unreleased
 
+### Renamed from Clawperator
+
+Clawperator has been renamed to **Androperator**, starting with version **1.0.0**.
+It remains the deterministic hand for an agent's brain: a tool for agents to
+navigate, observe, and control Android apps, especially during agentic development.
+
+The rename includes the npm package, CLI, Android app, environment variables,
+local configuration paths, and runtime result envelope. Existing integrations
+must adopt the new names together; the renamed Android app installs separately
+and needs its permissions granted. See the [migration guide](docs/migration-to-androperator.md).
+
+Entries below version 1.0.0 describe releases published as Clawperator. Their
+original names and links are retained as historical records.
+
 ### Breaking changes
 
 - Rename the product, npm package and CLI to Androperator. Use `ANDROPERATOR_*`,

@@ -40,9 +40,15 @@ def internet(nodes):
     return wifi[0]
 
 
+class HierarchyTreeBuilder(ET.TreeBuilder):
+    def doctype(self, name, pubid, system):
+        # Device hierarchy XML never needs a DTD or entity definitions.
+        raise ValueError("Hierarchy XML must not contain a DOCTYPE")
+
+
 def parity(nodes, xml):
     wifi = internet(nodes)
-    tree = ET.fromstring(xml)
+    tree = ET.fromstring(xml, parser=ET.XMLParser(target=HierarchyTreeBuilder()))
     root = tree.find('node')
     assert root is not None and root.get('package') == 'com.android.settings', 'Wrong XML application root'
     assert root.get('accessibility-data-sensitive') == 'true', 'XML root sensitivity'

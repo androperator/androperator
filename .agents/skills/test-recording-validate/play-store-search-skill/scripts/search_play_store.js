@@ -24,7 +24,7 @@
 
 const { execFileSync } = require('child_process');
 const path = require('path');
-const { writeFileSync } = require('fs');
+const { mkdtempSync, writeFileSync, rmSync } = require('fs');
 const { tmpdir } = require('os');
 
 const deviceId = process.argv[2] || process.env.DEVICE_ID;
@@ -38,12 +38,14 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..');
 const LOCAL_CLAW = path.join(REPO_ROOT, 'apps', 'node', 'dist', 'cli', 'index.js');
 
 function runAndroperatorLocal(execution, deviceId, operatorPkg) {
-  const tmpFile = path.join(tmpdir(), execution.commandId + '.json');
-  writeFileSync(tmpFile, JSON.stringify(execution));
+  // A private directory prevents shared-temp symlink substitution and name collisions.
+  const executionDir = mkdtempSync(path.join(tmpdir(), 'play-store-execution-'));
+  const tmpFile = path.join(executionDir, 'execution.json');
 
   const args = [LOCAL_CLAW, 'exec', '--execution', tmpFile, '--device', deviceId, '--operator-package', operatorPkg];
 
   try {
+    writeFileSync(tmpFile, JSON.stringify(execution), { mode: 0o600 });
     const output = execFileSync('node', args, { encoding: 'utf-8' });
     const result = JSON.parse(output);
     return { ok: true, result, raw: output };
@@ -52,6 +54,8 @@ function runAndroperatorLocal(execution, deviceId, operatorPkg) {
     if (e.stderr) msg += '\nSTDERR: ' + Buffer.from(e.stderr).toString();
     if (e.stdout) msg += '\nSTDOUT: ' + Buffer.from(e.stdout).toString();
     return { ok: false, error: msg };
+  } finally {
+    rmSync(executionDir, { recursive: true, force: true });
   }
 }
 

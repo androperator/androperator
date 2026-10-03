@@ -66,6 +66,10 @@ Recommended - the installer handles Node, Java 17, adb, CLI bootstrap, and the d
 curl -fsSL https://androperator.com/install.sh | bash
 ```
 
+When bootstrapping nvm, the installer downloads version 0.40.1 over HTTPS and
+verifies its pinned SHA-256 checksum with `sha256sum` or `shasum` before running
+it. A missing checksum tool, failed download, or checksum mismatch stops setup.
+
 If the installer succeeds, skip to [5. Verify readiness with doctor](#5-verify-readiness-with-doctor).
 
 When more than one adb-visible device is present, the installer reports each

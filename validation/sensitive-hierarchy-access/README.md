@@ -1,5 +1,8 @@
 # Sensitive hierarchy access regression
 
+The XML parity check rejects DOCTYPE declarations before parsing device hierarchy
+content, so entity definitions cannot be expanded.
+
 Run from the repository root after building Node and installing the matching APK:
 
 ```sh

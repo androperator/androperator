@@ -16,6 +16,14 @@ class AssertionsTest(unittest.TestCase):
     def test_known_values_and_parity(self):
         parity(self.nodes, self.xml)
 
+    def test_device_xml_rejects_entity_definitions(self):
+        for declaration in (
+            '<!DOCTYPE hierarchy [<!ENTITY payload "expanded">]>',
+            '<!DOCTYPE hierarchy SYSTEM "file:///etc/passwd">',
+        ):
+            with self.assertRaisesRegex(ValueError, "DOCTYPE"):
+                parity(self.nodes, declaration + self.xml)
+
     def test_original_missing_root_is_failure(self):
         with self.assertRaises(AssertionError):
             envelope(dict(envelope=dict(commandId='query', taskId='query', status='failed', stepResults=[], errorCode='UI_TREE_UNAVAILABLE')))

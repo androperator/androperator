@@ -1,9 +1,8 @@
 # Context adapter
 
-The linked helper is a historical Clawperator reference, not an Androperator installation dependency. Bundled examples will be added separately.
-
-The companion skills repository provides a provider-neutral adapter in
-[`skills/utils/observation_context.js`](https://github.com/clawperator/clawperator-skills/blob/main/skills/utils/observation_context.js).
+The optional bundled examples provide a provider-neutral adapter in
+[`examples/skills/utils/observation_context.js`](https://github.com/androperator/androperator/blob/main/examples/skills/utils/observation_context.js).
+It is an example helper, not an installation dependency.
 It selects evidence for model context without changing Androperator's execution
 contract. It contains no model calls, app navigation policy, or retry loop.
 The two Settings version-details examples use it through their shared Settings

@@ -122,9 +122,9 @@ Measure provider request latency separately from whole-run wall time; do not
 present agent tool-call counts as exact model-request counts. Retain failures and
 successes in isolated local artifacts, and sanitize evidence before sharing it.
 
-The [Codex-only Settings skill](https://github.com/clawperator/clawperator-skills/tree/main/skills/com.android.settings.get-version-details-codex)
-and [Codex with Jev Settings skill](https://github.com/clawperator/clawperator-skills/tree/main/skills/com.android.settings.get-version-details-codex-with-jev)
-are historical reference implementations from the former Clawperator catalog; they have not yet been ported to Androperator. Bundled examples are planned separately. Their instructions own setup, app-specific
+The [Codex-only Settings skill](https://github.com/androperator/androperator/tree/main/examples/skills/com.android.settings.get-version-details-codex)
+and [Codex with Jev Settings skill](https://github.com/androperator/androperator/tree/main/examples/skills/com.android.settings.get-version-details-codex-with-jev)
+are optional bundled Androperator examples adapted from the former catalog. Their instructions own setup, app-specific
 candidates, limits and terminal verification. Those choices are examples, not
 requirements for every Jev integration. See [Development workflow](development.md)
 for skill validation and iteration.

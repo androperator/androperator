@@ -1,0 +1,12 @@
+{
+  "id": "com.android.settings.capture-overview",
+  "applicationId": "com.android.settings",
+  "intent": "capture-overview",
+  "summary": "Open Settings and retain a current snapshot without inferring version details.",
+  "path": "skills/com.android.settings.capture-overview",
+  "skillFile": "skills/com.android.settings.capture-overview/SKILL.md",
+  "scripts": [
+    "skills/com.android.settings.capture-overview/scripts/run.js"
+  ],
+  "artifacts": []
+}

@@ -1,0 +1,23 @@
+{
+  "id": "com.android.settings.get-version-details-codex",
+  "applicationId": "com.android.settings",
+  "intent": "get-version-details",
+  "summary": "Read exact Android OS release version and Build number from live Settings UI using Codex.",
+  "path": "skills/com.android.settings.get-version-details-codex",
+  "skillFile": "skills/com.android.settings.get-version-details-codex/SKILL.md",
+  "scripts": [
+    "skills/com.android.settings.get-version-details-codex/scripts/run.js"
+  ],
+  "artifacts": [],
+  "contract": {
+    "inputs": {},
+    "goal": {
+      "kind": "get_android_version_details"
+    },
+    "verification": null
+  },
+  "agent": {
+    "cli": "codex",
+    "timeoutMs": 300000
+  }
+}

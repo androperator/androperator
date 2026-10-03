@@ -47,6 +47,7 @@ def main(argv=None):
         'validation': [
             ['python3', '-m', 'unittest', 'discover', '-s', 'validation/cloudflare'],
             ['node', 'validation/video-stream-verification/test-video-stream.mjs'],
+            ['node', '--test', *[str(path.relative_to(ROOT)) for path in sorted((ROOT / 'validation/skills').glob('*.test.js'))]],
             ['python3', '-m', 'unittest', 'discover', '-s', 'validation'],
             ['python3', '-m', 'unittest', 'discover', '-s', 'validation/sensitive-hierarchy-access'],
             ['python3', '-m', 'unittest', 'discover', '-s', 'validation/result-transport-reliability'],

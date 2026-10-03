@@ -115,6 +115,49 @@ class SecurityCheckTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     check.extract(archive, root / "output")
 
+    def test_scanner_install_requires_hashes_and_invalidates_changed_lock(self):
+        lock = json.loads(check.LOCK.read_text())
+        self.assertIn(f"semgrep=={lock['semgrep']['version']}", check.REQUIREMENTS.read_text())
+        self.assertIn(f"semgrep=={lock['semgrep']['version']}",
+                      Path(__file__).with_name("requirements.in").read_text().splitlines())
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            requirements = root / "requirements.txt"
+            requirements.write_text("first lock")
+
+            def fake_extract(_archive, destination):
+                destination.mkdir(parents=True, exist_ok=True)
+                (destination / "reviewdog").write_text("reporter fixture")
+
+            def fake_run(command, **_kwargs):
+                if "venv" in command:
+                    binary = Path(command[-1]) / "bin" / "semgrep"
+                    binary.parent.mkdir(parents=True, exist_ok=True)
+                    binary.write_text("scanner fixture")
+                return process_result(command, 0)
+
+            with patch.object(check, "REQUIREMENTS", requirements), \
+                 patch.object(check, "download", return_value=root / "archive"), \
+                 patch.object(check, "extract", side_effect=fake_extract), \
+                 patch.object(check, "run", side_effect=fake_run) as run:
+                first, _ = check.install(lock, root, root / "temporary")
+                command = run.call_args.args[0]
+                self.assertIn("--require-hashes", command)
+                self.assertIn("--only-binary=:all:", command)
+                self.assertEqual(command[-2:], ["-r", str(requirements)])
+                run.reset_mock()
+                check.install(lock, root, root / "temporary")
+                run.assert_not_called()
+                requirements.write_text("changed lock")
+                second, _ = check.install(lock, root, root / "temporary")
+                self.assertNotEqual(first["semgrep"], second["semgrep"])
+                requirements.write_text("failed lock")
+                run.side_effect = subprocess.CalledProcessError(1, "pip")
+                with self.assertRaises(subprocess.CalledProcessError):
+                    check.install(lock, root, root / "temporary")
+                digest = hashlib.sha256(requirements.read_bytes()).hexdigest()
+                self.assertEqual(list(root.glob(f"semgrep-*-{digest}/.installed")), [])
+
     def test_full_reporter_status_is_propagated(self):
         with tempfile.TemporaryDirectory() as directory:
             with patch.object(check.sys, "argv", ["check.py", "--full"]), \
@@ -140,6 +183,7 @@ class SecurityCheckTests(unittest.TestCase):
                 self.assertEqual(check.main(), 0)
                 self.assertIn("--end-of-options", run.call_args_list[0].args[0])
                 self.assertIn("./sample.py", run.call_args_list[3].args[0])
+                self.assertIn("-filter-mode=file", report.call_args.args[0])
                 self.assertIn("-diff=git diff --no-ext-diff --no-textconv -U0 merge-sha", report.call_args.args[0])
 
     def test_only_exact_parser_exclusions_skip_a_diff_scan(self):
@@ -190,10 +234,17 @@ class LiveSecurityCheckTests(unittest.TestCase):
                 subprocess.run(["git", "-C", directory, "-c", "user.name=Fixture",
                                 "-c", "user.email=fixture@example.invalid", "commit",
                                 "-qm", "Add known fixture finding"], check=True)
-                # An existing finding is filtered out of the diff, but a full scan reports it.
+                # An unchanged file is not scanned, but a full scan reports its finding.
                 self.assertEqual(check.main(), 0)
                 with patch.object(check.sys, "argv", ["check.py", "--full", "--reporter", "github-annotations"]):
                     self.assertEqual(check.main(), 1)
+                # Change only a later line: the existing finding must still block and annotate.
+                script.write_text("import subprocess\nsubprocess.call(user_input, shell=True)\nprint(42)\n")
+                subprocess.run(["git", "-C", directory, "add", "sample.py"], check=True)
+                with patch.object(check.sys, "argv", ["check.py", "--base", "HEAD", "--reporter", "github-annotations"]), \
+                     patch.object(check.sys, "stdout", io.StringIO()) as output:
+                    self.assertEqual(check.main(), 1)
+                    self.assertIn("file=sample.py,line=2", output.getvalue())
                 script.write_text("print(42)\n")
                 subprocess.run(["git", "-C", directory, "add", "sample.py"], check=True)
                 self.assertEqual(check.main(), 0)

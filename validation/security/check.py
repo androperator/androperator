@@ -15,6 +15,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 LOCK = Path(__file__).with_name("tools.json")
+REQUIREMENTS = Path(__file__).with_name("requirements.txt")
 REVIEWS = Path(__file__).with_name("reviewed-findings.json")
 # Audit rules require manual context review; retain these concrete execution risks.
 AUDIT_RULES = {"curl-pipe-bash", "spawn-shell-true"}
@@ -83,14 +84,17 @@ def install(lock, cache, temporary):
     reporter.chmod(0o755)
 
     version = lock["semgrep"]["version"]
-    environment = cache / f"semgrep-{version}"
+    requirements_digest = hashlib.sha256(REQUIREMENTS.read_bytes()).hexdigest()
+    python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+    environment = cache / f"semgrep-{version}-py{python_version}-{requirements_digest}"
     scanner = environment / "bin" / "semgrep"
     # A failed install leaves no completion marker, so the next run retries it.
     marker = environment / ".installed"
     if not scanner.exists() or not marker.exists():
         run([sys.executable, "-m", "venv", str(environment)])
         run([str(environment / "bin" / "python"), "-m", "pip", "install",
-             "--disable-pip-version-check", f"semgrep=={version}"])
+             "--disable-pip-version-check", "--require-hashes", "--only-binary=:all:",
+             "-r", str(REQUIREMENTS)])
         marker.write_text(version)
     binaries = {"semgrep": str(scanner), "reviewdog": str(reporter)}
     rules = lock["rules"]
@@ -216,7 +220,7 @@ def main():
         command = [binaries["reviewdog"], "-f=rdjson", f"-reporter={'rdjson' if args.reporter == 'github-annotations' else 'local'}",
                    "-name=security", "-fail-level=any"]
         if base:
-            command.extend(["-filter-mode=added", f"-diff=git diff --no-ext-diff --no-textconv -U0 {shlex.quote(base)}"])
+            command.extend(["-filter-mode=file", f"-diff=git diff --no-ext-diff --no-textconv -U0 {shlex.quote(base)}"])
         else:
             command.append("-filter-mode=nofilter")
         # The executable is a verified release; cache location is trusted local configuration.

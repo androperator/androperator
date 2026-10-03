@@ -1,0 +1,3 @@
+semgrep==1.179.0
+# Cryptography 49+ dropped Intel macOS wheels; keep all supported hosts wheel-only.
+cryptography<49

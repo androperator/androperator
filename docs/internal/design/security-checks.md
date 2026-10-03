@@ -6,7 +6,7 @@ Run the security check before opening a pull request:
 python3 validation/security/check.py
 ```
 
-The default compares changed lines against the merge base with `origin/main`.
+The default compares changed files against the merge base with `origin/main`.
 Fetch the intended base before scanning. Select another base explicitly when
 needed:
 
@@ -15,12 +15,18 @@ python3 validation/security/check.py --base origin/main
 python3 validation/security/check.py --full
 ```
 
-Python 3.11+, Git, curl, and a network connection for the first download are
-required. macOS and Linux on arm64 and x86_64 are supported. The command installs
+Python 3.11-3.14, Git, curl, and a network connection for the first download are
+required. macOS and Linux on arm64 and x86_64 are supported; Linux requires
+glibc 2.34 or newer for the pinned scanner wheel. The command installs
 Semgrep CE in an isolated Python environment and downloads reviewdog and the
 maintained rules pinned in
 `validation/security/tools.json`. The scanner version is pinned and installed
-from PyPI; its transitive Python dependencies are resolved by pip at installation time. The scanner environment
+from PyPI with all transitive dependencies pinned and SHA-256 verified using
+`validation/security/requirements.txt`. Only wheels are installed, avoiding
+unlocked build dependencies. The scanner cache is keyed by the dependency lock
+and Python minor version. Cryptography is constrained below version 49 to
+retain Intel macOS wheels; revisit this constraint when updating dependencies.
+The scanner environment
 and downloads are cached under
 `${XDG_CACHE_HOME:-~/.cache}/androperator-security`. The rule archive and reviewdog
 release SHA-256 checksums are verified on every run. An intact cache and completed
@@ -72,7 +78,9 @@ so those workflow files remain scanned without parser exceptions.
 
 The default scans changed files in the working tree, including local tracked
 edits, then reviewdog reports
-only findings on added or modified lines in the diff. Untracked files have no
+all applicable findings anywhere in added or modified files, including findings
+on unchanged lines whose safety may be affected by surrounding edits. Existing
+findings in unchanged files are not reported. Untracked files have no
 Git diff and must be staged before they can produce findings in the default
 mode. With no changed files the command succeeds without downloading or scanning.
 `--full` scans the entire tree and reports existing issues too. Parse errors in
@@ -87,8 +95,8 @@ clean result. There is no LLM, paid scanner account, or API key involved. Versio
 checks and scanner metrics are disabled; scanning uses downloaded local rules.
 
 `.github/workflows/security.yml` runs the same check on pull requests to `main`,
-using the PR's base SHA and reporting GitHub workflow annotations on changed
-lines. Reviewdog filters the JSON findings locally; the check converts those
+using the PR's base SHA and reporting GitHub workflow annotations throughout changed
+files. Reviewdog filters the JSON findings locally; the check converts those
 filtered findings to escaped workflow annotations without calling GitHub's API.
 It uses a standard Ubuntu runner and read-only repository permissions;
 it does not post review comments or require a write token. A manual workflow run
@@ -110,5 +118,13 @@ SECURITY_RUN_LIVE=1 python3 -m unittest discover -s validation/security -v
 The live test downloads the same pinned tools and runs automatically in the
 security workflow. The orchestration tests also run in the repository's
 validation suite and in the security workflow. When updating tools or rules, update the pinned versions, commit, and
-checksums together, run the regression tests, and verify both a clean scan and a
-known finding with the real binaries.
+checksums together. Update `validation/security/requirements.in` to match the
+scanner version in `tools.json`, then regenerate its universal hash lock:
+
+```bash
+uv pip compile validation/security/requirements.in --universal --python-version 3.11 --generate-hashes --output-file validation/security/requirements.txt --no-emit-index-url
+```
+
+The lock covers supported macOS/Linux hosts and Python 3.11-3.14. Run the
+regression tests and verify both a clean scan and a known finding with the real
+binaries.

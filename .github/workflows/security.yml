@@ -24,7 +24,7 @@ jobs:
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cache/androperator-security
-          key: security-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('validation/security/tools.json') }}
+          key: security-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('validation/security/tools.json', 'validation/security/requirements.txt') }}
       - name: Test security check orchestration and real tools
         env:
           SECURITY_RUN_LIVE: '1'

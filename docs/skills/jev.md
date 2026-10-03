@@ -1,4 +1,4 @@
-# Using Jev in orchestrated skills
+# Optional Jev proposals for the current agent
 
 An orchestrating agent can use [Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)
 to propose a bounded decision from the current Android observation. The agent owns the task and recovery policy; local skill
@@ -9,7 +9,7 @@ CLI, Node API, or Android Operator.
 Use this pattern when a workflow benefits from repeated choices among a small
 set of observed actions. The integration belongs in the skill's orchestration
 code. Androperator does not provide a built-in Jev command or configure a provider
-for the agent. See [Authoring](authoring.md) for the skill contract and
+for the agent. See [Authoring](authoring.md) for adaptive instructions and
 [Host Agent Orientation](../host-agents.md) for selecting the CLI, device and
 Operator before execution.
 
@@ -106,7 +106,7 @@ After dispatch uncertainty, inspect current state before repeating a mutation.
 Preserve requested-command and readiness-probe evidence separately, including
 possible preflight effects. See [Execution failure evidence](../api/errors.md#execution-failure-evidence).
 Keep valid failed results even when no success receipt exists. Use only actual
-execution envelopes in [skill results](runtime.md); do not invent an envelope
+execution envelopes in [retained execution evidence](runtime.md); do not invent an envelope
 for a failed command slot.
 
 ## Validate the integration
@@ -122,12 +122,12 @@ Measure provider request latency separately from whole-run wall time; do not
 present agent tool-call counts as exact model-request counts. Retain failures and
 successes in isolated local artifacts, and sanitize evidence before sharing it.
 
-The [Codex-only Settings skill](https://github.com/clawperator/clawperator-skills/tree/main/skills/com.android.settings.get-version-details-codex)
-and [Codex with Jev Settings skill](https://github.com/clawperator/clawperator-skills/tree/main/skills/com.android.settings.get-version-details-codex-with-jev)
-are historical reference implementations from the former Clawperator catalog; they have not yet been ported to Androperator. Bundled examples are planned separately. Their instructions own setup, app-specific
+The [Agent-followed Settings instructions](https://github.com/androperator/androperator/tree/main/examples/skills/com.android.settings.get-version-details)
+and [Settings instructions with optional Jev](https://github.com/androperator/androperator/tree/main/examples/skills/com.android.settings.get-version-details-with-jev)
+are current repository examples followed by the current agent. Their instructions own setup, app-specific
 candidates, limits and terminal verification. Those choices are examples, not
 requirements for every Jev integration. See [Development workflow](development.md)
-for skill validation and iteration.
+for helper validation and instruction iteration.
 
 
 ## Observation failure recovery

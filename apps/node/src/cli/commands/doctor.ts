@@ -145,11 +145,11 @@ function formatDoctorText(value: string): string {
 
   const withCommands = value
     .replace(/\[Androperator-Result\]/g, "`[Androperator-Result]`")
-    .replace(/\b(?:brew install --cask android-platform-tools|sudo apt update && sudo apt install android-tools-adb|brew install scrcpy ffmpeg|androperator skills install|androperator doctor --device <device_serial>)(?=\b|[\s.,])/g, command => `\`${command}\``)
+    .replace(/\b(?:brew install --cask android-platform-tools|sudo apt update && sudo apt install android-tools-adb|brew install scrcpy ffmpeg|androperator doctor --device <device_serial>)(?=\b|[\s.,])/g, command => `\`${command}\``)
     .replace(/--operator-package [\w.]+/g, code => `\`${code}\``)
     .replace(/'([A-Za-z][\w.-]*)'/g, (_match, code: string) => `\`${code}\``);
   return withCommands.split(/(`[^`]*`)/g).map(segment => segment.startsWith("`")
     ? segment
-    : segment.replace(/\b(?:ANDROPERATOR_[A-Z_]+|PATH|skill\.json(?:\.agent\.cliPath)?|skills-registry\.json|SKILL\.md|doctor_ping|host\.video\.dependencies|com\.androperator\.operator(?:\.dev)?|adb|ffmpeg|ffprobe|scrcpy|libx264)\b|--[a-z][\w-]*|-(?:fps_mode|enc_time_base)\s+\w+/g, code => `\`${code}\``)
+    : segment.replace(/\b(?:ANDROPERATOR_[A-Z_]+|PATH|SKILL\.md|doctor_ping|host\.video\.dependencies|com\.androperator\.operator(?:\.dev)?|adb|ffmpeg|ffprobe|scrcpy|libx264)\b|--[a-z][\w-]*|-(?:fps_mode|enc_time_base)\s+\w+/g, code => `\`${code}\``)
   ).join("");
 }

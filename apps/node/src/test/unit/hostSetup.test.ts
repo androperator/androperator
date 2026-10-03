@@ -10,8 +10,6 @@ const ENV_KEYS = [
   "HOME",
   "CODEX_HOME",
   "ADB_PATH",
-  "ANDROPERATOR_SKILLS_REGISTRY",
-  "SKILLS_REGISTRY_PATH",
 ] as const;
 
 const ORIGINAL_ENV = new Map<string, string | undefined>(
@@ -31,41 +29,6 @@ afterEach(async () => {
 
 async function makeTempHome(): Promise<string> {
   return mkdtemp(join(tmpdir(), "androperator-host-setup-"));
-}
-
-async function writeRuntimeRegistry(homeDir: string): Promise<string> {
-  const registryPath = join(homeDir, ".androperator", "skills", "skills", "skills-registry.json");
-  await mkdir(join(homeDir, ".androperator", "skills", "skills"), { recursive: true });
-  await writeFile(
-    registryPath,
-    `${JSON.stringify({
-      schemaVersion: "1.0",
-      generatedAt: "2026-04-23T00:00:00Z",
-      skills: [
-        {
-          id: "com.example.weather.check-status",
-          applicationId: "com.example.weather",
-          intent: "check_status",
-          summary: "Checks the current weather status",
-          contract: {
-            inputs: {
-              city_name: {
-                type: "string",
-              },
-            },
-          },
-        },
-      ],
-    }, null, 2)}\n`,
-    "utf8",
-  );
-  return registryPath;
-}
-
-async function writeBundledSkill(homeDir: string, skillName: string): Promise<void> {
-  const skillDir = join(homeDir, ".androperator", "bundled-skills", skillName);
-  await mkdir(skillDir, { recursive: true });
-  await writeFile(join(skillDir, "SKILL.md"), `# ${skillName}\n`, "utf8");
 }
 
 describe("setupHost", () => {
@@ -88,7 +51,6 @@ describe("setupHost", () => {
         schemaVersion: 1,
         installedAt: "2026-04-23T10:11:12Z",
         cliVersion: "1.2.3",
-        registryPath: null,
         apkVersion: null,
         lastDeviceSerial: null,
       });
@@ -128,42 +90,6 @@ describe("setupHost", () => {
         "serve",
       ]);
       assert.strictEqual(parsed.genericStdioConsumer.server.env.ADB_PATH, "/opt/android/platform-tools/adb");
-    } finally {
-      await rm(homeDir, { recursive: true, force: true });
-    }
-  });
-
-  it("writes AGENTS.md content using installed runtime skill information when available", async () => {
-    const homeDir = await makeTempHome();
-
-    try {
-      const registryPath = await writeRuntimeRegistry(homeDir);
-      await writeBundledSkill(homeDir, "androperator-agent-orientation");
-      await writeBundledSkill(homeDir, "androperator-upgrade");
-      await writeBundledSkill(homeDir, "androperator-skill-author-by-agent-discovery");
-      await writeBundledSkill(homeDir, "androperator-skill-author-by-recording");
-      await writeFile(join(homeDir, ".androperator", "bundled-skills", "version.txt"), "0.7.4\n", "utf8");
-
-      await setupHost({
-        env: { HOME: homeDir, ANDROPERATOR_SKILLS_REGISTRY: registryPath },
-        installedAt: "2026-04-23T10:11:12Z",
-        cliJsPath: "/opt/androperator/dist/cli/index.js",
-        processExecPath: "/usr/local/bin/node",
-      });
-
-      const guidePath = join(homeDir, ".androperator", "AGENTS.md");
-      const guide = await readFile(guidePath, "utf8");
-
-      assert.match(guide, /## Runtime Skills/);
-      assert.match(guide, new RegExp(registryPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-      assert.match(guide, /### Application/);
-      assert.match(guide, /com\.example\.weather/);
-      assert.match(guide, /com\.example\.weather\.check-status/);
-      assert.match(guide, /androperator skills run com\.example\.weather\.check-status --city-name <city_name>/);
-      assert.match(guide, /npm install -g androperator@latest/);
-      assert.match(guide, /androperator install/);
-      assert.match(guide, /install\.sh` as recovery-only fallback/);
-      assert.match(guide, /Recommended first-run flow:/);
     } finally {
       await rm(homeDir, { recursive: true, force: true });
     }
@@ -235,7 +161,7 @@ describe("setupHost", () => {
       assert.match(bridge, /Footer text/);
       assert.strictEqual((bridge.match(/ANDROPERATOR_SHARED_AGENT_BRIDGE:START/g) ?? []).length, 1);
       assert.strictEqual((bridge.match(/ANDROPERATOR_SHARED_AGENT_BRIDGE:END/g) ?? []).length, 1);
-      assert.match(bridge, /Androperator runtime skills stay in the `androperator` CLI surface\./);
+      assert.match(bridge, /The current agent follows instructions/);
 
       const firstBridge = first.artifacts.find((artifact) => artifact.artifact === "sharedAgentBridge");
       const secondBridge = second.artifacts.find((artifact) => artifact.artifact === "sharedAgentBridge");
@@ -286,8 +212,6 @@ describe("cmdHostSetup", () => {
 
     try {
       process.env.HOME = homeDir;
-      delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
-      delete process.env.SKILLS_REGISTRY_PATH;
       delete process.env.ADB_PATH;
       process.env.CODEX_HOME = join(homeDir, ".codex");
 
@@ -332,8 +256,6 @@ describe("cmdHostSetup", () => {
 
     try {
       process.env.HOME = homeDir;
-      delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
-      delete process.env.SKILLS_REGISTRY_PATH;
       delete process.env.ADB_PATH;
       delete process.env.CODEX_HOME;
 
@@ -363,8 +285,6 @@ describe("cmdHostSetup", () => {
 
     try {
       process.env.HOME = homeDir;
-      delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
-      delete process.env.SKILLS_REGISTRY_PATH;
       delete process.env.ADB_PATH;
       delete process.env.CODEX_HOME;
 

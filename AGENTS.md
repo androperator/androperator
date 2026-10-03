@@ -81,13 +81,13 @@ material only where release/version management requires it.
 
 ## Skills and Task Packs
 
-- Agents create and run local skills. Optional bundled examples will live in
+- Agents follow and author reusable instructions. Optional bundled examples will live in
   `examples/skills/`; no companion skills catalog is required.
   Canonical skill documentation lives here in `docs/skills/`.
 - Repo maintenance skills live in `.agents/skills/`. Keep descriptions narrowly
   scoped and load conditional references only when needed.
-- For contract changes affecting runtime skills, update bundled authoring skills
-  and fixtures in lockstep and run relevant skills smoke checks.
+- For execution changes affecting agent instructions, update bundled guidance
+  and fixtures in lockstep and run relevant execution and helper checks.
 - `tasks/` holds temporary handoffs. Separate active tasks may have separate
   packs, including small tasks. Before retiring a pack, move durable knowledge
   to docs, skills, or code and preserve actionable follow-up.
@@ -127,7 +127,7 @@ Relevant device helpers:
 - Debug install: `./gradlew :app:installDebug`; launch the app's actual main activity.
 - Permissions: `./scripts/androperator_grant_android_permissions.sh`.
 - Ingress: `./scripts/androperator_validate_operator_ingress.sh`.
-- Smoke: `./scripts/androperator_smoke_core.sh`, `./scripts/androperator_smoke_skills.sh`.
+- Smoke: `./scripts/androperator_smoke_core.sh`.
 - Opt-in integration: `ANDROPERATOR_RUN_INTEGRATION=1 ./scripts/androperator_integration_canonical.sh`.
 - Formatting: `./scripts/apply_coding_standards.sh -f`.
 

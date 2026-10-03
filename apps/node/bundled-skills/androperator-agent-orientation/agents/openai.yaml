@@ -1,4 +1,4 @@
 interface:
-  display_name: "Androperator Agent Orientation"
-  short_description: "Get started with Androperator for Android automation"
-  default_prompt: "Use $androperator-agent-orientation to establish the intended CLI/device/Operator selection and choose one next entry point. Use $androperator-agent-control-loop for adaptive execution after checking runtime-skill goal coverage. Follow its selection-before-readiness order and evidence requirements. Finish with the readiness result, one concrete next step, and its canonical reference, or the specific blocker and recovery reference."
+  display_name: "androperator-agent-orientation"
+  short_description: "Orient an unfamiliar host for Android execution with Androperator."
+  default_prompt: "Follow this guidance in the current agent for the authorized Android goal."

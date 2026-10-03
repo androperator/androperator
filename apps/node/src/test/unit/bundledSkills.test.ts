@@ -1,8 +1,9 @@
 import { afterEach, describe, it } from "node:test";
 import assert from "node:assert";
 import { chmod, cp, lstat, mkdtemp, realpath, mkdir, readFile, readlink, rm, stat, symlink, writeFile } from "node:fs/promises";
-import { join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
 import { getCliVersion } from "../../domain/version/compatibility.js";
 import { cmdBundledSkillsInstall, cmdBundledSkillsList } from "../../cli/commands/bundledSkills.js";
 import {
@@ -12,13 +13,13 @@ import {
   resolveBundledSkillDiscoveryGroups,
   MANAGED_BUNDLED_SKILL_COPY_MARKER,
   MANAGED_BUNDLED_SKILL_COPY_MARKER_CONTENT,
-} from "../../domain/skills/copyBundledSkills.js";
+} from "../../domain/bundledSkills/copyBundledSkills.js";
 
 import { checkBundledSkillsStaleness } from "../../domain/doctor/checks/hostChecks.js";
 
 import { getDefaultRuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 
-import { moveLegacyBundledSkillToBackup } from "../../domain/skills/legacyBundledSkills.js";
+import { moveLegacyBundledSkillToBackup } from "../../domain/bundledSkills/legacyBundledSkills.js";
 
 const tempRoots: string[] = [];
 const directorySymlinkType = process.platform === "win32" ? "junction" : "dir";
@@ -50,7 +51,7 @@ async function createLegacySkillFixture(skillName = "androperator-upgrade", cons
   const homeDir = join(root, "home");
   const sourceDir = resolvePackagedBundledSkillsSourceDir({ env: {} });
   const legacyPath = join(homeDir, consumer, "skills", skillName);
-  await cp(join(sourceDir, skillName), legacyPath, { recursive: true });
+  await cp(join(dirname(fileURLToPath(import.meta.url)), "../../../src/test/fixtures/bundled-guidance", skillName), legacyPath, { recursive: true });
   return { root, homeDir, sourceDir, skillName, legacyPath };
 }
 
@@ -997,14 +998,15 @@ describe("bundled discovery directory aliases", () => {
   });
 
   it("backs up exact unmarked first-party copies once and leaves Doctor clean", async () => {
-    const { homeDir, sourceDir, skillName } = await createLegacySkillFixture("androperator-upgrade", ".agents");
+    const { homeDir, sourceDir, legacyPath } = await createLegacySkillFixture("androperator-upgrade", ".agents");
+    const oldMarkdown = await readFile(join(legacyPath, "SKILL.md"), "utf8");
     await mkdir(join(homeDir, ".claude"), { recursive: true });
     await symlink(join(homeDir, ".agents", "skills"), join(homeDir, ".claude", "skills"), directorySymlinkType);
     const options = { homeDir, sourceDir, env: {}, cliVersion: "1.2.3" };
     const result = await copyBundledSkills(options);
     assert.ok(result.ok, JSON.stringify(result));
     assert.equal(result.migrations.length, 1);
-    assert.equal(await readFile(join(result.migrations[0].backupPath, "SKILL.md"), "utf8"), await readFile(join(sourceDir, skillName, "SKILL.md"), "utf8"));
+    assert.equal(await readFile(join(result.migrations[0].backupPath, "SKILL.md"), "utf8"), oldMarkdown);
     assert.equal((await checkBundledSkillsStaleness(getDefaultRuntimeConfig(), options)).status, "pass");
     const repeated = await copyBundledSkills(options);
     assert.ok(repeated.ok);

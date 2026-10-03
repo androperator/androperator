@@ -107,12 +107,13 @@ curl -fsSL https://androperator.com/install.sh | bash
 - [Setup](docs/setup.md) - host requirements, APK installation, and permissions.
 - [API overview](docs/api/overview.md) - CLI, HTTP API, actions, and result contracts.
 - [Operator automation playbook](docs/internal/design/operator-llm-playbook.md) - runtime conventions and the agent/runtime boundary.
-- [Local skills](docs/skills/overview.md) - create and run your own workflows.
+- [Local skills](docs/skills/overview.md) - instructions followed by the current agent.
 - [Recording](docs/api/recording.md) - capture observations for skill authoring.
 - [Troubleshooting](docs/troubleshooting/operator.md) - diagnose setup and runtime failures.
 
-Androperator does not require a companion skills catalog. Agents create and
-maintain local skills; optional bundled examples are planned separately.
+The current agent follows and authors reusable instructions with optional
+ordinary helpers. [Settings examples](examples/skills/README.md) are included;
+Androperator supplies execution and evidence without a runtime package framework.
 
 Technical documentation is built from `docs/` and code-derived inputs in
 `apps/node/src/`, through `sites/docs/`. The former landing site is preserved

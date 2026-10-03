@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { DoctorService } from "../../../domain/doctor/DoctorService.js";
@@ -51,11 +51,8 @@ describe("selected Operator readiness policy", () => {
   beforeEach(async () => {
     savedEnvironment = { ...process.env };
     root = await mkdtemp(join(tmpdir(), "doctor-readiness-policy-"));
-    const registry = join(root, "registry.json");
-    await writeFile(registry, JSON.stringify({ schemaVersion: "1.0", skills: [] }));
     await mkdir(join(root, "empty-path"));
     process.env.PATH = join(root, "empty-path");
-    process.env.ANDROPERATOR_SKILLS_REGISTRY = registry;
     process.env.ANDROPERATOR_LOG_DIR = join(root, "logs");
   });
   afterEach(async () => {
@@ -95,7 +92,6 @@ describe("selected Operator readiness policy", () => {
       assert.deepEqual(report.skippedChecks, []);
       assert.equal(handshakes(), 1);
       assert.ok(report.checks.some(check => check.id === "host.video.dependencies" && check.status === "warn"));
-      assert.ok(report.checks.some(check => check.id === "host.skill-agent-cli.default" && check.status === "warn"));
       assert.equal(report.checks.some(check => check.id === "readiness.smoke"), full);
     });
   }

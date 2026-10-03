@@ -135,7 +135,7 @@ describe("flag aliases - --device works like --device-id", () => {
   it("--device alias passes device id (validated via timeout error output)", async () => {
     // Use --timeout nope which produces EXECUTION_VALIDATION_FAILED. The device alias is consumed
     // by getGlobalOpts, so the command should still run and fail on the timeout.
-    const { stdout, code } = await runCli(["--device", "test-device-alias", "skills", "run", "some-skill", "--timeout", "nope"]);
+    const { stdout, code } = await runCli(["--device", "test-device-alias", "snapshot", "--timeout", "nope"]);
     assert.notStrictEqual(code, 0);
     assert.match(stdout, /EXECUTION_VALIDATION_FAILED/);
     assert.match(stdout, /timeoutMs must be a finite number/);
@@ -212,7 +212,7 @@ describe("missing command after global flags", () => {
 
 describe("flag aliases - --timeout works like --timeout-ms", () => {
   it("--timeout nope produces EXECUTION_VALIDATION_FAILED", async () => {
-    const { stdout, code } = await runCli(["skills", "run", "some-skill", "--timeout", "nope"]);
+    const { stdout, code } = await runCli(["snapshot", "--timeout", "nope"]);
     assert.notStrictEqual(code, 0);
     assert.match(stdout, /EXECUTION_VALIDATION_FAILED/);
     assert.match(stdout, /timeoutMs must be a finite number/);
@@ -322,13 +322,6 @@ describe("record synonym dispatches to recording handler", () => {
     assert.deepStrictEqual(
       resolveSupportedFlagsFromRegistry(COMMANDS.recording, ["export"]),
       ["--input", "--out", "--snapshots"],
-    );
-  });
-
-  it("recording compare exposes the expected supported flags", () => {
-    assert.deepStrictEqual(
-      resolveSupportedFlagsFromRegistry(COMMANDS.recording, ["compare"]),
-      ["--baseline", "--result", "--mode"],
     );
   });
 
@@ -502,5 +495,20 @@ describe("didYouMean tie-breaking", () => {
     } as Parameters<typeof didYouMean>[2];
     const result = JSON.parse(didYouMean("xcd", [], cmds)) as { suggestion?: string };
     assert.strictEqual(result.suggestion, "acd");
+  });
+});
+
+
+describe("direct execution product surface", () => {
+  it("exposes host guidance and recording evidence without a runtime package namespace", async () => {
+    assert.equal(COMMANDS.skills, undefined);
+    assert.ok(COMMANDS["bundled-skills"]);
+    assert.ok(COMMANDS.exec);
+    for (const args of [["skills"], ["skills", "run", "example"], ["skills", "--help"]]) {
+      const result = await runCli(args);
+      assert.equal(result.code, 1);
+      assert.match(result.stdout || result.stderr, /UNKNOWN_COMMAND/);
+      assert.doesNotMatch(result.stdout || result.stderr, /deprecated|migration|legacy/i);
+    }
   });
 });

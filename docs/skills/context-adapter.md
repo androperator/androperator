@@ -1,13 +1,10 @@
 # Context adapter
 
-The linked helper is a historical Clawperator reference, not an Androperator installation dependency. Bundled examples will be added separately.
-
-The companion skills repository provides a provider-neutral adapter in
-[`skills/utils/observation_context.js`](https://github.com/clawperator/clawperator-skills/blob/main/skills/utils/observation_context.js).
-It selects evidence for model context without changing Androperator's execution
-contract. It contains no model calls, app navigation policy, or retry loop.
-The two Settings version-details examples use it through their shared Settings
-helper; Codex still controls the task and optional Jev proposals remain bounded.
+The [optional observation helper](https://github.com/androperator/androperator/blob/main/examples/skills/utils/observation_context.js)
+selects evidence for model context without changing Androperator's execution
+contract. It contains no model calls, app navigation policy or retry loop.
+The current agent controls the Settings examples; optional Jev proposals remain
+bounded. This helper is ordinary example code, not a core runtime framework.
 
 ## Input contract
 
@@ -105,7 +102,7 @@ are not atomic. Image descriptions cannot create accessibility selectors.
 ## Small example
 
 ```javascript
-const { normalizeCompact, projectObservation } = require('./skills/utils/observation_context');
+const { normalizeCompact, projectObservation } = require('./examples/skills/utils/observation_context');
 
 // Save the original response and XML locally before using this projection.
 const observation = normalizeCompact(snapshotResponse, {

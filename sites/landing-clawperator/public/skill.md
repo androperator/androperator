@@ -83,7 +83,7 @@ clawperator install
 ```
 
 `clawperator install` is the setup route after the CLI exists. It handles
-Operator remediation, runtime skills, bundled host-agent skills, and local host
+Operator remediation, bundled host-agent guidance, and local host
 orientation. Do not replace it with raw `adb install`.
 
 ## Readiness Checks
@@ -105,7 +105,7 @@ Success criteria:
 
 If more than one adb-visible target is connected, choose one serial from
 `clawperator devices` and pass `--device <device_serial>` on later `snapshot`,
-runtime-skill, and direct action commands.
+direct action and evidence commands.
 
 ## Local Orientation
 
@@ -114,7 +114,7 @@ After `clawperator install`, read these host-local files when present:
 | File | Use |
 | --- | --- |
 | `~/.clawperator/AGENTS.md` | First local guide for what this host can do now. |
-| `~/.clawperator/install-state.json` | Install metadata such as CLI version, registry path, APK version, and last device serial. |
+| `~/.clawperator/install-state.json` | Install metadata such as CLI version, APK version, and last device serial. |
 | `~/.clawperator/mcp-config-snippet.json` | Generated MCP configuration for stdio MCP clients. |
 
 These files are host-specific. Treat them as local orientation, not public
@@ -136,13 +136,12 @@ Use MCP only after setup when the host agent supports stdio MCP:
 clawperator mcp serve
 ```
 
-Use runtime-skill discovery after setup when the task is app-specific:
+For an app-specific task, use the current agent control loop:
 
-```bash
-clawperator skills list
-clawperator skills search --keyword "<term>"
-clawperator skills get <skill_id>
-```
+Use the current agent to observe state, choose one justified action and verify
+the requested result. Save reusable host instructions when useful; ordinary
+helpers and human demonstrations are optional. See
+[agent instructions](https://docs.androperator.com/skills/overview/).
 
 ## Stop Conditions
 

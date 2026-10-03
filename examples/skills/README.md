@@ -14,8 +14,7 @@ Your host owns skill discovery, orchestration, and optional delegation.
 
 Copy/adapt instructions into your host's skill format. If you use the optional
 helpers, copy the sibling `utils/` directory too. No runtime manifests or index
-files are needed to read these instructions. Existing product skill APIs are
-unchanged by these examples; their future is a separate design audit.
+files are needed to read these instructions. The current agent owns discovery and execution; Androperator supplies actions and evidence.
 
 ## Optional helper setup
 
@@ -38,7 +37,7 @@ export ANDROPERATOR_DEVICE_ID="<device_serial>"
 export ANDROPERATOR_OPERATOR_PACKAGE="com.androperator.operator.dev"
 export ANDROPERATOR_SKILL_ID="com.android.settings.get-version-details"
 export VERSION_RUN_DIR="$(mktemp -d)"
-export ANDROPERATOR_SKILL_RUN_ID="example-$(basename "$VERSION_RUN_DIR")"
+export ANDROPERATOR_SKILL_RUN_ID="skillrun_example-$(basename "$VERSION_RUN_DIR")"
 node examples/skills/utils/settings_version_tool.js open
 ```
 

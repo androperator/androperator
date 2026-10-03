@@ -37,7 +37,7 @@ exists. After install, local host-specific orientation moves to:
 | Path | Use |
 | --- | --- |
 | `~/.androperator/AGENTS.md` | Local guide written by host setup for the current machine. |
-| `~/.androperator/install-state.json` | Install metadata, registry path, APK version, and last device serial when known. |
+| `~/.androperator/install-state.json` | Install metadata, APK version, and last device serial when known. |
 | `~/.androperator/mcp-config-snippet.json` | Generated stdio MCP configuration for hosts that choose `androperator mcp serve`. |
 
 Machine-checkable verification after an agent-directed setup:
@@ -97,13 +97,13 @@ Success conditions:
 ### Durable host-agent artifacts from `androperator install`
 
 After shell bootstrap succeeds, `install.sh` delegates to `androperator install`.
-That CLI-owned post-bootstrap flow runs operator remediation, runtime-skills
-install, bundled-skills install, and `androperator host setup`, then writes
+That CLI-owned post-bootstrap flow runs operator remediation, bundled-skills
+install, and `androperator host setup`, then writes
 these durable onboarding files under `~/.androperator/`:
 
 | Path | Meaning | When to read it |
 | --- | --- | --- |
-| `~/.androperator/AGENTS.md` | Local Androperator guide with runtime-skill discovery commands and current bundled-skills status | First stop for a host agent that needs to discover what Androperator can do on this machine |
+| `~/.androperator/AGENTS.md` | Local Androperator guide with agent control-loop guidance and current bundled-skills status | First stop for a host agent that needs to discover what Androperator can do on this machine |
 | `~/.androperator/install-state.json` | Durable install metadata written by `androperator host setup` during install | Use when you need the last known install facts without rerunning `doctor` |
 | `~/.androperator/mcp-config-snippet.json` | Paste-ready MCP config for Claude Desktop, Codex, and a generic stdio MCP consumer | Use when the host should connect through `androperator mcp serve` instead of shelling out to the CLI |
 
@@ -112,69 +112,14 @@ Shell prerequisite failures exit before these files are written. After
 readiness failures can still leave these files behind because host setup runs
 before the CLI returns its final install status.
 
-The runtime-skills registry is discovered automatically from
-`~/.androperator/skills/skills/skills-registry.json` after `androperator skills install`, so
-`install.sh` no longer writes `ANDROPERATOR_SKILLS_REGISTRY` into shell RC files.
+Bundled host guidance has a canonical store at `~/.androperator/bundled-skills/`.
+Claude and Codex discovery directories receive managed links; generic agents
+receive managed directory copies in `~/.agents/skills/`. Aliased discovery
+locations share the generic managed copies. Conflicting user-owned content is
+preserved and reported as an install warning, never silently overwritten.
+Use `androperator bundled-skills list` to inspect installed instructions and
+[host orientation](host-agents.md) to choose execution and evidence tools.
 
-Bundled host-agent skills are installed separately from runtime skills:
-
-- `~/.androperator/bundled-skills/` is the canonical first-party bundled-skill store
-- `~/.claude/skills/` and the Codex skills dir receive Androperator-managed symlinks into that store
-- `~/.agents/skills/` receives Androperator-managed real directory copies with a `.androperator-managed` marker so generic agents can scan them without following symlinks outside their configured root
-- discovery directories that alias `~/.agents/skills/` share its managed copies, including Claude Code or Codex; see [bundled-skill installation](skills/authoring.md) for legacy migration and backup behavior
-- runtime skills from `~/.androperator/skills/` are not mirrored into shared agent discovery directories
-
-Canonical public next step after install:
-
-- read [Host Agent Orientation](host-agents.md) when you need to decide between
-  `androperator skills`, `androperator mcp serve`, and direct CLI automation
-
-`install-state.json` currently has this shape:
-
-```json
-{
-  "schemaVersion": 1,
-  "installedAt": "2026-04-17T08:12:34Z",
-  "cliVersion": "1.2.3",
-  "registryPath": "/Users/<local_user>/.androperator/skills/skills/skills-registry.json",
-  "apkVersion": "1.2.3",
-  "lastDeviceSerial": null
-}
-```
-
-Field rules:
-
-- `schemaVersion` and `installedAt` are always present
-- `cliVersion` is `null` when the installer could not run `androperator --version`
-- `registryPath` is `null` when the installer cannot resolve any readable runtime-skills registry path from the current install run, `ANDROPERATOR_SKILLS_REGISTRY`, prior install state, or the default installed home path
-- `apkVersion` is `null` when the installer does not have a known operator version
-- `lastDeviceSerial` is `null` when install did not pick one unambiguous device
-
-Shared-agent bridge behavior is intentionally bounded:
-
-- if `~/.agents/AGENTS.md` already exists, `androperator host setup` appends one Androperator-owned bridge block there
-- that bridge points back to `~/.androperator/AGENTS.md` plus the `androperator skills` discovery commands
-- if `~/.agents/AGENTS.md` does not exist, the installer does not create it
-- the installer does not copy runtime skills into shared agent skill directories
-
-Verification:
-
-```bash
-ls ~/.androperator/AGENTS.md ~/.androperator/install-state.json ~/.androperator/mcp-config-snippet.json
-androperator skills list
-test ! -f ~/.agents/AGENTS.md || grep -F "ANDROPERATOR_SHARED_AGENT_BRIDGE:START" ~/.agents/AGENTS.md
-```
-
-When choosing the host-facing surface:
-
-- use `androperator skills` when you want to discover or run installed runtime skills by app, keyword, or id
-- no shell profile export is required for the default runtime-skills registry path
-- use MCP when your host already supports stdio MCP and wants registered tools such as `devices`, `snapshot`, and `execute`
-
-See [Host Agent Orientation](host-agents.md) for the post-install decision flow
-and the first discovery commands to try.
-
-<a id="setup-step-prepare-android-target"></a>
 ## 2. Prepare the Android target
 
 Required device state:

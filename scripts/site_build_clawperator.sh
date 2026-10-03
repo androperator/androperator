@@ -20,6 +20,9 @@ if [ ! -d "$LANDING_DIR" ]; then
     exit 1
 fi
 
+"$REPO_ROOT/scripts/docs_build.sh"
+cp "$REPO_ROOT/sites/docs/static/llms-full.txt" "$LANDING_DIR/public/llms-full.txt"
+
 cd "$LANDING_DIR"
 
 echo "Generating landing sitemap metadata..."

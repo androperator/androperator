@@ -7,13 +7,6 @@ import { parseRecordingFile } from "../../domain/recording/parseRecording.js";
 import {
   exportRecordingFile,
 } from "../../domain/recording/exportRecording.js";
-import {
-  compareRecordingBaselineWithSkillResult,
-  isMeaningfulCompareDivergence,
-  loadRecordingExportBaselineFile,
-  loadSkillResultFromSkillsRunFile,
-  type RecordingCompareModeInput,
-} from "../../domain/recording/compareRecording.js";
 import { getDefaultRuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 import type { OutputOptions } from "../output.js";
 import { formatSuccess, formatError } from "../output.js";
@@ -221,27 +214,6 @@ export async function cmdRecordExport(options: {
       byType: result.exportData.counts.byType,
     }, options);
   } catch (e) {
-    return formatError(e, options);
-  }
-}
-
-export async function cmdRecordCompare(options: {
-  format: OutputOptions["format"];
-  baselineFile: string;
-  resultFile: string;
-  mode?: RecordingCompareModeInput;
-}): Promise<string> {
-  try {
-    const baseline = await loadRecordingExportBaselineFile(options.baselineFile);
-    const skillResult = await loadSkillResultFromSkillsRunFile(options.resultFile);
-    const report = compareRecordingBaselineWithSkillResult(baseline, skillResult, {
-      mode: options.mode ?? "auto",
-    });
-
-    process.exitCode = isMeaningfulCompareDivergence(report.outcome) ? 1 : 0;
-    return formatSuccess(report, options);
-  } catch (e) {
-    process.exitCode = 1;
     return formatError(e, options);
   }
 }

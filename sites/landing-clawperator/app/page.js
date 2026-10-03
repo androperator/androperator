@@ -97,7 +97,7 @@ const faqs = [
   {
     question: "What if the skill I need does not exist yet?",
     answer:
-      "That is fine. Clawperator includes a growing open source skills library, but you are not blocked on prebuilt skills. Your agent can use Clawperator's structured, documented API to explore an app, operate it, and build a private skill for your own workflow."
+      "That is fine. Your current agent can use the structured API to explore an app, operate it, verify the outcome and save reusable instructions when useful. Ordinary helpers are optional."
   },
   {
     question: "Does Clawperator do the thinking for my agent?",
@@ -410,7 +410,7 @@ export default function Home() {
           </h1>
           <p className="hero-category-line">Clawperator gives agents direct control of real Android apps.</p>
           <p className="hero-summary">
-            Clawperator is a deterministic execution layer that lets agents run skills on real Android apps to read data and take action on behalf of users.
+            Clawperator is a deterministic execution layer that lets agents execute validated actions on real Android apps to read data and take action on behalf of users.
           </p>
           <div className="hero-video-embed">
             <iframe
@@ -432,7 +432,7 @@ export default function Home() {
             <br />
             Clawperator is the hand.
             <br />
-            Repeatable app flows become skills, so automations can be packaged and run again.
+            Agents can save reusable instructions for app flows and verify each run from current evidence.
           </p>
 
           <div className="hero-image-panel">
@@ -697,13 +697,7 @@ export default function Home() {
             </p>
             <pre>
               <code>{`##
-## Runtime skill path:
-##
-
-clawperator skills run <hvac-app>.set-power -- --climate-state on --unit-name "Living room"
-
-##
-## Or, agent-driven control path:
+## Agent-followed control path:
 ##
 
 clawperator open --app <hvac-app>
@@ -737,51 +731,19 @@ clawperator click --id ":id/power_button"`}</code>
       <section id="skills" className="content-section">
         <h2>Skills</h2>
         <p>
-          Clawperator automations are unlocked through skills.
+          Skills are reusable instructions followed by the current agent. The agent owns app strategy,
+          supported recovery and outcome verification; the runtime executes Android actions and returns evidence.
         </p>
         <p>
-          Clawperator includes an{" "}
-          <a href="https://github.com/clawperator/clawperator-skills" target="_blank" rel="noreferrer">
-            open source, ever-expanding skills repository
-          </a>{" "}
-          for common Android workflows.
+          <a href="https://github.com/androperator/androperator/tree/main/examples/skills" target="_blank" rel="noreferrer">
+            Agent-followed Settings examples
+          </a>{" "}illustrate adaptive navigation and optional evidence helpers.
+          No runtime catalog, manifest or runner is required. Human demonstrations are optional evidence.
         </p>
         <p>
-          But you are not blocked waiting for an official skill. Agents do not need a prebuilt skill to automate your
-          apps.
+          Start from the authorized goal, observe current state and verify each requested result.
+          Save reusable instructions when requested or useful. Scheduling and optional delegation belong to your host.
         </p>
-        <p>
-          Our dedicated build-your-own-skill-from-scratch documentation walks agents through the process step by step.
-          Point your agent at the right app and tell it to make a skill. It can use the <code>clawperator</code> API
-          to inspect the app&apos;s UI, find a reliable path to the state or action you need, and create a private,
-          personalized skill for your exact workflow.
-        </p>
-
-        <div className="grid-2-col">
-          <div>
-            <h3>Included with install</h3>
-            <ul>
-              <li>Open source skills repository</li>
-              <li>Reusable building blocks for common workflows</li>
-              <li>Discoverable and runnable through the same runtime</li>
-            </ul>
-          </div>
-          <div>
-            <h3>Yours to create</h3>
-            <ul>
-              <li>Private skills for your own apps and accounts</li>
-              <li>Agent-built skills from live app exploration</li>
-              <li>Public and private skills mixed in the same runtime</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="setup-note">
-          <p>
-            <strong>You are not blocked waiting for a public skill.</strong> Start with included skills, adapt them to
-            your setup, or let your agent create private ones through Clawperator&apos;s documented API.
-          </p>
-        </div>
       </section>
 
       <section id="how-it-works" className="content-section architecture-section loop-section">
@@ -831,8 +793,7 @@ clawperator click --id ":id/power_button"`}</code>
         <p>
           The runtime includes the CLI on your host machine and the Clawperator Operator Android app on the Android
           device. The agent decides what to do next. Skills give the agent reusable ways to handle app-specific
-          workflows it already understands, whether those come from the open source skills repository or from private
-          skills the agent created for you. Clawperator executes the Android side of the workflow and returns data your
+          workflows using current observations and reusable instructions saved in your host. Clawperator executes the Android side of the workflow and returns data your
           agent can use.
         </p>
         <div className="grid-2-col">

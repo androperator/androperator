@@ -1,7 +1,0 @@
-          Examples: - `-c model="o3"` - `-c 'sandbox_permissions=["disk-full-read-access"]'` - `-c
-  -s, --sandbox <SANDBOX_MODE>
-          Select the sandbox policy to use when executing model-generated shell commands
-          Convenience alias for low-friction sandboxed automatic execution (-a on-request, --sandbox
-      --dangerously-bypass-approvals-and-sandbox
-          Skip all confirmation prompts and execute commands without sandboxing. EXTREMELY
-          DANGEROUS. Intended solely for running in environments that are externally sandboxed

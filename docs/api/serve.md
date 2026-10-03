@@ -10,7 +10,6 @@ Define the local HTTP and SSE contract exposed by `androperator serve`, includin
 - Execution result contract: `apps/node/src/domain/executions/runExecution.ts`
 - Result envelope source: `apps/node/src/contracts/result.ts`; canonical docs:
   [Result Envelope](overview.md#result-envelope)
-- Skills registry contract: `apps/node/src/contracts/skills.ts`
 - SSE event names: `apps/node/src/domain/observe/events.ts`
 - Emulator response types: `apps/node/src/domain/android-emulators/types.ts`
 
@@ -47,7 +46,7 @@ Important boundary:
 }
 ```
 
-and then endpoint-specific fields such as `devices`, `skills`, `avds`, `output`, or emulator state.
+and then endpoint-specific fields such as `devices`, `avds`, `output`, or emulator state.
 
 ### Execution result passthrough
 
@@ -111,9 +110,6 @@ Success conditions for execution endpoints:
 | `POST` | `/execute` | run a caller-supplied execution payload |
 | `POST` | `/snapshot` | run a synthetic one-step `snapshot` execution |
 | `POST` | `/screenshot` | run a synthetic one-step `take_screenshot` execution |
-| `GET` | `/skills` | list all skills or search by query |
-| `GET` | `/skills/:skillId` | fetch one skill registry entry |
-| `POST` | `/skills/:skillId/run` | run one skill script |
 | `GET` | `/android/emulators` | list configured AVDs |
 | `GET` | `/android/emulators/running` | list running emulators |
 | `GET` | `/android/emulators/:name` | inspect one configured AVD |
@@ -443,192 +439,6 @@ Route validation:
 }
 ```
 
-<a id="endpoint-get-skills"></a>
-## `GET /skills`
-
-Without query parameters, returns every registry entry:
-
-```json
-{
-  "ok": true,
-  "skills": [
-    {
-      "id": "com.test.echo",
-      "applicationId": "com.example",
-      "intent": "echo text",
-      "summary": "Echo test skill",
-      "path": "skills/com.test.echo",
-      "skillFile": "skills/com.test.echo/SKILL.md",
-      "scripts": ["skills/com.test.echo/run.js"],
-      "artifacts": []
-    }
-  ],
-  "count": 1
-}
-```
-
-Optional query parameters:
-
-| Query key | Type | Match behavior |
-| --- | --- | --- |
-| `app` | string | exact `applicationId` match |
-| `intent` | string | exact `intent` match |
-| `keyword` | string | case-insensitive substring match across `id`, `summary`, and `applicationId` |
-
-<a id="endpoint-get-skills-skill-id"></a>
-## `GET /skills/:skillId`
-
-Success response:
-
-```json
-{
-  "ok": true,
-  "skill": {
-    "id": "com.test.echo",
-    "applicationId": "com.example",
-    "intent": "echo text",
-    "summary": "Echo test skill",
-    "path": "skills/com.test.echo",
-    "skillFile": "skills/com.test.echo/SKILL.md",
-    "scripts": ["skills/com.test.echo/run.js"],
-    "artifacts": []
-  }
-}
-```
-
-<a id="endpoint-post-skills-skill-id-run"></a>
-## `POST /skills/:skillId/run`
-
-### Request body
-
-```json
-{
-  "deviceId": "emulator-5554",
-  "args": ["hello", "api"],
-  "timeoutMs": 4321,
-  "expectContains": "TEST_OUTPUT:hello"
-}
-```
-
-Validation rules:
-
-- body must be a JSON object
-- `deviceId`, when present, must be a string
-- `args`, when present, must be an array
-- `timeoutMs`, when present, must be a positive integer
-- `expectContains`, when present, must be a string
-
-Argument mapping:
-
-- if `deviceId` is a non-empty string, it is prepended to the script argument list
-- `args[]` are appended after that, stringified with `String()`
-- if `timeoutMs` is omitted, `runSkill()` uses its default timeout of `120000ms`
-
-### Success response
-
-**Unframed success (`skillResult: null`, example `com.test.echo`):**
-
-```json
-{
-  "ok": true,
-  "status": "success",
-  "skillId": "com.test.echo",
-  "output": "TEST_OUTPUT:hello\nTEST_OUTPUT:api\n",
-  "skillResult": null,
-  "exitCode": 0,
-  "durationMs": 18,
-  "timeoutMs": 4321,
-  "expectedSubstring": "TEST_OUTPUT:hello"
-}
-```
-
-**Success:** top-level `status`, `skillId`, `output`, and `exitCode` are
-**omitted**. The HTTP layer includes `ok: true` and the nested `skillResult`
-(read **`skillResult.result`** for the domain answer), plus `durationMs` and
-optional `timeoutMs` / `expectedSubstring` when set.
-
-```json
-{
-  "ok": true,
-  "skillResult": {
-    "result": { "kind": "text", "text": "ok" },
-    "status": "success",
-    "contractVersion": "1.0.0",
-    "skillId": "com.example.framed",
-    "checkpoints": [],
-    "source": { "kind": "script" }
-  },
-  "durationMs": 18,
-  "timeoutMs": 4321
-}
-```
-
-Behavior:
-
-- if `expectContains` is provided and `output` does not contain that substring, the route returns HTTP `400`
-- `expectContains` is an assertion helper for tests and agent loops that need a simple stdout substring gate
-- if the skill ID does not exist, the route returns HTTP `404`
-- if skill registry loading fails, the route returns HTTP `500` with `REGISTRY_READ_FAILED`
-- other `runSkill()` failures, including non-zero exit and timeout, return HTTP `400`
-- success JSON **omits** duplicate top-level `status`, `skillId`, `output`, and
-  `exitCode`; **indeterminate** responses with a parsed `skillResult` keep
-  wrapper `status`, `code`, and `message` but omit
-  `skillId`, `exitCode`, and `output`
-- malformed framed output returns `SKILL_RESULT_PARSE_FAILED`
-- success responses omit `exitCode` at the top level; process exit is still `0`
-  on the run
-
-Failure examples:
-
-Output assertion failure:
-
-```json
-{
-  "ok": false,
-  "error": {
-    "code": "SKILL_OUTPUT_ASSERTION_FAILED",
-    "message": "Skill com.test.echo output did not include expected text",
-    "skillId": "com.test.echo",
-    "output": "TEST_OUTPUT:api\n",
-    "expectedSubstring": "TEST_OUTPUT:hello",
-    "timeoutMs": 4321
-  }
-}
-```
-
-Non-zero skill exit:
-
-```json
-{
-  "ok": false,
-  "error": {
-    "code": "SKILL_EXECUTION_FAILED",
-    "message": "Skill com.test.echo exited with code 2",
-    "skillId": "com.test.echo",
-    "exitCode": 2,
-    "stdout": "partial output\n",
-    "stderr": "fatal error\n",
-    "skillResult": null,
-    "timeoutMs": 4321
-  }
-}
-```
-
-Malformed framed result:
-
-```json
-{
-  "ok": false,
-  "error": {
-    "code": "SKILL_RESULT_PARSE_FAILED",
-    "message": "SkillResult frame contained invalid JSON: ...",
-    "skillId": "com.test.echo",
-    "stdout": "[Androperator-Skill-Result]\n{not-json\n",
-    "skillResult": null
-  }
-}
-```
-
 ## Error Layers
 
 Serve has three distinct error layers. Keep them separate when recovering from a
@@ -639,7 +449,6 @@ failure.
 | Route-local wrapper error | Express JSON parsing or per-route request checks in `serve.ts` | `{ "ok": false, "error": { "code": "INVALID_BODY", ... } }` or similar route-local codes | Fix the HTTP request shape and retry. These codes are not the shared execution contract. |
 | Shared execution error | `runExecution()` returns `ok: false` for `/execute`, `/snapshot`, or `/screenshot` | `{ "ok": false, "error": { "code": "<errors.ts code>", ... } }` | Branch on `error.code` and use [Errors](errors.md) for recovery. |
 | Failed result envelope | Android returned an execution envelope with `envelope.status == "failed"` | `{ "ok": true, "envelope": { "status": "failed", ... } }` in success-wrapper passthrough cases | Read [Result Envelope](overview.md#result-envelope), then branch on `envelope.errorCode` or failed `stepResults[].data.error`. |
-| Feature-specific wrapper error | Skills and emulator routes call their subsystem helpers directly | `{ "ok": false, "error": { "code": "SKILL_NOT_FOUND", ... } }` or emulator codes | Use the owning feature page: [Skills CLI](../skills/cli.md), [Serve skills routes](#endpoint-get-skills), or emulator endpoint notes below. |
 
 Machine-checkable rule:
 

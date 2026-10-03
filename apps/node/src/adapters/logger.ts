@@ -129,10 +129,9 @@ export function createAndroperatorLogger(options?: CreateAndroperatorLoggerOptio
       const merged = mergeDefinedContext(defaultContext, event) as LogEvent;
 
       const rule = resolveRoutingRule(merged.event, DEFAULT_ROUTING_RULES);
-      const alwaysWriteToFile = merged.event === "skills.run.output";
 
       // File destination
-      if (rule.file && (alwaysWriteToFile || shouldLogToFile(merged.level))) {
+      if (rule.file && shouldLogToFile(merged.level)) {
         writeToFile(merged);
       }
 

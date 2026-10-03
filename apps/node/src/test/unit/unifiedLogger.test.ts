@@ -109,7 +109,7 @@ describe("createAndroperatorLogger", () => {
       assert.strictEqual(lines[0].event, "test.warn");
     });
 
-    it("writes skills.run.output to file only, not terminal", async () => {
+    it("writes execution.output to file only, not terminal", async () => {
       const logDir = join(tempRoot, "logs");
       const logger = createAndroperatorLogger({
         logDir,
@@ -119,16 +119,15 @@ describe("createAndroperatorLogger", () => {
 
       logger.emit(
         makeEvent({
-          event: "skills.run.output",
+          event: "execution.output",
           message: "Launching app...",
-          stream: "stdout",
         })
       );
 
       const lines = await readLogLines(logDir);
       assert.strictEqual(lines.length, 1);
-      assert.strictEqual(lines[0].event, "skills.run.output");
-      // No terminal output for skills.run.output
+      assert.strictEqual(lines[0].event, "execution.output");
+      // No terminal output for execution.output
       const terminalOutput = stderrLines.filter((l) => l.includes("Launching app"));
       assert.strictEqual(terminalOutput.length, 0);
     });
@@ -323,13 +322,13 @@ describe("createAndroperatorLogger", () => {
       const logger = createAndroperatorLogger({ logDir, logLevel: "debug" });
 
       const child1 = logger.child({ commandId: "cmd-1" });
-      const child2 = child1.child({ skillId: "test-skill" });
+      const child2 = child1.child({ taskId: "child-task" });
       child2.emit(makeEvent({ event: "test.nested" }));
 
       const lines = await readLogLines(logDir);
       assert.strictEqual(lines.length, 1);
       assert.strictEqual(lines[0].commandId, "cmd-1");
-      assert.strictEqual(lines[0].skillId, "test-skill");
+      assert.strictEqual(lines[0].taskId, "child-task");
     });
   });
 
@@ -407,15 +406,12 @@ describe("createAndroperatorLogger", () => {
       logger.emit({
         ts: "2026-03-27T12:00:00.000Z",
         level: "info",
-        event: "skills.run.output",
+        event: "execution.output",
         message: "Launching app...",
         commandId: "cmd-1",
         taskId: "task-1",
         deviceId: "device-1",
-        skillId: "com.test.skill",
-        stream: "stdout",
         durationMs: 1234,
-        exitCode: 0,
         status: "complete",
       });
 
@@ -424,15 +420,12 @@ describe("createAndroperatorLogger", () => {
       const line = lines[0];
       assert.strictEqual(line.ts, "2026-03-27T12:00:00.000Z");
       assert.strictEqual(line.level, "info");
-      assert.strictEqual(line.event, "skills.run.output");
+      assert.strictEqual(line.event, "execution.output");
       assert.strictEqual(line.message, "Launching app...");
       assert.strictEqual(line.commandId, "cmd-1");
       assert.strictEqual(line.taskId, "task-1");
       assert.strictEqual(line.deviceId, "device-1");
-      assert.strictEqual(line.skillId, "com.test.skill");
-      assert.strictEqual(line.stream, "stdout");
       assert.strictEqual(line.durationMs, 1234);
-      assert.strictEqual(line.exitCode, 0);
       assert.strictEqual(line.status, "complete");
     });
 

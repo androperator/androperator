@@ -53,7 +53,7 @@ Every log event has these fields:
 |-------|------|-------------|
 | `ts` | string | ISO 8601 timestamp (e.g., `2026-03-28T12:34:56.789Z`) |
 | `level` | string | One of: `debug`, `info`, `warn`, `error` |
-| `event` | string | Dot-separated event name (e.g., `skills.run.start`) |
+| `event` | string | Dot-separated event name (e.g., `broadcast.dispatched`) |
 | `message` | string | Human-readable summary |
 
 ### Optional Context Fields
@@ -65,22 +65,14 @@ Events may include additional context fields:
 | `commandId` | string | CLI command or execution has a correlation ID |
 | `taskId` | string | Part of a larger task sequence |
 | `deviceId` | string | Event targets a specific device |
-| `skillId` | string | Skill execution event |
-| `skillRunId` | string | Events belong to one `androperator skills run` invocation |
+| `skillRunId` | string | Caller-supplied helper run correlation |
 | `logPath` | string | Event points at the active daily log file |
-| `tailCommand` | string | Event supplies a ready-to-run command for observing the log |
-| `stream` | string | `stdout` or `stderr` for skill output lines |
 | `status` | string | Completion status (e.g., `pass`, `fail`) |
 | `durationMs` | number | Operation completed, measured in milliseconds |
-| `exitCode` | number | Process exit code for skill/execution events |
 
 ### Example Log Lines
 
 ```jsonl
-{"ts":"2026-03-28T10:15:30.100Z","level":"info","event":"skills.run.log_location","message":"Skill com.example.app.get-status run skillrun_1777600000000_00000000-0000-4000-8000-000000000000 logging to /home/user/.androperator/logs/androperator-2026-03-28.log; observe with: tail -f '/home/user/.androperator/logs/androperator-2026-03-28.log'","skillId":"com.example.app.get-status","skillRunId":"skillrun_1777600000000_00000000-0000-4000-8000-000000000000","logPath":"/home/user/.androperator/logs/androperator-2026-03-28.log","tailCommand":"tail -f '/home/user/.androperator/logs/androperator-2026-03-28.log'"}
-{"ts":"2026-03-28T10:15:30.123Z","level":"info","event":"skills.run.start","message":"Skill com.example.app.get-status started","skillId":"com.example.app.get-status","skillRunId":"skillrun_1777600000000_00000000-0000-4000-8000-000000000000","commandId":"cmd-123"}
-{"ts":"2026-03-28T10:15:30.456Z","level":"info","event":"skills.run.output","message":"Opening app...","skillId":"com.example.app.get-status","skillRunId":"skillrun_1777600000000_00000000-0000-4000-8000-000000000000","stream":"stdout"}
-{"ts":"2026-03-28T10:15:32.789Z","level":"info","event":"skills.run.complete","message":"Skill com.example.app.get-status completed successfully in 2345ms","skillId":"com.example.app.get-status","skillRunId":"skillrun_1777600000000_00000000-0000-4000-8000-000000000000","durationMs":2345,"exitCode":0}
 ```
 
 ## Log Levels
@@ -111,7 +103,6 @@ Valid values: `debug`, `info`, `warn`, `error` (case-insensitive)
 
 Invalid values fall back silently to `info`.
 
-**Exception:** Skill output events (`skills.run.output`) are always written to the file regardless of level threshold, so agents can diagnose timeouts even when `--log-level error` is set.
 
 ## Event Naming Conventions
 
@@ -119,35 +110,18 @@ Events use dot-separated names with prefix-based categories:
 
 | Prefix | Category | Example |
 |--------|----------|---------|
-| `skills.run.` | Skill execution lifecycle | `skills.run.start`, `skills.run.complete` |
 | `cli.` | CLI output | `cli.banner` |
 | `doctor.` | Doctor diagnostics | `doctor.check` |
 | `serve.` | HTTP/SSE server | `serve.server.started`, `serve.http.request` |
 
-### Skill Run Correlation
+### Helper run correlation
 
-Every `androperator skills run` invocation creates a `skillRunId` and emits a
-`skills.run.log_location` event at `info` level as the run starts, before
-validation, readiness preflight, or child process execution. That event
-contains the daily `logPath` and a `tailCommand` for human or agent observers.
-JSON errors from early validation or preflight failures include the same
-additive `logs` object when the CLI has a logger available.
-
-The log file remains the same daily NDJSON file. Androperator does not create a
-separate per-run log file. The `skillRunId` is additive correlation metadata
-for filtering events that belong to one invocation.
-
-Skill scripts receive the same value in `ANDROPERATOR_SKILL_RUN_ID`. When a
-script invokes nested Androperator CLI commands, those short-lived child CLI
-processes inherit the id and attach it to their log events.
-
-Long-lived daemon processes do not inherit `ANDROPERATOR_SKILL_RUN_ID` from the
-script that happened to start them. For daemon-backed execution, the nested CLI
-passes the id on the individual daemon `/execute` request instead. This keeps
-request-specific execution events such as `serve.http.request`,
-`preflight.apk.pass`, `broadcast.dispatched`, and `envelope.received`
-correlated to the skill run without permanently tagging unrelated future daemon
-events.
+Optional caller-owned helpers can supply `ANDROPERATOR_SKILL_RUN_ID` with a
+`skillrun_` prefix and safe identifier characters. Short-lived CLI commands
+inherit valid IDs. Daemon-backed commands pass the ID on each execute request;
+the long-lived daemon does not inherit ambient run context. This is logging
+metadata, not a workflow result contract. Command/task IDs remain execution
+correlation authority.
 
 <a id="the-androperator-logs-command"></a>
 
@@ -205,43 +179,11 @@ The command or skill still executes normally. Only the log file is affected.
 
 ## Verification
 
-Confirm logging is active:
+Run `androperator snapshot` for an explicit target, then inspect the daily log
+or use `androperator logs`. Execution events retain command/task correlation.
+Check logger status when a file cannot be persisted; logging never establishes
+that the requested Android operation succeeded.
 
-```bash
-# Check the log file exists and has recent content
-ls -la ~/.androperator/logs/
-
-# Stream logs in real time
-androperator logs
-```
-
-Generate log entries:
-
-```bash
-# Skill runs produce lifecycle and output events
-androperator skills run <skill_id> --device <device_serial>
-
-# Snapshot commands produce execution lifecycle events
-androperator snapshot --device <device_serial>
-```
-
-Verify entries appear:
-
-```bash
-# Check for skill lifecycle events
-grep '"event":"skills.run.start"' ~/.androperator/logs/androperator-$(date +%F).log
-
-# Check for the CLI banner (emitted at debug level during skill runs)
-grep '"event":"cli.banner"' ~/.androperator/logs/androperator-$(date +%F).log
-
-# Parse the NDJSON file with jq to see all events from a specific category
-jq -c 'select(.event | startswith("skills.run."))' ~/.androperator/logs/androperator-$(date +%F).log
-
-# Filter one skill invocation by run id
-jq -c 'select(.skillRunId == "skillrun_1777600000000_00000000-0000-4000-8000-000000000000")' ~/.androperator/logs/androperator-$(date +%F).log
-```
-
-Note: `cli.banner` is logged at `debug` level. To see it in the file, use `--log-level debug`.
 
 ## Environment Variables
 

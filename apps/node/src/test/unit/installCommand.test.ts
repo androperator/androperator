@@ -3,7 +3,7 @@ import assert from "node:assert";
 import { cmdInstall } from "../../cli/commands/install.js";
 import type { OperatorRemediateResult } from "../../cli/commands/operatorRemediate.js";
 import type { HostSetupResult } from "../../domain/host/hostSetup.js";
-import type { CopyBundledSkillsSuccess } from "../../domain/skills/copyBundledSkills.js";
+import type { CopyBundledSkillsSuccess } from "../../domain/bundledSkills/copyBundledSkills.js";
 
 function makeOperatorRemediationResult(
   overrides: Partial<OperatorRemediateResult> = {},
@@ -78,13 +78,6 @@ describe("cmdInstall", () => {
       { format: "json", operatorPackage: "com.androperator.operator" },
       {
         runOperatorRemediateImpl: async () => makeOperatorRemediationResult(),
-        syncSkillsImpl: async () => ({
-          ok: true,
-          synced: true,
-          skillsDir: "/tmp/skills",
-          registryPath: "/tmp/skills/skills/skills-registry.json",
-          message: "Skills synced to /tmp/skills (ref: main)",
-        }),
         copyBundledSkillsImpl: async () => makeBundledSkillsResult(),
         setupHostImpl: async (options) => {
           setupHostCalls.push(options as unknown as Record<string, unknown>);
@@ -98,11 +91,9 @@ describe("cmdInstall", () => {
     assert.strictEqual(parsed.status, "ok");
     assert.strictEqual(parsed.lastDeviceSerial, "serial-solo");
     assert.strictEqual(parsed.deviceSelectionRequired, false);
-    assert.strictEqual(parsed.steps.skillsInstall.registryPath, "/tmp/skills/skills/skills-registry.json");
     assert.strictEqual(parsed.steps.hostSetup.status, "ok");
     assert.strictEqual(process.exitCode, undefined);
     assert.strictEqual(setupHostCalls.length, 1);
-    assert.strictEqual(setupHostCalls[0].registryPath, "/tmp/skills/skills/skills-registry.json");
     assert.strictEqual(setupHostCalls[0].lastDeviceSerial, "serial-solo");
     assert.strictEqual(setupHostCalls[0].operatorPackage, "com.androperator.operator");
     assert.strictEqual(setupHostCalls[0].cliVersion, undefined);
@@ -150,13 +141,6 @@ describe("cmdInstall", () => {
             },
           ],
         }),
-        syncSkillsImpl: async () => ({
-          ok: true,
-          synced: true,
-          skillsDir: "/tmp/skills",
-          registryPath: "/tmp/skills/skills/skills-registry.json",
-          message: "Skills synced to /tmp/skills (ref: main)",
-        }),
         copyBundledSkillsImpl: async () => makeBundledSkillsResult(),
         setupHostImpl: async () => makeHostSetupResult(),
       },
@@ -185,13 +169,6 @@ describe("cmdInstall", () => {
           },
           devices: [],
           message: "No connected Android devices found.",
-        }),
-        syncSkillsImpl: async () => ({
-          ok: true,
-          synced: true,
-          skillsDir: "/tmp/skills",
-          registryPath: "/tmp/skills/skills/skills-registry.json",
-          message: "Skills synced to /tmp/skills (ref: main)",
         }),
         copyBundledSkillsImpl: async () => makeBundledSkillsResult(),
         setupHostImpl: async () => makeHostSetupResult(),
@@ -222,13 +199,6 @@ describe("cmdInstall", () => {
           },
           devices: [],
           message: "No connected Android devices found.",
-        }),
-        syncSkillsImpl: async () => ({
-          ok: true,
-          synced: true,
-          skillsDir: "/tmp/skills",
-          registryPath: "/tmp/skills/skills/skills-registry.json",
-          message: "Skills synced to /tmp/skills (ref: main)",
         }),
         copyBundledSkillsImpl: async () => makeBundledSkillsResult(),
         setupHostImpl: async () => makeHostSetupResult(),
@@ -282,13 +252,6 @@ describe("cmdInstall", () => {
             },
           ],
           message: "Remediation still required for 1 device.",
-        }),
-        syncSkillsImpl: async () => ({
-          ok: true,
-          synced: true,
-          skillsDir: "/tmp/skills",
-          registryPath: "/tmp/skills/skills/skills-registry.json",
-          message: "Skills synced to /tmp/skills (ref: main)",
         }),
         copyBundledSkillsImpl: async () => makeBundledSkillsResult(),
         setupHostImpl: async () => makeHostSetupResult(),
@@ -346,13 +309,6 @@ describe("cmdInstall", () => {
           ],
           message: "Remediation still required for 1 device.",
         }),
-        syncSkillsImpl: async () => ({
-          ok: true,
-          synced: true,
-          skillsDir: "/tmp/skills",
-          registryPath: "/tmp/skills/skills/skills-registry.json",
-          message: "Skills synced to /tmp/skills (ref: main)",
-        }),
         copyBundledSkillsImpl: async () => makeBundledSkillsResult(),
         setupHostImpl: async () => makeHostSetupResult(),
       },
@@ -368,13 +324,6 @@ describe("cmdInstall", () => {
       { format: "json" },
       {
         runOperatorRemediateImpl: async () => makeOperatorRemediationResult(),
-        syncSkillsImpl: async () => ({
-          ok: true,
-          synced: true,
-          skillsDir: "/tmp/skills",
-          registryPath: "/tmp/skills/skills/skills-registry.json",
-          message: "Skills synced to /tmp/skills (ref: main)",
-        }),
         copyBundledSkillsImpl: async () => makeBundledSkillsResult(),
         setupHostImpl: async () => makeHostSetupResult({
           status: "warn",
@@ -396,13 +345,6 @@ describe("cmdInstall", () => {
       { format: "pretty" },
       {
         runOperatorRemediateImpl: async () => makeOperatorRemediationResult(),
-        syncSkillsImpl: async () => ({
-          ok: true,
-          synced: true,
-          skillsDir: "/tmp/skills",
-          registryPath: "/tmp/skills/skills/skills-registry.json",
-          message: "Skills synced to /tmp/skills (ref: main)",
-        }),
         copyBundledSkillsImpl: async () => makeBundledSkillsResult(),
         setupHostImpl: async () => makeHostSetupResult({
           ok: false,
@@ -435,13 +377,6 @@ describe("cmdInstall", () => {
           devices: [],
           message: "No connected Android devices found.",
         }),
-        syncSkillsImpl: async () => ({
-          ok: true,
-          synced: true,
-          skillsDir: "/tmp/skills",
-          registryPath: "/tmp/skills/skills/skills-registry.json",
-          message: "Skills synced to /tmp/skills (ref: main)",
-        }),
         copyBundledSkillsImpl: async () => makeBundledSkillsResult(),
         setupHostImpl: async () => makeHostSetupResult({
           ok: false,
@@ -457,16 +392,11 @@ describe("cmdInstall", () => {
     assert.strictEqual(process.exitCode, 1);
   });
 
-  it("treats skills and bundled-skills failures as warnings while preserving a usable install", async () => {
+  it("treats bundled-skills failures as warnings while preserving a usable install", async () => {
     const output = await cmdInstall(
       { format: "json" },
       {
         runOperatorRemediateImpl: async () => makeOperatorRemediationResult(),
-        syncSkillsImpl: async () => ({
-          ok: false,
-          code: "SKILLS_SYNC_FAILED",
-          message: "Skills sync failed: auth required",
-        }),
         copyBundledSkillsImpl: async () => ({
           ok: false,
           code: "BUNDLED_SKILLS_COPY_FAILED",
@@ -479,25 +409,17 @@ describe("cmdInstall", () => {
     const parsed = JSON.parse(output);
     assert.strictEqual(parsed.ok, true);
     assert.strictEqual(parsed.status, "warn");
-    assert.strictEqual(parsed.steps.skillsInstall.ok, false);
-    assert.strictEqual(parsed.steps.skillsInstall.status, "warn");
     assert.strictEqual(parsed.steps.bundledSkillsInstall.ok, false);
     assert.strictEqual(parsed.steps.bundledSkillsInstall.status, "warn");
-    assert.match(parsed.message, /runtime skills install needs attention/i);
     assert.match(parsed.message, /bundled-skills install needs attention/i);
     assert.strictEqual(process.exitCode, undefined);
   });
 
-  it("includes best-effort repair guidance in pretty output when skills-related steps warn", async () => {
+  it("includes best-effort repair guidance in pretty output when bundled guidance steps warn", async () => {
     const output = await cmdInstall(
       { format: "pretty" },
       {
         runOperatorRemediateImpl: async () => makeOperatorRemediationResult(),
-        syncSkillsImpl: async () => ({
-          ok: false,
-          code: "SKILLS_SYNC_FAILED",
-          message: "Skills sync failed: auth required",
-        }),
         copyBundledSkillsImpl: async () => ({
           ok: false,
           code: "BUNDLED_SKILLS_COPY_FAILED",
@@ -511,7 +433,6 @@ describe("cmdInstall", () => {
     );
 
     assert.match(output, /Androperator install: WARN/);
-    assert.match(output, /Install runtime skills later with: androperator skills install/);
     assert.match(output, /Repair bundled-skills later with: androperator bundled-skills install/);
     assert.match(output, /Rerun host artifact setup after resolving the warning if needed: androperator host setup/);
     assert.strictEqual(process.exitCode, undefined);

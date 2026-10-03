@@ -1,7 +1,6 @@
 import type { Logger } from "../../adapters/logger.js";
 import { setupHost, type HostSetupResult } from "../../domain/host/hostSetup.js";
-import { copyBundledSkills, resolveClaudeSkillsDir, resolveCodexSkillsDir, type CopyBundledSkillsError, type CopyBundledSkillsSuccess } from "../../domain/skills/copyBundledSkills.js";
-import { syncSkills, type SyncSkillsError, type SyncSkillsResult } from "../../domain/skills/syncSkills.js";
+import { copyBundledSkills, resolveClaudeSkillsDir, resolveCodexSkillsDir, type CopyBundledSkillsError, type CopyBundledSkillsSuccess } from "../../domain/bundledSkills/copyBundledSkills.js";
 import { DEFAULT_OPERATOR_PACKAGE } from "../../domain/config/resolveOperatorPackage.js";
 import { runOperatorRemediate, type OperatorRemediateCommandError, type OperatorRemediateResult } from "./operatorRemediate.js";
 import type { OutputOptions } from "../output.js";
@@ -12,12 +11,6 @@ interface InstallBestEffortStep {
   ok: boolean;
   status: "ok" | "warn";
   message: string;
-}
-
-export interface InstallSkillsStepResult extends InstallBestEffortStep {
-  synced?: true;
-  registryPath?: string;
-  code?: string;
 }
 
 export interface InstallBundledSkillsStepResult extends InstallBestEffortStep {
@@ -46,7 +39,6 @@ export interface InstallCommandFailure {
     remediated: 0;
     adbUnready: 0;
     failed: 0;
-    skillsStatus: "warn";
     bundledSkillsStatus: "warn";
     hostStatus: "failed";
   };
@@ -61,13 +53,11 @@ export interface InstallCommandResult {
   deviceSelectionRequired: boolean;
   lastDeviceSerial: string | null;
   summary: OperatorRemediateResult["summary"] & {
-    skillsStatus: InstallSkillsStepResult["status"];
     bundledSkillsStatus: InstallBundledSkillsStepResult["status"];
     hostStatus: HostSetupResult["status"];
   };
   steps: {
     operatorRemediation: OperatorRemediateResult;
-    skillsInstall: InstallSkillsStepResult;
     bundledSkillsInstall: InstallBundledSkillsStepResult;
     hostSetup: HostSetupResult;
   };
@@ -75,32 +65,12 @@ export interface InstallCommandResult {
 
 export interface InstallCommandDeps {
   runOperatorRemediateImpl?: typeof runOperatorRemediate;
-  syncSkillsImpl?: typeof syncSkills;
   copyBundledSkillsImpl?: typeof copyBundledSkills;
   setupHostImpl?: typeof setupHost;
 }
 
 function isOperatorRemediationError(result: OperatorRemediateResult | OperatorRemediateCommandError): result is OperatorRemediateCommandError {
   return "code" in result;
-}
-
-function toSkillsInstallStep(result: SyncSkillsResult | SyncSkillsError): InstallSkillsStepResult {
-  if (!result.ok) {
-    return {
-      ok: false,
-      status: "warn",
-      code: result.code,
-      message: result.message,
-    };
-  }
-
-  return {
-    ok: true,
-    status: "ok",
-    synced: result.synced,
-    registryPath: result.registryPath,
-    message: result.message,
-  };
 }
 
 function getBundledSkillsEnvHint(env: NodeJS.ProcessEnv | undefined): string | undefined {
@@ -149,14 +119,12 @@ function deriveLastDeviceSerial(result: OperatorRemediateResult): string | null 
 
 function buildInstallMessage(options: {
   operatorRemediation: OperatorRemediateResult;
-  skillsInstall: InstallSkillsStepResult;
   bundledSkillsInstall: InstallBundledSkillsStepResult;
   hostSetup: HostSetupResult;
   deviceSelectionRequired: boolean;
 }): { ok: boolean; status: InstallStatus; message: string } {
   const {
     operatorRemediation,
-    skillsInstall,
     bundledSkillsInstall,
     hostSetup,
     deviceSelectionRequired,
@@ -196,9 +164,6 @@ function buildInstallMessage(options: {
   if (operatorRemediation.summary.adbUnready > 0) {
     warnings.push("some visible devices still need ADB recovery");
   }
-  if (!skillsInstall.ok) {
-    warnings.push("runtime skills install needs attention");
-  }
   if (!bundledSkillsInstall.ok) {
     warnings.push("bundled-skills install needs attention");
   }
@@ -236,7 +201,6 @@ function renderInstallPrettyOutput(result: InstallCommandResult | InstallCommand
     "",
     "Steps:",
     `- Operator remediation: ${result.steps.operatorRemediation.message}`,
-    `- Skills install: ${result.steps.skillsInstall.message}`,
     `- Bundled-skills install: ${result.steps.bundledSkillsInstall.message}`,
     `- Host setup: ${result.steps.hostSetup.message}`,
   );
@@ -270,9 +234,6 @@ function renderInstallPrettyOutput(result: InstallCommandResult | InstallCommand
     if (result.deviceSelectionRequired) {
       followUp.push(`Verify one device explicitly with: androperator doctor --device <device_id> --output pretty --operator-package ${result.operatorPackage}`);
     }
-    if (!result.steps.skillsInstall.ok) {
-      followUp.push("Install runtime skills later with: androperator skills install");
-    }
     if (!result.steps.bundledSkillsInstall.ok) {
       followUp.push("Repair bundled-skills later with: androperator bundled-skills install");
     }
@@ -299,7 +260,6 @@ export async function cmdInstall(
   deps: InstallCommandDeps = {},
 ): Promise<string> {
   const runOperatorRemediateImpl = deps.runOperatorRemediateImpl ?? runOperatorRemediate;
-  const syncSkillsImpl = deps.syncSkillsImpl ?? syncSkills;
   const copyBundledSkillsImpl = deps.copyBundledSkillsImpl ?? copyBundledSkills;
   const setupHostImpl = deps.setupHostImpl ?? setupHost;
 
@@ -325,7 +285,6 @@ export async function cmdInstall(
         remediated: 0,
         adbUnready: 0,
         failed: 0,
-        skillsStatus: "warn",
         bundledSkillsStatus: "warn",
         hostStatus: "failed",
       },
@@ -337,14 +296,12 @@ export async function cmdInstall(
       : JSON.stringify(failure);
   }
 
-  const skillsInstall = toSkillsInstallStep(await syncSkillsImpl("main"));
   const bundledSkillsInstall = toBundledSkillsInstallStep(
     await copyBundledSkillsImpl({ env: process.env }),
     process.env,
   );
   const lastDeviceSerial = deriveLastDeviceSerial(operatorRemediationResult);
   const hostSetup = await setupHostImpl({
-    registryPath: skillsInstall.ok ? skillsInstall.registryPath ?? null : null,
     lastDeviceSerial,
     operatorPackage: operatorRemediationResult.operatorPackage,
     env: process.env,
@@ -352,7 +309,6 @@ export async function cmdInstall(
   const deviceSelectionRequired = operatorRemediationResult.summary.connectedDevices > 1;
   const overall = buildInstallMessage({
     operatorRemediation: operatorRemediationResult,
-    skillsInstall,
     bundledSkillsInstall,
     hostSetup,
     deviceSelectionRequired,
@@ -371,13 +327,11 @@ export async function cmdInstall(
     lastDeviceSerial,
     summary: {
       ...operatorRemediationResult.summary,
-      skillsStatus: skillsInstall.status,
       bundledSkillsStatus: bundledSkillsInstall.status,
       hostStatus: hostSetup.status,
     },
     steps: {
       operatorRemediation: operatorRemediationResult,
-      skillsInstall,
       bundledSkillsInstall,
       hostSetup,
     },

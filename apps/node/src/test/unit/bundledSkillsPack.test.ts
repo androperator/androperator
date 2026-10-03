@@ -59,7 +59,9 @@ describe("bundled skill packaging", () => {
       "utf8"
     );
 
-    assert.match(discoverySkill, /androperator bundled-skills list/);
+    assert.match(discoverySkill, /current agent/);
+    assert.match(discoverySkill, /demonstration is never required/);
+    assert.doesNotMatch(discoverySkill, /androperator skills (?:run|new|search)/);
     assert.doesNotMatch(discoverySkill, /androperator agent-skills list --json/);
   });
   it("ships control-loop conditional references and agent metadata", async () => {

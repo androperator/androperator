@@ -95,19 +95,6 @@ describe("maybeShowStarHint", () => {
     assert.strictEqual(capturedStderr, "");
   });
 
-  it("suppresses skill trigger when skillHintShown is true in state", async () => {
-    const stateDir = join(tempRoot, ".androperator");
-    const stateFile = join(stateDir, "star-hint-state.json");
-    const fs = await import("node:fs/promises");
-    await fs.mkdir(stateDir, { recursive: true });
-    await fs.writeFile(stateFile, JSON.stringify({ skillHintShown: true }), "utf8");
-
-    mockStderr();
-    await maybeShowStarHint("skill");
-    restoreStderr();
-
-    assert.strictEqual(capturedStderr, "");
-  });
 
   it("suppresses upgrade trigger when lastUpgradeHintVersion matches current version", async () => {
     const { createRequire } = await import("node:module");
@@ -143,19 +130,6 @@ describe("maybeShowStarHint", () => {
     assert.strictEqual(state.doctorHintShown, true);
   });
 
-  it("shows hint and updates state correctly for skill trigger", async () => {
-    mockStderr();
-    await maybeShowStarHint("skill");
-    restoreStderr();
-
-    assert.match(capturedStderr, /Androperator is open source/);
-
-    // Verify state was written
-    const stateFile = join(tempRoot, ".androperator", "star-hint-state.json");
-    const stateData = await readFile(stateFile, "utf8");
-    const state = JSON.parse(stateData);
-    assert.strictEqual(state.skillHintShown, true);
-  });
 
   it("shows hint and updates state correctly for upgrade trigger", async () => {
     mockStderr();
@@ -208,7 +182,7 @@ describe("maybeShowStarHint", () => {
     assert.match(capturedStderr, /Androperator is open source/);
 
     // Second call should be suppressed (same module instance)
-    await maybeShowStarHint("skill");
+    await maybeShowStarHint("upgrade");
     // Output should be unchanged
     const outputAfterSecond = capturedStderr;
     assert.match(outputAfterSecond, /Androperator is open source/);

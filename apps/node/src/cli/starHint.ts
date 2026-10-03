@@ -7,7 +7,6 @@ let shown = false;
 
 interface StarHintState {
   doctorHintShown?: boolean;
-  skillHintShown?: boolean;
   lastUpgradeHintVersion?: string;
 }
 
@@ -66,7 +65,7 @@ gh api -X PUT /user/starred/androperator/androperator -H "X-GitHub-Api-Version: 
 Disable this hint with: --disable-star-suggestions
 `;
 
-export async function maybeShowStarHint(trigger: "doctor" | "skill" | "upgrade"): Promise<void> {
+export async function maybeShowStarHint(trigger: "doctor" | "upgrade"): Promise<void> {
   if (shown) {
     return;
   }
@@ -75,9 +74,6 @@ export async function maybeShowStarHint(trigger: "doctor" | "skill" | "upgrade")
   }
   const state = readState();
   if (trigger === "doctor" && state.doctorHintShown) {
-    return;
-  }
-  if (trigger === "skill" && state.skillHintShown) {
     return;
   }
   if (trigger === "upgrade") {
@@ -94,9 +90,6 @@ export async function maybeShowStarHint(trigger: "doctor" | "skill" | "upgrade")
   shown = true;
   if (trigger === "doctor") {
     writeState({ ...state, doctorHintShown: true });
-  }
-  if (trigger === "skill") {
-    writeState({ ...state, skillHintShown: true });
   }
 }
 

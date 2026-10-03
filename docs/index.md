@@ -46,7 +46,7 @@ Use:
 ## Setup
 
 - [Setup](setup.md) - install the CLI, prepare a device, install the Operator APK, verify readiness, and run the first snapshot
-- [Host Agent Orientation](host-agents.md) - canonical post-install route for choosing between `androperator skills`, `androperator mcp serve`, and direct CLI automation
+- [Host Agent Orientation](host-agents.md) - canonical post-install route for using CLI, MCP or HTTP execution
 - [Quickstart](quickstart.md) - the observe/decide/act loop: taking snapshots, reading the hierarchy, and sending actions
 
 ## API
@@ -68,11 +68,11 @@ Use:
 
 ## Skills
 
-- [Overview](skills/overview.md) - registry model, discovery, and wrapper execution
-- [Authoring](skills/authoring.md) - scaffolded files, artifacts, and validation
-- [Personalized Skills](skills/personalized-skills.md) - local wrappers, privacy boundaries, and shared-skill promotion rules
+- [Overview](skills/overview.md) - instructions followed by the current agent
+- [Authoring](skills/authoring.md) - adaptive instructions and optional evidence
+- [Personalized Skills](skills/personalized-skills.md) - host instructions and privacy boundaries
 - [Development Workflow](skills/development.md) - local iteration loop for skills
-- [Device Prep and Runtime](skills/runtime.md) - runtime environment, timeout, and output rules
+- [Device Prep and Runtime](skills/runtime.md) - device readiness and verified outcomes
 
 ## Troubleshooting
 

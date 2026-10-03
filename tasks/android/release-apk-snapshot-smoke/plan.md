@@ -50,7 +50,7 @@ path rather than hand-writing a one-off script.
 Likely files to inspect:
 
 - `scripts/androperator_smoke_core.sh`
-- `scripts/androperator_smoke_skills.sh`
+- `scripts/androperator_integration_canonical.sh`
 - `scripts/androperator_validate_operator_ingress.sh`
 - `apps/node/src/domain/doctor/checks/readinessChecks.ts`
 - `apps/android/app/app.gradle.kts`

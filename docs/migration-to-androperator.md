@@ -24,13 +24,9 @@ variables. Use the new CLI and explicitly select the new Operator package.
 Do not reuse old daemon sockets, PIDs, or version markers. Stop the old daemon
 using the old CLI before starting the renamed one.
 
-Installation initializes an empty local skill registry. It no longer clones a
-companion skills catalog. Keep your own workspace, set
-`ANDROPERATOR_SKILLS_REGISTRY` to its registry, and adapt its scripts, manifests,
-frontmatter and result handling to the new contracts before validating and running.
-Git-ref catalog synchronization is no longer supported; `skills update` and
-`skills sync --ref main` initialize or validate the local workspace.
-Optional bundled example workflows are a separate follow-up.
+The runtime skills framework was removed after the rename. The current agent
+follows instructions and optional helpers directly. Installation provides bundled
+host guidance and Android readiness; there is no runtime catalog or package API.
 
 Do not copy the entire old state directory. Review any recordings, logs and user
 skills you need to retain, then migrate those deliberately. Git hooks use

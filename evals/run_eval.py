@@ -32,20 +32,11 @@ from evals.harness.environment import (
     resolve_inputs,
     _resolve_androperator_cmd,
 )
-from evals.harness.live_skill_eval import (
-    DEFAULT_SKILLS_REGISTRY,
-    SOLAX_COLD_START_EVAL_ID,
-    run_solax_orchestrated_cold_start_eval,
-)
 from evals.harness.runner import (
     build_prompt,
     run_eval,
-    _apply_skill_generation_contract,
-    _apply_skill_generation_outcome,
     _prepare_androperator_launcher,
-    _synthesize_skill_score_for_contract,
 )
-from evals.harness.replay import run_replay, DEFAULT_REPLAY_TIMEOUT_S
 from evals.harness.scorer import score
 from evals.harness.timeutil import format_timestamp
 
@@ -97,53 +88,13 @@ def _resolve_android_eval_budget(args: argparse.Namespace, spec: dict) -> tuple[
     return timeout_s, max_turns
 
 
-def _resolve_prompt_path(eval_id: str, spec: dict, mode: str, skill_prompt: str | None) -> Path:
+def _resolve_prompt_path(eval_id: str, spec: dict, mode: str) -> Path:
     spec_dir = Path(spec.get("spec_dir") or (ROOT / "evals" / "specs" / eval_id))
-    prompt_name: str | None = skill_prompt
-    if prompt_name is None:
-        prompt_name = spec["prompts"][mode]
+    prompt_name = spec["prompts"][mode]
     prompt_path = Path(prompt_name)
     if not prompt_path.is_absolute():
         prompt_path = spec_dir / prompt_path
     return prompt_path
-
-
-def _load_replay_runtime(config: dict) -> tuple[list[str], str, str]:
-    runtime_target = config.get("runtime_target")
-    if not isinstance(runtime_target, str) or not runtime_target.strip():
-        runtime_target = "local-dev"
-
-    environment = config.get("environment", {})
-    operator_package = environment.get("operator_package")
-    if not isinstance(operator_package, str) or not operator_package.strip():
-        operator_package = RELEASE_OPERATOR_PACKAGE if runtime_target == "published" else LOCAL_DEV_OPERATOR_PACKAGE
-
-    configured_cmd = environment.get("runtime_androperator_cmd")
-    if isinstance(configured_cmd, list) and configured_cmd and all(isinstance(part, str) and part for part in configured_cmd):
-        androperator_cmd = list(configured_cmd)
-    else:
-        display_cmd = environment.get("androperator_cmd")
-        if runtime_target == "published" and isinstance(display_cmd, list) and display_cmd and all(isinstance(part, str) and part for part in display_cmd):
-            androperator_cmd = list(display_cmd)
-        else:
-            androperator_cmd = _resolve_androperator_cmd(runtime_target)
-
-    return androperator_cmd, operator_package, runtime_target
-
-
-def _config_used_skill_prompt(config: dict, spec: dict) -> bool:
-    skill_generation = spec.get("skill_generation")
-    if not isinstance(skill_generation, dict):
-        return False
-    skill_prompt_name = skill_generation.get("skill_prompt")
-    if not isinstance(skill_prompt_name, str) or not skill_prompt_name.strip():
-        return False
-    config_spec = config.get("spec")
-    if not isinstance(config_spec, dict):
-        return False
-    prompt_file = config_spec.get("prompt_file")
-    skill_prompt_file = config_spec.get("skill_prompt_file")
-    return prompt_file == skill_prompt_name or skill_prompt_file == skill_prompt_name
 
 
 def _public_preflight_details(preflight_details: dict | None) -> dict | None:
@@ -264,26 +215,6 @@ def _rescore_run(runs_dir: Path, run_id: str) -> dict:
     violations = dict(rescored["metrics"].get("violations", {}))
     violations["used_adb"] = bool(score_result.used_disallowed_tool)
     rescored["metrics"]["violations"] = violations
-    eval_id = config.get("eval_id") or result.get("eval_id")
-    if isinstance(eval_id, str):
-        spec = _load_spec(eval_id)
-        skill_generation = spec.get("skill_generation")
-        skill_score = result.get("skill_score")
-        if skill_generation and (_config_used_skill_prompt(config, spec) or isinstance(skill_score, dict)):
-            androperator_cmd, operator_package, _ = _load_replay_runtime(config)
-            prepared_skill_score = _synthesize_skill_score_for_contract(
-                transcript=transcript,
-                skill_generation=skill_generation,
-                androperator_cmd=androperator_cmd,
-                operator_package=operator_package,
-                existing_skill_score=skill_score if isinstance(skill_score, dict) else None,
-            )
-            rescored_skill_score = _apply_skill_generation_contract(
-                prepared_skill_score,
-                transcript,
-                skill_generation,
-            )
-            rescored = _apply_skill_generation_outcome(rescored, rescored_skill_score)
     result_rescored_path = run_dir / "result-rescored.json"
     _write_json_file(result_rescored_path, rescored)
     return rescored
@@ -296,7 +227,6 @@ def _write_preflight_failure_run(
     agent: BaseAgent,
     failure_reason: str,
     runtime_inputs: RuntimeInputs | None = None,
-    skill_prompt: str | None = None,
     preflight_details: dict | None = None,
 ) -> Path:
     runs_dir = Path(args.runs_dir)
@@ -304,7 +234,7 @@ def _write_preflight_failure_run(
     run_dir = runs_dir / run_id
     run_dir.mkdir(parents=True, exist_ok=False)
 
-    prompt_path = _resolve_prompt_path(args.eval_id, spec, args.mode, skill_prompt)
+    prompt_path = _resolve_prompt_path(args.eval_id, spec, args.mode)
     androperator_cmd = (
         runtime_inputs.androperator_cmd
         if runtime_inputs is not None
@@ -369,7 +299,6 @@ def _write_preflight_failure_run(
             "eval_version": spec.get("version", spec.get("eval_version", "1.0.0")),
             "prompt_file": prompt_path.name,
             "prompt_sha256": prompt_sha256,
-            **({"skill_prompt_file": prompt_path.name} if skill_prompt is not None else {}),
         },
         "run_label": args.label,
         "invocation": {
@@ -433,7 +362,6 @@ def _write_preflight_failure_run(
         "spec": {
             "prompt_file": prompt_path.name,
             "prompt_sha256": prompt_sha256,
-            **({"skill_prompt_file": prompt_path.name} if skill_prompt is not None else {}),
         },
         "run_label": args.label,
         "invocation": {
@@ -492,19 +420,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--agent", choices=sorted(SUPPORTED_AGENTS))
     parser.add_argument("--model")
     parser.add_argument("--device")
-    parser.add_argument("--operator-package")
     parser.add_argument("--mode", default="public-surface", choices=sorted(SUPPORTED_MODES))
     parser.add_argument("--runtime", default="local-dev", choices=sorted(SUPPORTED_RUNTIMES))
     parser.add_argument("--timeout-s", type=int)
     parser.add_argument("--max-turns", type=int)
-    parser.add_argument("--skill-prompt")
-    parser.add_argument("--replay")
-    parser.add_argument("--replay-timeout-s", type=int, default=DEFAULT_REPLAY_TIMEOUT_S)
     parser.add_argument("--label")
     parser.add_argument("--runs-dir", default=str(ROOT / "evals" / "runs"))
-    parser.add_argument("--artifacts-dir", default=argparse.SUPPRESS)
-    parser.add_argument("--skills-registry", default=argparse.SUPPRESS)
-    parser.add_argument("--runs", type=int, default=argparse.SUPPRESS)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--rescore", nargs="?", const="")
     return parser
@@ -514,93 +435,13 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    if args.eval_id == SOLAX_COLD_START_EVAL_ID:
-        if args.agent is not None:
-            parser.error("--agent is not supported for solax-orchestrated-cold-start")
-        if args.model is not None:
-            parser.error("--model is not supported for solax-orchestrated-cold-start")
-        if args.skill_prompt is not None:
-            parser.error("--skill-prompt is not supported for solax-orchestrated-cold-start")
-        if args.replay is not None:
-            parser.error("--replay is not supported for solax-orchestrated-cold-start")
-        if args.rescore is not None:
-            parser.error("--rescore is not supported for solax-orchestrated-cold-start")
-        if args.timeout_s is not None and args.timeout_s != DEFAULT_ANDROID_TIMEOUT_S:
-            parser.error("--timeout-s is not supported for solax-orchestrated-cold-start")
-        if args.max_turns is not None and args.max_turns != DEFAULT_ANDROID_MAX_TURNS:
-            parser.error("--max-turns is not supported for solax-orchestrated-cold-start")
-        if args.runs_dir != str(ROOT / "evals" / "runs"):
-            parser.error("--runs-dir is not supported for solax-orchestrated-cold-start")
-        batch_dir = run_solax_orchestrated_cold_start_eval(
-            device_serial=args.device,
-            operator_package=args.operator_package,
-            runtime=args.runtime,
-            runs=getattr(args, "runs", 1),
-            artifacts_dir=Path(getattr(args, "artifacts_dir", str(ROOT / "evals" / "artifacts"))),
-            skills_registry=Path(getattr(args, "skills_registry", str(DEFAULT_SKILLS_REGISTRY))),
-            label=args.label,
-            dry_run=args.dry_run,
-        )
-        print(batch_dir)
-        if not args.dry_run:
-            summary = json.loads((batch_dir / "summary.json").read_text(encoding="utf-8"))
-            print(
-                f"{summary['aggregate_status'].upper()} | cold-start | "
-                f"{summary['counts']['cold_start_verified']}/{summary['runs_requested']} verified"
-            )
-        return 0
-
-    if args.eval_id != "android-version":
-        raise SystemExit(f"unsupported eval: {args.eval_id}")
-    if args.operator_package is not None:
-        parser.error("--operator-package is only supported for solax-orchestrated-cold-start")
-    if hasattr(args, "artifacts_dir"):
-        parser.error("--artifacts-dir is only supported for solax-orchestrated-cold-start")
-    if hasattr(args, "skills_registry"):
-        parser.error("--skills-registry is only supported for solax-orchestrated-cold-start")
-    if hasattr(args, "runs"):
-        parser.error("--runs is only supported for solax-orchestrated-cold-start")
-    if args.timeout_s is not None and args.timeout_s <= 0:
-        parser.error("--timeout-s must be greater than 0")
-    if args.max_turns is not None and args.max_turns <= 0:
-        parser.error("--max-turns must be greater than 0")
-
+    for flag, value in [("--timeout-s", args.timeout_s), ("--max-turns", args.max_turns)]:
+        if value is not None and value <= 0:
+            parser.error(f"{flag} must be greater than 0")
     spec = _load_spec(args.eval_id)
-    spec["runtime_target"] = args.runtime
     args.timeout_s, args.max_turns = _resolve_android_eval_budget(args, spec)
 
-    if args.replay is not None:
-        if not args.replay:
-            raise SystemExit("replay failed: missing run_id")
-        run_dir = _resolve_run_dir(Path(args.runs_dir), args.replay)
-        config = json.loads((run_dir / "config.json").read_text(encoding="utf-8"))
-        androperator_cmd, operator_package, runtime_target = _load_replay_runtime(config)
-        device_serial = config.get("environment", {}).get("device_serial")
-        if not isinstance(device_serial, str) or not device_serial.strip():
-            raise SystemExit("replay failed: run artifacts missing environment.device_serial")
-        skill_score = run_replay(
-            run_dir=run_dir,
-            androperator_cmd=androperator_cmd,
-            operator_package=operator_package,
-            device_serial=device_serial,
-            timeout_s=args.replay_timeout_s,
-        )
-        result = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
-        eval_id = config.get("eval_id") or result.get("eval_id")
-        if isinstance(eval_id, str):
-            spec = _load_spec(eval_id)
-            skill_score = _apply_skill_generation_contract(
-                dict(skill_score),
-                (run_dir / "transcript.txt").read_text(encoding="utf-8"),
-                spec.get("skill_generation"),
-            )
-        replay_result = _apply_skill_generation_outcome(result, skill_score)
-        _write_json_file(run_dir / "result-replay.json", replay_result)
-        status = replay_result.get("outcome", {}).get("status", skill_score["replay_status"]).upper()
-        answer = skill_score["replay_answer_normalized"] or "none"
-        print(run_dir)
-        print(f"{status} | replay/{runtime_target} | {skill_score['replay_wall_clock_s']:.1f}s | answer={answer}")
-        return 0
+    spec["runtime_target"] = args.runtime
 
     if args.rescore is not None:
         run_id = args.rescore
@@ -652,7 +493,7 @@ def main(argv: list[str] | None = None) -> int:
         resolved_config["operator_package"] = inputs.operator_package
         resolved_config["androperator_version"] = inputs.androperator_version
         resolved_config["androperator_npm_version"] = inputs.androperator_npm_version
-        prompt_path = _resolve_prompt_path(args.eval_id, spec, args.mode, args.skill_prompt)
+        prompt_path = _resolve_prompt_path(args.eval_id, spec, args.mode)
         prompt_text = build_prompt(
             str(prompt_path),
             {
@@ -704,7 +545,6 @@ def main(argv: list[str] | None = None) -> int:
             agent=agent,
             failure_reason=str(exc),
             runtime_inputs=None,
-            skill_prompt=args.skill_prompt,
             preflight_details=getattr(exc, "details", None),
         )
         result = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
@@ -724,7 +564,6 @@ def main(argv: list[str] | None = None) -> int:
             agent=agent,
             failure_reason=str(exc),
             runtime_inputs=inputs,
-            skill_prompt=args.skill_prompt,
             preflight_details=getattr(exc, "details", None),
         )
         result = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
@@ -744,7 +583,6 @@ def main(argv: list[str] | None = None) -> int:
         runs_dir=Path(args.runs_dir),
         label=args.label,
         max_turns=args.max_turns,
-        skill_prompt_name=args.skill_prompt,
     )
 
     result = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))

@@ -85,7 +85,7 @@ describe("createAndroperatorLogger (compat tests)", () => {
       deviceId: "device-parent",
     });
     const childLogger = parentLogger.child({
-      skillId: "skill-child",
+      taskId: "task-child",
       deviceId: undefined,
     });
 
@@ -97,9 +97,9 @@ describe("createAndroperatorLogger (compat tests)", () => {
     });
 
     const contents = await readFile(parentLogger.logPath()!, "utf8");
-    const entry = JSON.parse(contents.trimEnd()) as { deviceId?: string; skillId?: string };
+    const entry = JSON.parse(contents.trimEnd()) as { deviceId?: string; taskId?: string };
     assert.strictEqual(entry.deviceId, "device-parent");
-    assert.strictEqual(entry.skillId, "skill-child");
+    assert.strictEqual(entry.taskId, "task-child");
   });
 
   it("appends entries instead of overwriting the file", async () => {

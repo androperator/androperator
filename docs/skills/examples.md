@@ -27,6 +27,5 @@ helpers or adapt them to your host's skill format. They are source references,
 not installed app skills. Copy sibling helpers when adapting helper-based examples.
 An existing local skill API or registry is not needed to read and follow them.
 
-This change does not modify existing product skill APIs, installation, or discovery
-configuration. Auditing those APIs is separate work. The examples demonstrate
-bounded execution and independent verification, not broad OEM reliability.
+These instructions demonstrate bounded execution and independent verification,
+not broad OEM reliability.

@@ -30,14 +30,10 @@ export interface LogEvent {
   commandId?: string;
   taskId?: string;
   deviceId?: string;
-  skillId?: string;
   skillRunId?: string;
   logPath?: string;
-  tailCommand?: string;
-  stream?: "stdout" | "stderr";
   status?: string;
   durationMs?: number;
-  exitCode?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,14 +96,12 @@ export interface RoutingRule {
  *
  * | Event category                | File | Terminal | In JSON mode |
  * |-------------------------------|------|----------|--------------|
- * | skills.run.output             | Yes  | No       | No           |
  * | cli.                          | Yes  | Yes      | No           |
  * | doctor.                       | Yes  | No       | No           |
  * | serve.                        | Yes  | No       | No           |
  * | * (default)                   | Yes  | No       | No           |
  */
 export const DEFAULT_ROUTING_RULES: readonly RoutingRule[] = [
-  { prefix: "skills.run.output", file: true, terminal: false, terminalInJsonMode: false },
   { prefix: "cli.", file: true, terminal: true, terminalInJsonMode: false },
   { prefix: "doctor.", file: true, terminal: false, terminalInJsonMode: false },
   { prefix: "serve.", file: true, terminal: false, terminalInJsonMode: false },

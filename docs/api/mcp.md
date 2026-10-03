@@ -5,7 +5,7 @@
 Describe the first-party stdio MCP server exposed by `androperator mcp serve`: how to launch it, how to configure long-running MCP clients, which tools ship today, and what behavior to expect when device state changes under a running client.
 
 For the post-install decision of whether you should start with MCP or with
-`androperator skills`, read [Host Agent Orientation](../host-agents.md) first.
+direct CLI execution, read [Host Agent Orientation](../host-agents.md) first.
 This page assumes you have already decided that MCP is the correct front door.
 
 ## Sources
@@ -108,25 +108,11 @@ Why `node` is the command:
 - MCP desktop clients usually want an explicit executable plus argument list
 - using `node` plus the installed CLI entrypoint avoids relying on shell wrappers
 
-## When To Use MCP Versus `androperator skills`
+## Choosing MCP
 
-Use `androperator skills` when:
+Use MCP when the host supports stdio tools, and CLI or HTTP when those
+interfaces suit the host. The current agent owns planning and verification.
 
-- your host can shell out to the CLI directly
-- you want to discover installed runtime skills by app, keyword, or id
-- you want the runtime-skill wrapper semantics from `skills get` and `skills run`
-
-Use MCP when:
-
-- your host already supports stdio MCP
-- you want a long-running registered tool surface instead of repeated CLI process launches
-- you need general device tools such as `devices`, `snapshot`, `execute`, and `configure`, not only runtime-skill discovery
-
-These surfaces are complementary:
-
-- `androperator skills` is the primary runtime-skill discovery and wrapper surface
-- `androperator mcp serve` is the primary tool-registration surface for MCP-capable hosts
-- [Host Agent Orientation](../host-agents.md) is the canonical post-install route for choosing between them
 
 ## Environment For Long-Running MCP Clients
 

@@ -84,7 +84,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir,
       claudeSkillsDir,
-      codexSkillsDir,
       agentsSkillsDir,
       cliVersion: "1.2.3",
     });
@@ -133,7 +132,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir,
       claudeSkillsDir: join(root, "home", ".claude", "skills"),
-      codexSkillsDir: join(root, "home", ".codex", "skills"),
       agentsSkillsDir: join(root, "home", ".agents", "skills"),
       cliVersion: "1.2.3",
     });
@@ -155,7 +153,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir,
       claudeSkillsDir: join(root, "home", ".claude", "skills"),
-      codexSkillsDir: join(root, "home", ".codex", "skills"),
       agentsSkillsDir: join(root, "home", ".agents", "skills"),
     });
 
@@ -172,7 +169,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir: join(root, "home", ".androperator", "bundled-skills"),
       claudeSkillsDir,
-      codexSkillsDir: join(root, "home", ".codex", "skills"),
       agentsSkillsDir: join(root, "home", ".agents", "skills"),
       cliVersion: "1.2.3",
     });
@@ -226,7 +222,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir,
       claudeSkillsDir,
-      codexSkillsDir: join(root, "home", ".codex", "skills"),
       agentsSkillsDir: join(root, "home", ".agents", "skills"),
       cliVersion: "1.2.3",
     });
@@ -245,7 +240,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir: join(root, "home", ".androperator", "bundled-skills"),
       claudeSkillsDir: join(root, "home", ".claude", "skills"),
-      codexSkillsDir: join(root, "home", ".codex", "skills"),
       agentsSkillsDir: join(root, "home", ".agents", "skills"),
       cliVersion: "1.2.3",
     };
@@ -263,13 +257,11 @@ describe("copyBundledSkills", () => {
     const sourceDir = await createSourceSkill(root, "androperator-learn-from-recording");
     const installedDir = join(root, "home", ".androperator", "bundled-skills");
     const claudeSkillsDir = join(root, "home", ".claude", "skills");
-    const codexSkillsDir = join(root, "home", ".codex", "skills");
     const agentsSkillsDir = join(root, "home", ".agents", "skills");
     const options = {
       sourceDir: relative(process.cwd(), sourceDir),
       installedDir: relative(process.cwd(), installedDir),
       claudeSkillsDir: relative(process.cwd(), claudeSkillsDir),
-      codexSkillsDir: relative(process.cwd(), codexSkillsDir),
       agentsSkillsDir: relative(process.cwd(), agentsSkillsDir),
       cliVersion: "1.2.3",
     };
@@ -289,7 +281,6 @@ describe("copyBundledSkills", () => {
       sourceDir: join(root, "missing-source"),
       installedDir: join(root, "home", ".androperator", "bundled-skills"),
       claudeSkillsDir: join(root, "home", ".claude", "skills"),
-      codexSkillsDir: join(root, "home", ".codex", "skills"),
       agentsSkillsDir: join(root, "home", ".agents", "skills"),
       cliVersion: "1.2.3",
     });
@@ -310,7 +301,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir: join(root, "home", ".androperator", "bundled-skills"),
       claudeSkillsDir: join(root, "home", ".claude", "skills"),
-      codexSkillsDir: join(root, "home", ".codex", "skills"),
       agentsSkillsDir: join(root, "home", ".agents", "skills"),
       cliVersion: "1.2.3",
     });
@@ -334,7 +324,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir,
       claudeSkillsDir: join(root, "home", ".claude", "skills"),
-      codexSkillsDir: join(root, "home", ".codex", "skills"),
       agentsSkillsDir: join(root, "home", ".agents", "skills"),
       cliVersion: "1.2.3",
     });
@@ -376,7 +365,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir,
       claudeSkillsDir,
-      codexSkillsDir,
       agentsSkillsDir,
       cliVersion: "1.2.3",
     });
@@ -427,7 +415,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir: join(root, "home", ".androperator", "bundled-skills"),
       claudeSkillsDir,
-      codexSkillsDir,
       agentsSkillsDir,
       cliVersion: "1.2.3",
     });
@@ -450,7 +437,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir: join(root, "home", ".androperator", "bundled-skills"),
       claudeSkillsDir: join(root, "home", ".claude", "skills"),
-      codexSkillsDir: join(root, "home", ".codex", "skills"),
       agentsSkillsDir,
       cliVersion: "1.2.3",
     });
@@ -476,7 +462,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir: join(root, "home", ".androperator", "bundled-skills"),
       claudeSkillsDir: join(root, "home", ".claude", "skills"),
-      codexSkillsDir: join(root, "home", ".codex", "skills"),
       agentsSkillsDir,
       cliVersion: "1.2.3",
     });
@@ -504,7 +489,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir: join(root, "home", ".androperator", "bundled-skills"),
       claudeSkillsDir: join(root, "home", ".claude", "skills"),
-      codexSkillsDir: join(root, "home", ".codex", "skills"),
       agentsSkillsDir,
       cliVersion: "1.2.3",
     });
@@ -531,7 +515,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir: join(root, "home", ".androperator", "bundled-skills"),
       claudeSkillsDir,
-      codexSkillsDir,
       agentsSkillsDir,
       cliVersion: "1.2.3",
     });
@@ -565,14 +548,13 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir,
       claudeSkillsDir,
-      codexSkillsDir,
       agentsSkillsDir,
       cliVersion: "1.2.3",
     });
 
     assert.equal(result.ok, true);
     assert.equal(await readlink(join(claudeSkillsDir, "androperator-learn-from-recording")), targetSkillDir);
-    await assert.rejects(lstat(join(codexSkillsDir, "androperator-learn-from-recording")), { code: "ENOENT" });
+    assert.equal((await lstat(join(codexSkillsDir, "androperator-learn-from-recording"))).isSymbolicLink(), true);
     await assertManagedAgentsCopy(agentsSkillsDir, "androperator-learn-from-recording", "# androperator-learn-from-recording\n");
     assert.equal(await readFile(join(targetSkillDir, "SKILL.md"), "utf8"), "# androperator-learn-from-recording\n");
   });
@@ -601,14 +583,13 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir,
       claudeSkillsDir,
-      codexSkillsDir,
       agentsSkillsDir,
       cliVersion: "1.2.3",
     });
 
     assert.equal(result.ok, true);
     assert.equal(await readlink(join(claudeSkillsDir, "androperator-learn-from-recording")), targetSkillDir);
-    await assert.rejects(lstat(join(codexSkillsDir, "androperator-learn-from-recording")), { code: "ENOENT" });
+    assert.equal((await lstat(join(codexSkillsDir, "androperator-learn-from-recording"))).isSymbolicLink(), true);
     await assertManagedAgentsCopy(agentsSkillsDir, "androperator-learn-from-recording", "# androperator-learn-from-recording\n");
     assert.equal(await readFile(join(targetSkillDir, "SKILL.md"), "utf8"), "# androperator-learn-from-recording\n");
     assert.equal(await readFile(join(legacyTargetSkillDir, "SKILL.md"), "utf8"), "# old-androperator-learn-from-recording\n");
@@ -627,7 +608,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir: join(root, "home", ".androperator", "bundled-skills"),
       claudeSkillsDir: join(root, "home", ".claude", "skills"),
-      codexSkillsDir: join(root, "home", ".codex", "skills"),
       agentsSkillsDir,
       cliVersion: "1.2.3",
     });
@@ -656,7 +636,6 @@ describe("copyBundledSkills", () => {
       sourceDir,
       installedDir,
       claudeSkillsDir,
-      codexSkillsDir,
       agentsSkillsDir,
       cliVersion: "1.2.3",
     });
@@ -675,7 +654,6 @@ describe("copyBundledSkills", () => {
     const result = await copyBundledSkills({
       installedDir: join(root, "home", ".androperator", "bundled-skills"),
       claudeSkillsDir: join(root, "home", ".claude", "skills"),
-      codexSkillsDir: join(root, "home", ".codex", "skills"),
       agentsSkillsDir: join(root, "home", ".agents", "skills"),
       env: { ...process.env, ANDROPERATOR_BUNDLED_SKILLS: customSourceDir },
       cliVersion: "1.2.3",
@@ -700,7 +678,6 @@ describe("copyBundledSkills", () => {
     const result = await copyBundledSkills({
       installedDir: join(root, "home", ".androperator", "bundled-skills"),
       claudeSkillsDir: join(root, "home", ".claude", "skills"),
-      codexSkillsDir: join(root, "home", ".codex", "skills"),
       agentsSkillsDir: join(root, "home", ".agents", "skills"),
       env: { ...process.env, ANDROPERATOR_AGENT_SKILLS: join(root, "missing-source") },
       cliVersion: "1.2.3",
@@ -721,7 +698,6 @@ describe("cmdBundledSkillsInstall", () => {
     ]);
     const installedDir = join(root, "home", ".androperator", "bundled-skills");
     const claudeSkillsDir = join(root, "home", ".claude", "skills");
-    const codexSkillsDir = join(root, "home", ".codex", "skills");
     const agentsSkillsDir = join(root, "home", ".agents", "skills");
 
     const rendered = await cmdBundledSkillsInstall({
@@ -729,7 +705,6 @@ describe("cmdBundledSkillsInstall", () => {
       sourceDir,
       installedDir,
       claudeSkillsDir,
-      codexSkillsDir,
       agentsSkillsDir,
       cliVersion: "1.2.3",
     });
@@ -898,11 +873,11 @@ describe("bundled discovery directory aliases", () => {
     assert.deepEqual(await copyBundledSkills(options), first);
   });
 
-  it("keeps symlinks when only Claude and Codex alias one directory", async () => {
+  it("uses symlinks for a separate Claude discovery directory", async () => {
     const root = await makeTempRoot();
     const sourceDir = await createSourceSkill(root, "androperator-upgrade");
     const sharedDir = join(root, "shared");
-    const result = await copyBundledSkills({ sourceDir, homeDir: join(root, "home"), claudeSkillsDir: sharedDir, codexSkillsDir: sharedDir, env: {} });
+    const result = await copyBundledSkills({ sourceDir, homeDir: join(root, "home"), claudeSkillsDir: sharedDir, env: {} });
     assert.ok(result.ok);
     assert.equal(result.discoveryGroups[0].representation, "symlink");
     assert.equal((await lstat(join(sharedDir, "androperator-upgrade"))).isSymbolicLink(), true);
@@ -947,7 +922,6 @@ describe("bundled discovery directory aliases", () => {
     const groups = await resolveBundledSkillDiscoveryGroups({
       claudeSkillsDir: join(root, "alias"),
       agentsSkillsDir: join(root, "physical", "missing"),
-      codexSkillsDir: join(root, "codex"),
     });
     assert.equal(groups.length, 1);
     assert.equal(groups[0].dir, join(root, "physical", "missing"));
@@ -994,7 +968,6 @@ describe("bundled discovery directory aliases", () => {
     const groups = await resolveBundledSkillDiscoveryGroups({
       claudeSkillsDir: join(root, "alias", "skills"),
       agentsSkillsDir: join(root, "physical", "skills"),
-      codexSkillsDir: join(root, "codex"),
     });
     assert.equal(groups.length, 1);
     assert.equal(groups[0].representation, "copy");
@@ -1097,62 +1070,5 @@ describe("legacy bundled skill backups across filesystems", () => {
       throw crossDeviceError();
     }), /original preserved/);
     assert.equal(await readFile(join(originalPath, "SKILL.md"), "utf8"), "user edits during migration");
-  });
-});
-
-describe("redundant Codex discovery cleanup", () => {
-  it("removes owned current, stale and dangling links under CODEX_HOME without touching user entries", async () => {
-    const root = await makeTempRoot();
-    const homeDir = join(root, "home");
-    const sourceDir = await createSourceSkill(root, "androperator-upgrade");
-    const installedDir = join(homeDir, ".androperator", "bundled-skills");
-    const codexHome = join(root, "custom-codex");
-    const codexDir = join(codexHome, "skills");
-    await mkdir(codexDir, { recursive: true });
-    for (const name of ["androperator-upgrade", "retired-skill"]) {
-      await symlink(join(installedDir, name), join(codexDir, name), directorySymlinkType);
-    }
-    const userDir = join(codexDir, "user-skill");
-    await mkdir(userDir);
-    await writeFile(join(userDir, "SKILL.md"), "user content");
-    await symlink(userDir, join(codexDir, "user-link"), directorySymlinkType);
-    const options = { homeDir, sourceDir, env: { CODEX_HOME: codexHome } };
-    for (let attempt = 0; attempt < 2; attempt++) {
-      const result = await copyBundledSkills(options);
-      assert.ok(result.ok, JSON.stringify(result));
-      assert.deepEqual(result.agentDiscoveryDirs.map(entry => entry.label), ["claude", "agents"]);
-      for (const name of ["androperator-upgrade", "retired-skill"]) {
-        await assert.rejects(lstat(join(codexDir, name)), { code: "ENOENT" });
-      }
-      assert.equal(await readFile(join(userDir, "SKILL.md"), "utf8"), "user content");
-      assert.equal(await readlink(join(codexDir, "user-link")), userDir);
-      await assertManagedAgentsCopy(join(homeDir, ".agents", "skills"), "androperator-upgrade", "# androperator-upgrade\n");
-    }
-  });
-
-  it("preserves a same-name user directory in the former Codex discovery root", async () => {
-    const root = await makeTempRoot();
-    const homeDir = join(root, "home");
-    const sourceDir = await createSourceSkill(root, "androperator-upgrade");
-    const userDir = join(homeDir, ".codex", "skills", "androperator-upgrade");
-    await mkdir(userDir, { recursive: true });
-    await writeFile(join(userDir, "SKILL.md"), "personal version");
-    const result = await copyBundledSkills({ homeDir, sourceDir, env: {} });
-    assert.ok(result.ok, JSON.stringify(result));
-    assert.equal(await readFile(join(userDir, "SKILL.md"), "utf8"), "personal version");
-  });
-
-  it("does not clean Codex links until the active install is verified", async () => {
-    const root = await makeTempRoot();
-    const homeDir = join(root, "home");
-    const sourceDir = join(root, "source");
-    await mkdir(join(sourceDir, "invalid-skill", "SKILL.md"), { recursive: true });
-    const codexDir = join(homeDir, ".codex", "skills");
-    await mkdir(codexDir, { recursive: true });
-    const ownedTarget = join(homeDir, ".androperator", "bundled-skills", "invalid-skill");
-    await symlink(ownedTarget, join(codexDir, "invalid-skill"), directorySymlinkType);
-    const result = await copyBundledSkills({ homeDir, sourceDir, env: {} });
-    assert.equal(result.ok, false);
-    assert.equal(await readlink(join(codexDir, "invalid-skill")), ownedTarget);
   });
 });

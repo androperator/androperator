@@ -277,7 +277,6 @@ describe("Doctor: hostChecks", () => {
             const root = await makeTempRoot("androperator-doctor-agent-skills-current-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
-            const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
@@ -285,7 +284,6 @@ describe("Doctor: hostChecks", () => {
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
                 claudeSkillsDir,
-                codexSkillsDir,
                 agentsSkillsDir,
             });
 
@@ -303,7 +301,6 @@ describe("Doctor: hostChecks", () => {
             const root = await makeTempRoot("androperator-doctor-agent-skills-missing-claude-link-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
-            const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
@@ -312,7 +309,6 @@ describe("Doctor: hostChecks", () => {
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
                 claudeSkillsDir,
-                codexSkillsDir,
                 agentsSkillsDir,
             });
 
@@ -345,7 +341,7 @@ describe("Doctor: hostChecks", () => {
             const codexSkillsDir = join(root, "absent-codex-skills");
             await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
             const result = await checkBundledSkillsStaleness(getDefaultRuntimeConfig(), {
-                installedDir, claudeSkillsDir, agentsSkillsDir, codexSkillsDir,
+                installedDir, claudeSkillsDir, agentsSkillsDir,
             });
             assert.strictEqual(result.status, "pass");
             await assert.rejects(lstat(codexSkillsDir), { code: "ENOENT" });
@@ -355,7 +351,6 @@ describe("Doctor: hostChecks", () => {
             const root = await makeTempRoot("androperator-doctor-agent-skills-missing-agents-copy-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
-            const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
@@ -364,7 +359,6 @@ describe("Doctor: hostChecks", () => {
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
                 claudeSkillsDir,
-                codexSkillsDir,
                 agentsSkillsDir,
             });
 
@@ -391,7 +385,6 @@ describe("Doctor: hostChecks", () => {
             const root = await makeTempRoot("androperator-doctor-agent-skills-unmarked-agents-copy-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
-            const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
@@ -400,7 +393,6 @@ describe("Doctor: hostChecks", () => {
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
                 claudeSkillsDir,
-                codexSkillsDir,
                 agentsSkillsDir,
             });
 
@@ -427,7 +419,6 @@ describe("Doctor: hostChecks", () => {
             const root = await makeTempRoot("androperator-doctor-agent-skills-stale-agents-copy-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
-            const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
@@ -436,7 +427,6 @@ describe("Doctor: hostChecks", () => {
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
                 claudeSkillsDir,
-                codexSkillsDir,
                 agentsSkillsDir,
             });
 
@@ -463,7 +453,6 @@ describe("Doctor: hostChecks", () => {
             const root = await makeTempRoot("androperator-doctor-agent-skills-legacy-agents-link-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
-            const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
@@ -473,7 +462,6 @@ describe("Doctor: hostChecks", () => {
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
                 claudeSkillsDir,
-                codexSkillsDir,
                 agentsSkillsDir,
             });
 
@@ -500,7 +488,6 @@ describe("Doctor: hostChecks", () => {
             const root = await makeTempRoot("androperator-doctor-agent-skills-wrong-link-target-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
-            const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
@@ -512,7 +499,6 @@ describe("Doctor: hostChecks", () => {
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
                 claudeSkillsDir,
-                codexSkillsDir,
                 agentsSkillsDir,
             });
 
@@ -539,7 +525,6 @@ describe("Doctor: hostChecks", () => {
             const root = await makeTempRoot("androperator-doctor-agent-skills-conflicting-entry-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
-            const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
@@ -549,7 +534,6 @@ describe("Doctor: hostChecks", () => {
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
                 claudeSkillsDir,
-                codexSkillsDir,
                 agentsSkillsDir,
             });
 
@@ -576,7 +560,6 @@ describe("Doctor: hostChecks", () => {
             const root = await makeTempRoot("androperator-doctor-agent-skills-conflicting-agents-entry-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
-            const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             const [targetSkill] = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
@@ -586,7 +569,6 @@ describe("Doctor: hostChecks", () => {
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
                 claudeSkillsDir,
-                codexSkillsDir,
                 agentsSkillsDir,
             });
 
@@ -613,7 +595,6 @@ describe("Doctor: hostChecks", () => {
             const root = await makeTempRoot("androperator-doctor-agent-skills-broken-link-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
-            const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const missingTarget = join(root, "missing-target");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
@@ -624,7 +605,6 @@ describe("Doctor: hostChecks", () => {
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
                 claudeSkillsDir,
-                codexSkillsDir,
                 agentsSkillsDir,
             });
 
@@ -651,7 +631,6 @@ describe("Doctor: hostChecks", () => {
             const root = await makeTempRoot("androperator-doctor-agent-skills-stale-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
-            const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir], "0.0.1");
@@ -659,7 +638,6 @@ describe("Doctor: hostChecks", () => {
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
                 claudeSkillsDir,
-                codexSkillsDir,
                 agentsSkillsDir,
             });
 
@@ -701,7 +679,6 @@ describe("Doctor: hostChecks", () => {
             const root = await makeTempRoot("androperator-doctor-agent-skills-missing-upgrade-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
-            const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             const expectedSkills = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
@@ -711,7 +688,6 @@ describe("Doctor: hostChecks", () => {
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
                 claudeSkillsDir,
-                codexSkillsDir,
                 agentsSkillsDir,
             });
 
@@ -749,7 +725,6 @@ describe("Doctor: hostChecks", () => {
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
                 claudeSkillsDir,
-                codexSkillsDir,
                 agentsSkillsDir,
             });
 
@@ -771,7 +746,6 @@ describe("Doctor: hostChecks", () => {
             const sourceDir = join(root, "custom-bundled-skills");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
-            const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             const customSkill = "custom-bundled-skill";
@@ -783,7 +757,6 @@ describe("Doctor: hostChecks", () => {
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
                 claudeSkillsDir,
-                codexSkillsDir,
                 agentsSkillsDir,
                 env: {
                     ...process.env,
@@ -808,7 +781,6 @@ describe("Doctor: hostChecks", () => {
             const sourceDir = join(root, "legacy-agent-skills");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
-            const codexSkillsDir = join(root, "codex-skills");
             const agentsSkillsDir = join(root, "agents-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             const expectedSkills = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, agentsSkillsDir]);
@@ -819,7 +791,6 @@ describe("Doctor: hostChecks", () => {
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
                 claudeSkillsDir,
-                codexSkillsDir,
                 agentsSkillsDir,
                 env: {
                     ...process.env,

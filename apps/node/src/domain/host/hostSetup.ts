@@ -253,65 +253,16 @@ async function resolveRuntimeGuideInfo(
   const configuredRegistryPath = configuredDirectory === undefined ? undefined : join(configuredDirectory, "skills-registry.json");
   const explicitRegistryPath = trimConfiguredPath(options.registryPath ?? undefined);
 
-  const candidates = [explicitRegistryPath ?? configuredRegistryPath ?? defaultRegistryPath];
+  const candidate = explicitRegistryPath ?? configuredRegistryPath ?? defaultRegistryPath;
   if (options.env?.ANDROPERATOR_SKILLS_DIR !== undefined && configuredDirectory === undefined) {
     return { resolvedPath: null, hintPath: defaultRegistryPath, applications: null, unreadableRegistry: true };
   }
 
-  const hintPath = candidates[0] ?? defaultRegistryPath;
-
-  for (const candidate of candidates) {
-    try {
-      const loaded = await loadCollection(dirname(candidate), candidate === defaultRegistryPath && explicitRegistryPath === undefined && configuredDirectory === undefined);
-      const parsed = loaded.registry;
-      if (!Array.isArray(parsed.skills)) {
-        return {
-          resolvedPath: candidate,
-          hintPath,
-          applications: null,
-          unreadableRegistry: true,
-        };
-      }
-
-      const byApplication = new Map<string, RuntimeSkillSummary["skills"]>();
-      for (const rawSkill of parsed.skills) {
-        if (!rawSkill || typeof rawSkill !== "object") {
-          continue;
-        }
-
-        const skill = rawSkill as unknown as Record<string, unknown>;
-        const applicationId = typeof skill.applicationId === "string" && skill.applicationId.length > 0
-          ? skill.applicationId
-          : "unknown.application";
-        const entries = byApplication.get(applicationId) ?? [];
-        entries.push({
-          id: typeof skill.id === "string" && skill.id.length > 0 ? skill.id : "unknown-skill",
-          intent: typeof skill.intent === "string" && skill.intent.length > 0 ? skill.intent : "unknown",
-          summary: typeof skill.summary === "string" && skill.summary.length > 0 ? skill.summary : "No summary provided.",
-          example: buildSkillRunExample(skill),
-        });
-        byApplication.set(applicationId, entries);
-      }
-
-      const applications = Array.from(byApplication.entries())
-        .sort(([left], [right]) => left.localeCompare(right))
-        .map(([applicationId, skills]) => ({
-          applicationId,
-          skills: skills.slice().sort((left, right) => {
-            if (left.intent !== right.intent) {
-              return left.intent.localeCompare(right.intent);
-            }
-            return left.id.localeCompare(right.id);
-          }),
-        }));
-
-      return {
-        resolvedPath: loaded.indexed ? candidate : null,
-        hintPath,
-        applications,
-        unreadableRegistry: false,
-      };
-    } catch {
+  const hintPath = candidate;
+  try {
+    const loaded = await loadCollection(dirname(candidate), candidate === defaultRegistryPath && explicitRegistryPath === undefined && configuredDirectory === undefined);
+    const parsed = loaded.registry;
+    if (!Array.isArray(parsed.skills)) {
       return {
         resolvedPath: candidate,
         hintPath,
@@ -319,14 +270,53 @@ async function resolveRuntimeGuideInfo(
         unreadableRegistry: true,
       };
     }
-  }
 
-  return {
-    resolvedPath: null,
-    hintPath,
-    applications: null,
-    unreadableRegistry: false,
-  };
+    const byApplication = new Map<string, RuntimeSkillSummary["skills"]>();
+    for (const rawSkill of parsed.skills) {
+      if (!rawSkill || typeof rawSkill !== "object") {
+        continue;
+      }
+
+      const skill = rawSkill as unknown as Record<string, unknown>;
+      const applicationId = typeof skill.applicationId === "string" && skill.applicationId.length > 0
+        ? skill.applicationId
+        : "unknown.application";
+      const entries = byApplication.get(applicationId) ?? [];
+      entries.push({
+        id: typeof skill.id === "string" && skill.id.length > 0 ? skill.id : "unknown-skill",
+        intent: typeof skill.intent === "string" && skill.intent.length > 0 ? skill.intent : "unknown",
+        summary: typeof skill.summary === "string" && skill.summary.length > 0 ? skill.summary : "No summary provided.",
+        example: buildSkillRunExample(skill),
+      });
+      byApplication.set(applicationId, entries);
+    }
+
+    const applications = Array.from(byApplication.entries())
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([applicationId, skills]) => ({
+        applicationId,
+        skills: skills.slice().sort((left, right) => {
+          if (left.intent !== right.intent) {
+            return left.intent.localeCompare(right.intent);
+          }
+          return left.id.localeCompare(right.id);
+        }),
+      }));
+
+    return {
+      resolvedPath: loaded.indexed ? candidate : null,
+      hintPath,
+      applications,
+      unreadableRegistry: false,
+    };
+  } catch {
+    return {
+      resolvedPath: candidate,
+      hintPath,
+      applications: null,
+      unreadableRegistry: true,
+    };
+  }
 }
 
 function buildInstallStateContent(options: HostSetupOptions, resolvedRegistryPath: string | null): string {

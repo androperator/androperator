@@ -52,11 +52,11 @@ def build_checks(landing_base_url, docs_base_url):
             "body_pattern": r"(?im)^#\s+Androperator",
             "probe_bots": True,
         },
-        {"kind": "url", "url": f"{landing_base_url}/agents", "content_type": r"text/html"},
+        {"kind": "url", "url": f"{landing_base_url}/agents/", "content_type": r"text/html"},
         {"kind": "url", "url": f"{landing_base_url}/sitemap.xml", "content_type": r"application/xml|text/xml"},
-        {"kind": "redirect", "url": f"{landing_base_url}/agent.md", "location": r"/index.md"},
-        {"kind": "redirect", "url": f"{landing_base_url}/agents.md", "location": r"/index.md"},
-        {"kind": "redirect", "url": f"{landing_base_url}/for-agents", "location": r"/agents"},
+        {"kind": "redirect", "url": f"{landing_base_url}/agent.md", "location": r"/agents.md"},
+        {"kind": "url", "url": f"{landing_base_url}/agents.md", "content_type": r"text/markdown|text/plain"},
+        {"kind": "redirect", "url": f"{landing_base_url}/for-agents", "location": r"/agents/"},
         {
             "kind": "url",
             "url": f"{docs_base_url}/robots.txt",
@@ -75,7 +75,7 @@ def build_checks(landing_base_url, docs_base_url):
             "kind": "url",
             "url": f"{docs_base_url}/llms-full.txt",
             "content_type": r"text/plain",
-            "body_pattern": r"(?im)^#\s+Androperator Full Documentation",
+            "body_pattern": r"(?im)^#\s+Androperator Documentation",
             "probe_bots": True,
         },
         {"kind": "url", "url": f"{docs_base_url}/sitemap.xml", "content_type": r"application/xml|text/xml"},
@@ -220,6 +220,10 @@ def fail(url, reasons, status="", headers=None, raw=""):
     }
 
 
+def is_challenge_page(body):
+    return bool(re.search(r"(?is)<title[^>]*>\s*(?:attention required|just a moment|access denied)|<[^>]+(?:id|class)=[\"\'][^\"\']*(?:cf-challenge|challenge-platform)|/cdn-cgi/challenge-platform/", body))
+
+
 def verify_url(check, allow_noindex=False):
     code, raw = run_curl([check["url"]])
     if code != 0:
@@ -251,7 +255,7 @@ def verify_url(check, allow_noindex=False):
                 reasons.append(f"expected GET 200, got {get_status or 'no status line'}")
             if not re.search(check["body_pattern"], body, re.IGNORECASE):
                 reasons.append("unexpected body content")
-            if re.search(r"(?i)content signals|attention required|just a moment|captcha|verify you are human|access denied|403 forbidden|404 - androperator", body):
+            if is_challenge_page(body):
                 reasons.append("response body looks like an anti-bot, policy, or fallback page")
 
     if check.get("probe_bots"):
@@ -291,7 +295,7 @@ def probe_bot_access(url, allow_noindex=False):
             failures.append(f"{bot_name} saw AI-blocking header: {x_robots}")
         if not allow_noindex and re.search(r"\bnoindex\b", x_robots, re.IGNORECASE):
             failures.append(f"{bot_name} saw noindex header: {x_robots}")
-        if re.search(r"(?i)attention required|just a moment|captcha|verify you are human|access denied", body):
+        if is_challenge_page(body):
             failures.append(f"{bot_name} received challenge-like body content")
     return failures
 

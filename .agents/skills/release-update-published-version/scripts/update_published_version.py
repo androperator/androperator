@@ -243,11 +243,7 @@ def main() -> None:
 
     # Stage only files that exist (and were likely updated). This avoids
     # aborting the follow-up commit due to removed/migrated doc inputs.
-    paths_to_stage = {
-        repo_root / "sites" / "docs" / "static" / "llms-full.txt",
-        repo_root / "sites" / "androperator-public" / "install.sh",
-        repo_root / "sites" / "androperator-public" / "llms-full.txt",
-    }
+    paths_to_stage = {repo_root / "sites" / "androperator-public" / "install.sh"}
     for p in updated_docs:
         paths_to_stage.add(p)
 
@@ -257,7 +253,6 @@ def main() -> None:
         [
             "git",
             "add",
-            "-f",
             *stage_args,
         ],
         cwd=repo_root,

@@ -23,7 +23,7 @@ This skill is for repo maintenance. It is not a live GEO audit.
 1. Regenerate landing sitemap source files:
    - `python3 .agents/skills/sitemaps-generate/scripts/generate_sitemap_metadata.py landing --repo-root .`
 2. Build the landing site if needed:
-   - `./scripts/site_build.sh`
+   - `./scripts/site_build_clawperator.sh`
 3. Build the docs site:
    - `./scripts/docs_build.sh`
 4. Validate the resulting sitemap XML and live GEO expectations.

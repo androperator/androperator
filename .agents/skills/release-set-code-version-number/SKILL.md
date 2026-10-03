@@ -43,8 +43,8 @@ It intentionally does **not** update public release-facing docs and release-main
 - `docs/troubleshooting/compatibility.md`
 - `docs/internal/release-procedure.md`
 - `sites/docs/**`
-- `sites/landing/public/**`
-- `sites/landing/public/install.sh`
+- `sites/landing-clawperator/public/**`
+- `sites/landing-clawperator/public/install.sh`
 
 ## Mandatory Manual Audit
 

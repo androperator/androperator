@@ -134,7 +134,7 @@ Key implications:
 
 Refs:
 
-- `sites/landing/public/install.sh`
+- `sites/landing-clawperator/public/install.sh`
 - `apps/node/src/cli/commands/install.ts`
 - `apps/node/src/domain/host/hostSetup.ts`
 - `apps/node/src/adapters/skills-repo/localSkillsRegistry.ts`

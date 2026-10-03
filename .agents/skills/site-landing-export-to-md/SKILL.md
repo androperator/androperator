@@ -21,11 +21,11 @@ Generate a markdown representation of the `clawperator.com` landing page from th
 1.  **Build the landing page**:
     Run the build script from the repository root to generate the static HTML:
     ```bash
-    ./scripts/site_build.sh
+    ./scripts/site_build_clawperator.sh
     ```
 
 2.  **Export to Markdown**:
-    Run the helper script to convert the local `index.html` to `sites/landing/export/landing-export-local.md`:
+    Run the helper script to convert the local `index.html` to `sites/landing-clawperator/export/landing-export-local.md`:
     ```bash
     python3 .agents/skills/site-landing-export-to-md/scripts/export_landing_to_md.py
     ```
@@ -38,6 +38,6 @@ Generate a markdown representation of the `clawperator.com` landing page from th
 
 ## Notes
 
--   This skill is useful for validating how local changes to the landing page (`sites/landing/app/page.js`) will be perceived by AI agents before they are deployed.
+-   This skill is useful for validating how local changes to the landing page (`sites/landing-clawperator/app/page.js`) will be perceived by AI agents before they are deployed.
 -   The conversion focuses on the `<main>` content of the page, stripping out navigation, scripts, and styles to provide a clean representation for LLMs.
--   Ensure you have run `./scripts/site_build.sh` at least once before running the export script.
+-   Ensure you have run `./scripts/site_build_clawperator.sh` at least once before running the export script.

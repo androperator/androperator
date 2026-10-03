@@ -9,6 +9,18 @@ on:
       - main
 
 jobs:
+  preserved-landing-build:
+    name: Build preserved Clawperator landing site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: sites/landing-clawperator/package-lock.json
+      - run: ./scripts/site_build_clawperator.sh
+
   commit-message-guard:
     name: Validate Commit Messages
     runs-on: ubuntu-latest

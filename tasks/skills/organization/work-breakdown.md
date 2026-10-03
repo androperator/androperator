@@ -67,7 +67,7 @@ Read these files IN THIS ORDER before writing anything.
 | `apps/node/src/test/unit/cliHelp.test.ts` | Help-text and command-surface regression patterns |
 | `apps/node/src/test/unit/doctor/hostChecks.test.ts` | Doctor regression patterns |
 | `validation/install/README.md` | Canonical installer validation entrypoint and maintenance rule |
-| `sites/landing/public/install.sh` | Current installer text and agent-guide generation |
+| `sites/landing-clawperator/public/install.sh` | Current installer text and agent-guide generation |
 | `docs/api/doctor.md` | Public doctor-check reference page carrying the id that must flip in Phase 3 |
 | `docs/host-agents.md` | Main public docs page for the host-agent front doors |
 | `.agents/skills/docs-author/SKILL.md` | Required workflow for authored public docs touched in Phases 2 and 3 |
@@ -184,7 +184,7 @@ skill ids while keeping the public noun `agent-skills` unchanged until PR-2.
 - `apps/node/bundled-skills/skill-author-by-recording/`
 - `.agents/skills/clawperator-agent-orientation/SKILL.md`
 - `.agents/skills/clawperator-upgrade/SKILL.md`
-- `sites/landing/public/install.sh`
+- `sites/landing-clawperator/public/install.sh`
 - `validation/install/test_agent_skills.sh`
 - `validation/install/test_main.sh`
 - `docs/host-agents.md`
@@ -250,7 +250,7 @@ npm --prefix apps/node run test
 ./scripts/docs_build.sh
 uv --project evals run pytest evals/harness/test_run_eval.py evals/harness/test_rescore.py
 find apps/node/bundled-skills -maxdepth 1 -mindepth 1 -type d | sort
-rg -n --pcre2 '(?<![a-z-])skill-author-by-agent-discovery(?![a-z-])|(?<![a-z-])skill-author-by-recording(?![a-z-])' apps/node docs sites/landing/public validation evals .agents/skills
+rg -n --pcre2 '(?<![a-z-])skill-author-by-agent-discovery(?![a-z-])|(?<![a-z-])skill-author-by-recording(?![a-z-])' apps/node docs sites/landing-clawperator/public validation evals .agents/skills
 ```
 
 The final `rg` command should return no matches. If it reports a real remaining
@@ -284,7 +284,7 @@ eval expectations, with no backwards-compatibility layer for the old surface.
 - `apps/node/src/test/unit/agentSkills.test.ts`
 - `apps/node/src/test/unit/cliHelp.test.ts`
 - `apps/node/src/test/unit/doctor/hostChecks.test.ts`
-- `sites/landing/public/install.sh`
+- `sites/landing-clawperator/public/install.sh`
 - `validation/install/test_agent_skills.sh`
 - `validation/install/test_main.sh`
 - `validation/install/README.md`
@@ -387,7 +387,7 @@ npm --prefix apps/node run test
 uv --project evals run pytest evals/harness/test_run_eval.py evals/harness/test_rescore.py
 node apps/node/dist/cli/index.js bundled-skills --help
 node apps/node/dist/cli/index.js agent-skills --help ; [ $? -ne 0 ]
-rg -n "host\\.agent-skills\\.staleness|CLAWPERATOR_AGENT_SKILLS|~/.clawperator/agent-skills|clawperator agent-skills|Agent-skills |Setting up agent-skills|AGENT_SKILLS_SOURCE_NOT_FOUND|AGENT_SKILLS_SOURCE_EMPTY|AGENT_SKILLS_INSTALL_FAILED|AGENT_SKILLS_LIST_FAILED" apps/node docs sites/landing/public validation evals .agents/skills
+rg -n "host\\.agent-skills\\.staleness|CLAWPERATOR_AGENT_SKILLS|~/.clawperator/agent-skills|clawperator agent-skills|Agent-skills |Setting up agent-skills|AGENT_SKILLS_SOURCE_NOT_FOUND|AGENT_SKILLS_SOURCE_EMPTY|AGENT_SKILLS_INSTALL_FAILED|AGENT_SKILLS_LIST_FAILED" apps/node docs sites/landing-clawperator/public validation evals .agents/skills
 ```
 
 Review the final `rg` output manually. Any remaining matches must be deliberate

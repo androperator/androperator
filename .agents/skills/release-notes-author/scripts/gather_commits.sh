@@ -79,11 +79,15 @@ path_type() {
       sites/docs/AGENTS.md|\
       sites/docs/requirements.txt|\
       sites/landing/public/sitemap.xml|\
+      sites/landing-clawperator/public/sitemap.xml|\
       sites/landing/public/landing-sitemap.xml|\
+      sites/landing-clawperator/public/landing-sitemap.xml|\
       sites/docs/.build/**|\
       sites/docs/site/**|\
       sites/landing/.next/**|\
+      sites/landing-clawperator/.next/**|\
       sites/landing/out/**|\
+      sites/landing-clawperator/out/**|\
       detekt*.yml|\
       detekt-baseline.xml)
       printf 'infra'
@@ -92,7 +96,9 @@ path_type() {
       sites/docs/static/llms-full.txt|\
       sites/docs/static/llms.txt|\
       sites/landing/public/llms-full.txt|\
-      sites/landing/public/llms.txt)
+      sites/landing-clawperator/public/llms-full.txt|\
+      sites/landing/public/llms.txt|\
+      sites/landing-clawperator/public/llms.txt)
       printf 'generated'
       ;;
     apps/node/package.json|\
@@ -101,9 +107,13 @@ path_type() {
       sites/docs/mkdocs.yml|\
       sites/docs/source-map.yaml|\
       sites/landing/next.config.js|\
+      sites/landing-clawperator/next.config.js|\
       sites/landing/next.config.cjs|\
+      sites/landing-clawperator/next.config.cjs|\
       sites/landing/next.config.mjs|\
+      sites/landing-clawperator/next.config.mjs|\
       sites/landing/next.config.ts|\
+      sites/landing-clawperator/next.config.ts|\
       *.gradle.kts|\
       gradle/**|\
       gradle.properties|\
@@ -112,7 +122,7 @@ path_type() {
       ;;
     *)
       case "$path" in
-        apps/node/**|apps/android/**|docs/**|sites/docs/**|sites/landing/**)
+        apps/node/**|apps/android/**|docs/**|sites/docs/**|sites/landing/**|sites/landing-clawperator/**)
           printf 'src'
           ;;
         *)
@@ -201,7 +211,7 @@ while IFS= read -r sha; do
               has_src_in_surface=1
             fi
             ;;
-          docs/**|sites/docs/**|sites/landing/**)
+          docs/**|sites/docs/**|sites/landing/**|sites/landing-clawperator/**)
             has_docs=1
             has_named_surface=1
             if [[ "$type" == "src" ]]; then

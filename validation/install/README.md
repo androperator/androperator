@@ -1,7 +1,7 @@
 # Install Validation
 
 This directory contains the install-specific validation harnesses for the
-shell bootstrap wrapper in `sites/landing/public/install.sh`.
+shell bootstrap wrapper in `sites/landing-clawperator/public/install.sh`.
 
 ## Entry Point
 
@@ -29,8 +29,8 @@ dependencies for you.
   - builds the Node package, runs the install-related Node tests, then runs the
     shell harnesses in this directory plus `validation/test_doctor.sh`
 - `test_skill_md.sh`
-  - validates the public `sites/landing/public/skill.md` and
-    `sites/landing/public/agents.md` setup contract
+  - validates the public `sites/landing-clawperator/public/skill.md` and
+    `sites/landing-clawperator/public/agents.md` setup contract
   - guards package name, Node requirement, setup commands, local host artifacts,
     landing redirects, discovery links, sitemap entries, and out-of-scope
     strings
@@ -45,7 +45,7 @@ dependencies for you.
 
 ## Maintenance Rule
 
-When a change adds or changes behavior in `sites/landing/public/install.sh`,
+When a change adds or changes behavior in `sites/landing-clawperator/public/install.sh`,
 update or add the matching coverage here in the same change. Do not rely on the
 existing harnesses as generic coverage for new install branches.
 

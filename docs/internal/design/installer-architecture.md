@@ -5,7 +5,7 @@
 Keep the Clawperator install path easy to reason about, test, and recover.
 
 This note defines the ownership boundary between the public shell installer at
-`sites/landing/public/install.sh` and the Node CLI install surfaces. Use it when
+`sites/landing-clawperator/public/install.sh` and the Node CLI install surfaces. Use it when
 changing setup, upgrade, host artifact generation, operator remediation,
 runtime-skill installation, bundled-skill installation, or install validation.
 
@@ -13,7 +13,7 @@ runtime-skill installation, bundled-skill installation, or install validation.
 
 | Surface | Authority |
 | --- | --- |
-| Shell bootstrap behavior | `sites/landing/public/install.sh` |
+| Shell bootstrap behavior | `sites/landing-clawperator/public/install.sh` |
 | Top-level install command and help | `apps/node/src/cli/registry.ts` |
 | CLI-owned post-bootstrap flow | `apps/node/src/cli/commands/install.ts` |
 | Operator remediation policy | `apps/node/src/cli/commands/operatorRemediate.ts` |

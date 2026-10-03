@@ -3,11 +3,11 @@ set -euo pipefail
 
 cd "$(dirname "$0")/../.."
 
-SKILL_MD="sites/landing/public/skill.md"
-AGENTS_MD="sites/landing/public/agents.md"
-REDIRECTS="sites/landing/public/_redirects"
-LLMS_TXT="sites/landing/public/llms.txt"
-LANDING_SITEMAP="sites/landing/public/landing-sitemap.xml"
+SKILL_MD="sites/landing-clawperator/public/skill.md"
+AGENTS_MD="sites/landing-clawperator/public/agents.md"
+REDIRECTS="sites/landing-clawperator/public/_redirects"
+LLMS_TXT="sites/landing-clawperator/public/llms.txt"
+LANDING_SITEMAP="sites/landing-clawperator/public/landing-sitemap.xml"
 
 assert_file_exists() {
     local file="$1"

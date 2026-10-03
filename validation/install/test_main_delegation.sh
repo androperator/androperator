@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 
 REPO_ROOT="$(pwd)"
-INSTALL_SCRIPT="$REPO_ROOT/sites/landing/public/install.sh"
+INSTALL_SCRIPT="$REPO_ROOT/sites/landing-clawperator/public/install.sh"
 SYSTEM_PATH_BASE="$(dirname "$(command -v node)"):/usr/bin:/bin:/usr/sbin:/sbin"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT

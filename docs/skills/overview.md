@@ -17,7 +17,7 @@ the exact `clawperator skills` command contract.
 - Runtime wrapper: `apps/node/src/domain/skills/runSkill.ts`
 - Listing and search: `apps/node/src/domain/skills/listSkills.ts`, `apps/node/src/domain/skills/searchSkills.ts`
 - CLI surface: `apps/node/src/cli/commands/skills.ts`, `apps/node/src/cli/registry.ts`
-- Installer outputs: [`install.sh`](https://github.com/clawperator/clawperator/blob/main/sites/landing/public/install.sh)
+- Installer outputs: [`install.sh`](https://github.com/clawperator/clawperator/blob/main/sites/landing-clawperator/public/install.sh)
 - Serve API wrapper: `apps/node/src/cli/commands/serve.ts`
 
 ## What Skills Are

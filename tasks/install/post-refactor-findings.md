@@ -8,12 +8,12 @@ Reviewed range: `0c3ce93b9cac5d48635677f77f50b431d4231eca^..1f1943b75dda84273be4
 
 This review focused on whether the install compaction work actually moved
 post-bootstrap install ownership out of
-`sites/landing/public/install.sh` and into the Node CLI, while keeping
+`sites/landing-clawperator/public/install.sh` and into the Node CLI, while keeping
 installer reliability and validation coverage intact.
 
 Surfaces inspected:
 
-- `sites/landing/public/install.sh`
+- `sites/landing-clawperator/public/install.sh`
 - `validation/install/`
 - `apps/node/src/cli/commands/install.ts`
 - `apps/node/src/cli/commands/operatorRemediate.ts`

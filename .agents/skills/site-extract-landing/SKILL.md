@@ -17,7 +17,7 @@ The following environment variables must be set:
 ## Workflow
 
 1.  **Run the extraction script**:
-    -   To extract the default landing page (`https://clawperator.com`) to `sites/landing/export/landing-export-cloudflare.md`:
+    -   To extract the default landing page (`https://clawperator.com`) to `sites/landing-clawperator/export/landing-export-cloudflare.md`:
         ```bash
         python3 .agents/skills/site-extract-landing/scripts/extract_landing.py
         ```

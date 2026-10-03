@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# site_build.sh
+# site_build_clawperator.sh
 # Build the Clawperator landing page (Next.js static export).
 # Works from any directory.
 
@@ -9,7 +9,7 @@ set -euo pipefail
 # Get absolute path of script and repo root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-LANDING_DIR="$REPO_ROOT/sites/landing"
+LANDING_DIR="$REPO_ROOT/sites/landing-clawperator"
 
 echo "--- Building Clawperator Landing Page ---"
 echo "Repository Root: $REPO_ROOT"

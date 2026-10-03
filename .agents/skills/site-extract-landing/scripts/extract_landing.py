@@ -19,7 +19,7 @@ def main():
     
     output_path = args.output
     if not output_path:
-        output_path = repo_root / "sites/landing" / "export" / "landing-export-cloudflare.md"
+        output_path = repo_root / "sites/landing-clawperator" / "export" / "landing-export-cloudflare.md"
     else:
         output_path = Path(output_path)
 

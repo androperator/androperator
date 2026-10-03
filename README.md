@@ -89,7 +89,7 @@ Full docs at [docs.clawperator.com](https://docs.clawperator.com)
 [Release notes](https://github.com/clawperator/clawperator/blob/main/CHANGELOG.md) cover changes in each version.
 
 Website surfaces in this repo:
-- `sites/landing/` builds the marketing/install site at [clawperator.com](https://clawperator.com)
+- `sites/landing-clawperator/` builds the marketing/install site at [clawperator.com](https://clawperator.com)
 - `sites/docs/` builds the technical documentation site at [docs.clawperator.com](https://docs.clawperator.com)
 
 When updating website content, make sure you are editing the correct surface. The docs content itself is sourced from `docs/`, `apps/node/src/`, and `../clawperator-skills/docs`, then published through `sites/docs/`.

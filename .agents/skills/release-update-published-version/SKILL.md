@@ -24,7 +24,7 @@ This skill updates public release-facing surfaces such as:
 - `docs/index.md` (the "Current release" badge that feeds the docs home page)
 - `docs/troubleshooting/compatibility.md` (versioned Operator APK remediation example)
 - `docs/internal/release-procedure.md` (versioned release command examples)
-- `sites/landing/public/install.sh`
+- `sites/landing-clawperator/public/install.sh`
 - the generated docs-site outputs produced by `./scripts/docs_build.sh`, including the docs home page and `llms-full.txt`
 - generated `llms-full.txt` artifacts
 

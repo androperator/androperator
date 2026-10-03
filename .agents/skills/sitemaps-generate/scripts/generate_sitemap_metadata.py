@@ -101,58 +101,58 @@ def landing_manifest():
             "loc": f"{LANDING_BASE_URL}/",
             "priority": "1.0",
             "sources": [
-                "sites/landing/app/page.js",
-                "sites/landing/app/layout.js",
+                "sites/landing-clawperator/app/page.js",
+                "sites/landing-clawperator/app/layout.js",
             ],
         },
         {
             "loc": f"{LANDING_BASE_URL}/agents",
             "priority": "0.9",
             "sources": [
-                "sites/landing/app/agents/page.js",
-                "sites/landing/app/layout.js",
+                "sites/landing-clawperator/app/agents/page.js",
+                "sites/landing-clawperator/app/layout.js",
             ],
         },
         {
             "loc": f"{LANDING_BASE_URL}/index.md",
             "priority": "0.9",
             "sources": [
-                "sites/landing/public/index.md",
+                "sites/landing-clawperator/public/index.md",
             ],
         },
         {
             "loc": f"{LANDING_BASE_URL}/skill.md",
             "priority": "0.9",
             "sources": [
-                "sites/landing/public/skill.md",
+                "sites/landing-clawperator/public/skill.md",
             ],
         },
         {
             "loc": f"{LANDING_BASE_URL}/agents.md",
             "priority": "0.8",
             "sources": [
-                "sites/landing/public/agents.md",
+                "sites/landing-clawperator/public/agents.md",
             ],
         },
         {
             "loc": f"{LANDING_BASE_URL}/install.sh",
             "priority": "0.8",
             "sources": [
-                "sites/landing/public/install.sh",
+                "sites/landing-clawperator/public/install.sh",
             ],
         },
         {
             "loc": f"{LANDING_BASE_URL}/llms.txt",
             "priority": "0.9",
             "sources": [
-                "sites/landing/public/llms.txt",
+                "sites/landing-clawperator/public/llms.txt",
             ],
         },
         {
             "loc": f"{LANDING_BASE_URL}/llms-full.txt",
             "priority": "0.8",
             "sources": [
-                "sites/landing/public/llms-full.txt",
+                "sites/landing-clawperator/public/llms-full.txt",
             ],
         },
         {
@@ -180,7 +180,7 @@ def set_child_text(parent, tag, text):
 
 
 def generate_landing_sitemaps(repo_root):
-    public_dir = repo_root / "sites/landing/public"
+    public_dir = repo_root / "sites/landing-clawperator/public"
     landing_path = public_dir / "landing-sitemap.xml"
     sitemap_index_path = public_dir / "sitemap.xml"
 

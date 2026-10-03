@@ -297,3 +297,8 @@ Serve adds route-local request validation and HTTP status codes. Use
 - [Device Prep and Runtime](runtime.md)
 - [Environment Variables](../api/environment.md)
 - [Serve API](../api/serve.md)
+
+## Examples followed by the current agent
+
+[Agent-followed examples](examples.md) provide optional Settings instructions and
+evidence helpers without launching another agent or using the runtime skills API.

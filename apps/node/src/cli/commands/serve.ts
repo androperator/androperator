@@ -51,11 +51,7 @@ function extractRequestRunId(body: unknown): string | undefined {
   if (typeof body !== "object" || body === null || !("runId" in body)) {
     return undefined;
   }
-  const value = (body as { runId?: unknown }).runId;
-  if (typeof value !== "string") {
-    return undefined;
-  }
-  return normalizeRunId(value);
+  return normalizeRunId((body as { runId?: unknown }).runId);
 }
 
 function requestLoggerForRun(options: ServeAppOptions, runId: string | undefined): Logger | undefined {

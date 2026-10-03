@@ -1,0 +1,13 @@
+{
+  "name": "androperator-landing",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "bash ../../scripts/site_build.sh --dependencies-installed",
+    "test": "node --test ../../validation/landing/site.test.mjs"
+  },
+  "dependencies": {
+    "markdown-it": "15.0.2"
+  }
+}

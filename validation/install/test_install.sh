@@ -46,6 +46,7 @@ bash validation/install/test_operator_package_env.sh
 # caller-local adb configuration cannot bypass that scenario.
 env -u ADB_PATH bash validation/test_doctor.sh
 bash validation/install/test_java.sh
+bash validation/install/test_nvm_verification.sh
 bash validation/install/test_cli_bootstrap.sh
 bash validation/install/test_main_delegation.sh
 

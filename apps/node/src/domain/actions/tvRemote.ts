@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { runAdb } from "../../adapters/android-bridge/adbClient.js";
 import type { RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
-import type { Execution } from "../../contracts/execution.js";
+import type { Execution, ExecutionAction } from "../../contracts/execution.js";
 import { ERROR_CODES, isAndroperatorError } from "../../contracts/errors.js";
 import { isTvRemoteKey } from "../../contracts/keys.js";
 import type { ResultEnvelope } from "../../contracts/result.js";
@@ -17,6 +17,10 @@ const KEY_EVENTS: Record<string, string> = {
   // The emulator's person icon opens its dashboard, not PROFILE_SWITCH.
   profile: "KEYCODE_NOTIFICATION",
 };
+
+export function isTvRemoteAction(action: ExecutionAction): boolean {
+  return action.type === "press_key" && isTvRemoteKey(action.params?.key);
+}
 
 /** Execute bridge-only buttons in order with runtime segments, under the caller's device lock. */
 export async function runTvRemoteSequence(
@@ -45,14 +49,17 @@ export async function runTvRemoteSequence(
     for (let index = 0; index < execution.actions.length;) {
       if (sequenceSignal.aborted) return canceled();
       const action = execution.actions[index];
-      if (action.type !== "press_key" || !isTvRemoteKey(action.params?.key)) {
-        const start = index++;
-        while (index < execution.actions.length && !(execution.actions[index].type === "press_key" && isTvRemoteKey(execution.actions[index].params?.key))) index++;
+      if (!isTvRemoteAction(action)) {
+        const segmentStart = index;
+        index += 1;
+        while (index < execution.actions.length && !isTvRemoteAction(execution.actions[index])) {
+          index += 1;
+        }
         const result = await runRuntime({
           ...execution,
           // Distinct transport IDs prevent a preceding segment's logcat result from being reused.
           commandId: `tv_segment_${randomUUID()}`,
-          actions: execution.actions.slice(start, index),
+          actions: execution.actions.slice(segmentStart, index),
         }, sequenceSignal);
         if (!result.ok) return { ...result, error: { ...result.error, details: { ...result.error.details as object, precedingStepResults: envelope.stepResults } } };
         envelope.stepResults.push(...result.envelope.stepResults);

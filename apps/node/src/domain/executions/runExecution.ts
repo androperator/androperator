@@ -1,5 +1,4 @@
-import { isTvRemoteKey } from "../../contracts/keys.js";
-import { runTvRemoteSequence } from "../actions/tvRemote.js";
+import { isTvRemoteAction, runTvRemoteSequence } from "../actions/tvRemote.js";
 import { getLoggingStatus } from "../../adapters/logger.js";
 import { verifyScreenshot } from "../observe/screenshotMetadata.js";
 import type { ScreenshotMetadata } from "../../contracts/screenshot.js";
@@ -676,7 +675,7 @@ async function performExecution(
   }
 
   try {
-    if (execution.actions.some(action => action.type === "press_key" && isTvRemoteKey(action.params?.key))) {
+    if (execution.actions.some(isTvRemoteAction)) {
       cancelEarlyResultWaiter();
       const readiness = await (options.ensureInteractiveAutomationReadyFn ?? ensureInteractiveAutomationReadyCached)(config, {
         probeInteractiveStateFn: options.probeInteractiveStateFn,

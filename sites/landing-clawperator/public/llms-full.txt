@@ -1036,7 +1036,7 @@ Top-level execution fields:
 | `expectedFormat` | `"android-ui-automator"` | Required constant. |
 | `timeoutMs` | `number` | Execution-level timeout for the whole payload. Current Node limits require `1000 <= timeoutMs <= 120000`. |
 | `actions` | `ExecutionAction[]` | Ordered action list. |
-| `mode` | `"artifact_compiled" | "direct"` | Optional runtime mode marker. |
+| `mode` | `"direct"` | Optional runtime mode marker. |
 
 Each action has:
 
@@ -7081,7 +7081,7 @@ This constant exists in `apps/node/src/contracts/limits.ts`, but the current CLI
 What is implemented today:
 
 - normal direct executions validate `execution.timeoutMs` inside `1000..120000`
-- `validateExecution()` only accepts `mode: "direct"` or `mode: "artifact_compiled"`
+- `validateExecution()` accepts an omitted `mode` or `mode: "direct"`
 - `MAX_BEST_EFFORT_RUNTIME_MS` is a defined constant, not an active public execution contract for the current CLI path
 
 Agent guidance:
@@ -11484,11 +11484,6 @@ Events may include additional context fields:
 | `status` | string | Completion status (e.g., `pass`, `fail`) |
 | `durationMs` | number | Operation completed, measured in milliseconds |
 
-### Example Log Lines
-
-```jsonl
-```
-
 ## Log Levels
 
 Four levels are available, in order of increasing severity:
@@ -11589,7 +11584,7 @@ Example warning (includes the error message when available):
 [androperator] WARN: logging disabled after write failure for /home/user/.androperator/logs/androperator-2026-03-28.log: EACCES: permission denied, mkdir '/home/user/.androperator'
 ```
 
-The command or skill still executes normally. Only the log file is affected.
+The command continues normally. Only the log file is affected.
 
 ## Verification
 

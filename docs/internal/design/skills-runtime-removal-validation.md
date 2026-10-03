@@ -75,3 +75,26 @@ human-input event diversity or coverage beyond the observed window-change event.
 Host tests do not substitute for those missing live checks. No historical
 repository or installed local skill content was modified. No push, publication
 or pull request was performed.
+
+## Review follow-up
+
+A fresh read-only review inspected the full `627e128f..00e5f944` branch diff.
+It found two remaining removal gaps: the public `artifact_compiled` mode and
+active internal guidance prescribing the retired catalog, package structure,
+and runner logging contracts. Both were corrected in the review follow-up.
+Execution accepts an omitted mode or `direct`; unsupported modes return
+`EXECUTION_VALIDATION_FAILED`. No compatibility adapter or migration is needed
+because the project has no users or compatibility obligations.
+
+Independent validation first passed all 1,427 existing Node tests. After the
+fixes, the Node build and all 1,428 tests passed, including the new mode-contract
+regression test. The canonical docs pipeline and preserved landing build passed:
+38 navigation pages, 396 generated-doc links and 24 machine-facing routes were
+checked. Generated full-text documentation was refreshed. Documentation
+organization checks emitted no warnings; dependency tooling emitted only pip
+cache and future MkDocs compatibility notices.
+
+This follow-up changed host validation and guidance, not Android behavior, so
+live-device validation was not repeated. The original live-validation limits
+above still apply. The fixes were validated by the implementing reviewer but
+have not received another independent review pass.

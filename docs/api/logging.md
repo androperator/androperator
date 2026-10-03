@@ -70,11 +70,6 @@ Events may include additional context fields:
 | `status` | string | Completion status (e.g., `pass`, `fail`) |
 | `durationMs` | number | Operation completed, measured in milliseconds |
 
-### Example Log Lines
-
-```jsonl
-```
-
 ## Log Levels
 
 Four levels are available, in order of increasing severity:
@@ -175,7 +170,7 @@ Example warning (includes the error message when available):
 [androperator] WARN: logging disabled after write failure for /home/user/.androperator/logs/androperator-2026-03-28.log: EACCES: permission denied, mkdir '/home/user/.androperator'
 ```
 
-The command or skill still executes normally. Only the log file is affected.
+The command continues normally. Only the log file is affected.
 
 ## Verification
 

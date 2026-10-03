@@ -100,8 +100,6 @@ export interface Execution {
   expectedFormat: "android-ui-automator";
   timeoutMs: number;
   actions: ExecutionAction[];
-  /** Set by runtime: artifact_compiled | direct */
-  mode?: "artifact_compiled" | "direct";
+  /** Optional marker for direct execution. */
+  mode?: "direct";
 }
-
-export type ExecutionMode = "artifact_compiled" | "direct";

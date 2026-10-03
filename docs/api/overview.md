@@ -83,7 +83,7 @@ Top-level execution fields:
 | `expectedFormat` | `"android-ui-automator"` | Required constant. |
 | `timeoutMs` | `number` | Execution-level timeout for the whole payload. Current Node limits require `1000 <= timeoutMs <= 120000`. |
 | `actions` | `ExecutionAction[]` | Ordered action list. |
-| `mode` | `"artifact_compiled" | "direct"` | Optional runtime mode marker. |
+| `mode` | `"direct"` | Optional runtime mode marker. |
 
 Each action has:
 

@@ -7,7 +7,7 @@ Keep the Androperator install path easy to reason about, test, and recover.
 This note defines the ownership boundary between the public shell installer at
 `sites/androperator-public/install.sh` and the Node CLI install surfaces. Use it when
 changing setup, upgrade, host artifact generation, operator remediation,
-runtime-skill installation, bundled-skill installation, or install validation.
+bundled-skill installation, or install validation.
 
 ## Source Of Truth
 

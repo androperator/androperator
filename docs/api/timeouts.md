@@ -285,7 +285,7 @@ This constant exists in `apps/node/src/contracts/limits.ts`, but the current CLI
 What is implemented today:
 
 - normal direct executions validate `execution.timeoutMs` inside `1000..120000`
-- `validateExecution()` only accepts `mode: "direct"` or `mode: "artifact_compiled"`
+- `validateExecution()` accepts an omitted `mode` or `mode: "direct"`
 - `MAX_BEST_EFFORT_RUNTIME_MS` is a defined constant, not an active public execution contract for the current CLI path
 
 Agent guidance:

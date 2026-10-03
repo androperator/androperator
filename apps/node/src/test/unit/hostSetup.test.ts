@@ -2,7 +2,7 @@ import { afterEach, describe, it } from "node:test";
 import assert from "node:assert";
 import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { cmdHostSetup } from "../../cli/commands/host.js";
 import { setupHost } from "../../domain/host/hostSetup.js";
 
@@ -10,7 +10,7 @@ const ENV_KEYS = [
   "HOME",
   "CODEX_HOME",
   "ADB_PATH",
-  "ANDROPERATOR_SKILLS_REGISTRY",
+  "ANDROPERATOR_SKILLS_DIR",
   "SKILLS_REGISTRY_PATH",
 ] as const;
 
@@ -97,6 +97,19 @@ describe("setupHost", () => {
     }
   });
 
+  it("reports invalid directory overrides without falling back to home skills", async () => {
+    const homeDir = await makeTempHome();
+    try {
+      await writeRuntimeRegistry(homeDir);
+      for (const directory of [" ", join(homeDir, "missing")]) {
+        await setupHost({ env: { HOME: homeDir, ANDROPERATOR_SKILLS_DIR: directory } });
+        const guide = await readFile(join(homeDir, ".androperator", "AGENTS.md"), "utf8");
+        assert.match(guide, /Local skill metadata could not be read/);
+        assert.doesNotMatch(guide, /### Application/);
+      }
+    } finally { await rm(homeDir, { recursive: true, force: true }); }
+  });
+
   it("writes MCP snippet JSON with the expected top-level sections", async () => {
     const homeDir = await makeTempHome();
 
@@ -145,7 +158,7 @@ describe("setupHost", () => {
       await writeFile(join(homeDir, ".androperator", "bundled-skills", "version.txt"), "0.7.4\n", "utf8");
 
       await setupHost({
-        env: { HOME: homeDir, ANDROPERATOR_SKILLS_REGISTRY: registryPath },
+        env: { HOME: homeDir, ANDROPERATOR_SKILLS_DIR: dirname(registryPath) },
         installedAt: "2026-04-23T10:11:12Z",
         cliJsPath: "/opt/androperator/dist/cli/index.js",
         processExecPath: "/usr/local/bin/node",
@@ -155,7 +168,7 @@ describe("setupHost", () => {
       const guide = await readFile(guidePath, "utf8");
 
       assert.match(guide, /## Runtime Skills/);
-      assert.match(guide, new RegExp(registryPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+      assert.match(guide, new RegExp(dirname(registryPath).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
       assert.match(guide, /### Application/);
       assert.match(guide, /com\.example\.weather/);
       assert.match(guide, /com\.example\.weather\.check-status/);
@@ -286,7 +299,7 @@ describe("cmdHostSetup", () => {
 
     try {
       process.env.HOME = homeDir;
-      delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+      delete process.env.ANDROPERATOR_SKILLS_DIR;
       delete process.env.SKILLS_REGISTRY_PATH;
       delete process.env.ADB_PATH;
       process.env.CODEX_HOME = join(homeDir, ".codex");
@@ -332,7 +345,7 @@ describe("cmdHostSetup", () => {
 
     try {
       process.env.HOME = homeDir;
-      delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+      delete process.env.ANDROPERATOR_SKILLS_DIR;
       delete process.env.SKILLS_REGISTRY_PATH;
       delete process.env.ADB_PATH;
       delete process.env.CODEX_HOME;
@@ -363,7 +376,7 @@ describe("cmdHostSetup", () => {
 
     try {
       process.env.HOME = homeDir;
-      delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+      delete process.env.ANDROPERATOR_SKILLS_DIR;
       delete process.env.SKILLS_REGISTRY_PATH;
       delete process.env.ADB_PATH;
       delete process.env.CODEX_HOME;

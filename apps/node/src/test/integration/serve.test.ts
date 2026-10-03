@@ -45,12 +45,12 @@ async function createTempRegistryWithSkill(options: {
 describe("serve API integration", () => {
   let server: Server;
   let port: number;
-  const previousRegistryPath = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+  const previousRegistryPath = process.env.ANDROPERATOR_SKILLS_DIR;
   const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
   const testRegistryPath = join(packageRoot, "src", "test", "fixtures", "skills", "skills-registry.json");
 
   before(async () => {
-    process.env.ANDROPERATOR_SKILLS_REGISTRY = testRegistryPath;
+    process.env.ANDROPERATOR_SKILLS_DIR = dirname(testRegistryPath);
     server = await startServer({
       port: 0,
       host: "localhost",
@@ -80,9 +80,9 @@ describe("serve API integration", () => {
       });
     }
     if (previousRegistryPath === undefined) {
-      delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+      delete process.env.ANDROPERATOR_SKILLS_DIR;
     } else {
-      process.env.ANDROPERATOR_SKILLS_REGISTRY = previousRegistryPath;
+      process.env.ANDROPERATOR_SKILLS_DIR = previousRegistryPath;
     }
   });
 
@@ -445,8 +445,8 @@ describe("serve API integration", () => {
       "utf8"
     );
 
-    const originalRegistryPath = process.env.ANDROPERATOR_SKILLS_REGISTRY;
-    process.env.ANDROPERATOR_SKILLS_REGISTRY = registry.registryPath;
+    const originalRegistryPath = process.env.ANDROPERATOR_SKILLS_DIR;
+    process.env.ANDROPERATOR_SKILLS_DIR = dirname(registry.registryPath);
 
     const blockingServer = await startServer({
       port: 0,
@@ -488,9 +488,9 @@ describe("serve API integration", () => {
         blockingServer.close((err) => (err ? reject(err) : resolve()));
       });
       if (originalRegistryPath === undefined) {
-        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+        delete process.env.ANDROPERATOR_SKILLS_DIR;
       } else {
-        process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistryPath;
+        process.env.ANDROPERATOR_SKILLS_DIR = originalRegistryPath;
       }
       await registry.cleanup();
       await rm(tempRoot, { recursive: true, force: true });
@@ -532,8 +532,8 @@ describe("serve API integration", () => {
       "utf8"
     );
 
-    const originalRegistryPath = process.env.ANDROPERATOR_SKILLS_REGISTRY;
-    process.env.ANDROPERATOR_SKILLS_REGISTRY = registry.registryPath;
+    const originalRegistryPath = process.env.ANDROPERATOR_SKILLS_DIR;
+    process.env.ANDROPERATOR_SKILLS_DIR = dirname(registry.registryPath);
 
     const blockingServer = await startServer({
       port: 0,
@@ -582,9 +582,9 @@ describe("serve API integration", () => {
         blockingServer.close((err) => (err ? reject(err) : resolve()));
       });
       if (originalRegistryPath === undefined) {
-        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+        delete process.env.ANDROPERATOR_SKILLS_DIR;
       } else {
-        process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistryPath;
+        process.env.ANDROPERATOR_SKILLS_DIR = originalRegistryPath;
       }
       await registry.cleanup();
       await rm(tempRoot, { recursive: true, force: true });
@@ -713,8 +713,8 @@ describe("serve API integration", () => {
       },
     });
 
-    const previousRegistryPathForTest = process.env.ANDROPERATOR_SKILLS_REGISTRY;
-    process.env.ANDROPERATOR_SKILLS_REGISTRY = temp.registryPath;
+    const previousRegistryPathForTest = process.env.ANDROPERATOR_SKILLS_DIR;
+    process.env.ANDROPERATOR_SKILLS_DIR = dirname(temp.registryPath);
     try {
       const res = await fetch(`http://localhost:${port}/skills/com.test.serve-stale-registry-contract/run`, {
         method: "POST",
@@ -734,9 +734,9 @@ describe("serve API integration", () => {
       assert.match(body.error?.message ?? "", /metadata does not match the registry entry/i);
     } finally {
       if (previousRegistryPathForTest === undefined) {
-        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+        delete process.env.ANDROPERATOR_SKILLS_DIR;
       } else {
-        process.env.ANDROPERATOR_SKILLS_REGISTRY = previousRegistryPathForTest;
+        process.env.ANDROPERATOR_SKILLS_DIR = previousRegistryPathForTest;
       }
       await temp.cleanup();
     }

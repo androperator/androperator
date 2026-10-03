@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert";
 import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { delimiter, join } from "node:path";
+import { dirname, delimiter, join } from "node:path";
 import { tmpdir } from "node:os";
 import { DoctorService } from "../../../domain/doctor/DoctorService.js";
 import { getDefaultRuntimeConfig } from "../../../adapters/android-bridge/runtimeConfig.js";
@@ -34,7 +34,7 @@ describe("DoctorService", () => {
   beforeEach(async () => {
     originalPath = process.env.PATH;
     originalLogDir = process.env.ANDROPERATOR_LOG_DIR;
-    originalRegistryPath = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+    originalRegistryPath = process.env.ANDROPERATOR_SKILLS_DIR;
     fakeAgentCliDir = await mkdtemp(join(tmpdir(), "androperator-doctor-agent-cli-"));
     fakeRegistryDir = await mkdtemp(join(tmpdir(), "androperator-doctor-registry-"));
     process.env.ANDROPERATOR_LOG_DIR = join(fakeRegistryDir, "logs");
@@ -47,7 +47,7 @@ describe("DoctorService", () => {
     await writeFile(registryPath, `${JSON.stringify({ schemaVersion: "1.0", generatedAt: "2026-04-16T00:00:00Z", skills: [] }, null, 2)}\n`, "utf8");
     await chmod(fakeAgentPath, 0o755);
     process.env.PATH = `${fakeAgentCliDir}${delimiter}${originalPath ?? ""}`;
-    process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
+    process.env.ANDROPERATOR_SKILLS_DIR = dirname(registryPath);
   });
 
   afterEach(async () => {
@@ -61,9 +61,9 @@ describe("DoctorService", () => {
       process.env.PATH = originalPath;
     }
     if (originalRegistryPath === undefined) {
-      delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+      delete process.env.ANDROPERATOR_SKILLS_DIR;
     } else {
-      process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistryPath;
+      process.env.ANDROPERATOR_SKILLS_DIR = originalRegistryPath;
     }
   });
 

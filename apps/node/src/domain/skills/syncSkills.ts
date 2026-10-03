@@ -1,4 +1,5 @@
-import { readFile, mkdir, writeFile } from "node:fs/promises";
+import { loadCollection } from "../../adapters/skills-repo/localSkillsRegistry.js";
+import { mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { DEFAULT_SKILLS_DIR, DEFAULT_SKILLS_REGISTRY_SUBPATH } from "./skillsConfig.js";
 import { SKILLS_SYNC_FAILED } from "../../contracts/skills.js";
@@ -7,7 +8,7 @@ export interface SyncSkillsResult {
   ok: true;
   synced: true;
   skillsDir: string;
-  registryPath: string;
+  registryPath: string | null;
   message: string;
 }
 
@@ -30,15 +31,8 @@ export async function syncSkills(
   }
   try {
     await mkdir(dirname(registryPath), { recursive: true });
-    try {
-      // Exclusive creation preserves existing skills, even during concurrent installs.
-      await writeFile(registryPath, JSON.stringify({ skills: [] }, null, 2) + "\n", { flag: "wx" });
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
-    }
-    const data = JSON.parse(await readFile(registryPath, "utf8"));
-    if (!Array.isArray(data.skills)) throw new Error("skills array required");
-    return { ok: true, synced: true, skillsDir: dir, registryPath,
+    const loaded = await loadCollection(dirname(registryPath));
+    return { ok: true, synced: true, skillsDir: dir, registryPath: loaded.indexed ? registryPath : null,
       message: `Local skill workspace ready at ${dir}. Create skills with androperator skills new; no catalog was downloaded.` };
   } catch (error) {
     return { ok: false, code: SKILLS_SYNC_FAILED,

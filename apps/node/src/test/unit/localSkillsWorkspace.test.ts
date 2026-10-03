@@ -1,16 +1,18 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile, mkdir } from "node:fs/promises";
+import { mkdtemp, readFile, access, rm, writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { syncSkills } from "../../domain/skills/syncSkills.js";
 
-test("local skill setup creates an empty registry, preserves user entries, and rejects Git refs", async () => {
+test("local skill setup initializes without an index, preserves user entries, and rejects Git refs", async () => {
   const dir = await mkdtemp(join(tmpdir(), "androperator-local-skills-"));
   try {
     const result = await syncSkills("main", dir);
     assert.equal(result.ok, true);
-    assert.deepEqual(JSON.parse(await readFile(join(dir, "skills", "skills-registry.json"), "utf8")), { skills: [] });
+    if (result.ok) assert.equal(result.registryPath, null);
+    await access(join(dir, "skills"));
+    await assert.rejects(access(join(dir, "skills", "skills-registry.json")));
     const userRegistry = JSON.stringify({ skills: [{ id: "com.test.own-workflow" }] });
     await writeFile(join(dir, "skills", "skills-registry.json"), userRegistry);
     assert.equal((await syncSkills("main", dir)).ok, true);

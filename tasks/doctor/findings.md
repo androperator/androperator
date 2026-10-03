@@ -34,7 +34,7 @@ and not resolvable on PATH), it should:
 3. Only if both checks fail: download and install the Android command-line tools
    to a well-known Androperator-managed location (e.g. `~/.androperator/android-sdk/`).
 4. After install, export `ANDROID_HOME=~/.androperator/android-sdk/` into the
-   user's shell RC (same pattern as `ANDROPERATOR_SKILLS_REGISTRY` in `install.sh`).
+   user's shell RC (same pattern as `ANDROPERATOR_SKILLS_DIR` in `install.sh`).
 
 ## Contract for any doctor SDK install implementation
 

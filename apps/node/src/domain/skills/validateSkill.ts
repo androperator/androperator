@@ -872,7 +872,9 @@ export async function validateAllSkills(
 ): Promise<ValidateAllSkillsResult | ValidateAllSkillsError> {
   try {
     const loaded = await loadRegistry(registryPath);
-    const generatedArtifactsValidation = await validateGeneratedArtifactsFresh(loaded.registry, loaded.resolvedPath);
+    const generatedArtifactsValidation = loaded.indexed
+      ? await validateGeneratedArtifactsFresh(loaded.registry, loaded.resolvedPath)
+      : null;
     if (generatedArtifactsValidation !== null) {
       return {
         ok: false,

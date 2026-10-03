@@ -82,13 +82,6 @@ function buildBundledSkillsPathRepairFix(installedDir: string): DoctorCheckResul
   };
 }
 
-function isUnsetRegistryConfigurationError(detail: string): boolean {
-  return (
-    detail.startsWith("Registry not found at default path:")
-    || detail.startsWith("Registry not found. Checked:")
-  );
-}
-
 async function findMissingInstalledAgentSkills(
   installedDir: string,
   expectedSkills: string[]
@@ -308,16 +301,6 @@ export async function checkInstalledOrchestratedSkillAgentCliAvailability(_confi
     registryResult = await loadRegistry();
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    const registryNotConfigured = process.env.ANDROPERATOR_SKILLS_REGISTRY === undefined
-      && isUnsetRegistryConfigurationError(detail);
-    if (registryNotConfigured) {
-      return {
-        id: "host.skill-agent-cli.skills",
-        status: "pass",
-        summary: "Skipping skill-aware orchestrated agent CLI check because no local skills registry is configured.",
-        detail,
-      };
-    }
     return {
       id: "host.skill-agent-cli.skills",
       status: "warn",
@@ -329,7 +312,7 @@ export async function checkInstalledOrchestratedSkillAgentCliAvailability(_confi
         platform: "any",
         steps: [
           { kind: "manual", value: "Fix the configured skills-registry.json path or repair the registry JSON contents." },
-          { kind: "manual", value: "If no registry is installed yet, run androperator skills install first." },
+          { kind: "manual", value: "Inspect skill.json in your local skills directory." },
         ],
         docsUrl: DOCTOR_DOCS_URLS.setup,
       },

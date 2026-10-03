@@ -403,7 +403,7 @@ Another common failure is a bad registry or missing script:
 ```json
 {
   "code": "REGISTRY_READ_FAILED",
-  "message": "Registry not found at configured path: /tmp/missing-registry.json. The installed registry normally lives at ~/.androperator/skills/skills/skills-registry.json. Fix ANDROPERATOR_SKILLS_REGISTRY, unset it to use the installed copy, then rerun androperator skills list, or run androperator skills install."
+  "message": "Invalid skill manifest: /tmp/workspace/skills/com.example.task/skill.json"
 }
 ```
 
@@ -425,7 +425,7 @@ Another common failure is a bad registry or missing script:
 
 Recovery patterns:
 
-- `REGISTRY_READ_FAILED`: run `androperator skills install` to restore the registry at the installed home path (`~/.androperator/skills/skills/skills-registry.json`); if `ANDROPERATOR_SKILLS_REGISTRY` is set to a custom path, fix or unset that variable
+- `REGISTRY_READ_FAILED`: repair the selected local directory, manifest, or optional index; an absent default collection is valid.
 - `SKILL_NOT_FOUND`: confirm the exact registry `id` with `androperator skills list`
 - `SKILL_SCRIPT_NOT_FOUND`: repair the registry entry or restore the script file on disk
 - `SKILL_EXECUTION_FAILED`: inspect `exitCode`, `stdout`, and `stderr`

@@ -1,7 +1,7 @@
 import { afterEach, describe, it } from "node:test";
 import assert from "node:assert";
 import { chmod, cp, mkdtemp, realpath, mkdir, rm, symlink, writeFile } from "node:fs/promises";
-import { delimiter, join } from "node:path";
+import { dirname, delimiter, join } from "node:path";
 import { tmpdir } from "node:os";
 import {
   checkAdbPresence,
@@ -291,9 +291,9 @@ describe("Doctor: hostChecks", () => {
     });
 
     describe("checkInstalledOrchestratedSkillAgentCliAvailability", () => {
-        it("passes when no local skills registry is installed and ANDROPERATOR_SKILLS_REGISTRY is unset", async () => {
+        it("passes when no local skills registry is installed and ANDROPERATOR_SKILLS_DIR is unset", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_DIR;
             const originalHome = process.env.HOME;
             const originalCwd = process.cwd();
             const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-unset-"));
@@ -303,20 +303,20 @@ describe("Doctor: hostChecks", () => {
             try {
                 await mkdir(tempHome, { recursive: true });
                 await mkdir(appNodeDir, { recursive: true });
-                delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+                delete process.env.ANDROPERATOR_SKILLS_DIR;
                 process.env.HOME = tempHome;
                 process.chdir(appNodeDir);
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "pass");
-                assert.match(result.summary, /Skipping skill-aware orchestrated agent CLI check/i);
-                assert.match(result.detail ?? "", /Registry not found\. Checked:/);
+                assert.match(result.summary, /No orchestrated skills/i);
+                assert.equal(result.detail, undefined);
             } finally {
                 process.chdir(originalCwd);
                 if (originalRegistry === undefined) {
-                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_DIR;
                 } else {
-                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_DIR = originalRegistry;
                 }
                 if (originalHome === undefined) {
                     delete process.env.HOME;
@@ -327,9 +327,9 @@ describe("Doctor: hostChecks", () => {
             }
         });
 
-        it("warns when no local skills registry is installed and ANDROPERATOR_SKILLS_REGISTRY is blank", async () => {
+        it("warns when no local skills registry is installed and ANDROPERATOR_SKILLS_DIR is blank", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_DIR;
             const originalHome = process.env.HOME;
             const originalCwd = process.cwd();
             const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-blank-"));
@@ -339,20 +339,20 @@ describe("Doctor: hostChecks", () => {
             try {
                 await mkdir(tempHome, { recursive: true });
                 await mkdir(appNodeDir, { recursive: true });
-                process.env.ANDROPERATOR_SKILLS_REGISTRY = "   ";
+                process.env.ANDROPERATOR_SKILLS_DIR = "   ";
                 process.env.HOME = tempHome;
                 process.chdir(appNodeDir);
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "warn");
                 assert.match(result.summary, /could not inspect the local skills registry/i);
-                assert.match(result.detail ?? "", /ANDROPERATOR_SKILLS_REGISTRY is set but blank/);
+                assert.match(result.detail ?? "", /ANDROPERATOR_SKILLS_DIR must not be blank/);
             } finally {
                 process.chdir(originalCwd);
                 if (originalRegistry === undefined) {
-                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_DIR;
                 } else {
-                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_DIR = originalRegistry;
                 }
                 if (originalHome === undefined) {
                     delete process.env.HOME;
@@ -365,7 +365,7 @@ describe("Doctor: hostChecks", () => {
 
         it("warns when the default registry path exists but is unreadable as a file", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_DIR;
             const originalHome = process.env.HOME;
             const originalCwd = process.cwd();
             const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-broken-default-"));
@@ -376,7 +376,7 @@ describe("Doctor: hostChecks", () => {
             try {
                 await mkdir(tempHome, { recursive: true });
                 await mkdir(defaultRegistryPath, { recursive: true });
-                delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+                delete process.env.ANDROPERATOR_SKILLS_DIR;
                 process.env.HOME = tempHome;
                 process.chdir(appNodeDir);
 
@@ -387,9 +387,9 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 process.chdir(originalCwd);
                 if (originalRegistry === undefined) {
-                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_DIR;
                 } else {
-                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_DIR = originalRegistry;
                 }
                 if (originalHome === undefined) {
                     delete process.env.HOME;
@@ -402,7 +402,7 @@ describe("Doctor: hostChecks", () => {
 
         it("passes when the local registry has no orchestrated skills", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_DIR;
             const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-none-"));
             const registryPath = join(root, "skills", "skills-registry.json");
 
@@ -417,7 +417,7 @@ describe("Doctor: hostChecks", () => {
                     }),
                     "utf8"
                 );
-                process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
+                process.env.ANDROPERATOR_SKILLS_DIR = dirname(registryPath);
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "pass");
@@ -425,16 +425,16 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(root, { recursive: true, force: true });
                 if (originalRegistry === undefined) {
-                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_DIR;
                 } else {
-                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_DIR = originalRegistry;
                 }
             }
         });
 
         it("passes when installed orchestrated skills resolve via cliPath", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_DIR;
             const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-ok-"));
             const skillId = "com.test.doctor-agent-cli-path";
             const skillDir = join(root, "skills", skillId);
@@ -484,7 +484,7 @@ describe("Doctor: hostChecks", () => {
                     }),
                     "utf8"
                 );
-                process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
+                process.env.ANDROPERATOR_SKILLS_DIR = dirname(registryPath);
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "pass");
@@ -493,16 +493,16 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(root, { recursive: true, force: true });
                 if (originalRegistry === undefined) {
-                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_DIR;
                 } else {
-                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_DIR = originalRegistry;
                 }
             }
         });
 
         it("passes when installed orchestrated skills use backslash-separated skill paths with cliPath", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_DIR;
             const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-win-path-"));
             const skillId = "com.test.doctor-agent-win-path";
             const skillDir = join(root, "skills", skillId);
@@ -552,7 +552,7 @@ describe("Doctor: hostChecks", () => {
                     }),
                     "utf8"
                 );
-                process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
+                process.env.ANDROPERATOR_SKILLS_DIR = dirname(registryPath);
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "pass");
@@ -561,16 +561,16 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(root, { recursive: true, force: true });
                 if (originalRegistry === undefined) {
-                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_DIR;
                 } else {
-                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_DIR = originalRegistry;
                 }
             }
         });
 
         it("warns when an installed orchestrated skill has an unresolved cliPath", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_DIR;
             const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-missing-cli-"));
             const skillId = "com.test.doctor-missing-cli-path";
             const skillDir = join(root, "skills", skillId);
@@ -617,7 +617,7 @@ describe("Doctor: hostChecks", () => {
                     }),
                     "utf8"
                 );
-                process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
+                process.env.ANDROPERATOR_SKILLS_DIR = dirname(registryPath);
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "warn");
@@ -632,16 +632,16 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(root, { recursive: true, force: true });
                 if (originalRegistry === undefined) {
-                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_DIR;
                 } else {
-                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_DIR = originalRegistry;
                 }
             }
         });
 
         it("warns when installed skill metadata is unreadable", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_DIR;
             const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-bad-manifest-"));
             const skillId = "com.test.doctor-bad-manifest";
             const skillDir = join(root, "skills", skillId);
@@ -671,7 +671,7 @@ describe("Doctor: hostChecks", () => {
                     }),
                     "utf8"
                 );
-                process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
+                process.env.ANDROPERATOR_SKILLS_DIR = dirname(registryPath);
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "warn");
@@ -686,16 +686,16 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(root, { recursive: true, force: true });
                 if (originalRegistry === undefined) {
-                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_DIR;
                 } else {
-                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_DIR = originalRegistry;
                 }
             }
         });
 
         it("ignores unreadable non-orchestrated skill metadata for the orchestrated agent readiness check", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_DIR;
             const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-bad-non-agent-"));
             const skillId = "com.test.doctor-bad-non-agent";
             const skillDir = join(root, "skills", skillId);
@@ -725,7 +725,7 @@ describe("Doctor: hostChecks", () => {
                     }),
                     "utf8"
                 );
-                process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
+                process.env.ANDROPERATOR_SKILLS_DIR = dirname(registryPath);
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "pass");
@@ -736,22 +736,22 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(root, { recursive: true, force: true });
                 if (originalRegistry === undefined) {
-                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_DIR;
                 } else {
-                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_DIR = originalRegistry;
                 }
             }
         });
 
         it("warns when the configured skills registry is unreadable", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_DIR;
             const root = await mkdtemp(join(tmpdir(), "androperator-doctor-bad-registry-"));
             const registryPath = join(root, "skills-registry.json");
 
             try {
                 await writeFile(registryPath, "{not-json", "utf8");
-                process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
+                process.env.ANDROPERATOR_SKILLS_DIR = dirname(registryPath);
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "warn");
@@ -761,9 +761,9 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(root, { recursive: true, force: true });
                 if (originalRegistry === undefined) {
-                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_DIR;
                 } else {
-                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_DIR = originalRegistry;
                 }
             }
         });

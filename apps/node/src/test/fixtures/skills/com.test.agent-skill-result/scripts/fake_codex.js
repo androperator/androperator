@@ -28,8 +28,8 @@ if (
 }
 
 if (
-  process.env.EXPECTED_SKILLS_REGISTRY !== undefined &&
-  process.env.ANDROPERATOR_SKILLS_REGISTRY !== process.env.EXPECTED_SKILLS_REGISTRY
+  process.env.EXPECTED_SKILLS_DIR !== undefined &&
+  process.env.ANDROPERATOR_SKILLS_DIR !== process.env.EXPECTED_SKILLS_DIR
 ) {
   console.error("unexpected skills registry path");
   process.exit(6);

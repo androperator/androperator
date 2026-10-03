@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { DoctorService } from "../../../domain/doctor/DoctorService.js";
 import { getDefaultRuntimeConfig } from "../../../adapters/android-bridge/runtimeConfig.js";
@@ -55,7 +55,7 @@ describe("selected Operator readiness policy", () => {
     await writeFile(registry, JSON.stringify({ schemaVersion: "1.0", skills: [] }));
     await mkdir(join(root, "empty-path"));
     process.env.PATH = join(root, "empty-path");
-    process.env.ANDROPERATOR_SKILLS_REGISTRY = registry;
+    process.env.ANDROPERATOR_SKILLS_DIR = dirname(registry);
     process.env.ANDROPERATOR_LOG_DIR = join(root, "logs");
   });
   afterEach(async () => {

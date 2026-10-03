@@ -232,7 +232,7 @@ def _build_replay_env(registry_path: Path, androperator_cmd: list[str]) -> dict[
         "LOGNAME": os.environ.get("LOGNAME", os.environ.get("USER", "")),
         "LANG": os.environ.get("LANG", "C.UTF-8"),
         "LC_ALL": os.environ.get("LC_ALL", "C.UTF-8"),
-        "ANDROPERATOR_SKILLS_REGISTRY": str(registry_path),
+        "ANDROPERATOR_SKILLS_DIR": str(registry_path.parent),
     }
     if androperator_cmd and all(isinstance(part, str) and part for part in androperator_cmd):
         if len(androperator_cmd) == 1:

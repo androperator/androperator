@@ -1,3 +1,4 @@
+import { loadCollection } from "../../adapters/skills-repo/localSkillsRegistry.js";
 import { mkdir, readFile, rename, chmod, lstat, unlink, writeFile, readdir } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { homedir } from "node:os";
@@ -141,19 +142,6 @@ function trimConfiguredPath(value: string | undefined): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
-async function readPreviousInstallStateRegistryPath(androperatorDir: string): Promise<string | undefined> {
-  const installStatePath = join(androperatorDir, "install-state.json");
-  try {
-    const raw = await readFile(installStatePath, "utf8");
-    const parsed = JSON.parse(raw) as { registryPath?: unknown };
-    return typeof parsed.registryPath === "string" && parsed.registryPath.length > 0
-      ? parsed.registryPath
-      : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 async function fileExists(path: string): Promise<boolean> {
   try {
     await lstat(path);
@@ -258,29 +246,24 @@ function buildSkillRunExample(skill: Record<string, unknown>): string {
 
 async function resolveRuntimeGuideInfo(
   options: HostSetupOptions,
-  androperatorDir: string,
 ): Promise<RuntimeGuideInfo> {
   const homeDir = getHomeDir(options.env);
   const defaultRegistryPath = join(homeDir, DEFAULT_REGISTRY_SUBPATH);
-  const configuredRegistryPath = trimConfiguredPath(options.env?.ANDROPERATOR_SKILLS_REGISTRY);
-  const previousRegistryPath = await readPreviousInstallStateRegistryPath(androperatorDir);
+  const configuredDirectory = trimConfiguredPath(options.env?.ANDROPERATOR_SKILLS_DIR);
+  const configuredRegistryPath = configuredDirectory === undefined ? undefined : join(configuredDirectory, "skills-registry.json");
   const explicitRegistryPath = trimConfiguredPath(options.registryPath ?? undefined);
-  const installPhaseRegistryPath = trimConfiguredPath(options.env?.SKILLS_REGISTRY_PATH);
 
-  const candidates = [
-    installPhaseRegistryPath,
-    explicitRegistryPath,
-    configuredRegistryPath,
-    previousRegistryPath,
-    defaultRegistryPath,
-  ].filter((value, index, all): value is string => value !== undefined && all.indexOf(value) === index);
+  const candidates = [explicitRegistryPath ?? configuredRegistryPath ?? defaultRegistryPath];
+  if (options.env?.ANDROPERATOR_SKILLS_DIR !== undefined && configuredDirectory === undefined) {
+    return { resolvedPath: null, hintPath: defaultRegistryPath, applications: null, unreadableRegistry: true };
+  }
 
   const hintPath = candidates[0] ?? defaultRegistryPath;
 
   for (const candidate of candidates) {
     try {
-      const raw = await readFile(candidate, "utf8");
-      const parsed = JSON.parse(raw) as { skills?: unknown };
+      const loaded = await loadCollection(dirname(candidate), candidate === defaultRegistryPath && explicitRegistryPath === undefined && configuredDirectory === undefined);
+      const parsed = loaded.registry;
       if (!Array.isArray(parsed.skills)) {
         return {
           resolvedPath: candidate,
@@ -296,7 +279,7 @@ async function resolveRuntimeGuideInfo(
           continue;
         }
 
-        const skill = rawSkill as Record<string, unknown>;
+        const skill = rawSkill as unknown as Record<string, unknown>;
         const applicationId = typeof skill.applicationId === "string" && skill.applicationId.length > 0
           ? skill.applicationId
           : "unknown.application";
@@ -323,20 +306,18 @@ async function resolveRuntimeGuideInfo(
         }));
 
       return {
-        resolvedPath: candidate,
+        resolvedPath: loaded.indexed ? candidate : null,
         hintPath,
         applications,
         unreadableRegistry: false,
       };
-    } catch (error) {
-      if (!(error && typeof error === "object" && "code" in error && (error.code === "ENOENT" || error.code === "ENOTDIR"))) {
-        return {
-          resolvedPath: candidate,
-          hintPath,
-          applications: null,
-          unreadableRegistry: true,
-        };
-      }
+    } catch {
+      return {
+        resolvedPath: candidate,
+        hintPath,
+        applications: null,
+        unreadableRegistry: true,
+      };
     }
   }
 
@@ -516,41 +497,41 @@ async function buildAgentGuideContent(
     "",
     "## Runtime Skills",
     "",
-    "Use the installed runtime-skill registry to discover and run app workflows:",
+    "Discover and run your own local skills. No catalog or registry is required:",
     "- `androperator skills list`",
     "- `androperator skills search --keyword \"<term>\"`",
     "- `androperator skills get <id>`",
     "- `androperator skills run <id>`",
   ];
 
-  if (runtimeGuide.resolvedPath === null) {
+  if (runtimeGuide.applications === null && !runtimeGuide.unreadableRegistry) {
     lines.push(
       "",
       "Runtime skills not available on this host right now.",
-      "Expected registry path:",
-      `\`${runtimeGuide.hintPath}\``,
+      "Local skills directory:",
+      `\`${dirname(runtimeGuide.hintPath)}\``,
       "",
       "Repair or manual bootstrap:",
-      "- run `androperator skills install`",
+      "- inspect the reported skill.json files or optional legacy index and repair invalid metadata",
     );
   } else if (runtimeGuide.unreadableRegistry || runtimeGuide.applications === null) {
     lines.push(
       "",
       "Runtime skills not available on this host right now.",
-      "Expected registry path:",
-      `\`${runtimeGuide.hintPath}\``,
+      "Local skills directory:",
+      `\`${dirname(runtimeGuide.hintPath)}\``,
       "",
-      "The registry exists but could not be read.",
+      "Local skill metadata could not be read.",
       "Repair or manual bootstrap:",
-      "- run `androperator skills install`",
+      "- inspect the reported skill.json files or optional legacy index and repair invalid metadata",
     );
   } else {
-    lines.push("", "Registry path:");
-    pushLiteralBlock(lines, runtimeGuide.resolvedPath);
+    lines.push("", "Local skills directory:");
+    pushLiteralBlock(lines, dirname(runtimeGuide.resolvedPath ?? runtimeGuide.hintPath));
     lines.push("", "Inspect required inputs before running with `androperator skills get <id>`.");
 
     if (runtimeGuide.applications.length === 0) {
-      lines.push("", "Runtime skills registry is present, but it does not contain any installed skills.");
+      lines.push("", "No local skills yet. Create one with `androperator skills new <application_id>.<intent>` or use the optional examples at https://github.com/androperator/androperator/tree/main/examples/skills.");
     } else {
       for (const application of runtimeGuide.applications) {
         lines.push("", "### Application", "", "App ID:");
@@ -730,7 +711,7 @@ export async function setupHost(
   const sharedAgentsPath = options.sharedAgentsPath ?? join(homeDir, ".agents", "AGENTS.md");
 
   await ensurePrivateAndroperatorDir(androperatorDir);
-  const runtimeGuide = await resolveRuntimeGuideInfo(options, androperatorDir);
+  const runtimeGuide = await resolveRuntimeGuideInfo(options);
 
   const results: HostArtifactOutcome[] = [];
 

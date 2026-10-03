@@ -117,8 +117,8 @@ Key implications:
      real directory copies marked with `.androperator-managed`
 3. the generated guide lives under `~/.androperator/AGENTS.md`, not the places a
    host agent is most likely to inspect first
-4. the runtime-skills registry is discovered from the installed home-directory
-   path when no explicit `ANDROPERATOR_SKILLS_REGISTRY` override is set
+4. local manifests are discovered from `<cwd>/skills/` or the home directory
+   when no optional `ANDROPERATOR_SKILLS_DIR` override is set
 5. the local guide and shared-agent bridge now explicitly advertise the
    first-run and discovery-to-proving route:
    - `androperator-agent-orientation` is the packaged first-run orientation
@@ -212,8 +212,7 @@ text on `skills` or `doctor`.
 If Androperator needs to work well with an OpenClaw-style host, prefer this
 shape:
 
-1. make the runtime-skills registry self-discovering from the installed home
-   path
+1. discover local skill manifests without requiring a registry or catalog
 2. render installed runtime skills into `~/.androperator/AGENTS.md`
 3. append a bounded Androperator section to `~/.agents/AGENTS.md`
 4. write a small `~/.androperator/TOOLS.md` or equivalent host-agent tool

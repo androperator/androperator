@@ -16,7 +16,7 @@ interface InstallBestEffortStep {
 
 export interface InstallSkillsStepResult extends InstallBestEffortStep {
   synced?: true;
-  registryPath?: string;
+  registryPath?: string | null;
   code?: string;
 }
 

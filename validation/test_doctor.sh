@@ -26,8 +26,8 @@ ln -s "$(which cp)" "$TMP_BIN/cp"
 # Run doctor from source with poisoned path
 export PATH="$TMP_BIN"
 export ANDROPERATOR_LOG_DIR="$TMP_DIR/logs"
-export ANDROPERATOR_SKILLS_REGISTRY="$TMP_DIR/skills-registry.json"
-node -e 'require("node:fs").writeFileSync(process.argv[1], JSON.stringify({schemaVersion:"1.0",skills:[]}))' "$ANDROPERATOR_SKILLS_REGISTRY"
+export ANDROPERATOR_SKILLS_DIR="$TMP_DIR/skills"
+node -e 'require("node:fs").mkdirSync(process.argv[1], {recursive:true})' "$ANDROPERATOR_SKILLS_DIR"
 
 set +e
 node "$REPO_ROOT/apps/node/dist/cli/index.js" doctor > "$TMP_DIR/out1.json"

@@ -345,8 +345,8 @@ Usage:
 
 Notes:
   - Initializes an empty local skill workspace at ~/.androperator/skills/; no catalog is downloaded.
-  - The installed-home registry at ~/.androperator/skills/skills/skills-registry.json is discovered automatically in fresh shells.
-  - Set ANDROPERATOR_SKILLS_REGISTRY only when you intentionally want to point at a non-default registry path.
+  - Discovers skill.json files in <cwd>/skills/ or ~/.androperator/skills/skills/; no index file is required.
+  - ANDROPERATOR_SKILLS_DIR optionally selects a different directory containing local skill folders.
   - Existing registries and user-created skills are preserved.
 `;
 
@@ -358,8 +358,7 @@ Usage:
 Notes:
   - Initializes or validates the local skill workspace; only --ref main is accepted.
   - Git-backed catalog synchronization was removed in 1.0.0.
-  - Registry path after sync:
-      $HOME/.androperator/skills/skills/skills-registry.json
+  - Local skill directory after sync: $HOME/.androperator/skills/skills/
 `;
 
 const HELP_BUNDLED_SKILLS_INSTALL = `androperator bundled-skills install
@@ -428,12 +427,12 @@ Usage:
   androperator skills new <skill_id> [--summary <text>] [--recording-context <file>] [--output <json|pretty>]
 
 Notes:
-  - Scaffolds a new local skill in the currently configured skills registry repo.
+  - Scaffolds a new local skill in the selected local skills directory.
   - Derives applicationId and intent by splitting <skill_id> on the final dot.
   - Creates: SKILL.md, skill.json, scripts/run.js, and scripts/run.sh
   - --summary overrides the default TODO summary written to skill.json and SKILL.md.
   - --recording-context copies a recording export JSON file into the new skill folder as reference evidence for an external authoring agent or human.
-  - Updates the configured registry JSON so the new skill appears in skills list.
+  - New skills are discovered from skill.json; an existing optional index is kept in sync.
   - This is the low-level manual scaffold. If runtime-skill discovery found no relevant match, inspect 'androperator bundled-skills list' first and start with 'androperator-skill-author-by-agent-discovery'.
   - Use 'androperator-skill-author-by-recording' only after discovery returns 'proceed_to_recording', or when the app route is already well understood and you need the proving workflow.
 `;
@@ -490,8 +489,8 @@ Usage:
   androperator skills validate --all [--dry-run] [--output <json|pretty>]
 
 Notes:
-  - Use <skill_id> to validate one skill, or --all to validate every registry entry in one pass.
-  - Verifies that the registry entry exists for the requested skill.
+  - Use <skill_id> to validate one skill, or --all to validate every discovered local skill in one pass.
+  - Verifies that local skill metadata exists for the requested skill.
   - Checks that skill.json, SKILL.md, script files, and artifact files exist on disk.
   - Confirms that the parsed skill.json metadata matches the registry entry.
   - This is an integrity check, not a live device test.
@@ -2886,7 +2885,7 @@ Notes:
     run: HELP_SKILLS_RUN,
   },
   topLevelBlock: `  skills list
-                                            List available runtime skills from the registry
+                                            List runtime skills from the selected local collection
   skills get <skill_id>
                                             Show skill metadata
   skills for-app <package_id>
@@ -2898,10 +2897,10 @@ Notes:
   skills compile-artifact --skill-id <id> --artifact <name> [--vars <json>]
                                             Compile from a skill artifact (skill: positional or --skill-id; artifact: climate-status or climate-status.recipe.json)
   skills new <skill_id> [--summary <text>] [--recording-context <file>]
-                                            Scaffold a new local skill folder and registry entry
+                                            Scaffold a new local skill folder and manifest
   skills validate <skill_id> [--dry-run]
   skills validate --all [--dry-run]
-                                            Validate one local skill or the entire configured registry
+                                            Validate one local skill or the entire selected collection
   skills run <skill_id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>] [--expect-contains <text>] [--skip-validate] [--output <json|pretty>] [skill_args...]
                                             Run a discovered skill through the local wrapper
   skills install

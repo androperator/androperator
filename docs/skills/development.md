@@ -487,92 +487,43 @@ Verification pattern:
 
 ## Skill Sync
 
-Current sync commands:
+`skills install`, `skills sync --ref main`, and `skills update` initialize the
+local home directory without downloading a catalog or creating an index. Other
+Git refs are unsupported. Existing skills and optional indexes are preserved.
 
-```bash
-androperator skills install
-androperator skills update [--ref <git-ref>]
-androperator skills sync --ref <git-ref>
-```
+Local skills are optional. Androperator discovers `skill.json` files directly in
+`<cwd>/skills/<skill_id>/`. When `<cwd>/skills/` is absent, it uses
+`~/.androperator/skills/skills/<skill_id>/`. A project collection, even an empty
+one, shadows the home collection; collections are not merged.
 
-Behavior:
+`ANDROPERATOR_SKILLS_DIR` optionally selects a directory containing skill
+folders. It must be non-blank and readable. No environment variable, index file,
+or catalog checkout is required for a normal installation. A missing home
+collection produces an empty list without warnings.
 
-- `skills install` syncs `main`
-- `skills update` syncs the given ref or defaults to `main`
-- `skills sync --ref ...` pins the local skills repo to a specific git ref
+An existing `skills-registry.json` in the selected directory remains an optional
+legacy index and takes precedence over manifest scanning. Explicit Node API
+`registryPath` arguments still read that file and fail if it cannot be read.
+Invalid manifests, duplicate ids, unreadable directories, or malformed indexes
+fail with `REGISTRY_READ_FAILED`; repair the local file reported in the error.
 
-Exact success shapes:
+Use `androperator skills new <application_id>.<intent>` to scaffold a skill.
+It writes a manifest, instructions, and scripts without creating an index. When
+an optional index already exists, scaffolding keeps it updated. Run
+`androperator skills list`, inspect `skills get <id>`, then `skills validate <id>`
+before `skills run <id>`. An empty list is valid and does not require reinstalling.
 
-`skills install`:
-
-```json
-{
-  "synced": true,
-  "message": "Skills synced to /Users/<local_user>/.androperator/skills (ref: main)",
-  "registryPath": "/Users/<local_user>/.androperator/skills/skills/skills-registry.json"
-}
-```
-
-`skills update` and `skills sync --ref <git-ref>`:
-
-```json
-{
-  "synced": true,
-  "message": "Skills synced to /Users/<local_user>/.androperator/skills (ref: main)"
-}
-```
-
-Verification pattern:
-
-```bash
-androperator skills install
-androperator skills update
-androperator skills sync --ref main
-```
-
-Check:
-
-- `synced` is `true`
-- `registryPath` from `skills install` ends with `~/.androperator/skills/skills/skills-registry.json`
-- after install, `androperator skills list` succeeds in a fresh shell without exporting `ANDROPERATOR_SKILLS_REGISTRY`
-- set `ANDROPERATOR_SKILLS_REGISTRY` only when pointing at a non-standard registry path
-
-Common sync failures:
-
-```json
-{
-  "code": "USAGE",
-  "message": "skills sync --ref <git-ref>"
-}
-```
-
-```json
-{
-  "code": "SKILLS_GIT_NOT_FOUND",
-  "message": "git is not installed or not on PATH. Install git to use skills install/update."
-}
-```
-
-```json
-{
-  "code": "SKILLS_SYNC_FAILED",
-  "message": "Registry file not found or unreadable after sync: ENOENT: no such file or directory, open '/Users/<local_user>/.androperator/skills/skills/skills-registry.json'. Expected at /Users/<local_user>/.androperator/skills/skills/skills-registry.json"
-}
-```
+Optional [bundled examples](https://github.com/androperator/androperator/tree/main/examples/skills)
+show a Settings starter, Codex-only navigation, and bounded Jev delegation.
+They are references for agents to adapt, and are not installed by default.
 
 ## Common Development Issues
 
 ### `REGISTRY_READ_FAILED`
 
-Cause:
-
-- `ANDROPERATOR_SKILLS_REGISTRY` missing or wrong
-- registry file does not exist
-
-Fix:
-
-- set the env var to the correct registry
-- or run `androperator skills install`
+Inspect the reported local directory or manifest. Fix invalid JSON, duplicate
+skill ids, permissions, or an optional legacy index. Missing default skills are
+valid; `skills list` returns an empty list without warnings.
 
 ### `SKILL_SCRIPT_NOT_FOUND`
 

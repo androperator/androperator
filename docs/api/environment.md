@@ -10,7 +10,7 @@ Define every environment variable the Node CLI reads, its exact default, where i
 - Logger construction (reads `ANDROPERATOR_LOG_DIR`, `ANDROPERATOR_LOG_LEVEL`): `apps/node/src/adapters/logger.ts`
 - Android SDK tool resolution (reads `ANDROID_HOME`, `ANDROID_SDK_ROOT`): `apps/node/src/adapters/android-bridge/runtimeConfig.ts`
 - Skill binary and package resolution (reads `ANDROPERATOR_BIN`, `ANDROPERATOR_OPERATOR_PACKAGE`): `apps/node/src/domain/skills/skillsConfig.ts`
-- Skills registry path (reads `ANDROPERATOR_SKILLS_REGISTRY`): `apps/node/src/adapters/skills-repo/localSkillsRegistry.ts`
+- Optional local skills directory (reads `ANDROPERATOR_SKILLS_DIR`): `apps/node/src/adapters/skills-repo/localSkillsRegistry.ts`
 - Per-command operator package and adb path: `apps/node/src/cli/registry.ts` plus device-targeting handlers in `apps/node/src/cli/commands/`
 - Execution runtime (reads `ANDROPERATOR_OPERATOR_PACKAGE`, `ADB_PATH`): `apps/node/src/domain/executions/runExecution.ts`
 
@@ -33,7 +33,7 @@ There is no configuration file layer between the environment variable and the de
 | `ANDROPERATOR_OPERATOR_PACKAGE` | `com.androperator.operator` | `--operator-package` |
 | `ANDROPERATOR_LOG_DIR` | `~/.androperator/logs` | none |
 | `ANDROPERATOR_LOG_LEVEL` | `info` | `--log-level` |
-| `ANDROPERATOR_SKILLS_REGISTRY` | `<cwd>/skills/skills-registry.json` | none |
+| `ANDROPERATOR_SKILLS_DIR` | `<cwd>/skills/`, otherwise `~/.androperator/skills/skills/` | none |
 | `ANDROPERATOR_BIN` | local sibling build if present, otherwise `androperator` | none |
 | `ADB_PATH` | `adb` (from `PATH`) | none |
 | `ANDROID_HOME` | unset | none |
@@ -144,45 +144,33 @@ androperator snapshot --log-level debug
 # logger threshold is debug for this command
 ```
 
-## `ANDROPERATOR_SKILLS_REGISTRY`
+## `ANDROPERATOR_SKILLS_DIR`
 
-Defines the path to the active `skills-registry.json` used by all skill commands when they do not pass an explicit registry-path argument into `loadRegistry()`.
+Local skills are optional. Androperator discovers `skill.json` files directly in
+`<cwd>/skills/<skill_id>/`. When `<cwd>/skills/` is absent, it uses
+`~/.androperator/skills/skills/<skill_id>/`. A project collection, even an empty
+one, shadows the home collection; collections are not merged.
 
-Read by: `skills list`, `skills get`, `skills search`, `skills run`, `skills validate`, `skills compile-artifact`, `skills new`, and the `/skills` serve endpoints.
+`ANDROPERATOR_SKILLS_DIR` optionally selects a directory containing skill
+folders. It must be non-blank and readable. No environment variable, index file,
+or catalog checkout is required for a normal installation. A missing home
+collection produces an empty list without warnings.
 
-Default when unset: `<cwd>/skills/skills-registry.json` where `<cwd>` is `process.cwd()`.
+An existing `skills-registry.json` in the selected directory remains an optional
+legacy index and takes precedence over manifest scanning. Explicit Node API
+`registryPath` arguments still read that file and fail if it cannot be read.
+Invalid manifests, duplicate ids, unreadable directories, or malformed indexes
+fail with `REGISTRY_READ_FAILED`; repair the local file reported in the error.
 
-Current `loadRegistry()` precedence is:
+Use `androperator skills new <application_id>.<intent>` to scaffold a skill.
+It writes a manifest, instructions, and scripts without creating an index. When
+an optional index already exists, scaffolding keeps it updated. Run
+`androperator skills list`, inspect `skills get <id>`, then `skills validate <id>`
+before `skills run <id>`. An empty list is valid and does not require reinstalling.
 
-1. explicit `registryPath` argument, when a caller supplied one
-2. `ANDROPERATOR_SKILLS_REGISTRY`, when it is set and non-blank
-3. default path `<cwd>/skills/skills-registry.json`
-
-Fallback behavior after that initial choice:
-
-1. If an explicit `registryPath` argument was passed and that read fails, `loadRegistry()` throws immediately
-2. If `ANDROPERATOR_SKILLS_REGISTRY` is set but blank, `loadRegistry()` throws immediately
-3. If `ANDROPERATOR_SKILLS_REGISTRY` is set to a non-blank path and that read fails, `loadRegistry()` throws a configured-path error immediately
-4. If the default-path read fails with no env var and no explicit `registryPath`, `loadRegistry()` next tries:
-   - `<cwd>/../../skills/skills-registry.json` when the current working directory is `apps/node`
-   - `~/.androperator/skills/skills/skills-registry.json`
-
-After `androperator skills install` or `androperator skills sync`, the registry lives at `~/.androperator/skills/skills/skills-registry.json`. That path is automatically discovered as a fallback when `ANDROPERATOR_SKILLS_REGISTRY` is not set, so no env var change is needed after a normal install:
-
-```bash
-androperator skills list
-```
-
-Set `ANDROPERATOR_SKILLS_REGISTRY` only when pointing at a non-standard registry path, such as a development checkout outside the installed home. For the normal post-install flow, start with [Host Agent Orientation](../host-agents.md).
-
-Error case: if the path does not exist, skill commands fail with `REGISTRY_READ_FAILED`. The error message includes the path that was tried.
-
-Current recovery rules:
-
-- missing default path with no env var: run `androperator skills install` to restore the registry at `~/.androperator/skills/skills/skills-registry.json`
-- blank `ANDROPERATOR_SKILLS_REGISTRY`: unset it or point it at a valid registry path
-- wrong `ANDROPERATOR_SKILLS_REGISTRY` path: fix the env var, or unset it to fall back to the installed home path
-- explicit caller-supplied registry path: fix the explicit path because `loadRegistry()` does not fall back from it
+Optional [bundled examples](https://github.com/androperator/androperator/tree/main/examples/skills)
+show a Settings starter, Codex-only navigation, and bounded Jev delegation.
+They are references for agents to adapt, and are not installed by default.
 
 ## `ANDROPERATOR_BIN`
 
@@ -242,7 +230,7 @@ Behavior details:
 Verification:
 
 ```bash
-ANDROPERATOR_SKILLS_REGISTRY=/abs/path/to/skills/skills-registry.json \
+ANDROPERATOR_SKILLS_DIR=/abs/path/to/skills \
 androperator skills run com.test.agent-skill-result \
   --device emulator-5554 \
   -- valid
@@ -338,7 +326,7 @@ androperator skills run com.test.echo --device emulator-5554
 
 The only flag you still need per-command is `--device` when multiple targets are connected. There is no environment variable equivalent for `--device` - device selection must always be explicit.
 
-After `androperator skills install`, the registry at `~/.androperator/skills/skills/skills-registry.json` is discovered automatically. Setting `ANDROPERATOR_SKILLS_REGISTRY` is only needed when overriding to a non-standard path. For the post-install orientation flow, read [Host Agent Orientation](../host-agents.md).
+Local skills are discovered without an index file. For the post-install orientation flow, read [Host Agent Orientation](../host-agents.md).
 
 ## Related Pages
 

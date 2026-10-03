@@ -2,8 +2,8 @@ import { describe, it, before, after, beforeEach, afterEach } from "node:test";
 import assert from "node:assert";
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
-import { chmod, mkdtemp, mkdir, copyFile, readFile, rm, stat, writeFile } from "node:fs/promises";
-import { basename, dirname, join, normalize } from "node:path";
+import { access, cp, chmod, mkdtemp, mkdir, copyFile, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import {
@@ -15,7 +15,7 @@ import {
   resolveSkillBinCommand,
   resolveOperatorPackage,
 } from "../../domain/skills/skillsConfig.js";
-import { getRepoRoot, getRegistryPath } from "../../adapters/skills-repo/localSkillsRegistry.js";
+import { loadRegistry, getRepoRoot, getRegistryPath } from "../../adapters/skills-repo/localSkillsRegistry.js";
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 import { listSkills } from "../../domain/skills/listSkills.js";
@@ -60,7 +60,7 @@ const TEST_AGENT_SKILL_RESULT = "com.test.agent-skill-result";
 const TEST_FIXTURE_CHUNKED_OUTPUT = "test-fixture-chunked-output";
 const TEST_FIXTURE_MIXED_STREAMS = "test-fixture-mixed-streams";
 const TEST_FIXTURE_SPLIT_WORD = "test-fixture-split-word";
-const ORIGINAL_REGISTRY_PATH = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+const ORIGINAL_REGISTRY_PATH = process.env.ANDROPERATOR_SKILLS_DIR;
 const ORIGINAL_STDERR_WRITE = process.stderr.write.bind(process.stderr);
 const VALID_RECORDING_EXPORT_JSON = `${JSON.stringify({
   exportVersion: 1,
@@ -276,7 +276,7 @@ let testLogDir: string;
 before(async () => {
   testLogDir = await mkdtemp(join(tmpdir(), "local skill workspace-test-logs-"));
   process.env.ANDROPERATOR_LOG_DIR = testLogDir;
-  process.env.ANDROPERATOR_SKILLS_REGISTRY = TEST_REGISTRY_PATH;
+  process.env.ANDROPERATOR_SKILLS_DIR = dirname(TEST_REGISTRY_PATH);
 });
 
 after(async () => {
@@ -284,16 +284,16 @@ after(async () => {
   else process.env.ANDROPERATOR_LOG_DIR = originalLogDir;
   await rm(testLogDir, { recursive: true, force: true });
   if (ORIGINAL_REGISTRY_PATH === undefined) {
-    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
+    delete process.env.ANDROPERATOR_SKILLS_DIR;
   } else {
-    process.env.ANDROPERATOR_SKILLS_REGISTRY = ORIGINAL_REGISTRY_PATH;
+    process.env.ANDROPERATOR_SKILLS_DIR = ORIGINAL_REGISTRY_PATH;
   }
 });
 
 afterEach(() => {
   process.stderr.write = ORIGINAL_STDERR_WRITE;
   process.exitCode = undefined;
-  process.env.ANDROPERATOR_SKILLS_REGISTRY = TEST_REGISTRY_PATH;
+  process.env.ANDROPERATOR_SKILLS_DIR = dirname(TEST_REGISTRY_PATH);
 });
 
 function runCli(
@@ -304,7 +304,7 @@ function runCli(
   return (async () => {
     const baseEnv = options?.env ?? {
       ...process.env,
-      ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+      ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
     };
     const skillsRunIndex = args.findIndex((arg, index) => arg === "skills" && args[index + 1] === "run");
     const needsFakeAdb = skillsRunIndex >= 0
@@ -379,10 +379,6 @@ function runNodeFile(
     proc.stderr?.on("data", (d) => (stderr += d.toString()));
     proc.on("close", (code) => resolve({ stdout, stderr, code: code ?? -1 }));
   });
-}
-
-function normalizeMacTmpPath(path: string): string {
-  return normalize(path).replace(/^\/private(?=\/var\/)/, "");
 }
 
 async function getPackageVersion(): Promise<string> {
@@ -714,566 +710,114 @@ describe("listSkills", () => {
   });
 });
 
-describe("loadRegistry", () => {
-  it("rejects a blank ANDROPERATOR_SKILLS_REGISTRY in getRegistryPath", () => {
-    const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+describe("local skill discovery", () => {
+  it("allows a fresh home without a registry or skills directory", async () => {
+    const root = await mkdtemp(join(tmpdir(), "androperator-empty-home-"));
     try {
-      process.env.ANDROPERATOR_SKILLS_REGISTRY = "   ";
-      assert.throws(
-        () => getRegistryPath(),
-        /ANDROPERATOR_SKILLS_REGISTRY is set but blank/
-      );
-    } finally {
-      if (originalRegistry === undefined) {
-        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
-      } else {
-        process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
-      }
-    }
-  });
-
-  it("warns to stderr when ANDROPERATOR_SKILLS_REGISTRY is unset and the default path is missing", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-unset-"));
-    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-unset-"));
-    const appNodeDir = join(tempRoot, "apps", "node");
-    const installedHomeRegistryPath = join(
-      tempHome,
-      ".androperator",
-      "skills",
-      "skills",
-      "skills-registry.json"
-    );
-    await mkdir(appNodeDir, { recursive: true });
-
-    try {
-      const moduleUrl = pathToFileURL(
-        join(packageRoot, "dist", "adapters", "skills-repo", "localSkillsRegistry.js")
-      ).href;
-      const script = `
+      const moduleUrl = pathToFileURL(join(packageRoot, "dist", "adapters", "skills-repo", "localSkillsRegistry.js")).href;
+      const child = await runNodeSnippet(`
         import { loadRegistry } from ${JSON.stringify(moduleUrl)};
-        process.chdir(${JSON.stringify(appNodeDir)});
-        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
-        try {
-          await loadRegistry();
-          console.log(JSON.stringify({ ok: true }));
-        } catch (error) {
-          console.log(JSON.stringify({ ok: false, message: error instanceof Error ? error.message : String(error) }));
-        }
-      `;
-      const child = await runNodeSnippet(script, {
-        env: { ...process.env, HOME: tempHome },
-      });
-      assert.strictEqual(child.code, 0, child.stderr);
-      const parsed = JSON.parse(child.stdout) as { ok: boolean; message?: string };
-      assert.strictEqual(parsed.ok, false);
-      assert.match(parsed.message ?? "", /Registry not found\. Checked:/);
-      assert.ok(
-        parsed.message?.includes(installedHomeRegistryPath),
-        `Expected message to include installed registry path, got: ${parsed.message}`
-      );
-      assert.ok(
-        parsed.message?.includes("androperator skills list"),
-        `Expected message to include next-step command, got: ${parsed.message}`
-      );
-      assert.ok(
-        child.stderr.includes("ANDROPERATOR_SKILLS_REGISTRY"),
-        `Expected stderr to mention ANDROPERATOR_SKILLS_REGISTRY, got: ${child.stderr}`
-      );
-      assert.ok(
-        child.stderr.includes(installedHomeRegistryPath),
-        `Expected stderr to include installed registry path, got: ${child.stderr}`
-      );
-      assert.ok(
-        child.stderr.includes("androperator skills list"),
-        `Expected stderr to include next-step command, got: ${child.stderr}`
-      );
-    } finally {
-      await rm(tempRoot, { recursive: true, force: true });
-      await rm(tempHome, { recursive: true, force: true });
-    }
+        delete process.env.ANDROPERATOR_SKILLS_DIR;
+        process.chdir(${JSON.stringify(root)});
+        console.log(JSON.stringify((await loadRegistry()).registry.skills));
+      `, { env: { ...process.env, HOME: root } });
+      assert.equal(child.code, 0, child.stderr);
+      assert.deepEqual(JSON.parse(child.stdout), []);
+      assert.equal(child.stderr, "");
+    } finally { await rm(root, { recursive: true, force: true }); }
   });
 
-  it("writes the configured path to stderr when ANDROPERATOR_SKILLS_REGISTRY points to a missing file", async () => {
-    const moduleUrl = pathToFileURL(
-      join(packageRoot, "dist", "adapters", "skills-repo", "localSkillsRegistry.js")
-    ).href;
-    const missingPath = "/tmp/does-not-exist/skills-registry.json";
-    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-fallback-configured-"));
-    const installedHomeRegistryPath = join(
-      tempHome,
-      ".androperator",
-      "skills",
-      "skills",
-      "skills-registry.json"
-    );
-    await mkdir(dirname(installedHomeRegistryPath), { recursive: true });
-    await copyFile(TEST_REGISTRY_PATH, installedHomeRegistryPath);
-    const script = `
-      import { loadRegistry } from ${JSON.stringify(moduleUrl)};
-      process.env.ANDROPERATOR_SKILLS_REGISTRY = ${JSON.stringify(missingPath)};
-      try {
-        await loadRegistry();
-        console.log(JSON.stringify({ ok: true }));
-      } catch (error) {
-        console.log(JSON.stringify({ ok: false, message: error instanceof Error ? error.message : String(error) }));
-      }
-    `;
+  it("lets an empty project collection shadow populated home skills", async () => {
+    const root = await mkdtemp(join(tmpdir(), "androperator-project-skills-"));
     try {
-      const child = await runNodeSnippet(script, {
-        env: { ...process.env, HOME: tempHome },
-      });
-      assert.strictEqual(child.code, 0, child.stderr);
-      const parsed = JSON.parse(child.stdout) as { ok: boolean; message?: string };
-      assert.strictEqual(parsed.ok, false);
-      assert.match(
-        parsed.message ?? "",
-        /Registry not found at configured path: \/tmp\/does-not-exist\/skills-registry\.json/
-      );
-      assert.ok(
-        parsed.message?.includes(installedHomeRegistryPath),
-        `Expected message to include installed registry path, got: ${parsed.message}`
-      );
-      assert.ok(
-        parsed.message?.includes("androperator skills list"),
-        `Expected message to include next-step command, got: ${parsed.message}`
-      );
-      assert.ok(
-        child.stderr.includes(missingPath),
-        `Expected stderr to include the missing path, got: ${child.stderr}`
-      );
-      assert.ok(
-        child.stderr.includes(installedHomeRegistryPath),
-        `Expected stderr to include installed registry path, got: ${child.stderr}`
-      );
-    } finally {
-      await rm(tempHome, { recursive: true, force: true });
-    }
-  });
-
-  it("fails when ANDROPERATOR_SKILLS_REGISTRY is blank instead of falling back", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-blank-env-"));
-    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-blank-env-"));
-    const appNodeDir = join(tempRoot, "apps", "node");
-    const installedHomeRegistryPath = join(
-      tempHome,
-      ".androperator",
-      "skills",
-      "skills",
-      "skills-registry.json"
-    );
-
-    await mkdir(appNodeDir, { recursive: true });
-    await mkdir(dirname(installedHomeRegistryPath), { recursive: true });
-    await copyFile(TEST_REGISTRY_PATH, installedHomeRegistryPath);
-
-    try {
-      const moduleUrl = pathToFileURL(
-        join(packageRoot, "dist", "adapters", "skills-repo", "localSkillsRegistry.js")
-      ).href;
-      const script = `
+      const project = join(root, "project");
+      const homeSkills = join(root, ".androperator", "skills", "skills");
+      await mkdir(join(project, "skills"), { recursive: true });
+      await mkdir(homeSkills, { recursive: true });
+      await cp(join(dirname(TEST_REGISTRY_PATH), "com.test.echo"), join(homeSkills, "com.test.echo"), { recursive: true });
+      const moduleUrl = pathToFileURL(join(packageRoot, "dist", "adapters", "skills-repo", "localSkillsRegistry.js")).href;
+      const child = await runNodeSnippet(`
         import { loadRegistry } from ${JSON.stringify(moduleUrl)};
-        process.chdir(${JSON.stringify(appNodeDir)});
-        process.env.ANDROPERATOR_SKILLS_REGISTRY = "   ";
-        try {
-          await loadRegistry();
-          console.log(JSON.stringify({ ok: true }));
-        } catch (error) {
-          console.log(JSON.stringify({ ok: false, message: error instanceof Error ? error.message : String(error) }));
-        }
-      `;
-      const child = await runNodeSnippet(script, {
-        env: { ...process.env, HOME: tempHome },
-      });
-      assert.strictEqual(child.code, 0, child.stderr);
-      const parsed = JSON.parse(child.stdout) as { ok: boolean; message?: string };
-      assert.strictEqual(parsed.ok, false);
-      assert.match(parsed.message ?? "", /ANDROPERATOR_SKILLS_REGISTRY is set but blank/);
-      assert.match(child.stderr, /ANDROPERATOR_SKILLS_REGISTRY is set but blank/);
+        delete process.env.ANDROPERATOR_SKILLS_DIR;
+        process.chdir(${JSON.stringify(root)});
+        console.log(JSON.stringify((await loadRegistry()).registry.skills.map(s => s.id)));
+        process.chdir(${JSON.stringify(project)});
+        console.log(JSON.stringify((await loadRegistry()).registry.skills));
+      `, { env: { ...process.env, HOME: root } });
+      assert.equal(child.code, 0, child.stderr);
+      assert.deepEqual(child.stdout.trim().split("\n").map(line => JSON.parse(line)), [["com.test.echo"], []]);
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+
+  it("discovers and runs a local skill without an index", async () => {
+    const root = await mkdtemp(join(tmpdir(), "androperator-local-skills-"));
+    const directory = join(root, "skills");
+    const original = process.env.ANDROPERATOR_SKILLS_DIR;
+    try {
+      await mkdir(directory, { recursive: true });
+      await cp(join(dirname(TEST_REGISTRY_PATH), "com.test.echo"), join(directory, "com.test.echo"), { recursive: true });
+      process.env.ANDROPERATOR_SKILLS_DIR = directory;
+      const result = await listSkills();
+      assert.equal(result.ok, true);
+      if (!result.ok) return;
+      assert.deepEqual(result.skills.map(skill => skill.id), ["com.test.echo"]);
+      const run = await runSkill("com.test.echo", ["local"]);
+      assert.equal(run.ok, true, JSON.stringify(run));
+      if (run.ok) assert.match(run.output, /local/);
+      await assert.rejects(access(join(directory, "skills-registry.json")));
     } finally {
-      await rm(tempRoot, { recursive: true, force: true });
-      await rm(tempHome, { recursive: true, force: true });
+      if (original === undefined) delete process.env.ANDROPERATOR_SKILLS_DIR;
+      else process.env.ANDROPERATOR_SKILLS_DIR = original;
+      await rm(root, { recursive: true, force: true });
     }
   });
 
-  it("uses an explicit registry path even when ANDROPERATOR_SKILLS_REGISTRY is blank", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-explicit-wins-"));
-    const explicitRegistryPath = join(tempRoot, "skills", "skills-registry.json");
-
-    await mkdir(dirname(explicitRegistryPath), { recursive: true });
-    await copyFile(TEST_REGISTRY_PATH, explicitRegistryPath);
-
+  it("scaffolds and validates a skill in an index-free collection", async () => {
+    const root = await mkdtemp(join(tmpdir(), "androperator-scaffold-local-"));
+    const original = process.env.ANDROPERATOR_SKILLS_DIR;
     try {
-      const moduleUrl = pathToFileURL(
-        join(packageRoot, "dist", "adapters", "skills-repo", "localSkillsRegistry.js")
-      ).href;
-      const script = `
-        import { loadRegistry } from ${JSON.stringify(moduleUrl)};
-        process.env.ANDROPERATOR_SKILLS_REGISTRY = "   ";
-        const result = await loadRegistry(${JSON.stringify(explicitRegistryPath)});
-        console.log(JSON.stringify({
-          resolvedPath: result.resolvedPath,
-          skillCount: result.registry.skills.length,
-        }));
-      `;
-      const child = await runNodeSnippet(script, {
-        env: { ...process.env },
-      });
-      assert.strictEqual(child.code, 0, child.stderr);
-      const parsed = JSON.parse(child.stdout) as { resolvedPath: string; skillCount: number };
-      assert.strictEqual(
-        normalizeMacTmpPath(parsed.resolvedPath),
-        normalizeMacTmpPath(explicitRegistryPath)
-      );
-      assert.ok(parsed.skillCount > 0);
-      assert.strictEqual(child.stderr, "");
+      process.env.ANDROPERATOR_SKILLS_DIR = join(root, "skills");
+      await mkdir(join(root, "skills"));
+      const created = await scaffoldSkill("com.example.observe");
+      assert.equal(created.ok, true, JSON.stringify(created));
+      const validation = await validateAllSkills();
+      assert.equal(validation.ok, true, JSON.stringify(validation));
+      await assert.rejects(access(join(root, "skills", "skills-registry.json")));
     } finally {
-      await rm(tempRoot, { recursive: true, force: true });
+      if (original === undefined) delete process.env.ANDROPERATOR_SKILLS_DIR;
+      else process.env.ANDROPERATOR_SKILLS_DIR = original;
+      await rm(root, { recursive: true, force: true });
     }
   });
 
-  it("trims explicit registry paths before reading them", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-explicit-trim-"));
-    const explicitRegistryPath = join(tempRoot, "skills", "skills-registry.json");
-
-    await mkdir(dirname(explicitRegistryPath), { recursive: true });
-    await copyFile(TEST_REGISTRY_PATH, explicitRegistryPath);
-
+  it("rejects duplicate manifest ids and malformed manifests instead of omitting them", async () => {
+    const root = await mkdtemp(join(tmpdir(), "androperator-invalid-local-"));
+    const original = process.env.ANDROPERATOR_SKILLS_DIR;
     try {
-      const moduleUrl = pathToFileURL(
-        join(packageRoot, "dist", "adapters", "skills-repo", "localSkillsRegistry.js")
-      ).href;
-      const script = `
-        import { loadRegistry } from ${JSON.stringify(moduleUrl)};
-        const result = await loadRegistry(${JSON.stringify(`  ${explicitRegistryPath}  `)});
-        console.log(JSON.stringify({
-          resolvedPath: result.resolvedPath,
-          skillCount: result.registry.skills.length,
-        }));
-      `;
-      const child = await runNodeSnippet(script, {
-        env: { ...process.env },
-      });
-      assert.strictEqual(child.code, 0, child.stderr);
-      const parsed = JSON.parse(child.stdout) as { resolvedPath: string; skillCount: number };
-      assert.strictEqual(
-        normalizeMacTmpPath(parsed.resolvedPath),
-        normalizeMacTmpPath(explicitRegistryPath)
-      );
-      assert.ok(parsed.skillCount > 0);
-      assert.strictEqual(child.stderr, "");
+      const directory = join(root, "skills");
+      await mkdir(directory);
+      await cp(join(dirname(TEST_REGISTRY_PATH), "com.test.echo"), join(directory, "com.test.echo"), { recursive: true });
+      await cp(join(dirname(TEST_REGISTRY_PATH), "com.test.echo"), join(directory, "com.test.copy"), { recursive: true });
+      process.env.ANDROPERATOR_SKILLS_DIR = directory;
+      await assert.rejects(loadRegistry(), /Duplicate local skill id/);
+      await writeFile(join(directory, "com.test.copy", "skill.json"), "invalid JSON");
+      await assert.rejects(loadRegistry(), /Unable to read/);
     } finally {
-      await rm(tempRoot, { recursive: true, force: true });
+      if (original === undefined) delete process.env.ANDROPERATOR_SKILLS_DIR;
+      else process.env.ANDROPERATOR_SKILLS_DIR = original;
+      await rm(root, { recursive: true, force: true });
     }
   });
 
-  it("fails when the caller passes an explicit default registry path that does not exist", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-"));
-    const appNodeDir = join(tempRoot, "apps", "node");
-    const fallbackDir = join(tempRoot, "skills");
-    const fallbackPath = join(fallbackDir, "skills-registry.json");
-
-    await mkdir(appNodeDir, { recursive: true });
-    await mkdir(fallbackDir, { recursive: true });
-    await copyFile(TEST_REGISTRY_PATH, fallbackPath);
-
+  it("rejects blank directory overrides and missing explicit index files", async () => {
+    const original = process.env.ANDROPERATOR_SKILLS_DIR;
     try {
-      const moduleUrl = pathToFileURL(
-        join(packageRoot, "dist", "adapters", "skills-repo", "localSkillsRegistry.js")
-      ).href;
-      const script = `
-        import { loadRegistry, getRegistryPath } from ${JSON.stringify(moduleUrl)};
-        process.chdir(${JSON.stringify(appNodeDir)});
-        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
-        try {
-          await loadRegistry(getRegistryPath());
-          console.log(JSON.stringify({ ok: true }));
-        } catch (error) {
-          console.log(JSON.stringify({ ok: false, message: error instanceof Error ? error.message : String(error) }));
-        }
-      `;
-      const child = await runNodeSnippet(script, {
-        env: { ...process.env },
-      });
-      assert.strictEqual(child.code, 0, child.stderr);
-      const parsed = JSON.parse(child.stdout) as { ok: boolean; message?: string };
-      assert.strictEqual(parsed.ok, false);
-      assert.match(parsed.message ?? "", /Registry not found at explicit path:/);
+      process.env.ANDROPERATOR_SKILLS_DIR = " ";
+      assert.throws(() => getRegistryPath(), /must not be blank/);
+      await assert.rejects(loadRegistry("/tmp/androperator-missing-index/skills-registry.json"), /explicit path/);
     } finally {
-      await rm(tempRoot, { recursive: true, force: true });
-    }
-  });
-
-  it("falls back to the installed home registry without warning when repo-local paths are missing", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-home-"));
-    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-"));
-    const appNodeDir = join(tempRoot, "apps", "node");
-    const installedHomeRegistryPath = join(
-      tempHome,
-      ".androperator",
-      "skills",
-      "skills",
-      "skills-registry.json"
-    );
-
-    await mkdir(appNodeDir, { recursive: true });
-    await mkdir(dirname(installedHomeRegistryPath), { recursive: true });
-    await copyFile(TEST_REGISTRY_PATH, installedHomeRegistryPath);
-
-    try {
-      const moduleUrl = pathToFileURL(
-        join(packageRoot, "dist", "adapters", "skills-repo", "localSkillsRegistry.js")
-      ).href;
-      const script = `
-        import { loadRegistry } from ${JSON.stringify(moduleUrl)};
-        process.chdir(${JSON.stringify(appNodeDir)});
-        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
-        const result = await loadRegistry();
-        console.log(JSON.stringify({
-          resolvedPath: result.resolvedPath,
-          skillCount: result.registry.skills.length,
-        }));
-      `;
-      const child = await runNodeSnippet(script, {
-        env: { ...process.env, HOME: tempHome },
-      });
-      assert.strictEqual(child.code, 0, child.stderr);
-      const parsed = JSON.parse(child.stdout) as { resolvedPath: string; skillCount: number };
-      assert.strictEqual(
-        normalizeMacTmpPath(parsed.resolvedPath),
-        normalizeMacTmpPath(installedHomeRegistryPath)
-      );
-      assert.ok(parsed.skillCount > 0);
-      assert.strictEqual(child.stderr, "");
-    } finally {
-      await rm(tempRoot, { recursive: true, force: true });
-      await rm(tempHome, { recursive: true, force: true });
-    }
-  });
-
-  it("keeps the configured env registry ahead of repo and installed-home fallbacks", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-env-priority-"));
-    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-priority-"));
-    const appNodeDir = join(tempRoot, "apps", "node");
-    const repoFallbackPath = join(tempRoot, "skills", "skills-registry.json");
-    const installedHomeRegistryPath = join(
-      tempHome,
-      ".androperator",
-      "skills",
-      "skills",
-      "skills-registry.json"
-    );
-
-    await mkdir(appNodeDir, { recursive: true });
-    await mkdir(dirname(repoFallbackPath), { recursive: true });
-    await mkdir(dirname(installedHomeRegistryPath), { recursive: true });
-    await copyFile(TEST_REGISTRY_PATH, repoFallbackPath);
-    await copyFile(TEST_REGISTRY_PATH, installedHomeRegistryPath);
-
-    try {
-      const moduleUrl = pathToFileURL(
-        join(packageRoot, "dist", "adapters", "skills-repo", "localSkillsRegistry.js")
-      ).href;
-      const script = `
-        import { loadRegistry } from ${JSON.stringify(moduleUrl)};
-        process.chdir(${JSON.stringify(appNodeDir)});
-        process.env.ANDROPERATOR_SKILLS_REGISTRY = ${JSON.stringify(TEST_REGISTRY_PATH)};
-        const result = await loadRegistry();
-        console.log(JSON.stringify({
-          resolvedPath: result.resolvedPath,
-          skillCount: result.registry.skills.length,
-        }));
-      `;
-      const child = await runNodeSnippet(script, {
-        env: { ...process.env, HOME: tempHome },
-      });
-      assert.strictEqual(child.code, 0, child.stderr);
-      const parsed = JSON.parse(child.stdout) as { resolvedPath: string; skillCount: number };
-      assert.strictEqual(normalizeMacTmpPath(parsed.resolvedPath), normalizeMacTmpPath(TEST_REGISTRY_PATH));
-      assert.ok(parsed.skillCount > 0);
-    } finally {
-      await rm(tempRoot, { recursive: true, force: true });
-      await rm(tempHome, { recursive: true, force: true });
-    }
-  });
-
-  it("prefers the repo-relative fallback over the installed home registry when both exist", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-repo-priority-"));
-    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-repo-priority-"));
-    const appNodeDir = join(tempRoot, "apps", "node");
-    const repoFallbackPath = join(tempRoot, "skills", "skills-registry.json");
-    const installedHomeRegistryPath = join(
-      tempHome,
-      ".androperator",
-      "skills",
-      "skills",
-      "skills-registry.json"
-    );
-
-    await mkdir(appNodeDir, { recursive: true });
-    await mkdir(dirname(repoFallbackPath), { recursive: true });
-    await mkdir(dirname(installedHomeRegistryPath), { recursive: true });
-    await copyFile(TEST_REGISTRY_PATH, repoFallbackPath);
-    await copyFile(TEST_REGISTRY_PATH, installedHomeRegistryPath);
-
-    try {
-      const moduleUrl = pathToFileURL(
-        join(packageRoot, "dist", "adapters", "skills-repo", "localSkillsRegistry.js")
-      ).href;
-      const script = `
-        import { loadRegistry } from ${JSON.stringify(moduleUrl)};
-        process.chdir(${JSON.stringify(appNodeDir)});
-        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
-        const result = await loadRegistry();
-        console.log(JSON.stringify({
-          resolvedPath: result.resolvedPath,
-          skillCount: result.registry.skills.length,
-        }));
-      `;
-      const child = await runNodeSnippet(script, {
-        env: { ...process.env, HOME: tempHome },
-      });
-      assert.strictEqual(child.code, 0, child.stderr);
-      const parsed = JSON.parse(child.stdout) as { resolvedPath: string; skillCount: number };
-      assert.strictEqual(normalizeMacTmpPath(parsed.resolvedPath), normalizeMacTmpPath(repoFallbackPath));
-      assert.ok(parsed.skillCount > 0);
-    } finally {
-      await rm(tempRoot, { recursive: true, force: true });
-      await rm(tempHome, { recursive: true, force: true });
-    }
-  });
-
-  it("does not probe ../../skills outside the checkout when running from repo root", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-root-cwd-"));
-    const repoRootDir = join(tempRoot, "repo");
-    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-root-cwd-"));
-    const ancestorRegistryPath = join(tempRoot, "skills", "skills-registry.json");
-    const installedHomeRegistryPath = join(
-      tempHome,
-      ".androperator",
-      "skills",
-      "skills",
-      "skills-registry.json"
-    );
-
-    await mkdir(repoRootDir, { recursive: true });
-    await mkdir(dirname(ancestorRegistryPath), { recursive: true });
-    await mkdir(dirname(installedHomeRegistryPath), { recursive: true });
-    await copyFile(TEST_REGISTRY_PATH, ancestorRegistryPath);
-    await copyFile(TEST_REGISTRY_PATH, installedHomeRegistryPath);
-
-    try {
-      const moduleUrl = pathToFileURL(
-        join(packageRoot, "dist", "adapters", "skills-repo", "localSkillsRegistry.js")
-      ).href;
-      const script = `
-        import { loadRegistry } from ${JSON.stringify(moduleUrl)};
-        process.chdir(${JSON.stringify(repoRootDir)});
-        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
-        const result = await loadRegistry();
-        console.log(JSON.stringify({
-          resolvedPath: result.resolvedPath,
-          skillCount: result.registry.skills.length,
-        }));
-      `;
-      const child = await runNodeSnippet(script, {
-        env: { ...process.env, HOME: tempHome },
-      });
-      assert.strictEqual(child.code, 0, child.stderr);
-      const parsed = JSON.parse(child.stdout) as { resolvedPath: string; skillCount: number };
-      assert.strictEqual(
-        normalizeMacTmpPath(parsed.resolvedPath),
-        normalizeMacTmpPath(installedHomeRegistryPath)
-      );
-      assert.ok(parsed.skillCount > 0);
-      assert.strictEqual(child.stderr, "");
-    } finally {
-      await rm(tempRoot, { recursive: true, force: true });
-      await rm(tempHome, { recursive: true, force: true });
-    }
-  });
-
-  it("does not hide broken default registries behind fallback probing", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-broken-default-"));
-    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-broken-default-"));
-    const appNodeDir = join(tempRoot, "apps", "node");
-    const defaultRegistryPath = join(appNodeDir, "skills", "skills-registry.json");
-    const installedHomeRegistryPath = join(
-      tempHome,
-      ".androperator",
-      "skills",
-      "skills",
-      "skills-registry.json"
-    );
-
-    await mkdir(defaultRegistryPath, { recursive: true });
-    await mkdir(dirname(installedHomeRegistryPath), { recursive: true });
-    await copyFile(TEST_REGISTRY_PATH, installedHomeRegistryPath);
-
-    try {
-      const moduleUrl = pathToFileURL(
-        join(packageRoot, "dist", "adapters", "skills-repo", "localSkillsRegistry.js")
-      ).href;
-      const script = `
-        import { loadRegistry } from ${JSON.stringify(moduleUrl)};
-        process.chdir(${JSON.stringify(appNodeDir)});
-        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
-        try {
-          await loadRegistry();
-          console.log(JSON.stringify({ ok: true }));
-        } catch (error) {
-          console.log(JSON.stringify({ ok: false, message: error instanceof Error ? error.message : String(error) }));
-        }
-      `;
-      const child = await runNodeSnippet(script, {
-        env: { ...process.env, HOME: tempHome },
-      });
-      assert.strictEqual(child.code, 0, child.stderr);
-      const parsed = JSON.parse(child.stdout) as { ok: boolean; message?: string };
-      assert.strictEqual(parsed.ok, false);
-      assert.match(parsed.message ?? "", /EISDIR|illegal operation on a directory/i);
-      assert.strictEqual(child.stderr, "");
-    } finally {
-      await rm(tempRoot, { recursive: true, force: true });
-      await rm(tempHome, { recursive: true, force: true });
-    }
-  });
-
-  it("fails cleanly when the caller passes an explicit missing registry path and no fallbacks resolve", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-registry-explicit-missing-"));
-    const tempHome = await mkdtemp(join(tmpdir(), "androperator-home-explicit-missing-"));
-    const appNodeDir = join(tempRoot, "apps", "node");
-    const explicitMissingPath = join(tempRoot, "custom", "skills-registry.json");
-
-    await mkdir(appNodeDir, { recursive: true });
-
-    try {
-      const moduleUrl = pathToFileURL(
-        join(packageRoot, "dist", "adapters", "skills-repo", "localSkillsRegistry.js")
-      ).href;
-      const script = `
-        import { loadRegistry } from ${JSON.stringify(moduleUrl)};
-        process.chdir(${JSON.stringify(appNodeDir)});
-        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
-        try {
-          await loadRegistry(${JSON.stringify(explicitMissingPath)});
-          console.log(JSON.stringify({ ok: true }));
-        } catch (error) {
-          console.log(JSON.stringify({ ok: false, message: error instanceof Error ? error.message : String(error) }));
-        }
-      `;
-      const child = await runNodeSnippet(script, {
-        env: { ...process.env, HOME: tempHome },
-      });
-      assert.strictEqual(child.code, 0, child.stderr);
-      const parsed = JSON.parse(child.stdout) as { ok: boolean; message?: string };
-      assert.strictEqual(parsed.ok, false);
-      assert.match(
-        parsed.message ?? "",
-        new RegExp(`Registry not found at explicit path: ${explicitMissingPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`)
-      );
-    } finally {
-      await rm(tempRoot, { recursive: true, force: true });
-      await rm(tempHome, { recursive: true, force: true });
+      if (original === undefined) delete process.env.ANDROPERATOR_SKILLS_DIR;
+      else process.env.ANDROPERATOR_SKILLS_DIR = original;
     }
   });
 });
@@ -2099,7 +1643,7 @@ describe("skills validate dry-run", () => {
       ], {
         env: {
           ...process.env,
-          ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+          ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
           ANDROPERATOR_LOG_DIR: tempLogDir,
         },
       });
@@ -2132,7 +1676,7 @@ describe("skills validate dry-run", () => {
       ], {
         env: {
           ...process.env,
-          ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+          ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
           ANDROPERATOR_LOG_DIR: tempLogDir,
         },
       });
@@ -2194,7 +1738,7 @@ describe("skills validate dry-run", () => {
       ], {
         env: {
           ...process.env,
-          ANDROPERATOR_SKILLS_REGISTRY: join(tempRegistryDir, "skills-registry.json"),
+          ANDROPERATOR_SKILLS_DIR: tempRegistryDir,
           ANDROPERATOR_LOG_DIR: tempLogDir,
         },
       });
@@ -2988,7 +2532,7 @@ childProcess.spawnSync = (command, args, options) => {
         {
           env: {
             ...process.env,
-            ANDROPERATOR_SKILLS_REGISTRY: registryPath,
+            ANDROPERATOR_SKILLS_DIR: dirname(registryPath),
           },
         }
       );
@@ -3040,7 +2584,7 @@ childProcess.spawnSync = (command, args, options) => {
         {
           env: {
             ...process.env,
-            ANDROPERATOR_SKILLS_REGISTRY: registryPath,
+            ANDROPERATOR_SKILLS_DIR: dirname(registryPath),
           },
         }
       );
@@ -3073,7 +2617,7 @@ childProcess.spawnSync = (command, args, options) => {
         {
           env: {
             ...process.env,
-            ANDROPERATOR_SKILLS_REGISTRY: registryPath,
+            ANDROPERATOR_SKILLS_DIR: dirname(registryPath),
           },
         }
       );
@@ -3115,7 +2659,7 @@ childProcess.spawnSync = (command, args, options) => {
         {
           env: {
             ...process.env,
-            ANDROPERATOR_SKILLS_REGISTRY: registryPath,
+            ANDROPERATOR_SKILLS_DIR: dirname(registryPath),
           },
         }
       );
@@ -3154,7 +2698,7 @@ childProcess.spawnSync = (command, args, options) => {
         {
           env: {
             ...process.env,
-            ANDROPERATOR_SKILLS_REGISTRY: registryPath,
+            ANDROPERATOR_SKILLS_DIR: dirname(registryPath),
           },
         }
       );
@@ -3193,7 +2737,7 @@ childProcess.spawnSync = (command, args, options) => {
         {
           env: {
             ...process.env,
-            ANDROPERATOR_SKILLS_REGISTRY: registryPath,
+            ANDROPERATOR_SKILLS_DIR: dirname(registryPath),
           },
         }
       );
@@ -3224,7 +2768,7 @@ childProcess.spawnSync = (command, args, options) => {
       const createResult = await runCli(["skills", "new", skillId, "--output", "json"], {
         env: {
           ...process.env,
-          ANDROPERATOR_SKILLS_REGISTRY: registryPath,
+          ANDROPERATOR_SKILLS_DIR: dirname(registryPath),
         },
       });
       assert.strictEqual(createResult.code, 0, createResult.stderr);
@@ -3232,7 +2776,7 @@ childProcess.spawnSync = (command, args, options) => {
       const validateResult = await runCli(["skills", "validate", skillId, "--output", "json"], {
         env: {
           ...process.env,
-          ANDROPERATOR_SKILLS_REGISTRY: registryPath,
+          ANDROPERATOR_SKILLS_DIR: dirname(registryPath),
         },
       });
       assert.strictEqual(validateResult.code, 0, validateResult.stderr);
@@ -3261,7 +2805,7 @@ childProcess.spawnSync = (command, args, options) => {
       const createFirst = await runCli(["skills", "new", firstSkillId, "--output", "json"], {
         env: {
           ...process.env,
-          ANDROPERATOR_SKILLS_REGISTRY: registryPath,
+          ANDROPERATOR_SKILLS_DIR: dirname(registryPath),
         },
       });
       assert.strictEqual(createFirst.code, 0, createFirst.stderr);
@@ -3269,7 +2813,7 @@ childProcess.spawnSync = (command, args, options) => {
       const createSecond = await runCli(["skills", "new", secondSkillId, "--output", "json"], {
         env: {
           ...process.env,
-          ANDROPERATOR_SKILLS_REGISTRY: registryPath,
+          ANDROPERATOR_SKILLS_DIR: dirname(registryPath),
         },
       });
       assert.strictEqual(createSecond.code, 0, createSecond.stderr);
@@ -3277,7 +2821,7 @@ childProcess.spawnSync = (command, args, options) => {
       const validateResult = await runCli(["skills", "validate", "--all", "--output", "json"], {
         env: {
           ...process.env,
-          ANDROPERATOR_SKILLS_REGISTRY: registryPath,
+          ANDROPERATOR_SKILLS_DIR: dirname(registryPath),
         },
       });
       assert.strictEqual(validateResult.code, 0, validateResult.stderr);
@@ -3306,7 +2850,7 @@ childProcess.spawnSync = (command, args, options) => {
       const validateResult = await runCli(["skills", "validate", "--all", "--output", "json"], {
         env: {
           ...process.env,
-          ANDROPERATOR_SKILLS_REGISTRY: registryPath,
+          ANDROPERATOR_SKILLS_DIR: dirname(registryPath),
         },
       });
       assert.strictEqual(validateResult.code, 1, validateResult.stderr);
@@ -3529,7 +3073,7 @@ describe("skills for-app CLI", () => {
         {
           env: {
             ...process.env,
-            ANDROPERATOR_SKILLS_REGISTRY: temp.registryPath,
+            ANDROPERATOR_SKILLS_DIR: dirname(temp.registryPath),
           },
         }
       );
@@ -4035,7 +3579,7 @@ describe("runSkill", () => {
         temp.registryPath,
         undefined,
         {
-          EXPECTED_SKILLS_REGISTRY: temp.registryPath,
+          EXPECTED_SKILLS_DIR: dirname(temp.registryPath),
           EXPECTED_SKILL_TIMEOUT_MS: "4321",
         }
       );
@@ -4611,7 +4155,7 @@ describe("runSkill", () => {
           {
             PATH: fakeAgentDir,
             ANDROPERATOR_SKILL_AGENT_CLI: "my-agent",
-            EXPECTED_SKILLS_REGISTRY: temp.registryPath,
+            EXPECTED_SKILLS_DIR: dirname(temp.registryPath),
             EXPECTED_SKILL_TIMEOUT_MS: "4321",
           }
         );
@@ -6332,7 +5876,7 @@ console.log(JSON.stringify({
     ], {
       env: {
         ...process.env,
-        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
         TEST_SKILL_MODE: "valid",
       },
     });
@@ -6369,7 +5913,7 @@ console.log(JSON.stringify({
     ], {
       env: {
         ...process.env,
-        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
         TEST_SKILL_MODE: "legacy",
       },
     });
@@ -6515,7 +6059,7 @@ console.log(JSON.stringify({
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
       },
     });
     assert.strictEqual(code, 0, stdout);
@@ -6550,7 +6094,7 @@ console.log(JSON.stringify({
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
         EXPECTED_DEVICE_ID: "device-123",
       },
     });
@@ -6770,7 +6314,7 @@ console.log(JSON.stringify({
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
       },
     });
     assert.strictEqual(code, 0, stdout);
@@ -6794,7 +6338,7 @@ console.log(JSON.stringify({
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
         ANDROPERATOR_LOG_DIR: tempLogDir,
       },
     });
@@ -6836,7 +6380,7 @@ console.log(JSON.stringify({
         env: {
           ...process.env,
           PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-          ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+          ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
           ANDROPERATOR_LOG_DIR: tempLogDir,
         },
       });
@@ -6871,7 +6415,7 @@ console.log(JSON.stringify({
         env: {
           ...process.env,
           PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-          ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+          ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
           ANDROPERATOR_LOG_DIR: tempLogDir,
         },
       });
@@ -6896,7 +6440,7 @@ console.log(JSON.stringify({
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
       },
     });
     assert.strictEqual(code, 0, stdout);
@@ -6919,7 +6463,7 @@ console.log(JSON.stringify({
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
       },
     });
     assert.strictEqual(code, 0, stdout);
@@ -6940,7 +6484,7 @@ console.log(JSON.stringify({
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
       },
     });
     assert.strictEqual(code, 0, stdout);
@@ -7668,7 +7212,7 @@ describe("cmdSkillsRun preflight gate", () => {
     const child = await runNodeSnippet(script, {
       env: {
         ...process.env,
-        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
       },
     });
     assert.strictEqual(child.code, 0, child.stderr);
@@ -7732,7 +7276,7 @@ describe("cmdSkillsRun preflight gate", () => {
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
       },
     });
     assert.strictEqual(child.code, 0, child.stderr);
@@ -8044,7 +7588,7 @@ describe("CLI skills run streaming", () => {
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
       },
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -8097,7 +7641,7 @@ describe("CLI skills run streaming", () => {
       env: {
         ...process.env,
         PATH: `${fakeAdbDir}${process.env.PATH ? `:${process.env.PATH}` : ""}`,
-        ANDROPERATOR_SKILLS_REGISTRY: TEST_REGISTRY_PATH,
+        ANDROPERATOR_SKILLS_DIR: dirname(TEST_REGISTRY_PATH),
         TEST_SKILL_MODE: "valid",
       },
       stdio: ["ignore", "pipe", "pipe"],

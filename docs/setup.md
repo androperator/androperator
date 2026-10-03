@@ -108,9 +108,9 @@ Shell prerequisite failures exit before these files are written. After
 readiness failures can still leave these files behind because host setup runs
 before the CLI returns its final install status.
 
-The runtime-skills registry is discovered automatically from
-`~/.androperator/skills/skills/skills-registry.json` after `androperator skills install`, so
-`install.sh` no longer writes `ANDROPERATOR_SKILLS_REGISTRY` into shell RC files.
+Local skills are optional and discovered directly from `skill.json`. Installation
+creates the home skills directory without a catalog or index file. No shell RC
+export is required.
 
 Bundled host-agent skills are installed separately from runtime skills:
 
@@ -132,7 +132,7 @@ Canonical public next step after install:
   "schemaVersion": 1,
   "installedAt": "2026-04-17T08:12:34Z",
   "cliVersion": "1.2.3",
-  "registryPath": "/Users/<local_user>/.androperator/skills/skills/skills-registry.json",
+  "registryPath": null,
   "apkVersion": "1.2.3",
   "lastDeviceSerial": null
 }
@@ -142,7 +142,7 @@ Field rules:
 
 - `schemaVersion` and `installedAt` are always present
 - `cliVersion` is `null` when the installer could not run `androperator --version`
-- `registryPath` is `null` when the installer cannot resolve any readable runtime-skills registry path from the current install run, `ANDROPERATOR_SKILLS_REGISTRY`, prior install state, or the default installed home path
+- `registryPath` is `null` when no optional legacy index exists. Local skill discovery does not require an index.
 - `apkVersion` is `null` when the installer does not have a known operator version
 - `lastDeviceSerial` is `null` when install did not pick one unambiguous device
 
@@ -164,7 +164,7 @@ test ! -f ~/.agents/AGENTS.md || grep -F "ANDROPERATOR_SHARED_AGENT_BRIDGE:START
 When choosing the host-facing surface:
 
 - use `androperator skills` when you want to discover or run installed runtime skills by app, keyword, or id
-- no shell profile export is required for the default runtime-skills registry path
+- no shell profile export is required for the default local skills directory
 - use MCP when your host already supports stdio MCP and wants registered tools such as `devices`, `snapshot`, and `execute`
 
 See [Host Agent Orientation](host-agents.md) for the post-install decision flow

@@ -5,7 +5,7 @@ cd "$(dirname "$0")/../.."
 
 run_node_install_validation() {
     env \
-        -u ANDROPERATOR_SKILLS_REGISTRY \
+        -u ANDROPERATOR_SKILLS_DIR \
         -u ANDROPERATOR_DEFAULT_ANDROID_DEVICE_ID \
         -u ANDROPERATOR_OPERATOR_PACKAGE \
         -u ANDROPERATOR_BUNDLED_SKILLS \

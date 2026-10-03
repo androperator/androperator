@@ -37,7 +37,7 @@ Probe attempts used this command shape, with the bypass explicitly unset:
 
 ```bash
 env -u ANDROPERATOR_SKILL_AGENT_ALLOW_BYPASS \
-  ANDROPERATOR_SKILLS_REGISTRY=/<local_user>/src/local skill workspace/skills/skills-registry.json \
+  ANDROPERATOR_SKILLS_DIR=/<local_user>/src/local-skill-workspace/skills \
   node /<local_user>/src/androperator/apps/node/dist/cli/index.js skills run \
     com.solaxcloud.starter.set-discharge-to-limit-orchestrated \
     --device <device_serial> \

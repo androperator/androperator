@@ -1,189 +1,111 @@
-import { readFile } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join, dirname, basename } from "node:path";
+import { join, dirname, basename, resolve } from "node:path";
 import type { SkillsRegistry, SkillEntry } from "../../contracts/skills.js";
 
-/**
- * Default registry path. When running from repo root (e.g. node apps/node/dist/cli/index.js), cwd is repo root.
- * When running from apps/node, cwd is apps/node so we try parent parent (repo root).
- */
-function getDefaultRegistryPath(): string {
-  const cwd = process.cwd();
-  return join(cwd, "skills", "skills-registry.json");
-}
-
-function getInstalledHomeRegistryPath(): string {
-  return join(homedir(), ".androperator", "skills", "skills", "skills-registry.json");
-}
-
-function getRepoRelativeFallbackPath(): string | undefined {
-  const cwd = process.cwd();
-  if (basename(cwd) !== "node" || basename(dirname(cwd)) !== "apps") {
-    return undefined;
+export function getSkillsDirectory(): string {
+  const configured = process.env.ANDROPERATOR_SKILLS_DIR;
+  if (configured !== undefined) {
+    if (configured.trim().length === 0) throw new Error("ANDROPERATOR_SKILLS_DIR must not be blank.");
+    return resolve(configured.trim());
   }
-  return join(cwd, "..", "..", "skills", "skills-registry.json");
+  return join(process.cwd(), "skills");
 }
 
-function isMissingRegistryFileError(error: unknown): boolean {
-  const code = typeof error === "object" && error !== null && "code" in error
-    ? (error as NodeJS.ErrnoException).code
-    : undefined;
-  return code === "ENOENT" || code === "ENOTDIR";
-}
-
-function getConfiguredRegistryPathFromEnv(): string | undefined {
-  const configuredPath = process.env.ANDROPERATOR_SKILLS_REGISTRY;
-  if (configuredPath === undefined) {
-    return undefined;
-  }
-
-  const trimmedPath = configuredPath.trim();
-  if (trimmedPath.length === 0) {
-    throw new Error(
-      "ANDROPERATOR_SKILLS_REGISTRY is set but blank. Unset it or set it to a valid skills-registry.json path."
-    );
-  }
-
-  return trimmedPath;
-}
-
+// Retained for Node callers that explicitly supply an index file.
 export function getRegistryPath(): string {
-  return getConfiguredRegistryPathFromEnv() ?? getDefaultRegistryPath();
+  return join(getSkillsDirectory(), "skills-registry.json");
 }
 
-/**
- * Repo root: directory containing the skills/ folder (parent of skills/).
- */
 export function getRepoRoot(registryPath: string): string {
   return dirname(dirname(registryPath));
 }
 
 export interface LoadRegistryResult {
   registry: SkillsRegistry;
+  // The collection's index location anchors relative paths, even when no file exists.
   resolvedPath: string;
+  indexed?: boolean;
 }
 
-function normalizeExplicitRegistryPath(registryPath: string | undefined): string | undefined {
-  if (registryPath === undefined) {
-    return undefined;
-  }
+function isMissing(error: unknown): boolean {
+  const code = (error as NodeJS.ErrnoException)?.code;
+  return code === "ENOENT" || code === "ENOTDIR";
+}
 
-  const trimmedPath = registryPath.trim();
-  if (trimmedPath.length === 0) {
-    throw new Error("Registry path is blank. Pass a valid skills-registry.json path.");
-  }
+async function readIndex(path: string): Promise<SkillsRegistry> {
+  const data = JSON.parse(await readFile(path, "utf8")) as SkillsRegistry;
+  if (!Array.isArray(data.skills)) throw new Error("Invalid registry: skills array required");
+  return data;
+}
 
-  return trimmedPath;
+export async function loadCollection(directory: string, allowMissing = false): Promise<LoadRegistryResult> {
+  const indexPath = join(directory, "skills-registry.json");
+  const registry: SkillsRegistry = { skills: [] };
+  const indexed = false;
+  try {
+    const index = await readIndex(indexPath);
+    return { registry: index, resolvedPath: indexPath, indexed: true };
+  } catch (error) {
+    if (!isMissing(error)) throw error;
+  }
+  let entries;
+  try {
+    entries = await readdir(directory, { withFileTypes: true });
+  } catch (error) {
+    if (!isMissing(error) || !allowMissing) throw error;
+    return { registry, resolvedPath: indexPath, indexed };
+  }
+  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+    if (!entry.isDirectory() || entry.name.startsWith(".")) continue;
+    const skillPath = join(basename(directory), entry.name);
+    const manifestPath = join(directory, entry.name, "skill.json");
+    let manifest: SkillEntry;
+    try {
+      manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+    } catch (error) {
+      if (isMissing(error)) continue;
+      throw new Error(`Unable to read ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    if (typeof manifest !== "object" || manifest === null || Array.isArray(manifest)
+        || typeof manifest.id !== "string" || manifest.id.trim().length === 0
+        || typeof manifest.applicationId !== "string" || manifest.applicationId.trim().length === 0
+        || typeof manifest.intent !== "string" || manifest.intent.trim().length === 0
+        || typeof manifest.summary !== "string" || !Array.isArray(manifest.scripts)
+        || !Array.isArray(manifest.artifacts)
+        || !manifest.scripts.every((path) => typeof path === "string" && path.trim().length > 0)
+        || !manifest.artifacts.every((path) => typeof path === "string" && path.trim().length > 0)) {
+      throw new Error(`Invalid skill manifest: ${manifestPath}`);
+    }
+    if (registry.skills.some((skill) => skill.id === manifest.id)) {
+      throw new Error(`Duplicate local skill id: ${manifest.id}`);
+    }
+    registry.skills.push({ ...manifest, path: skillPath, skillFile: join(skillPath, "SKILL.md") });
+  }
+  return { registry, resolvedPath: indexPath, indexed };
 }
 
 export async function loadRegistry(registryPath?: string): Promise<LoadRegistryResult> {
-  const explicitRegistryPath = normalizeExplicitRegistryPath(registryPath);
-  const installedHomeRegistryPath = getInstalledHomeRegistryPath();
-
-  let configuredPath: string | undefined;
-  if (explicitRegistryPath === undefined) {
+  if (registryPath !== undefined) {
+    if (registryPath.trim().length === 0) throw new Error("Registry path is blank. Pass a valid skills-registry.json path.");
+    const path = resolve(registryPath.trim());
     try {
-      configuredPath = getConfiguredRegistryPathFromEnv();
+      return { registry: await readIndex(path), resolvedPath: path, indexed: true };
     } catch (error) {
-      process.stderr.write(
-        "Error: ANDROPERATOR_SKILLS_REGISTRY is set but blank. " +
-        "Unset it or set it to a valid skills-registry.json path.\n"
-      );
-      throw error;
+      if (!isMissing(error)) throw error;
+      throw new Error(`Registry not found at explicit path: ${path}. Fix the path or omit the explicit registry path.`);
     }
   }
-
-  const defaultPath = getDefaultRegistryPath();
-  let path = explicitRegistryPath ?? configuredPath ?? defaultPath;
-  let raw: string | undefined;
+  const directory = getSkillsDirectory();
+  if (process.env.ANDROPERATOR_SKILLS_DIR !== undefined) return loadCollection(directory);
+  // A project collection, including an empty one, deliberately shadows home skills.
   try {
-    raw = await readFile(path, "utf-8");
+    if ((await stat(directory)).isDirectory()) return loadCollection(directory);
   } catch (error) {
-    if (explicitRegistryPath) {
-      if (!isMissingRegistryFileError(error)) {
-        throw error;
-      }
-      throw new Error(
-        `Registry not found at explicit path: ${path}. ` +
-        "Fix the path or omit the explicit registry path."
-      );
-    }
-
-    if (!explicitRegistryPath && configuredPath) {
-      if (!isMissingRegistryFileError(error)) {
-        throw error;
-      }
-      process.stderr.write(
-        `Error: Registry file not found at ${path} (from ANDROPERATOR_SKILLS_REGISTRY). ` +
-        `The installed registry normally lives at ${installedHomeRegistryPath}. ` +
-        "Check that the path is correct.\n"
-      );
-      throw new Error(
-        `Registry not found at configured path: ${path}. ` +
-        `The installed registry normally lives at ${installedHomeRegistryPath}. ` +
-        "Fix ANDROPERATOR_SKILLS_REGISTRY, unset it to use the installed copy, then rerun androperator skills list, or run androperator skills install."
-      );
-    }
-
-    if (!isMissingRegistryFileError(error)) {
-      throw error;
-    }
-
-    const candidates = [
-      getRepoRelativeFallbackPath(),
-      getInstalledHomeRegistryPath(),
-    ].filter((candidate, index, all): candidate is string => (
-      candidate !== undefined
-      && candidate !== path
-      && all.indexOf(candidate) === index
-    ));
-
-    for (const candidate of candidates) {
-      try {
-        raw = await readFile(candidate, "utf-8");
-        path = candidate;
-        break;
-      } catch (candidateError) {
-        if (!isMissingRegistryFileError(candidateError)) {
-          throw candidateError;
-        }
-      }
-    }
-
-    if (raw === undefined) {
-      if (!explicitRegistryPath && !configuredPath) {
-        process.stderr.write(
-          "Warning: ANDROPERATOR_SKILLS_REGISTRY is not set. " +
-          `Androperator also checked the installed registry at ${installedHomeRegistryPath}. ` +
-          "Verify that file, then rerun 'androperator skills list', or run 'androperator skills install'.\n"
-        );
-        throw new Error(
-          `Registry not found. Checked: ${[path, ...candidates].join(", ")}. ` +
-          `The installed registry normally lives at ${installedHomeRegistryPath}. ` +
-          "Verify that path, then rerun androperator skills list, or run androperator skills install."
-        );
-      }
-
-      if (candidates.length > 0) {
-        throw new Error(
-          `Registry not found. Checked: ${[path, ...candidates].join(", ")}. ` +
-          `The installed registry normally lives at ${installedHomeRegistryPath}. ` +
-          "Verify that path, then rerun androperator skills list, or run androperator skills install."
-        );
-      }
-
-      throw new Error(
-        `Registry not found: ${path}. ` +
-        `The installed registry normally lives at ${installedHomeRegistryPath}. ` +
-        "Verify that path, then rerun androperator skills list, or run androperator skills install."
-      );
-    }
+    if (!isMissing(error)) throw error;
   }
-  const data = JSON.parse(raw) as SkillsRegistry;
-  if (!Array.isArray(data.skills)) {
-    throw new Error("Invalid registry: skills array required");
-  }
-  return { registry: data, resolvedPath: path };
+  const homeDirectory = join(homedir(), ".androperator", "skills", "skills");
+  return loadCollection(homeDirectory, true);
 }
 
 export function findSkillById(registry: SkillsRegistry, skillId: string): SkillEntry | undefined {

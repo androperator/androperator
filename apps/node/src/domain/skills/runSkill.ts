@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { access, readFile } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { dirname, extname, join } from "node:path";
 import { loadRegistry, findSkillById, getRepoRoot } from "../../adapters/skills-repo/localSkillsRegistry.js";
 import type { Logger } from "../../adapters/logger.js";
 import { ANDROPERATOR_SKILL_RUN_ID_ENV_VAR, normalizeSkillRunId } from "../../contracts/logging.js";
@@ -47,7 +47,7 @@ const SKILL_AGENT_TIMEOUT_MS_ENV_VAR = "ANDROPERATOR_SKILL_AGENT_TIMEOUT_MS";
 const SKILL_INPUTS_ENV_VAR = "ANDROPERATOR_SKILL_INPUTS";
 const SKILL_PROGRAM_ENV_VAR = "ANDROPERATOR_SKILL_PROGRAM";
 const SKILL_ID_ENV_VAR = "ANDROPERATOR_SKILL_ID";
-const SKILLS_REGISTRY_ENV_VAR = "ANDROPERATOR_SKILLS_REGISTRY";
+const SKILLS_DIRECTORY_ENV_VAR = "ANDROPERATOR_SKILLS_DIR";
 
 export interface SkillRunSuccess {
   ok: true;
@@ -851,9 +851,9 @@ export async function runSkill(
     childEnv[SKILL_INPUTS_ENV_VAR] = JSON.stringify(args);
     childEnv[SKILL_PROGRAM_ENV_VAR] = skillProgramPath;
     childEnv[SKILL_ID_ENV_VAR] = skillId;
-    if (resolvedRegistryPath !== null) {
-      childEnv[SKILLS_REGISTRY_ENV_VAR] = resolvedRegistryPath;
-    }
+  }
+  if (resolvedRegistryPath !== null) {
+    childEnv[SKILLS_DIRECTORY_ENV_VAR] = dirname(resolvedRegistryPath);
   }
 
   const start = Date.now();

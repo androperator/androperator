@@ -96,11 +96,31 @@ Expected signals:
 
 ## Local Skill Workspace
 
-Create skills in a workspace you control, with a `skills/skills-registry.json`
-registry and `skills/<skill_id>/` directories. Set
-`ANDROPERATOR_SKILLS_REGISTRY` to its registry path, then run
-`androperator skills new <skill_id>`. No separate skills catalog is required.
-Optional bundled examples will be added separately.
+Local skills are optional. Androperator discovers `skill.json` files directly in
+`<cwd>/skills/<skill_id>/`. When `<cwd>/skills/` is absent, it uses
+`~/.androperator/skills/skills/<skill_id>/`. A project collection, even an empty
+one, shadows the home collection; collections are not merged.
+
+`ANDROPERATOR_SKILLS_DIR` optionally selects a directory containing skill
+folders. It must be non-blank and readable. No environment variable, index file,
+or catalog checkout is required for a normal installation. A missing home
+collection produces an empty list without warnings.
+
+An existing `skills-registry.json` in the selected directory remains an optional
+legacy index and takes precedence over manifest scanning. Explicit Node API
+`registryPath` arguments still read that file and fail if it cannot be read.
+Invalid manifests, duplicate ids, unreadable directories, or malformed indexes
+fail with `REGISTRY_READ_FAILED`; repair the local file reported in the error.
+
+Use `androperator skills new <application_id>.<intent>` to scaffold a skill.
+It writes a manifest, instructions, and scripts without creating an index. When
+an optional index already exists, scaffolding keeps it updated. Run
+`androperator skills list`, inspect `skills get <id>`, then `skills validate <id>`
+before `skills run <id>`. An empty list is valid and does not require reinstalling.
+
+Optional [bundled examples](https://github.com/androperator/androperator/tree/main/examples/skills)
+show a Settings starter, Codex-only navigation, and bounded Jev delegation.
+They are references for agents to adapt, and are not installed by default.
 
 ## Authoring Skills Install
 
@@ -613,7 +633,7 @@ that the agent selected the right workflow, stayed in scope, or verified success
 
 ## `skill.json` Contract
 
-`skill.json` is stricter than `SKILL.md`. Validation compares its parsed fields against the registry entry.
+`skill.json` is stricter than `SKILL.md`. Validation compares its parsed fields against the discovered collection entry (or the optional legacy index entry).
 
 Important current rule:
 
@@ -1395,7 +1415,7 @@ androperator skills validate --all [--dry-run]
 
 Validation checks:
 
-- registry entry exists
+- the skill exists in the selected collection
 - `skill.json` exists
 - `SKILL.md` exists
 - every listed script exists
@@ -1446,7 +1466,7 @@ androperator skills validate --all --dry-run
 Check:
 
 - single-skill validation returns `valid: true`
-- `registryPath` points at the active registry file
+- `registryPath` identifies the selected collection's index location; the file may be absent for manifest discovery
 - `checks.skillJsonPath`, `checks.skillFilePath`, `checks.scriptPaths`, and `checks.artifactPaths` resolve to real files
 - `validate --all` returns `totalSkills` and `validSkills`
 
@@ -1518,7 +1538,6 @@ Run:
 androperator skills new com.example.app.do-thing --summary "Do one deterministic workflow"
 androperator skills get com.example.app.do-thing
 androperator skills validate com.example.app.do-thing
-./scripts/generate_skill_indexes.sh
 androperator skills validate --all
 ```
 
@@ -1526,13 +1545,13 @@ Confirm:
 
 - `created` is `true`
 - `files` includes `SKILL.md`, `skill.json`, `scripts/run.js`, and `scripts/run.sh`
-- the new registry entry appears in `skills get`
+- the new skill appears in `skills get`
 - per-skill validation succeeds without hand-editing file paths
 - `validate --all` succeeds after generated indexes are refreshed in repos that own them
 
 ## Practical Authoring Rules
 
-- keep `skill.json` and the registry in sync
+- keep `skill.json` complete; if retaining a legacy index, keep it in sync
 - let `skills validate --dry-run` prove skill-local artifact payloads
 - use `skills new`, then verify with `skills get` and `skills validate`; if the repo owns generated indexes, rerun the generator and finish with `skills validate --all`
 - use `skills compile-artifact` when a workflow should compile into deterministic execution JSON

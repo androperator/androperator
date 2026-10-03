@@ -36,8 +36,8 @@ evidence, compare input, and maintenance evidence. It is not the runtime
 program.
 
 The runtime skill you author lives in a local workspace at
-`<workspace>/skills/<skill_id>/`. Configure `ANDROPERATOR_SKILLS_REGISTRY`
-for that workspace; no companion repository is required.
+`<workspace>/skills/<skill_id>/`. Run from `<workspace>` to discover its `skills/` directory, or set the optional
+`ANDROPERATOR_SKILLS_DIR` directory override. No index or companion repository is required.
 
 ## Required Reading During Use
 
@@ -377,7 +377,7 @@ Remember:
 
 - `recording-context.json` is scaffold-time evidence for the author
 - it is not the executable program
-- `skills validate` still validates the registry-linked skill files, not the
+- `skills validate` still validates the locally discovered skill files, not the
   recording context
 - generated runtime skills must stay portable across machines and worktrees
 - do not import runtime contracts from absolute local filesystem paths such as

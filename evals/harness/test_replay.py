@@ -83,7 +83,7 @@ def test_run_replay_passes_with_materialized_skill(monkeypatch, tmp_path):
         assert "--output" not in cmd
         assert "--json" not in cmd
         assert "SECRET_TOKEN" not in env
-        assert env["ANDROPERATOR_SKILLS_REGISTRY"].endswith("skills/skills-registry.json")
+        assert env["ANDROPERATOR_SKILLS_DIR"].endswith("skills")
         payload = {
             "skillId": "com.example.android-version",
             "output": "ANDROPERATOR_EVAL_ANSWER: 15\n",

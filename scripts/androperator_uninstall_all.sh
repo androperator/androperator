@@ -10,7 +10,7 @@
 #   - Any running Android emulators named `androperator-*` (stopped via adb)
 #   - Any configured Android AVDs named `androperator-*` (deleted via avdmanager)
 #   - ~/.androperator/ (downloads, skills repo, all local state)
-#   - ANDROPERATOR_SKILLS_REGISTRY export from shell RC files
+#   - Androperator environment exports from shell RC files
 #   - Any running `androperator serve` processes
 #
 # What this does NOT remove (not owned by Androperator):
@@ -294,7 +294,7 @@ remove_data_dir() {
 }
 
 # ---------------------------------------------------------------------------
-# 7. Clean ANDROPERATOR_SKILLS_REGISTRY from shell RC files
+# 7. Clean Androperator environment exports from shell RC files
 
 clean_shell_rcs() {
     echo -e "${BLUE}Cleaning shell RC files...${NC}"

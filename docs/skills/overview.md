@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Explain what Androperator skills are, how the registry model works, and how
+Explain what Androperator skills are, how local discovery works, and how
 runtime skills relate to authored skill packages and host-agent helpers.
 
 For the post-install decision of when to start with `androperator skills`
@@ -23,7 +23,7 @@ the exact `androperator skills` command contract.
 ## What Skills Are
 
 Androperator helps agents create and run their own local skills. Installation
-initializes an empty registry; it does not download an app-skill catalog.
+initializes an empty local workspace; it does not download an app-skill catalog.
 
 Skills are deterministic wrappers around repeatable workflows.
 
@@ -33,9 +33,11 @@ Current role split:
 - a skill defines a reusable wrapper or artifact
 - the agent decides when to invoke the skill and how to interpret the result
 
-Skills are registry-driven. They are not discovered by folder scanning alone. `androperator skills list`, `androperator skills for-app`, `androperator skills search`, `androperator skills get`, `androperator skills validate`, and `androperator skills run` all read the registry through `loadRegistry()` in `apps/node/src/adapters/skills-repo/localSkillsRegistry.ts`.
-
-`androperator skills` and `skills-registry.json` cover runtime skills only.
+Runtime skills are discovered from local `skill.json` manifests. An existing
+`skills-registry.json` remains an optional compatibility index. The list, search,
+get, validate, and run commands share the collection loader; see [lookup rules](#registry).
+The implementation calls the resulting in-memory collection a registry even when
+no index file exists. `androperator skills` covers runtime skills only.
 Authoring skills are a separate category of AI agent programs that live in
 `.agents/skills/` in source form and install separately into
 `~/.androperator/bundled-skills/` plus host-agent discovery directories. Claude
@@ -151,101 +153,37 @@ Current implementation notes:
 
 ## Registry
 
-The registry file is a JSON object with:
+Local skills are optional. Androperator discovers `skill.json` files directly in
+`<cwd>/skills/<skill_id>/`. When `<cwd>/skills/` is absent, it uses
+`~/.androperator/skills/skills/<skill_id>/`. A project collection, even an empty
+one, shadows the home collection; collections are not merged.
 
-```json
-{
-  "schemaVersion": "optional string",
-  "generatedAt": "optional string",
-  "skills": [
-    {
-      "id": "com.android.settings.capture-overview",
-      "applicationId": "com.android.settings",
-      "intent": "capture-overview",
-      "summary": "Capture a Settings overview snapshot",
-      "path": "skills/com.android.settings.capture-overview",
-      "skillFile": "skills/com.android.settings.capture-overview/SKILL.md",
-      "scripts": [
-        "skills/com.android.settings.capture-overview/scripts/run.js"
-      ],
-      "artifacts": []
-    }
-  ]
-}
-```
+`ANDROPERATOR_SKILLS_DIR` optionally selects a directory containing skill
+folders. It must be non-blank and readable. No environment variable, index file,
+or catalog checkout is required for a normal installation. A missing home
+collection produces an empty list without warnings.
 
-Registry resolution precedence is:
+An existing `skills-registry.json` in the selected directory remains an optional
+legacy index and takes precedence over manifest scanning. Explicit Node API
+`registryPath` arguments still read that file and fail if it cannot be read.
+Invalid manifests, duplicate ids, unreadable directories, or malformed indexes
+fail with `REGISTRY_READ_FAILED`; repair the local file reported in the error.
 
-1. explicit `registryPath` argument, when a caller supplied one
-2. `ANDROPERATOR_SKILLS_REGISTRY`, when it is set and non-blank
-3. default path `skills/skills-registry.json` relative to the current working directory
+Use `androperator skills new <application_id>.<intent>` to scaffold a skill.
+It writes a manifest, instructions, and scripts without creating an index. When
+an optional index already exists, scaffolding keeps it updated. Run
+`androperator skills list`, inspect `skills get <id>`, then `skills validate <id>`
+before `skills run <id>`. An empty list is valid and does not require reinstalling.
 
-Current failure and fallback rules:
-
-- if an explicit `registryPath` argument is passed and that path cannot be read, `loadRegistry()` fails immediately and does not fall back
-- if `ANDROPERATOR_SKILLS_REGISTRY` is set but blank, `loadRegistry()` fails immediately and does not fall back
-- if `ANDROPERATOR_SKILLS_REGISTRY` is set to a non-blank path and that read fails, `loadRegistry()` fails immediately and does not fall back
-- if neither an explicit path nor env var is active and the default-path read fails, `loadRegistry()` next tries:
-  - `../../skills/skills-registry.json` relative to the current working directory when running from `apps/node`
-  - `~/.androperator/skills/skills/skills-registry.json`
-
-The install and sync flow writes the canonical long-lived registry under:
-
-- `~/.androperator/skills/skills/skills-registry.json`
-
-That path is assembled from these literals in `apps/node/src/domain/skills/skillsConfig.ts`:
-
-- `DEFAULT_SKILLS_DIR = ~/.androperator/skills`
-- `DEFAULT_SKILLS_REGISTRY_SUBPATH = skills/skills-registry.json`
+Optional [bundled examples](https://github.com/androperator/androperator/tree/main/examples/skills)
+show a Settings starter, Codex-only navigation, and bounded Jev delegation.
+They are references for agents to adapt, and are not installed by default.
 
 ## Registry Verification
 
-Use `skills list` to confirm that the registry path in your current shell is readable:
-
-- after `install.sh`, this works in a fresh non-login shell because `loadRegistry()` falls back to `~/.androperator/skills/skills/skills-registry.json` when no explicit registry path or env var is active
-
-```bash
-androperator skills list
-```
-
-Success means the registry was loaded and the `skills` array was parsed:
-
-```json
-{
-  "skills": [
-    {
-      "id": "com.android.settings.capture-overview",
-      "applicationId": "com.android.settings",
-      "intent": "capture-overview",
-      "summary": "Capture a Settings overview snapshot",
-      "path": "skills/com.android.settings.capture-overview",
-      "skillFile": "skills/com.android.settings.capture-overview/SKILL.md",
-      "scripts": [
-        "skills/com.android.settings.capture-overview/scripts/run.js"
-      ],
-      "artifacts": []
-    }
-  ],
-  "count": 1
-}
-```
-
-If the registry cannot be read, every discovery command fails with `REGISTRY_READ_FAILED`:
-
-```json
-{
-  "code": "REGISTRY_READ_FAILED",
-  "message": "Registry not found at configured path: /tmp/missing-registry.json. Update ANDROPERATOR_SKILLS_REGISTRY or run androperator skills install."
-}
-```
-
-Recovery depends on how the path was chosen:
-
-- when `ANDROPERATOR_SKILLS_REGISTRY` points at a missing file, update the env var or run `androperator skills install`
-- when no env var is set and neither the current working directory nor `~/.androperator/skills/skills/skills-registry.json` contains the registry, verify `~/.androperator/skills/skills/skills-registry.json`, run `androperator skills list`, then run `androperator skills install` or set `ANDROPERATOR_SKILLS_REGISTRY`
-- when the registry file exists but does not contain a `skills` array, fix the JSON because `loadRegistry()` rejects that shape with `Invalid registry: skills array required`
-
-Wrapper failure fields like `stdout` and `stderr` are optional. `runSkill.ts` includes them only when the child process actually emitted non-empty data on those streams.
+`androperator skills list` returns the discovered skills and count. A fresh
+host can return `{ "skills": [], "count": 0 }`. A missing default collection is
+not a readiness failure. Existing index files are optional compatibility inputs.
 
 ## Runtime-Skill Workflow
 

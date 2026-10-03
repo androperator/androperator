@@ -86,43 +86,28 @@ Equal-ranked results keep registry order.
 
 ## Registry Failures
 
-All discovery commands read the registry through the same loader. When the
-registry cannot be read, they return:
+A missing default collection returns an empty list. `REGISTRY_READ_FAILED`
+means a selected directory, manifest, or optional index is invalid or unreadable.
+Inspect the path in the message and repair that local input. `SKILL_NOT_FOUND`
+means the collection was readable but the requested id was absent.
 
-```json
-{
-  "code": "REGISTRY_READ_FAILED",
-  "message": "Registry not found at configured path: /tmp/missing-registry.json. Update ANDROPERATOR_SKILLS_REGISTRY or run androperator skills install."
-}
-```
-
-Recovery depends on how the path was chosen:
-
-- if `ANDROPERATOR_SKILLS_REGISTRY` points at a missing or invalid file, fix or
-  unset that env var
-- if no env var is set, verify
-  `~/.androperator/skills/skills/skills-registry.json`
-- run `androperator skills install` when the installed skills repo is absent
-- run `androperator skills list` again and require a parsed `skills` array
-
-If the registry loads but a requested id is absent, `skills get`, `skills
-validate`, and `skills run` can return `SKILL_NOT_FOUND`.
+See [local lookup rules](overview.md#registry).
 
 ## Install, Update, And Sync
 
 | Command | Behavior |
 | --- | --- |
-| `skills install` | Initializes or validates an empty local registry under `~/.androperator/skills/`; preserves existing skills and downloads nothing. |
+| `skills install` | Initializes or validates the local skills directory under `~/.androperator/skills/`; preserves existing skills and downloads nothing. |
 | `skills update [--ref <git-ref>]` | Validates the local workspace; only `main` is accepted. |
 | `skills sync --ref <git-ref>` | Requires `--ref main`; other refs return `SKILLS_SYNC_FAILED`. |
 
-Successful `skills install` responses include the registry path:
+Successful `skills install` responses include an optional legacy index path (`null` on a fresh install):
 
 ```json
 {
   "synced": true,
   "message": "Local skill workspace ready.",
-  "registryPath": "/Users/<local_user>/.androperator/skills/skills/skills-registry.json"
+  "registryPath": null
 }
 ```
 
@@ -152,7 +137,8 @@ Validate every registry entry:
 androperator skills validate --all [--dry-run]
 ```
 
-Successful single-skill validation includes the registry entry, registry path,
+Successful single-skill validation includes the skill metadata and collection index location
+(the `registryPath` field can point to an absent index used only to anchor relative paths),
 and concrete file paths checked by the validator:
 
 ```json
@@ -240,11 +226,11 @@ androperator skills new <skill_id> [--summary <text>] [--recording-context <file
 
 Behavior:
 
-- creates a new local skill folder in the configured skills registry repo
+- creates a new local skill folder in the selected collection
 - derives `applicationId` and `intent` by splitting `<skill_id>` on the final dot
 - creates `SKILL.md`, `skill.json`, `scripts/run.js`, and `scripts/run.sh`
 - copies `--recording-context` into the skill folder when provided
-- updates the configured registry JSON
+- discovers the skill directly from its manifest; updates an optional existing index
 
 Success shape:
 
@@ -390,7 +376,7 @@ Common wrapper failures:
 
 | Code | When it appears | Recovery |
 | --- | --- | --- |
-| `REGISTRY_READ_FAILED` | registry cannot be loaded | repair `ANDROPERATOR_SKILLS_REGISTRY` or reinstall/sync skills |
+| `REGISTRY_READ_FAILED` | registry cannot be loaded | repair the selected local manifest, directory, or optional index |
 | `SKILL_NOT_FOUND` | requested id is absent | confirm the id with `skills list`, `skills search`, or `skills get` |
 | `SKILL_VALIDATION_FAILED` | pre-run validation found missing files or invalid artifacts | repair the skill before rerunning |
 | `SKILL_SCRIPT_NOT_FOUND` | chosen script path is missing | restore the script or fix the registry entry |

@@ -647,7 +647,7 @@ def run_solax_orchestrated_cold_start_eval(
 
     skill_env = {
         **_androperator_env(),
-        "ANDROPERATOR_SKILLS_REGISTRY": str(skills_registry),
+        "ANDROPERATOR_SKILLS_DIR": str(skills_registry.parent),
     }
 
     for run_index in range(1, runs + 1):

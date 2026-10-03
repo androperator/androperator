@@ -24,13 +24,14 @@ variables. Use the new CLI and explicitly select the new Operator package.
 Do not reuse old daemon sockets, PIDs, or version markers. Stop the old daemon
 using the old CLI before starting the renamed one.
 
-Installation initializes an empty local skill registry. It no longer clones a
+Installation initializes a local skills directory without an index file. It no longer clones a
 companion skills catalog. Keep your own workspace, set
-`ANDROPERATOR_SKILLS_REGISTRY` to its registry, and adapt its scripts, manifests,
+`ANDROPERATOR_SKILLS_DIR` to the directory containing its skill folders, and adapt its scripts, manifests,
 frontmatter and result handling to the new contracts before validating and running.
 Git-ref catalog synchronization is no longer supported; `skills update` and
 `skills sync --ref main` initialize or validate the local workspace.
-Optional bundled example workflows are a separate follow-up.
+Optional [bundled examples](https://github.com/androperator/androperator/tree/main/examples/skills)
+provide a starter and adaptive Settings references; they are not installed by default.
 
 Do not copy the entire old state directory. Review any recordings, logs and user
 skills you need to retain, then migrate those deliberately. Git hooks use
@@ -52,3 +53,7 @@ Firebase SDKs, plugins, registrations and remote task-status reporting have been
 removed. Crash information remains in the app-private `crash-log.txt` and logcat.
 Task status remains available through structured local logcat reporting with
 command/task correlation. No Firebase registrations are required.
+
+The removed `ANDROPERATOR_SKILLS_REGISTRY` variable is ignored. Remove old exports
+and use project-local `skills/<id>/skill.json`, or the optional directory override.
+Existing indexes can still be read for migration; new local skills need no index.

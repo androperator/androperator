@@ -236,39 +236,14 @@ Do not use MCP as the first discovery surface when the real question is
 
 Use this sequence:
 
-1. Confirm the registry is readable:
+Run `androperator skills list` from your project to inspect local skills. An
+empty list means no local skill is available; it is not an installation failure.
+Inspect `skills/<skill_id>/skill.json` if loading reports an error. See
+[local lookup rules](skills/overview.md#registry).
 
-```bash
-androperator skills list
-```
-
-2. If registry discovery still fails, check the installed home path written by
-   the install and sync flow:
-
-```bash
-ls ~/.androperator/skills/skills/skills-registry.json
-```
-
-3. If that file is missing or stale, reinstall the runtime skills:
-
-```bash
-androperator skills install
-```
-
-4. If the host should connect through MCP instead of shelling out to the CLI,
-   read the installed snippet and then use `androperator mcp serve`:
-
-```bash
-cat ~/.androperator/mcp-config-snippet.json
-androperator mcp serve
-```
-
-5. If the registry is readable but no installed runtime skill matches the
-   request, inspect the installed authoring-workflow helpers:
-
-```bash
-androperator bundled-skills list
-```
+When no skill matches, inspect `androperator bundled-skills list` and use the
+installed authoring helpers or the optional
+[Settings examples](https://github.com/androperator/androperator/tree/main/examples/skills).
 
 Then continue to [Authoring](skills/authoring.md), start with
 `androperator-skill-author-by-agent-discovery`, and move to `androperator-skill-author-by-recording`
@@ -284,7 +259,7 @@ These files help a host orient after install:
 | `~/.androperator/AGENTS.md` | Local Androperator guide written by `androperator host setup` during install | Use it as machine-local context after you read this public route. |
 | `~/.androperator/install-state.json` | Durable install metadata written by `androperator host setup` | Check `registryPath`, `cliVersion`, and `lastDeviceSerial` without rerunning install. |
 | `~/.androperator/mcp-config-snippet.json` | Paste-ready MCP config written by `androperator host setup` | Use it when you choose the MCP route. |
-| `~/.androperator/skills/skills/skills-registry.json` | Installed runtime-skills registry | Verify it exists when `skills list` or `skills for-app` cannot discover skills. |
+| `~/.androperator/skills/skills/` | Optional local runtime skills | Each skill has its own `skill.json`; no catalog or index is required. |
 | `~/.androperator/bundled-skills/` | Installed first-party bundled skills | Inspect it through `androperator bundled-skills list` when runtime discovery returns no relevant match. |
 | `~/.agents/skills/<androperator-bundled-skill>/` | Managed real directory copies for generic agent skill discovery | Generic agents such as OpenClaw can discover packaged Androperator bundled skills without following symlinks outside `~/.agents/skills`. |
 

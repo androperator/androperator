@@ -1,6 +1,6 @@
 ---
 name: com.google.android.apps.chromecast.app.get-climate
-clawperator-skill-type: replay
+androperator-skill-type: replay
 description: Read Google Home climate unit status (power/mode/indoor temp) on Android using ActionTask generic agent actions. Use when asked for current climate control status.
 ---
 

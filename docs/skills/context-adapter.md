@@ -1,8 +1,10 @@
 # Context adapter
 
+The linked helper is a historical Clawperator reference, not an Androperator installation dependency. Bundled examples will be added separately.
+
 The companion skills repository provides a provider-neutral adapter in
 [`skills/utils/observation_context.js`](https://github.com/clawperator/clawperator-skills/blob/main/skills/utils/observation_context.js).
-It selects evidence for model context without changing Clawperator's execution
+It selects evidence for model context without changing Androperator's execution
 contract. It contains no model calls, app navigation policy, or retry loop.
 The two Settings version-details examples use it through their shared Settings
 helper; Codex still controls the task and optional Jev proposals remain bounded.
@@ -88,7 +90,7 @@ intentionally small subset of the supported [selector contract](../api/selectors
 These tests do not establish lack of occlusion. Platform visibility, geometry,
 enabled state and selector uniqueness each contribute evidence, not certainty.
 Candidate IDs and paths are capture-local references, not persistent native
-handles. The caller translates the supported selector to a Clawperator action,
+handles. The caller translates the supported selector to an Androperator action,
 serializes device access, expires candidates after transitions and verifies the
 destination after acting. The Settings helper invalidates its menu before
 dispatch and before every refresh, even if the action or refresh fails, rejects

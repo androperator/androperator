@@ -1,38 +1,38 @@
-# Clawperator Documentation
+# Androperator Documentation
 
-This site contains the canonical technical documentation for Clawperator, a deterministic Android automation runtime for AI agents. Clawperator is the actuator. Your external agent or LLM is the brain.
+This site contains the canonical technical documentation for Androperator, a deterministic Android automation runtime for AI agents. Androperator is the actuator. Your external agent or LLM is the brain.
 
 ## Key pages
 
-- Docs home: https://docs.clawperator.com/
-- Setup: https://docs.clawperator.com/setup/
-- API overview: https://docs.clawperator.com/api/overview/
-- CLI reference: https://docs.clawperator.com/api/cli/
-- Actions: https://docs.clawperator.com/api/actions/
-- Selectors: https://docs.clawperator.com/api/selectors/
-- Snapshot format: https://docs.clawperator.com/api/snapshot/
-- Errors: https://docs.clawperator.com/api/errors/
-- Devices: https://docs.clawperator.com/api/devices/
-- Doctor: https://docs.clawperator.com/api/doctor/
-- Timeouts: https://docs.clawperator.com/api/timeouts/
-- Environment variables: https://docs.clawperator.com/api/environment/
-- Serve API: https://docs.clawperator.com/api/serve/
-- MCP server: https://docs.clawperator.com/api/mcp/
-- Navigation patterns: https://docs.clawperator.com/api/navigation/
-- Recording format: https://docs.clawperator.com/api/recording/
-- Skills overview: https://docs.clawperator.com/skills/overview/
-- Skill authoring: https://docs.clawperator.com/skills/authoring/
-- Skill development workflow: https://docs.clawperator.com/skills/development/
-- Device prep and runtime: https://docs.clawperator.com/skills/runtime/
-- Operator troubleshooting: https://docs.clawperator.com/troubleshooting/operator/
-- Known issues: https://docs.clawperator.com/troubleshooting/known-issues/
-- Version compatibility: https://docs.clawperator.com/troubleshooting/compatibility/
-- Full compiled docs on docs host: https://docs.clawperator.com/llms-full.txt
-- Full compiled docs on landing host: https://clawperator.com/llms-full.txt
+- Docs home: https://docs.androperator.com/
+- Setup: https://docs.androperator.com/setup/
+- API overview: https://docs.androperator.com/api/overview/
+- CLI reference: https://docs.androperator.com/api/cli/
+- Actions: https://docs.androperator.com/api/actions/
+- Selectors: https://docs.androperator.com/api/selectors/
+- Snapshot format: https://docs.androperator.com/api/snapshot/
+- Errors: https://docs.androperator.com/api/errors/
+- Devices: https://docs.androperator.com/api/devices/
+- Doctor: https://docs.androperator.com/api/doctor/
+- Timeouts: https://docs.androperator.com/api/timeouts/
+- Environment variables: https://docs.androperator.com/api/environment/
+- Serve API: https://docs.androperator.com/api/serve/
+- MCP server: https://docs.androperator.com/api/mcp/
+- Navigation patterns: https://docs.androperator.com/api/navigation/
+- Recording format: https://docs.androperator.com/api/recording/
+- Skills overview: https://docs.androperator.com/skills/overview/
+- Skill authoring: https://docs.androperator.com/skills/authoring/
+- Skill development workflow: https://docs.androperator.com/skills/development/
+- Device prep and runtime: https://docs.androperator.com/skills/runtime/
+- Operator troubleshooting: https://docs.androperator.com/troubleshooting/operator/
+- Known issues: https://docs.androperator.com/troubleshooting/known-issues/
+- Version compatibility: https://docs.androperator.com/troubleshooting/compatibility/
+- Full compiled docs on docs host: https://docs.androperator.com/llms-full.txt
+- Full compiled docs on landing host: https://androperator.com/llms-full.txt
 
 ## Guidance for agents
 
 - Prefer this docs site over the marketing homepage for technical behavior.
 - The Node API is strict and contract-driven.
-- Clawperator executes validated actions and returns structured results.
+- Androperator executes validated actions and returns structured results.
 - Reasoning and planning stay outside this runtime.

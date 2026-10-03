@@ -115,7 +115,7 @@ export async function cmdOperatorSetup(options: {
       verification: result.verification,
       message: permissionsAlreadyEnabled
         ? "Operator installed. Required permissions were already enabled."
-        : "Operator installed and ready. Run clawperator doctor to verify.",
+        : "Operator installed and ready. Run androperator doctor to verify.",
     },
     options
   );

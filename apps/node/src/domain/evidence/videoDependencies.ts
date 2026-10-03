@@ -2,8 +2,8 @@ import type { ProcessRunner } from "../../adapters/android-bridge/processRunner.
 import { FFMPEG_VIDEO_REQUIREMENT, supportsFfmpegVideo } from "./ffmpegCapabilities.js";
 import { ERROR_CODES } from "../../contracts/errors.js";
 
-export const VIDEO_DEPENDENCIES_DOCS = "https://docs.clawperator.com/api/evidence/#video-dependencies";
-export const VIDEO_DEPENDENCIES_HINT = "Install scrcpy 3.0 or newer and ffmpeg 6.1 or newer (including ffprobe and libx264, with -fps_mode passthrough and -enc_time_base demux support), and expose all three executables on the PATH used by Clawperator. On macOS: brew install scrcpy ffmpeg. Then rerun clawperator doctor --device <device_serial> and retry video start only after host.video.dependencies passes. Clawperator does not bundle or install these tools. Still screenshots require only ADB.";
+export const VIDEO_DEPENDENCIES_DOCS = "https://docs.androperator.com/api/evidence/#video-dependencies";
+export const VIDEO_DEPENDENCIES_HINT = "Install scrcpy 3.0 or newer and ffmpeg 6.1 or newer (including ffprobe and libx264, with -fps_mode passthrough and -enc_time_base demux support), and expose all three executables on the PATH used by Androperator. On macOS: brew install scrcpy ffmpeg. Then rerun androperator doctor --device <device_serial> and retry video start only after host.video.dependencies passes. Androperator does not bundle or install these tools. Still screenshots require only ADB.";
 export const SCRCPY_REQUIRED_FLAGS = ["--capture-orientation", "--no-window", "--no-audio", "--no-control", "--video-codec", "--max-size", "--record-format", "--time-limit"];
 
 export interface VideoDependencyIssue {

@@ -35,7 +35,7 @@ class PublishedVersionOutputTests(unittest.TestCase):
         self.repo_root = Path(self.tempdir.name)
         (self.repo_root / "sites/docs/site").mkdir(parents=True, exist_ok=True)
         (self.repo_root / "sites/docs/static").mkdir(parents=True, exist_ok=True)
-        (self.repo_root / "sites/landing-clawperator/public").mkdir(parents=True, exist_ok=True)
+        (self.repo_root / "sites/androperator-public").mkdir(parents=True, exist_ok=True)
 
     def tearDown(self) -> None:
         self.tempdir.cleanup()
@@ -43,14 +43,14 @@ class PublishedVersionOutputTests(unittest.TestCase):
     def write_outputs(self, version: str) -> None:
         html = (
             '<p><strong>Current release: '
-            f'<a href="https://github.com/clawperator/clawperator/releases/tag/v{version}">{version}</a>'
+            f'<a href="https://github.com/androperator/androperator/releases/tag/v{version}">{version}</a>'
             "</strong></p>"
         )
         text = published_version.current_release_marker_text(version)
         (self.repo_root / "sites/docs/site/index.html").write_text(html, encoding="utf-8")
         (self.repo_root / "sites/docs/site/llms-full.txt").write_text(text, encoding="utf-8")
         (self.repo_root / "sites/docs/static/llms-full.txt").write_text(text, encoding="utf-8")
-        (self.repo_root / "sites/landing-clawperator/public/llms-full.txt").write_text(text, encoding="utf-8")
+        (self.repo_root / "sites/androperator-public/llms-full.txt").write_text(text, encoding="utf-8")
 
     def test_updates_real_markdown_release_badge(self) -> None:
         path = self.repo_root / "compatibility.md"
@@ -82,7 +82,7 @@ class PublishedVersionOutputTests(unittest.TestCase):
 
     def test_rejects_mismatched_generated_release_artifact(self) -> None:
         self.write_outputs(TARGET_VERSION)
-        (self.repo_root / "sites/landing-clawperator/public/llms-full.txt").write_text(
+        (self.repo_root / "sites/androperator-public/llms-full.txt").write_text(
             published_version.current_release_marker_text("0.9.8"),
             encoding="utf-8",
         )
@@ -91,7 +91,7 @@ class PublishedVersionOutputTests(unittest.TestCase):
 
         self.assertTrue(
             any(
-                f"sites/landing-clawperator/public/llms-full.txt: missing current release marker for {TARGET_VERSION}"
+                f"sites/androperator-public/llms-full.txt: missing current release marker for {TARGET_VERSION}"
                 in problem
                 for problem in problems
             ),

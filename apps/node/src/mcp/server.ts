@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import { createClawperatorLogger } from "../adapters/logger.js";
+import { createAndroperatorLogger } from "../adapters/logger.js";
 import { Server } from "@modelcontextprotocol/sdk/server";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -17,13 +17,13 @@ const require = createRequire(import.meta.url);
 function createServerInfo(): { name: string; version: string } {
   const pkg = require("../../package.json") as { version?: string };
   return {
-    name: "clawperator",
+    name: "androperator",
     version: pkg.version ?? "0.0.0",
   };
 }
 
 export function createMcpServer(): Server {
-  const logger = createClawperatorLogger({ outputFormat: "json" }).child({
+  const logger = createAndroperatorLogger({ outputFormat: "json" }).child({
     event: "mcp.server",
   });
   const session = createSessionDefaults();
@@ -82,7 +82,7 @@ export async function runMcpStdioServer(): Promise<void> {
   };
 
   transport.onerror = (error) => {
-    process.stderr.write(`[clawperator:mcp] transport error: ${error.message}\n`);
+    process.stderr.write(`[androperator:mcp] transport error: ${error.message}\n`);
     void shutdown(1);
   };
   transport.onclose = () => {

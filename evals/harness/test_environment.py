@@ -41,7 +41,7 @@ def _fake_which_factory(mapping: dict[str, str | None]):
 
 
 def test_preflight_published_binary_missing(monkeypatch):
-    monkeypatch.setattr(environment.shutil, "which", _fake_which_factory({"adb": "/usr/bin/adb", "clawperator": None}))
+    monkeypatch.setattr(environment.shutil, "which", _fake_which_factory({"adb": "/usr/bin/adb", "androperator": None}))
     monkeypatch.setattr(environment, "_run", _fake_run_factory("0.5.2"))
 
     with pytest.raises(EnvironmentError, match="published_binary_not_found"):
@@ -59,23 +59,23 @@ def test_published_runtime_forces_release_operator_package(monkeypatch):
         if "doctor" in cmd:
             return subprocess.CompletedProcess(cmd, 0, stdout="{}\n", stderr="")
         if cmd[-1] == "version":
-            return subprocess.CompletedProcess(cmd, 0, stdout="clawperator 0.5.1\n", stderr="")
+            return subprocess.CompletedProcess(cmd, 0, stdout="androperator 0.5.1\n", stderr="")
         raise AssertionError(f"unexpected command: {cmd!r}")
 
     monkeypatch.setattr(
         environment.shutil,
         "which",
-        _fake_which_factory({"adb": "/usr/bin/adb", "clawperator": "/opt/homebrew/bin/clawperator"}),
+        _fake_which_factory({"adb": "/usr/bin/adb", "androperator": "/opt/homebrew/bin/androperator"}),
     )
     monkeypatch.setattr(environment, "_run", fake_run)
-    monkeypatch.setenv("CLAWPERATOR_OPERATOR_PACKAGE", "com.clawperator.operator.dev")
+    monkeypatch.setenv("ANDROPERATOR_OPERATOR_PACKAGE", "com.androperator.operator.dev")
 
     inputs = environment.resolve_inputs(None, runtime="published")
 
     assert inputs.operator_package == environment.RELEASE_OPERATOR_PACKAGE
-    assert inputs.requested_operator_package == "com.clawperator.operator.dev"
-    assert inputs.clawperator_version == "0.5.1"
-    assert inputs.clawperator_npm_version == "0.5.1"
+    assert inputs.requested_operator_package == "com.androperator.operator.dev"
+    assert inputs.androperator_version == "0.5.1"
+    assert inputs.androperator_npm_version == "0.5.1"
 
 
 def test_published_preflight_preserves_requested_operator_package(monkeypatch):
@@ -95,16 +95,16 @@ def test_published_preflight_preserves_requested_operator_package(monkeypatch):
     monkeypatch.setattr(
         environment.shutil,
         "which",
-        _fake_which_factory({"adb": "/usr/bin/adb", "clawperator": "/opt/homebrew/bin/clawperator"}),
+        _fake_which_factory({"adb": "/usr/bin/adb", "androperator": "/opt/homebrew/bin/androperator"}),
     )
     monkeypatch.setattr(environment, "_run", fake_run)
-    monkeypatch.setenv("CLAWPERATOR_OPERATOR_PACKAGE", "com.clawperator.operator.dev")
+    monkeypatch.setenv("ANDROPERATOR_OPERATOR_PACKAGE", "com.androperator.operator.dev")
 
     inputs = environment.resolve_inputs(None, runtime="published")
     env = environment.preflight(None, runtime="published", resolved_inputs=inputs)
 
     assert env.operator_package == environment.RELEASE_OPERATOR_PACKAGE
-    assert env.requested_operator_package == "com.clawperator.operator.dev"
+    assert env.requested_operator_package == "com.androperator.operator.dev"
 
 
 def test_local_dev_explicit_operator_package_overrides_env(monkeypatch):
@@ -114,26 +114,26 @@ def test_local_dev_explicit_operator_package_overrides_env(monkeypatch):
         _fake_which_factory({"adb": "/usr/bin/adb", "node": "/usr/bin/node"}),
     )
     monkeypatch.setattr(environment, "_run", _fake_run_factory("0.5.3"))
-    monkeypatch.setenv("CLAWPERATOR_OPERATOR_PACKAGE", "com.example.from-env")
+    monkeypatch.setenv("ANDROPERATOR_OPERATOR_PACKAGE", "com.example.from-env")
 
     inputs = environment.resolve_inputs(
         None,
         runtime="local-dev",
-        operator_package="com.clawperator.operator.dev",
+        operator_package="com.androperator.operator.dev",
     )
 
-    assert inputs.operator_package == "com.clawperator.operator.dev"
-    assert inputs.requested_operator_package == "com.clawperator.operator.dev"
+    assert inputs.operator_package == "com.androperator.operator.dev"
+    assert inputs.requested_operator_package == "com.androperator.operator.dev"
 
 
 @pytest.mark.parametrize(
     ("runtime", "expected_cmd_prefix"),
     [
         ("local-dev", "node"),
-        ("published", "/opt/homebrew/bin/clawperator"),
+        ("published", "/opt/homebrew/bin/androperator"),
     ],
 )
-def test_preflight_populates_clawperator_npm_version(monkeypatch, tmp_path, runtime, expected_cmd_prefix):
+def test_preflight_populates_androperator_npm_version(monkeypatch, tmp_path, runtime, expected_cmd_prefix):
     local_cli = tmp_path / "apps" / "node" / "dist" / "cli" / "index.js"
     local_cli.parent.mkdir(parents=True, exist_ok=True)
     local_cli.write_text("#!/usr/bin/env node\n", encoding="utf-8")
@@ -148,8 +148,8 @@ def test_preflight_populates_clawperator_npm_version(monkeypatch, tmp_path, runt
             return "/usr/bin/adb"
         if name == "node":
             return "/usr/bin/node"
-        if name == "clawperator":
-            return "/opt/homebrew/bin/clawperator" if runtime == "published" else None
+        if name == "androperator":
+            return "/opt/homebrew/bin/androperator" if runtime == "published" else None
         if Path(name).is_absolute():
             return name
         if "/" in name:
@@ -162,9 +162,9 @@ def test_preflight_populates_clawperator_npm_version(monkeypatch, tmp_path, runt
 
     env = environment.preflight(None, runtime=runtime)
 
-    assert env.clawperator_npm_version == expected_npm_version
-    assert env.clawperator_version == expected_npm_version
-    assert env.clawperator_cmd[0] == expected_cmd_prefix
+    assert env.androperator_npm_version == expected_npm_version
+    assert env.androperator_version == expected_npm_version
+    assert env.androperator_cmd[0] == expected_cmd_prefix
 
 
 def test_full_repo_prompt_substitutes_repo_root():
@@ -172,10 +172,10 @@ def test_full_repo_prompt_substitutes_repo_root():
     prompt = build_prompt(
         str(prompt_path),
         {
-            "CLAWPERATOR_CMD": "clawperator",
-            "CLAWPERATOR_OPERATOR_PACKAGE": "com.clawperator.operator",
+            "ANDROPERATOR_CMD": "androperator",
+            "ANDROPERATOR_OPERATOR_PACKAGE": "com.androperator.operator",
             "DEVICE_SERIAL": "device-123",
-            "DOCS_URL": "https://docs.clawperator.com",
+            "DOCS_URL": "https://docs.androperator.com",
             "REPO_ROOT": str(environment.REPO_ROOT),
         },
     )
@@ -184,15 +184,15 @@ def test_full_repo_prompt_substitutes_repo_root():
     assert str(environment.REPO_ROOT) in prompt
 
 
-def test_probe_clawperator_version_plain_text_fallback(monkeypatch):
+def test_probe_androperator_version_plain_text_fallback(monkeypatch):
     def fake_run(cmd: list[str], env: dict[str, str], cwd: Path | None = None):
         if cmd[-1] == "version":
-            return subprocess.CompletedProcess(cmd, 0, stdout="clawperator 0.5.4-beta.1\n", stderr="")
+            return subprocess.CompletedProcess(cmd, 0, stdout="androperator 0.5.4-beta.1\n", stderr="")
         raise AssertionError(f"unexpected command: {cmd!r}")
 
     monkeypatch.setattr(environment, "_run", fake_run)
 
-    version = environment._probe_clawperator_version(["clawperator"], {"PATH": "/usr/bin", "HOME": "/tmp"})
+    version = environment._probe_androperator_version(["androperator"], {"PATH": "/usr/bin", "HOME": "/tmp"})
 
     assert version == "0.5.4-beta.1"
 
@@ -202,7 +202,7 @@ def test_preflight_attaches_doctor_failure_details(monkeypatch):
         "ok": False,
         "criticalOk": False,
         "deviceId": "emulator-5554",
-        "operatorPackage": "com.clawperator.operator.dev",
+        "operatorPackage": "com.androperator.operator.dev",
         "checks": [
             {
                 "id": "readiness.version.compatibility",
@@ -213,7 +213,7 @@ def test_preflight_attaches_doctor_failure_details(monkeypatch):
                 "evidence": {
                     "cliVersion": "0.5.3",
                     "apkVersion": "0.4.1-d",
-                    "operatorPackage": "com.clawperator.operator.dev",
+                    "operatorPackage": "com.androperator.operator.dev",
                 },
                 "fix": {
                     "title": "Align CLI and APK versions",
@@ -254,7 +254,7 @@ def test_preflight_prefers_first_fail_over_earlier_warning(monkeypatch):
         "ok": False,
         "criticalOk": False,
         "deviceId": "emulator-5554",
-        "operatorPackage": "com.clawperator.operator.dev",
+        "operatorPackage": "com.androperator.operator.dev",
         "checks": [
             {
                 "id": "device.warning.example",

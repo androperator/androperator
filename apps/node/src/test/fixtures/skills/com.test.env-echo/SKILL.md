@@ -1,6 +1,6 @@
 ---
 name: com.test.env-echo
-clawperator-skill-type: replay
+androperator-skill-type: replay
 description: Test fixture that prints selected skill environment variables.
 ---
 

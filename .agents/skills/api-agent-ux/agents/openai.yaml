@@ -1,4 +1,4 @@
 interface:
   display_name: "API Agent UX"
-  short_description: "Review Clawperator APIs for agent usability"
-  default_prompt: "Use $api-agent-ux to review this Clawperator API change for agent guessability, command ergonomics, and output contract fit."
+  short_description: "Review Androperator APIs for agent usability"
+  default_prompt: "Use $api-agent-ux to review this Androperator API change for agent guessability, command ergonomics, and output contract fit."

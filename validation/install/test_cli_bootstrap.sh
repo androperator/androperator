@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 
 REPO_ROOT="$(pwd)"
-INSTALL_SCRIPT="$REPO_ROOT/sites/landing-clawperator/public/install.sh"
+INSTALL_SCRIPT="$REPO_ROOT/sites/androperator-public/install.sh"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
@@ -54,7 +54,7 @@ run_install_cli_resolution_case() {
 
     mkdir -p "$stale_dir" "$npm_prefix/bin"
 
-    cat > "$stale_dir/clawperator" <<'EOF'
+    cat > "$stale_dir/androperator" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 if [ "${1:-}" = "--version" ]; then
@@ -63,9 +63,9 @@ if [ "${1:-}" = "--version" ]; then
 fi
 exit 99
 EOF
-    chmod +x "$stale_dir/clawperator"
+    chmod +x "$stale_dir/androperator"
 
-    cat > "$npm_prefix/bin/clawperator" <<'EOF'
+    cat > "$npm_prefix/bin/androperator" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 if [ "${1:-}" = "--version" ]; then
@@ -74,7 +74,7 @@ if [ "${1:-}" = "--version" ]; then
 fi
 exit 0
 EOF
-    chmod +x "$npm_prefix/bin/clawperator"
+    chmod +x "$npm_prefix/bin/androperator"
 
     HOME="$TMP_DIR/home-$label" \
     OS=Linux \
@@ -85,7 +85,7 @@ EOF
         trap - ERR
 
         npm() {
-            if [ "$1" = "install" ] && [ "$2" = "-g" ] && [ "$3" = "clawperator@latest" ]; then
+            if [ "$1" = "install" ] && [ "$2" = "-g" ] && [ "$3" = "androperator@latest" ]; then
                 return 0
             fi
             if [ "$1" = "config" ] && [ "$2" = "get" ] && [ "$3" = "prefix" ]; then
@@ -107,8 +107,8 @@ EOF
 
         printf "%s\n" "$status" > "$3"
         {
-          printf "bin=%s\n" "$CLAWPERATOR_BIN_PATH"
-          printf "exported=%s\n" "${CLAWPERATOR_BIN_PATH:+yes}"
+          printf "bin=%s\n" "$ANDROPERATOR_BIN_PATH"
+          printf "exported=%s\n" "${ANDROPERATOR_BIN_PATH:+yes}"
         } > "$4"
     ' _ "$INSTALL_SCRIPT" "$output_file" "$status_file" "$values_file"
 }
@@ -124,9 +124,9 @@ run_install_cli_resolution_case \
     "$CLI_RESOLUTION_VALUES"
 
 assert_equals "0" "$(cat "$CLI_RESOLUTION_STATUS")" "cli-resolution status"
-assert_contains "$CLI_RESOLUTION_OUT" "Clawperator CLI installed." "cli-resolution output"
-assert_contains "$CLI_RESOLUTION_VALUES" "bin=$TMP_DIR/npm-prefix-cli-resolution/bin/clawperator" "cli-resolution values"
+assert_contains "$CLI_RESOLUTION_OUT" "Androperator CLI installed." "cli-resolution output"
+assert_contains "$CLI_RESOLUTION_VALUES" "bin=$TMP_DIR/npm-prefix-cli-resolution/bin/androperator" "cli-resolution values"
 assert_contains "$CLI_RESOLUTION_VALUES" "exported=yes" "cli-resolution values"
-assert_not_contains "$CLI_RESOLUTION_VALUES" "$TMP_DIR/stale-bin-cli-resolution/clawperator" "cli-resolution values"
+assert_not_contains "$CLI_RESOLUTION_VALUES" "$TMP_DIR/stale-bin-cli-resolution/androperator" "cli-resolution values"
 
 echo "=== install.sh CLI bootstrap harness passed ==="

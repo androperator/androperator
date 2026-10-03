@@ -11,8 +11,8 @@ import time
 
 from run import ROOT, query
 
-PACKAGES = ('com.clawperator.operator.dev', 'com.clawperator.operator')
-SERVICE = '/clawperator.operator.accessibilityservice.OperatorAccessibilityService'
+PACKAGES = ('com.androperator.operator.dev', 'com.androperator.operator')
+SERVICE = '/androperator.operator.accessibilityservice.OperatorAccessibilityService'
 
 
 def binding_matches(output, service=None):
@@ -69,7 +69,7 @@ def prepare_operator(run, cli, device, package, apk):
     for operator in PACKAGES:
         adb('am', 'force-stop', operator)
     run(['adb', '-s', device, 'install', '-r', str(apk)], timeout=120)
-    adb('am', 'start', '-n', package + '/clawperator.activity.MainActivity')
+    adb('am', 'start', '-n', package + '/androperator.activity.MainActivity')
     adb('settings', 'put', 'secure', 'enabled_accessibility_services', package + SERVICE)
     adb('settings', 'put', 'secure', 'accessibility_enabled', '1')
     cli('grant-device-permissions')
@@ -112,7 +112,7 @@ def main():
     def cli(*command):
         return json.loads(run(['node', 'apps/node/dist/cli/index.js', *command, '--device', args.device,
                                '--operator-package', args.operator_package, '--no-daemon']))
-    lock_path = Path(tempfile.gettempdir()) / ('clawperator-device-' + hashlib.sha256(args.device.encode()).hexdigest() + '.lock')
+    lock_path = Path(tempfile.gettempdir()) / ('androperator-device-' + hashlib.sha256(args.device.encode()).hexdigest() + '.lock')
     with lock_path.open('w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         try:

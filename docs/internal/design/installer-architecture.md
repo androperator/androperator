@@ -2,10 +2,10 @@
 
 ## Purpose
 
-Keep the Clawperator install path easy to reason about, test, and recover.
+Keep the Androperator install path easy to reason about, test, and recover.
 
 This note defines the ownership boundary between the public shell installer at
-`sites/landing-clawperator/public/install.sh` and the Node CLI install surfaces. Use it when
+`sites/androperator-public/install.sh` and the Node CLI install surfaces. Use it when
 changing setup, upgrade, host artifact generation, operator remediation,
 runtime-skill installation, bundled-skill installation, or install validation.
 
@@ -13,14 +13,14 @@ runtime-skill installation, bundled-skill installation, or install validation.
 
 | Surface | Authority |
 | --- | --- |
-| Shell bootstrap behavior | `sites/landing-clawperator/public/install.sh` |
+| Shell bootstrap behavior | `sites/androperator-public/install.sh` |
 | Top-level install command and help | `apps/node/src/cli/registry.ts` |
 | CLI-owned post-bootstrap flow | `apps/node/src/cli/commands/install.ts` |
 | Operator remediation policy | `apps/node/src/cli/commands/operatorRemediate.ts` |
 | Host artifact generation | `apps/node/src/domain/host/hostSetup.ts` |
 | Install shell validation | `validation/install/README.md`, `validation/install/test_install.sh` |
 | Public setup behavior | `docs/setup.md` |
-| Upgrade skill behavior | `apps/node/bundled-skills/clawperator-upgrade/SKILL.md` |
+| Upgrade skill behavior | `apps/node/bundled-skills/androperator-upgrade/SKILL.md` |
 
 ## Core Rule
 
@@ -33,7 +33,7 @@ directly callable by agents and host tooling.
 The canonical post-bootstrap route is:
 
 ```bash
-clawperator install
+androperator install
 ```
 
 The shell installer delegates to that route after it finishes shell-owned
@@ -50,11 +50,11 @@ The shell may own:
 - Java detection and provisioning
 - Node.js detection and provisioning
 - `curl`, `adb`, and `git` presence or provisioning
-- `npm install -g clawperator@latest`
+- `npm install -g androperator@latest`
 - freshly installed CLI binary discovery
 - top-level shell error trapping around bootstrap failures
 - shell activation hints such as `source ~/.zshrc`
-- pass-through invocation of `clawperator install`
+- pass-through invocation of `androperator install`
 
 The shell should stay small, linear, and boring. A future shell change should be
 suspicious if it needs arrays, JSON parsing, multi-step product state, or
@@ -62,9 +62,9 @@ branch-heavy summary formatting.
 
 ## CLI Ownership
 
-The Node CLI owns Clawperator install behavior after the CLI is available.
+The Node CLI owns Androperator install behavior after the CLI is available.
 
-`clawperator install` should own:
+`androperator install` should own:
 
 - operator remediation orchestration
 - runtime skills install
@@ -80,12 +80,12 @@ The Node CLI owns Clawperator install behavior after the CLI is available.
 
 Lower-level commands must remain reusable and truthful:
 
-- `clawperator operator remediate`
-- `clawperator skills install`
-- `clawperator bundled-skills install`
-- `clawperator host setup`
+- `androperator operator remediate`
+- `androperator skills install`
+- `androperator bundled-skills install`
+- `androperator host setup`
 
-`clawperator install` orchestrates those surfaces. It should not make them
+`androperator install` orchestrates those surfaces. It should not make them
 private implementation details.
 
 ## Things The Shell Should Not Do
@@ -100,7 +100,7 @@ Do not add these responsibilities to `install.sh`:
 - format host artifact summaries
 - install runtime skills by re-implementing CLI logic
 - install bundled skills by re-implementing CLI logic
-- write Clawperator host artifacts directly
+- write Androperator host artifacts directly
 - decide whether shared-agent bridge failures are fatal
 - encode multi-device policy
 
@@ -124,7 +124,7 @@ Shell validation should prove shell-owned behavior:
 
 - bootstrap checks gate execution
 - `install_cli()` selects the freshly installed binary
-- `install.sh` delegates to `clawperator install` with the expected arguments
+- `install.sh` delegates to `androperator install` with the expected arguments
 - delegated exit codes propagate correctly
 - shell-specific guidance appears only on appropriate paths
 

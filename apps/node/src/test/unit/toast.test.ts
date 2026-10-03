@@ -10,7 +10,7 @@ import type { Execution } from "../../contracts/execution.js";
 import type { RunExecutionResult } from "../../domain/executions/runExecution.js";
 
 const success: RunExecutionResult = {
-  ok: true, deviceId: "test-device", terminalSource: "clawperator_result",
+  ok: true, deviceId: "test-device", terminalSource: "androperator_result",
   envelope: { commandId: "test", taskId: "test", status: "success", stepResults: [], error: null },
 };
 function execution(type: string, params?: unknown) {
@@ -18,7 +18,7 @@ function execution(type: string, params?: unknown) {
 }
 function cli(args: string[]) {
   return spawnSync(process.execPath, [fileURLToPath(new URL("../../cli/index.js", import.meta.url)), ...args],
-    { encoding: "utf8", env: { ...process.env, CLAWPERATOR_DISABLE_STAR_SUGGESTIONS: "1" } });
+    { encoding: "utf8", env: { ...process.env, ANDROPERATOR_DISABLE_STAR_SUGGESTIONS: "1" } });
 }
 
 describe("toast contracts", () => {
@@ -61,13 +61,13 @@ describe("toast contracts", () => {
         let directs = 0;
         let proxied: Execution | undefined;
         const raw = await cmdToast({ operation, params: operation === "show" ? { text: "started", duration: "long" } : undefined,
-          format: "json", deviceId: "test-device", operatorPackage: "com.clawperator.operator.dev", timeoutMs: 4321, noDaemon: route === "direct",
+          format: "json", deviceId: "test-device", operatorPackage: "com.androperator.operator.dev", timeoutMs: 4321, noDaemon: route === "direct",
           tryDaemonExecutionFn: async (payload, options) => {
             proxies++;
             proxied = validateExecution(payload);
             assert.equal(options.allowPostDispatchFallback, false);
             assert.equal(options.rawDeviceId, "test-device");
-            assert.equal(options.operatorPackage, "com.clawperator.operator.dev");
+            assert.equal(options.operatorPackage, "com.androperator.operator.dev");
             if (route === "uncertain") throw { code: "DAEMON_REQUEST_FAILED", message: "Acknowledgement lost" };
             return route === "daemon" ? success : null;
           },
@@ -78,7 +78,7 @@ describe("toast contracts", () => {
             assert.equal(validated.actions[0].type, operation === "show" ? "show_toast" : "cancel_toast");
             assert.equal(validated.timeoutMs, 4321);
             assert.equal(options?.deviceId, "test-device");
-            assert.equal(options?.operatorPackage, "com.clawperator.operator.dev");
+            assert.equal(options?.operatorPackage, "com.androperator.operator.dev");
             return success;
           },
         });
@@ -92,7 +92,7 @@ describe("toast contracts", () => {
     const invalid = [[], ["--duration"], ["text", "--duration"], ["text", "--duration", ""], ["text", "--duration", "2000"],
       ["text", "--duration", "long", "--duration", "short"], ["--cancel", "text"], ["--cancel", "--duration", "long"],
       ["--cancel", "--cancel"], ["text", "extra"], [""], [" "], ["text", "--unknown"], ["--"]];
-    const common = ["--device", "test-device", "--operator-package", "com.clawperator.operator.dev", "--timeout", "4321", "--output", "json", "--no-daemon"];
+    const common = ["--device", "test-device", "--operator-package", "com.androperator.operator.dev", "--timeout", "4321", "--output", "json", "--no-daemon"];
     for (const args of invalid) {
       for (const before of [true, false]) {
         const result = cli(before ? [...common, "toast", ...args] : ["toast", ...common, ...args]);

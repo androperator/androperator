@@ -11,7 +11,7 @@ export interface QueryOptions {
 export function buildQueryExecution(options: QueryOptions = {}, timeoutMs = 30_000): Execution {
   const commandId = `query-${randomUUID()}`;
   return {
-    commandId, taskId: commandId, source: "clawperator-action",
+    commandId, taskId: commandId, source: "androperator-action",
     expectedFormat: "android-ui-automator", timeoutMs, mode: "direct",
     actions: [{ id: "query", type: "query_ui", params: { ...options } }],
   };

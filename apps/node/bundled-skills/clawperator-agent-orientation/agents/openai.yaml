@@ -1,4 +1,0 @@
-interface:
-  display_name: "Clawperator Agent Orientation"
-  short_description: "Get started with Clawperator for Android automation"
-  default_prompt: "Use $clawperator-agent-orientation to establish the intended CLI/device/Operator selection and choose one next entry point. Use $clawperator-agent-control-loop for adaptive execution after checking runtime-skill goal coverage. Follow its selection-before-readiness order and evidence requirements. Finish with the readiness result, one concrete next step, and its canonical reference, or the specific blocker and recovery reference."

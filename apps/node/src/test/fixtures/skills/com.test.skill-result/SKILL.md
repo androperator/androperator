@@ -1,6 +1,6 @@
 ---
 name: com.test.skill-result
-clawperator-skill-type: replay
+androperator-skill-type: replay
 description: Emit framed SkillResult test payloads.
 ---
 

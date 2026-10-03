@@ -14,7 +14,7 @@ describe("checkApkPresence", () => {
         const config = getDefaultRuntimeConfig({
             runner,
             deviceId: "test-device",
-            operatorPackage: "com.clawperator.operator",
+            operatorPackage: "com.androperator.operator",
         });
 
         runner.queueResult({ code: 0, stdout: "", stderr: "" });
@@ -24,11 +24,11 @@ describe("checkApkPresence", () => {
 
         assert.strictEqual(result.status, "fail");
         assert.strictEqual(result.code, ERROR_CODES.OPERATOR_NOT_INSTALLED);
-        assert.match(result.detail ?? "", /Package com\.clawperator\.operator was not found/);
-        assert.strictEqual(result.fix?.docsUrl, "https://docs.clawperator.com/setup/");
+        assert.match(result.detail ?? "", /Package com\.androperator\.operator was not found/);
+        assert.strictEqual(result.fix?.docsUrl, "https://docs.androperator.com/setup/");
         assert.deepStrictEqual(result.fix?.steps, [
-            { kind: "shell", value: "clawperator operator download" },
-            { kind: "shell", value: "clawperator operator setup --apk ~/.clawperator/downloads/operator.apk --device test-device" },
+            { kind: "shell", value: "androperator operator download" },
+            { kind: "shell", value: "androperator operator setup --apk ~/.androperator/downloads/operator.apk --device test-device" },
         ]);
     });
 
@@ -37,7 +37,7 @@ describe("checkApkPresence", () => {
         const config = getDefaultRuntimeConfig({
             runner,
             deviceId: "test-device",
-            operatorPackage: "com.clawperator.operator.dev",
+            operatorPackage: "com.androperator.operator.dev",
         });
 
         runner.queueResult({ code: 0, stdout: "", stderr: "" });
@@ -50,11 +50,11 @@ describe("checkApkPresence", () => {
         assert.deepStrictEqual(result.fix?.steps, [
             {
                 kind: "manual",
-                value: "If you do not already have a matching local debug APK at ~/.clawperator/downloads/operator-debug.apk, rebuild the debug app from the same checkout before rerunning setup.",
+                value: "If you do not already have a matching local debug APK at ~/.androperator/downloads/operator-debug.apk, rebuild the debug app from the same checkout before rerunning setup.",
             },
             {
                 kind: "shell",
-                value: "clawperator operator setup --apk ~/.clawperator/downloads/operator-debug.apk --device test-device --operator-package com.clawperator.operator.dev",
+                value: "androperator operator setup --apk ~/.androperator/downloads/operator-debug.apk --device test-device --operator-package com.androperator.operator.dev",
             },
         ]);
     });
@@ -64,7 +64,7 @@ describe("checkApkPresence", () => {
         const config = getDefaultRuntimeConfig({
             runner,
             deviceId: "test-device",
-            operatorPackage: "com.clawperator.operator.staging",
+            operatorPackage: "com.androperator.operator.staging",
         });
 
         runner.queueResult({ code: 0, stdout: "", stderr: "" });
@@ -77,11 +77,11 @@ describe("checkApkPresence", () => {
         assert.deepStrictEqual(result.fix?.steps, [
             {
                 kind: "manual",
-                value: "If you do not already have a matching local APK at ~/.clawperator/downloads/operator.apk, build or obtain the APK for com.clawperator.operator.staging from the same checkout before rerunning setup.",
+                value: "If you do not already have a matching local APK at ~/.androperator/downloads/operator.apk, build or obtain the APK for com.androperator.operator.staging from the same checkout before rerunning setup.",
             },
             {
                 kind: "shell",
-                value: "clawperator operator setup --apk ~/.clawperator/downloads/operator.apk --device test-device --operator-package com.clawperator.operator.staging",
+                value: "androperator operator setup --apk ~/.androperator/downloads/operator.apk --device test-device --operator-package com.androperator.operator.staging",
             },
         ]);
     });
@@ -139,7 +139,7 @@ describe("runHandshake", () => {
                     },
                 }],
             },
-            terminalSource: "clawperator_result" as const,
+            terminalSource: "androperator_result" as const,
         });
 
         const result = await runHandshake(config, mockWait);
@@ -159,7 +159,7 @@ describe("runHandshake", () => {
         const mockWait = async () => ({
             ok: true as const,
             envelope: { status: "failed" as const, commandId: "test-cmd", taskId: "test-task", stepResults: [], error: "Boom" },
-            terminalSource: "clawperator_result" as const,
+            terminalSource: "androperator_result" as const,
         });
 
         const result = await runHandshake(config, mockWait);
@@ -168,7 +168,7 @@ describe("runHandshake", () => {
         assert.match(result.detail!, /Boom/);
         assert.deepStrictEqual(
             result.fix?.steps.filter((step) => step.kind === "shell"),
-            [{ kind: "shell", value: "clawperator grant-device-permissions --device test-device --operator-package com.test.operator" }],
+            [{ kind: "shell", value: "androperator grant-device-permissions --device test-device --operator-package com.test.operator" }],
         );
     });
 
@@ -195,7 +195,7 @@ describe("runHandshake", () => {
         assert.match(result.detail ?? "", /Broadcast dispatch: sent/);
         assert.match(result.detail ?? "", /Operator package: com\.test\.operator/);
         assert.match(result.detail ?? "", /APK\/CLI version mismatch/);
-        assert.ok(result.fix?.steps.some(step => step.kind === "shell" && step.value.includes("clawperator snapshot")));
+        assert.ok(result.fix?.steps.some(step => step.kind === "shell" && step.value.includes("androperator snapshot")));
     });
 
     it("returns fail on broadcast failure", async () => {
@@ -240,7 +240,7 @@ describe("runHandshake", () => {
                     },
                 }],
             },
-            terminalSource: "clawperator_result" as const,
+            terminalSource: "androperator_result" as const,
         });
 
         const result = await runHandshake(config, mockWait);
@@ -319,7 +319,7 @@ describe("checkDeviceInteractiveState", () => {
         assert.strictEqual(result.status, "fail");
         assert.strictEqual(result.code, ERROR_CODES.DEVICE_NOT_INTERACTIVE);
         assert.match(result.detail ?? "", /deviceLocked=true/);
-        assert.strictEqual(result.fix?.docsUrl, "https://docs.clawperator.com/api/devices/");
+        assert.strictEqual(result.fix?.docsUrl, "https://docs.androperator.com/api/devices/");
     });
 
     it("fails closed when the foundation probe cannot verify state", async () => {
@@ -358,7 +358,7 @@ describe("readiness execution completeness", () => {
                     status: scenario === "terminal-failure" ? "failed" as const : "success" as const,
                     stepResults,
                 },
-                terminalSource: "clawperator_result" as const,
+                terminalSource: "androperator_result" as const,
             }));
             assert.equal(result.status, scenario === "complete" ? "pass" : "fail");
         });
@@ -374,7 +374,7 @@ describe("readiness execution completeness", () => {
                     commandId: "test-command", taskId: "test-task", status: "success" as const,
                     stepResults: missing ? [] : [{ id: "h1", actionType: "doctor_ping", success: false, data: {} }],
                 },
-                terminalSource: "clawperator_result" as const,
+                terminalSource: "androperator_result" as const,
             }));
             assert.equal(result.status, "fail");
             assert.equal(result.code, ERROR_CODES.RESULT_ENVELOPE_MALFORMED);
@@ -398,11 +398,11 @@ describe("doctor smoke execution pipeline", () => {
                 runner.calls.push({ command, args });
                 const action = args.join(" ");
                 if (action.endsWith("devices")) return { code: 0, stdout: "List of devices attached\ntest-device\tdevice\n", stderr: "" };
-                if (action.includes("pm list packages")) return { code: 0, stdout: "package:com.clawperator.operator.dev\n", stderr: "" };
+                if (action.includes("pm list packages")) return { code: 0, stdout: "package:com.androperator.operator.dev\n", stderr: "" };
                 if (action.includes("am force-stop")) return { code: closeSucceeds ? 0 : 1, stdout: "", stderr: "" };
                 assert.ok(action.includes("am broadcast"), action);
                 broadcast = true;
-                setTimeout(() => stdout.emit("data", Buffer.from(`D/TaskScopeDefault: [TaskScope] UI Hierarchy [commandId=${execution.commandId}]:\nD/TaskScopeDefault: <hierarchy>\nD/TaskScopeDefault: <node package="com.android.settings" />\nD/TaskScopeDefault: </hierarchy>\n[Clawperator-Result] ${JSON.stringify({
+                setTimeout(() => stdout.emit("data", Buffer.from(`D/TaskScopeDefault: [TaskScope] UI Hierarchy [commandId=${execution.commandId}]:\nD/TaskScopeDefault: <hierarchy>\nD/TaskScopeDefault: <node package="com.android.settings" />\nD/TaskScopeDefault: </hierarchy>\n[Androperator-Result] ${JSON.stringify({
                     commandId: execution.commandId, taskId: execution.taskId, status: "success", error: null,
                     stepResults: [
                         { id: "s1", actionType: "close_app", success: false, data: { error: "UNSUPPORTED_RUNTIME_CLOSE" } },
@@ -412,7 +412,7 @@ describe("doctor smoke execution pipeline", () => {
                 })}\n`)), 0);
                 return { code: 0, stdout: "Broadcast completed", stderr: "" };
             };
-            const config = getDefaultRuntimeConfig({ runner, deviceId: "test-device", operatorPackage: "com.clawperator.operator.dev", adbPath: "test-adb" });
+            const config = getDefaultRuntimeConfig({ runner, deviceId: "test-device", operatorPackage: "com.androperator.operator.dev", adbPath: "test-adb" });
             const result = await runSmokeTest(config, (input, options) => {
                 execution = input as Execution;
                 assert.equal(options?.deviceId, config.deviceId);

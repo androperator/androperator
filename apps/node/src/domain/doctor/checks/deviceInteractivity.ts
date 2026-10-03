@@ -3,7 +3,7 @@ import { runAdb, type AdbResult } from "../../../adapters/android-bridge/adbClie
 import { broadcastAgentCommand } from "../../../adapters/android-bridge/broadcastAgentCommand.js";
 import { waitForResultEnvelope, type LogcatResult } from "../../../adapters/android-bridge/logcatResultReader.js";
 import { type RuntimeConfig } from "../../../adapters/android-bridge/runtimeConfig.js";
-import { ERROR_CODES, type ErrorCode, type DispatchState, isClawperatorError } from "../../../contracts/errors.js";
+import { ERROR_CODES, type ErrorCode, type DispatchState, isAndroperatorError } from "../../../contracts/errors.js";
 import { type StepResult } from "../../../contracts/result.js";
 
 export type WaitForResultEnvelopeFn = typeof waitForResultEnvelope;
@@ -105,7 +105,7 @@ export async function runDoctorPingCommand(
   const payload = JSON.stringify({
     commandId,
     taskId: "doctor-handshake",
-    source: "clawperator-doctor",
+    source: "androperator-doctor",
     expectedFormat: "android-ui-automator",
     actions: [{ id: DOCTOR_PING_ACTION_ID, type: "doctor_ping" }],
     timeoutMs: 5000,
@@ -130,8 +130,8 @@ export async function runDoctorPingCommand(
     result = {
       ok: false,
       code: ERROR_CODES.RESULT_TRANSPORT_FAILED,
-      error: error instanceof Error || isClawperatorError(error) ? error.message : String(error),
-      ...(isClawperatorError(error) && error.details !== undefined ? { diagnostics: error.details } : {}),
+      error: error instanceof Error || isAndroperatorError(error) ? error.message : String(error),
+      ...(isAndroperatorError(error) && error.details !== undefined ? { diagnostics: error.details } : {}),
     };
   }
   return {

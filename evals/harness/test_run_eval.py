@@ -22,11 +22,11 @@ class _StubAgent:
 def _make_stub_environment():
     return SimpleNamespace(
         device_serial="device-123",
-        clawperator_cmd=["clawperator"],
-        clawperator_version="0.5.3",
-        clawperator_npm_version="0.5.3",
+        androperator_cmd=["androperator"],
+        androperator_version="0.5.3",
+        androperator_npm_version="0.5.3",
         ground_truth_android_version="15",
-        operator_package="com.clawperator.operator.dev",
+        operator_package="com.androperator.operator.dev",
     )
 
 
@@ -43,7 +43,7 @@ def test_write_preflight_failure_run_uses_full_repo_paths(monkeypatch, tmp_path)
         max_turns=40,
     )
     spec = {"prompts": {"full-repo": "prompt-full-repo.md"}}
-    monkeypatch.setenv("CLAWPERATOR_OPERATOR_PACKAGE", "   ")
+    monkeypatch.setenv("ANDROPERATOR_OPERATOR_PACKAGE", "   ")
     run_dir = run_eval._write_preflight_failure_run(
         args=args,
         spec=spec,
@@ -58,7 +58,7 @@ def test_write_preflight_failure_run_uses_full_repo_paths(monkeypatch, tmp_path)
     assert result["environment"]["operator_package"] == environment.RELEASE_OPERATOR_PACKAGE
     assert result["environment"]["cwd"] == str(run_eval.ROOT)
     assert result["environment"]["runs_dir"] == str(tmp_path / "runs")
-    assert result["environment"]["clawperator_npm_version"] is None
+    assert result["environment"]["androperator_npm_version"] is None
     assert config["invocation"]["work_dir"] == str(run_eval.ROOT)
     assert config["environment"]["cwd"] == str(run_eval.ROOT)
     assert config["environment"]["runs_dir"] == str(tmp_path / "runs")
@@ -84,7 +84,7 @@ def test_build_config_omits_redundant_skill_prompt_file(tmp_path):
         timeout_s=300,
         max_turns=40,
         agent_binary_version="1.0.0",
-        display_clawperator_cmd=["clawperator"],
+        display_androperator_cmd=["androperator"],
         display_work_dir=str(tmp_path),
         display_cwd=str(tmp_path),
         display_runs_dir=str(tmp_path / "runs"),
@@ -112,7 +112,7 @@ def test_build_config_records_distinct_skill_prompt_file(tmp_path):
         timeout_s=300,
         max_turns=40,
         agent_binary_version="1.0.0",
-        display_clawperator_cmd=["clawperator"],
+        display_androperator_cmd=["androperator"],
         display_work_dir=str(tmp_path),
         display_cwd=str(tmp_path),
         display_runs_dir=str(tmp_path / "runs"),
@@ -135,7 +135,7 @@ def test_write_preflight_failure_run_redacts_public_surface_runtime_command(monk
         max_turns=40,
     )
     spec = {"prompts": {"public-surface": "prompt-public.md"}}
-    monkeypatch.setenv("CLAWPERATOR_OPERATOR_PACKAGE", "   ")
+    monkeypatch.setenv("ANDROPERATOR_OPERATOR_PACKAGE", "   ")
 
     run_dir = run_eval._write_preflight_failure_run(
         args=args,
@@ -148,12 +148,12 @@ def test_write_preflight_failure_run_redacts_public_surface_runtime_command(monk
     result = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
     config = json.loads((run_dir / "config.json").read_text(encoding="utf-8"))
 
-    assert result["environment"]["clawperator_cmd"] == ["clawperator"]
-    assert result["environment"]["runtime_clawperator_cmd"] == ["node", str(run_eval.REPO_ROOT / "apps/node/dist/cli/index.js")]
+    assert result["environment"]["androperator_cmd"] == ["androperator"]
+    assert result["environment"]["runtime_androperator_cmd"] == ["node", str(run_eval.REPO_ROOT / "apps/node/dist/cli/index.js")]
     assert result["environment"]["cwd"] == "<redacted>"
     assert result["environment"]["runs_dir"] == "<redacted>"
-    assert config["environment"]["clawperator_cmd"] == ["clawperator"]
-    assert config["environment"]["runtime_clawperator_cmd"] == ["node", str(run_eval.REPO_ROOT / "apps/node/dist/cli/index.js")]
+    assert config["environment"]["androperator_cmd"] == ["androperator"]
+    assert config["environment"]["runtime_androperator_cmd"] == ["node", str(run_eval.REPO_ROOT / "apps/node/dist/cli/index.js")]
     assert config["environment"]["cwd"] == "<redacted>"
     assert config["environment"]["runs_dir"] == "<redacted>"
 
@@ -174,7 +174,7 @@ def test_write_preflight_failure_run_persists_doctor_details(monkeypatch, tmp_pa
     preflight_details = {
         "doctor_report": {
             "deviceId": "emulator-5554",
-            "operatorPackage": "com.clawperator.operator.dev",
+            "operatorPackage": "com.androperator.operator.dev",
         },
         "doctor_failure": {
             "code": "VERSION_INCOMPATIBLE",
@@ -223,8 +223,8 @@ def test_write_preflight_failure_run_persists_full_doctor_report_in_full_repo(mo
     preflight_details = {
         "doctor_report": {
             "deviceId": "emulator-5554",
-            "operatorPackage": "com.clawperator.operator.dev",
-            "nextActions": ["Run `clawperator doctor`"],
+            "operatorPackage": "com.androperator.operator.dev",
+            "nextActions": ["Run `androperator doctor`"],
         },
         "doctor_failure": {
             "code": "VERSION_INCOMPATIBLE",
@@ -250,7 +250,7 @@ def test_write_preflight_failure_run_persists_full_doctor_report_in_full_repo(mo
     config = json.loads((run_dir / "config.json").read_text(encoding="utf-8"))
 
     assert result["preflight"]["doctor_report"]["deviceId"] == "emulator-5554"
-    assert result["preflight"]["doctor_report"]["nextActions"] == ["Run `clawperator doctor`"]
+    assert result["preflight"]["doctor_report"]["nextActions"] == ["Run `androperator doctor`"]
     assert config["preflight"]["doctor_failure"]["evidence"]["cliVersion"] == "0.5.3"
 
 
@@ -258,16 +258,16 @@ def test_load_replay_runtime_prefers_recorded_context():
     config = {
         "runtime_target": "local-dev",
         "environment": {
-            "clawperator_cmd": ["clawperator"],
-            "runtime_clawperator_cmd": ["node", "/repo/apps/node/dist/cli/index.js"],
-            "operator_package": "com.clawperator.operator.dev",
+            "androperator_cmd": ["androperator"],
+            "runtime_androperator_cmd": ["node", "/repo/apps/node/dist/cli/index.js"],
+            "operator_package": "com.androperator.operator.dev",
         },
     }
 
-    clawperator_cmd, operator_package, runtime_target = run_eval._load_replay_runtime(config)
+    androperator_cmd, operator_package, runtime_target = run_eval._load_replay_runtime(config)
 
-    assert clawperator_cmd == ["node", "/repo/apps/node/dist/cli/index.js"]
-    assert operator_package == "com.clawperator.operator.dev"
+    assert androperator_cmd == ["node", "/repo/apps/node/dist/cli/index.js"]
+    assert operator_package == "com.androperator.operator.dev"
     assert runtime_target == "local-dev"
 
 
@@ -275,15 +275,15 @@ def test_load_replay_runtime_published_can_use_display_command():
     config = {
         "runtime_target": "published",
         "environment": {
-            "clawperator_cmd": ["/opt/homebrew/bin/clawperator"],
-            "operator_package": "com.clawperator.operator",
+            "androperator_cmd": ["/opt/homebrew/bin/androperator"],
+            "operator_package": "com.androperator.operator",
         },
     }
 
-    clawperator_cmd, operator_package, runtime_target = run_eval._load_replay_runtime(config)
+    androperator_cmd, operator_package, runtime_target = run_eval._load_replay_runtime(config)
 
-    assert clawperator_cmd == ["/opt/homebrew/bin/clawperator"]
-    assert operator_package == "com.clawperator.operator"
+    assert androperator_cmd == ["/opt/homebrew/bin/androperator"]
+    assert operator_package == "com.androperator.operator"
     assert runtime_target == "published"
 
 
@@ -342,8 +342,8 @@ def test_replay_cli_rejects_missing_recorded_device_serial(tmp_path):
             {
                 "runtime_target": "published",
                 "environment": {
-                    "clawperator_cmd": ["/opt/homebrew/bin/clawperator"],
-                    "operator_package": "com.clawperator.operator",
+                    "androperator_cmd": ["/opt/homebrew/bin/androperator"],
+                    "operator_package": "com.androperator.operator",
                 },
             },
             indent=2,
@@ -358,9 +358,9 @@ def test_replay_cli_rejects_missing_recorded_device_serial(tmp_path):
 
 def test_extract_answer_candidate_prefers_normalized_stream_output():
     raw_line = (
-        '{"role":"assistant","content":[{"type":"text","text":"CLAWPERATOR_EVAL_ANSWER: 15"}]}\n'
+        '{"role":"assistant","content":[{"type":"text","text":"ANDROPERATOR_EVAL_ANSWER: 15"}]}\n'
     )
-    normalized_line = "CLAWPERATOR_EVAL_ANSWER: 15\n"
+    normalized_line = "ANDROPERATOR_EVAL_ANSWER: 15\n"
 
     answer = runner._extract_answer_candidate(raw_line, normalized_line)
 
@@ -369,9 +369,9 @@ def test_extract_answer_candidate_prefers_normalized_stream_output():
 
 def test_extract_answer_candidate_handles_gemini_wrapped_marker():
     raw_line = (
-        '{"type":"message","role":"assistant","content":"CLAWPERATOR_\\nEVAL_ANSWER: 15","delta":true}\n'
+        '{"type":"message","role":"assistant","content":"ANDROPERATOR_\\nEVAL_ANSWER: 15","delta":true}\n'
     )
-    normalized_line = "CLAWPERATOR_\nEVAL_ANSWER: 15\n"
+    normalized_line = "ANDROPERATOR_\nEVAL_ANSWER: 15\n"
 
     answer = runner._extract_answer_candidate(raw_line, normalized_line)
 
@@ -380,9 +380,9 @@ def test_extract_answer_candidate_handles_gemini_wrapped_marker():
 
 def test_extract_answer_candidate_handles_kimi_stream_json():
     raw_line = (
-        '{"role":"assistant","content":[{"type":"text","text":"CLAWPERATOR_EVAL_ANSWER: 15"}]}\n'
+        '{"role":"assistant","content":[{"type":"text","text":"ANDROPERATOR_EVAL_ANSWER: 15"}]}\n'
     )
-    normalized_line = "CLAWPERATOR_EVAL_ANSWER: 15\n"
+    normalized_line = "ANDROPERATOR_EVAL_ANSWER: 15\n"
 
     answer = runner._extract_answer_candidate(raw_line, normalized_line)
 
@@ -391,9 +391,9 @@ def test_extract_answer_candidate_handles_kimi_stream_json():
 
 def test_extract_answer_candidate_handles_codex_item_completed_json():
     raw_line = (
-        '{"type":"item.completed","item":{"type":"agent_message","text":"CLAWPERATOR_EVAL_ANSWER: 15"}}\n'
+        '{"type":"item.completed","item":{"type":"agent_message","text":"ANDROPERATOR_EVAL_ANSWER: 15"}}\n'
     )
-    normalized_line = "CLAWPERATOR_EVAL_ANSWER: 15\n"
+    normalized_line = "ANDROPERATOR_EVAL_ANSWER: 15\n"
 
     answer = runner._extract_answer_candidate(raw_line, normalized_line)
 
@@ -423,16 +423,16 @@ def _valid_discovery_artifact_json(
     handoff_target: str | None = None,
     include_classification: bool | None = None,
     existing_skill_status: str = "none",
-    runtime_command: str = "clawperator skills for-app com.android.settings",
-    authoring_command: str = "clawperator bundled-skills list",
+    runtime_command: str = "androperator skills for-app com.android.settings",
+    authoring_command: str = "androperator bundled-skills list",
     registry_field: str = "commands",
 ) -> str:
     if handoff_target is None:
         handoff_target = {
             "use_existing_skill": "none",
-            "proceed_to_recording": "clawperator-skill-author-by-recording",
+            "proceed_to_recording": "androperator-skill-author-by-recording",
             "iterate_discovery": "none",
-            "one_shot_direct_automation": "raw-clawperator",
+            "one_shot_direct_automation": "raw-androperator",
             "escalate_to_human": "human",
             "decline": "none",
         }[recommended_next_step]
@@ -462,16 +462,16 @@ def test_attach_skill_score_records_replay_error_without_raising(monkeypatch, tm
     run_dir = tmp_path / "run"
     run_dir.mkdir()
     (run_dir / "transcript.txt").write_text(
-        "CLAWPERATOR_SKILL_START\n"
+        "ANDROPERATOR_SKILL_START\n"
         + _skill_payload_json()
         + "\n"
-        "CLAWPERATOR_SKILL_END\n",
+        "ANDROPERATOR_SKILL_END\n",
         encoding="utf-8",
     )
     result = {"run_id": "run-1", "outcome": {"status": "pass"}}
     env = SimpleNamespace(
-        clawperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
     )
 
@@ -502,18 +502,18 @@ def test_attach_skill_score_requires_pack_a_route_evidence(monkeypatch, tmp_path
     run_dir = tmp_path / "run"
     run_dir.mkdir()
     (run_dir / "transcript.txt").write_text(
-        '{"type":"item.completed","item":{"type":"command_execution","command":"clawperator bundled-skills list"}}\n'
-        "Discovery route: clawperator-skill-author-by-agent-discovery -> clawperator-skill-author-by-recording\n"
-        "CLAWPERATOR_SKILL_START\n"
+        '{"type":"item.completed","item":{"type":"command_execution","command":"androperator bundled-skills list"}}\n'
+        "Discovery route: androperator-skill-author-by-agent-discovery -> androperator-skill-author-by-recording\n"
+        "ANDROPERATOR_SKILL_START\n"
         + _skill_payload_json()
         + "\n"
-        "CLAWPERATOR_SKILL_END\n",
+        "ANDROPERATOR_SKILL_END\n",
         encoding="utf-8",
     )
     result = {"run_id": "run-1", "outcome": {"status": "pass"}}
     env = SimpleNamespace(
-        clawperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
     )
 
@@ -538,8 +538,8 @@ def test_attach_skill_score_requires_pack_a_route_evidence(monkeypatch, tmp_path
         spec={
             "skill_generation": {
                 "replay_timeout_s": 60,
-                "required_authoring_front_door": "clawperator-skill-author-by-agent-discovery",
-                "required_proving_handoff": "clawperator-skill-author-by-recording",
+                "required_authoring_front_door": "androperator-skill-author-by-agent-discovery",
+                "required_proving_handoff": "androperator-skill-author-by-recording",
             }
         },
         skill_prompt_name="prompt-skill.md",
@@ -559,9 +559,9 @@ def test_attach_skill_score_requires_pack_a_route_evidence(monkeypatch, tmp_path
     assert (
         updated["skill_score"]["route_requirement_errors"]
         == [
-            "missing structured command evidence for runtime-skill discovery (`clawperator skills for-app/search/get`)",
-            "missing structured discovery artifact for required_authoring_front_door `clawperator-skill-author-by-agent-discovery`",
-            "missing structured discovery handoff for required_proving_handoff `clawperator-skill-author-by-recording`",
+            "missing structured command evidence for runtime-skill discovery (`androperator skills for-app/search/get`)",
+            "missing structured discovery artifact for required_authoring_front_door `androperator-skill-author-by-agent-discovery`",
+            "missing structured discovery handoff for required_proving_handoff `androperator-skill-author-by-recording`",
         ]
     )
 
@@ -573,23 +573,23 @@ def test_attach_skill_score_accepts_pack_a_route_evidence(monkeypatch, tmp_path)
         (
             '{"type":"item.completed","item":{"type":"command_execution","command":"node apps/node/dist/cli/index.js skills for-app com.android.settings"}}\n'
             '{"type":"item.completed","item":{"type":"command_execution","command":"node apps/node/dist/cli/index.js bundled-skills list --format json"}}\n'
-            "Using clawperator-skill-author-by-agent-discovery for bounded discovery\n"
+            "Using androperator-skill-author-by-agent-discovery for bounded discovery\n"
             + _valid_discovery_artifact_json(
                 runtime_command="node apps/node/dist/cli/index.js skills for-app com.android.settings",
                 authoring_command="node apps/node/dist/cli/index.js bundled-skills list --format json",
                 registry_field="queried_registry_paths",
             )
-            + "CLAWPERATOR_SKILL_START\n"
+            + "ANDROPERATOR_SKILL_START\n"
             + _skill_payload_json()
             + "\n"
-            + "CLAWPERATOR_SKILL_END\n"
+            + "ANDROPERATOR_SKILL_END\n"
         ),
         encoding="utf-8",
     )
     result = {"run_id": "run-1", "outcome": {"status": "pass"}}
     env = SimpleNamespace(
-        clawperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
     )
 
@@ -614,8 +614,8 @@ def test_attach_skill_score_accepts_pack_a_route_evidence(monkeypatch, tmp_path)
         spec={
             "skill_generation": {
                 "replay_timeout_s": 60,
-                "required_authoring_front_door": "clawperator-skill-author-by-agent-discovery",
-                "required_proving_handoff": "clawperator-skill-author-by-recording",
+                "required_authoring_front_door": "androperator-skill-author-by-agent-discovery",
+                "required_proving_handoff": "androperator-skill-author-by-recording",
             }
         },
         skill_prompt_name="prompt-skill.md",
@@ -644,22 +644,22 @@ def test_attach_skill_score_accepts_equivalent_registry_launchers(monkeypatch, t
         (
             '{"type":"item.completed","item":{"type":"command_execution","command":"node apps/node/dist/cli/index.js skills for-app com.android.settings"}}\n'
             '{"type":"item.completed","item":{"type":"command_execution","command":"node apps/node/dist/cli/index.js bundled-skills list --format json"}}\n'
-            "Using clawperator-skill-author-by-agent-discovery for bounded discovery\n"
+            "Using androperator-skill-author-by-agent-discovery for bounded discovery\n"
             + _valid_discovery_artifact_json(
-                runtime_command="clawperator skills for-app com.android.settings",
-                authoring_command="clawperator bundled-skills list",
+                runtime_command="androperator skills for-app com.android.settings",
+                authoring_command="androperator bundled-skills list",
             )
-            + "CLAWPERATOR_SKILL_START\n"
+            + "ANDROPERATOR_SKILL_START\n"
             + _skill_payload_json()
             + "\n"
-            + "CLAWPERATOR_SKILL_END\n"
+            + "ANDROPERATOR_SKILL_END\n"
         ),
         encoding="utf-8",
     )
     result = {"run_id": "run-1", "outcome": {"status": "pass"}}
     env = SimpleNamespace(
-        clawperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
     )
 
@@ -684,8 +684,8 @@ def test_attach_skill_score_accepts_equivalent_registry_launchers(monkeypatch, t
         spec={
             "skill_generation": {
                 "replay_timeout_s": 60,
-                "required_authoring_front_door": "clawperator-skill-author-by-agent-discovery",
-                "required_proving_handoff": "clawperator-skill-author-by-recording",
+                "required_authoring_front_door": "androperator-skill-author-by-agent-discovery",
+                "required_proving_handoff": "androperator-skill-author-by-recording",
                 "target_app_package": "com.android.settings",
             }
         },
@@ -704,19 +704,19 @@ def test_attach_skill_score_requires_explicit_front_door_signal(monkeypatch, tmp
     run_dir.mkdir()
     (run_dir / "transcript.txt").write_text(
         (
-            '{"type":"item.completed","item":{"type":"command_execution","command":"clawperator skills for-app com.android.settings"}}\n'
-            '{"type":"item.completed","item":{"type":"command_execution","command":"clawperator bundled-skills list"}}\n'
+            '{"type":"item.completed","item":{"type":"command_execution","command":"androperator skills for-app com.android.settings"}}\n'
+            '{"type":"item.completed","item":{"type":"command_execution","command":"androperator bundled-skills list"}}\n'
             + _valid_discovery_artifact_json()
-            + "CLAWPERATOR_SKILL_START\n"
+            + "ANDROPERATOR_SKILL_START\n"
             + _skill_payload_json()
-            + "\nCLAWPERATOR_SKILL_END\n"
+            + "\nANDROPERATOR_SKILL_END\n"
         ),
         encoding="utf-8",
     )
     result = {"run_id": "run-1", "outcome": {"status": "pass"}}
     env = SimpleNamespace(
-        clawperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
     )
     monkeypatch.setattr(
@@ -740,8 +740,8 @@ def test_attach_skill_score_requires_explicit_front_door_signal(monkeypatch, tmp
         spec={
             "skill_generation": {
                 "replay_timeout_s": 60,
-                "required_authoring_front_door": "clawperator-skill-author-by-agent-discovery",
-                "required_proving_handoff": "clawperator-skill-author-by-recording",
+                "required_authoring_front_door": "androperator-skill-author-by-agent-discovery",
+                "required_proving_handoff": "androperator-skill-author-by-recording",
                 "target_app_package": "com.android.settings",
             }
         },
@@ -753,7 +753,7 @@ def test_attach_skill_score_requires_explicit_front_door_signal(monkeypatch, tmp
     assert updated["skill_score"]["required_authoring_front_door_seen"] is False
     assert updated["skill_score"]["route_requirements_met"] is False
     assert (
-        "missing explicit transcript signal for required_authoring_front_door `clawperator-skill-author-by-agent-discovery`"
+        "missing explicit transcript signal for required_authoring_front_door `androperator-skill-author-by-agent-discovery`"
         in updated["skill_score"]["route_requirement_errors"]
     )
     assert updated["outcome"]["status"] == "fail"
@@ -764,22 +764,22 @@ def test_attach_skill_score_rejects_copied_registry_provenance(monkeypatch, tmp_
     run_dir.mkdir()
     (run_dir / "transcript.txt").write_text(
         (
-            '{"type":"item.completed","item":{"type":"command_execution","command":"clawperator skills for-app com.android.settings"}}\n'
-            '{"type":"item.completed","item":{"type":"command_execution","command":"clawperator bundled-skills list"}}\n'
+            '{"type":"item.completed","item":{"type":"command_execution","command":"androperator skills for-app com.android.settings"}}\n'
+            '{"type":"item.completed","item":{"type":"command_execution","command":"androperator bundled-skills list"}}\n'
             + _valid_discovery_artifact_json(
-                runtime_command='clawperator skills search --keyword "Netflix"',
-                authoring_command="clawperator bundled-skills list",
+                runtime_command='androperator skills search --keyword "Netflix"',
+                authoring_command="androperator bundled-skills list",
             )
-            + "CLAWPERATOR_SKILL_START\n"
+            + "ANDROPERATOR_SKILL_START\n"
             + _skill_payload_json()
-            + "\nCLAWPERATOR_SKILL_END\n"
+            + "\nANDROPERATOR_SKILL_END\n"
         ),
         encoding="utf-8",
     )
     result = {"run_id": "run-1", "outcome": {"status": "pass"}}
     env = SimpleNamespace(
-        clawperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
     )
     monkeypatch.setattr(
@@ -803,8 +803,8 @@ def test_attach_skill_score_rejects_copied_registry_provenance(monkeypatch, tmp_
         spec={
             "skill_generation": {
                 "replay_timeout_s": 60,
-                "required_authoring_front_door": "clawperator-skill-author-by-agent-discovery",
-                "required_proving_handoff": "clawperator-skill-author-by-recording",
+                "required_authoring_front_door": "androperator-skill-author-by-agent-discovery",
+                "required_proving_handoff": "androperator-skill-author-by-recording",
                 "target_app_package": "com.android.settings",
             }
         },
@@ -826,19 +826,19 @@ def test_attach_skill_score_rejects_wrong_package_metadata(monkeypatch, tmp_path
     run_dir.mkdir()
     (run_dir / "transcript.txt").write_text(
         (
-            '{"type":"item.completed","item":{"type":"command_execution","command":"clawperator skills for-app com.android.settings"}}\n'
-            '{"type":"item.completed","item":{"type":"command_execution","command":"clawperator bundled-skills list"}}\n'
+            '{"type":"item.completed","item":{"type":"command_execution","command":"androperator skills for-app com.android.settings"}}\n'
+            '{"type":"item.completed","item":{"type":"command_execution","command":"androperator bundled-skills list"}}\n'
             + _valid_discovery_artifact_json(package_id="com.example.settings")
-            + "CLAWPERATOR_SKILL_START\n"
+            + "ANDROPERATOR_SKILL_START\n"
             + _skill_payload_json()
-            + "\nCLAWPERATOR_SKILL_END\n"
+            + "\nANDROPERATOR_SKILL_END\n"
         ),
         encoding="utf-8",
     )
     result = {"run_id": "run-1", "outcome": {"status": "pass"}}
     env = SimpleNamespace(
-        clawperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
     )
     monkeypatch.setattr(
@@ -862,8 +862,8 @@ def test_attach_skill_score_rejects_wrong_package_metadata(monkeypatch, tmp_path
         spec={
             "skill_generation": {
                 "replay_timeout_s": 60,
-                "required_authoring_front_door": "clawperator-skill-author-by-agent-discovery",
-                "required_proving_handoff": "clawperator-skill-author-by-recording",
+                "required_authoring_front_door": "androperator-skill-author-by-agent-discovery",
+                "required_proving_handoff": "androperator-skill-author-by-recording",
                 "target_app_package": "com.android.settings",
             }
         },
@@ -882,19 +882,19 @@ def test_attach_skill_score_requires_skill_classification_for_recording_handoff(
     run_dir.mkdir()
     (run_dir / "transcript.txt").write_text(
         (
-            '{"type":"item.completed","item":{"type":"command_execution","command":"clawperator skills for-app com.android.settings"}}\n'
-            '{"type":"item.completed","item":{"type":"command_execution","command":"clawperator bundled-skills list"}}\n'
+            '{"type":"item.completed","item":{"type":"command_execution","command":"androperator skills for-app com.android.settings"}}\n'
+            '{"type":"item.completed","item":{"type":"command_execution","command":"androperator bundled-skills list"}}\n'
             + _valid_discovery_artifact_json(include_classification=False)
-            + "CLAWPERATOR_SKILL_START\n"
+            + "ANDROPERATOR_SKILL_START\n"
             + _skill_payload_json()
-            + "\nCLAWPERATOR_SKILL_END\n"
+            + "\nANDROPERATOR_SKILL_END\n"
         ),
         encoding="utf-8",
     )
     result = {"run_id": "run-1", "outcome": {"status": "pass"}}
     env = SimpleNamespace(
-        clawperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
     )
     monkeypatch.setattr(
@@ -918,8 +918,8 @@ def test_attach_skill_score_requires_skill_classification_for_recording_handoff(
         spec={
             "skill_generation": {
                 "replay_timeout_s": 60,
-                "required_authoring_front_door": "clawperator-skill-author-by-agent-discovery",
-                "required_proving_handoff": "clawperator-skill-author-by-recording",
+                "required_authoring_front_door": "androperator-skill-author-by-agent-discovery",
+                "required_proving_handoff": "androperator-skill-author-by-recording",
                 "target_app_package": "com.android.settings",
             }
         },
@@ -942,7 +942,7 @@ def test_attach_skill_score_requires_skill_classification_for_recording_handoff(
         (
             "one_shot_direct_automation",
             "none",
-            "discovery artifact handoff_target must be `raw-clawperator` when recommended_next_step is `one_shot_direct_automation`",
+            "discovery artifact handoff_target must be `raw-androperator` when recommended_next_step is `one_shot_direct_automation`",
         ),
         (
             "escalate_to_human",
@@ -951,7 +951,7 @@ def test_attach_skill_score_requires_skill_classification_for_recording_handoff(
         ),
         (
             "iterate_discovery",
-            "raw-clawperator",
+            "raw-androperator",
             "discovery artifact handoff_target must be `none` when recommended_next_step is `iterate_discovery`",
         ),
     ],
@@ -967,24 +967,24 @@ def test_attach_skill_score_rejects_wrong_handoff_for_non_recording_routes(
     run_dir.mkdir()
     (run_dir / "transcript.txt").write_text(
         (
-            '{"type":"item.completed","item":{"type":"command_execution","command":"clawperator skills for-app com.android.settings"}}\n'
-            '{"type":"item.completed","item":{"type":"command_execution","command":"clawperator bundled-skills list"}}\n'
-            "Using clawperator-skill-author-by-agent-discovery for bounded discovery\n"
+            '{"type":"item.completed","item":{"type":"command_execution","command":"androperator skills for-app com.android.settings"}}\n'
+            '{"type":"item.completed","item":{"type":"command_execution","command":"androperator bundled-skills list"}}\n'
+            "Using androperator-skill-author-by-agent-discovery for bounded discovery\n"
             + _valid_discovery_artifact_json(
                 recommended_next_step=recommended_next_step,
                 handoff_target=handoff_target,
                 include_classification=False,
             )
-            + "CLAWPERATOR_SKILL_START\n"
+            + "ANDROPERATOR_SKILL_START\n"
             + _skill_payload_json()
-            + "\nCLAWPERATOR_SKILL_END\n"
+            + "\nANDROPERATOR_SKILL_END\n"
         ),
         encoding="utf-8",
     )
     result = {"run_id": "run-1", "outcome": {"status": "pass"}}
     env = SimpleNamespace(
-        clawperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
     )
     monkeypatch.setattr(
@@ -1008,8 +1008,8 @@ def test_attach_skill_score_rejects_wrong_handoff_for_non_recording_routes(
         spec={
             "skill_generation": {
                 "replay_timeout_s": 60,
-                "required_authoring_front_door": "clawperator-skill-author-by-agent-discovery",
-                "required_proving_handoff": "clawperator-skill-author-by-recording",
+                "required_authoring_front_door": "androperator-skill-author-by-agent-discovery",
+                "required_proving_handoff": "androperator-skill-author-by-recording",
                 "target_app_package": "com.android.settings",
             }
         },
@@ -1028,19 +1028,19 @@ def test_attach_skill_score_requires_runtime_discovery_before_authoring(monkeypa
     run_dir.mkdir()
     (run_dir / "transcript.txt").write_text(
         (
-            '{"type":"item.completed","item":{"type":"command_execution","command":"clawperator bundled-skills list"}}\n'
-            '{"type":"item.completed","item":{"type":"command_execution","command":"clawperator skills for-app com.android.settings"}}\n'
+            '{"type":"item.completed","item":{"type":"command_execution","command":"androperator bundled-skills list"}}\n'
+            '{"type":"item.completed","item":{"type":"command_execution","command":"androperator skills for-app com.android.settings"}}\n'
             + _valid_discovery_artifact_json()
-            + "CLAWPERATOR_SKILL_START\n"
+            + "ANDROPERATOR_SKILL_START\n"
             + _skill_payload_json()
-            + "\nCLAWPERATOR_SKILL_END\n"
+            + "\nANDROPERATOR_SKILL_END\n"
         ),
         encoding="utf-8",
     )
     result = {"run_id": "run-1", "outcome": {"status": "pass"}}
     env = SimpleNamespace(
-        clawperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["node", "/repo/apps/node/dist/cli/index.js"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
     )
     monkeypatch.setattr(
@@ -1064,8 +1064,8 @@ def test_attach_skill_score_requires_runtime_discovery_before_authoring(monkeypa
         spec={
             "skill_generation": {
                 "replay_timeout_s": 60,
-                "required_authoring_front_door": "clawperator-skill-author-by-agent-discovery",
-                "required_proving_handoff": "clawperator-skill-author-by-recording",
+                "required_authoring_front_door": "androperator-skill-author-by-agent-discovery",
+                "required_proving_handoff": "androperator-skill-author-by-recording",
                 "target_app_package": "com.android.settings",
             }
         },
@@ -1076,5 +1076,5 @@ def test_attach_skill_score_requires_runtime_discovery_before_authoring(monkeypa
     assert updated["skill_score"]["runtime_skill_discovery_seen"] is True
     assert updated["skill_score"]["runtime_skill_discovery_before_authoring"] is False
     assert updated["skill_score"]["route_requirements_met"] is False
-    assert "runtime-skill discovery must appear before `clawperator bundled-skills list`" in updated["skill_score"]["route_requirement_errors"]
+    assert "runtime-skill discovery must appear before `androperator bundled-skills list`" in updated["skill_score"]["route_requirement_errors"]
     assert updated["outcome"]["status"] == "fail"

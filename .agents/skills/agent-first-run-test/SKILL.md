@@ -1,15 +1,15 @@
 ---
 name: agent-first-run-test
-description: Explore an unfamiliar Android app with branch-local Clawperator and record evidence from a first-run test.
+description: Explore an unfamiliar Android app with branch-local Androperator and record evidence from a first-run test.
 ---
 
 # Agent First Run Test
 
-Use this skill when you need to drive an Android app that has no prewritten skill yet, prove that Clawperator can work in a blind install or first-run scenario, and leave behind markdown artifacts that explain what happened.
+Use this skill when you need to drive an Android app that has no prewritten skill yet, prove that Androperator can work in a blind install or first-run scenario, and leave behind markdown artifacts that explain what happened.
 
 ## Goal
 
-Show how an agent can use Clawperator to automate an unfamiliar Android app with no prior script or skill.
+Show how an agent can use Androperator to automate an unfamiliar Android app with no prior script or skill.
 
 The agent should:
 - inspect the live UI tree
@@ -28,7 +28,7 @@ Before trusting any contract detail, verify the current repo source and runtime 
 - `apps/node/src/contracts/result.ts`
 - current CLI help from the branch-local build
 
-Do not rely on stale task notes or the global `clawperator` binary.
+Do not rely on stale task notes or the global `androperator` binary.
 
 ## Working Rules
 

@@ -2,13 +2,13 @@
 
 An orchestrating agent can use [Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)
 to propose a bounded decision from the current Android observation. The agent owns the task and recovery policy; local skill
-code validates the proposal; Clawperator executes the chosen action and returns
-evidence. Jev is an optional dependency of that skill, not of the Clawperator
+code validates the proposal; Androperator executes the chosen action and returns
+evidence. Jev is an optional dependency of that skill, not of the Androperator
 CLI, Node API, or Android Operator.
 
 Use this pattern when a workflow benefits from repeated choices among a small
 set of observed actions. The integration belongs in the skill's orchestration
-code. Clawperator does not provide a built-in Jev command or configure a provider
+code. Androperator does not provide a built-in Jev command or configure a provider
 for the agent. See [Authoring](authoring.md) for the skill contract and
 [Host Agent Orientation](../host-agents.md) for selecting the CLI, device and
 Operator before execution.
@@ -25,7 +25,7 @@ Operator before execution.
    explicit way to return control to the orchestrating agent when none fits.
 4. Validate the returned choice against the current candidate set and the skill's
    policy. Jev must not supply arbitrary commands, coordinates, or selectors.
-5. Execute one validated action through Clawperator with the selected device and
+5. Execute one validated action through Androperator with the selected device and
    Operator, observe the result, and decide whether to continue, recover, or stop.
 
 Copy requested values from verified observation evidence. A model choosing a row
@@ -40,7 +40,7 @@ POST to `https://api.typesafe.ai/v1/systemone` with JSON `model`, `state`, and
 `criteria` map. The response includes `model`, `answers`, and token `usage`;
 a Choice answer contains `choice`, `probabilities`, and `confidence`.
 
-This synthetic request illustrates a provider call, not a Clawperator execution:
+This synthetic request illustrates a provider call, not an Androperator execution:
 
 ```json
 {
@@ -66,7 +66,7 @@ Pin and record the model used by a deployed skill. As checked on 2026-09-20,
 [the model documentation](https://docs.typesafe.ai/models) lists `jev-1.13.0`
 as text-only, accepting strings and JSON text structures rather than images,
 audio, or video. The example above uses that explicit version; it is not a
-Clawperator default. Recheck model availability and capabilities before changing
+Androperator default. Recheck model availability and capabilities before changing
 the integration. If another model interprets a screenshot, attribute the resulting
 text to that model rather than claiming Jev saw the image.
 
@@ -79,7 +79,7 @@ the answer distribution; it is not a guarantee of safe or successful device cont
 ## Credentials and data selection
 
 Choose an explicit credential variable for the integration. The Settings example
-skills use `JEV_API_KEY`; Clawperator itself does not consume this variable or
+skills use `JEV_API_KEY`; Androperator itself does not consume this variable or
 need it for other skills. Supply the key through the host environment and forward
 only required variables across agent and tool-process boundaries. Keep keys out
 of prompts, process arguments, retained request bodies and diagnostic dumps.
@@ -124,7 +124,7 @@ successes in isolated local artifacts, and sanitize evidence before sharing it.
 
 The [Codex-only Settings skill](https://github.com/clawperator/clawperator-skills/tree/main/skills/com.android.settings.get-version-details-codex)
 and [Codex with Jev Settings skill](https://github.com/clawperator/clawperator-skills/tree/main/skills/com.android.settings.get-version-details-codex-with-jev)
-provide concrete implementations. Their instructions own setup, app-specific
+are historical reference implementations from the former Clawperator catalog; they have not yet been ported to Androperator. Bundled examples are planned separately. Their instructions own setup, app-specific
 candidates, limits and terminal verification. Those choices are examples, not
 requirements for every Jev integration. See [Development workflow](development.md)
 for skill validation and iteration.

@@ -21,7 +21,7 @@ def _write_basic_run(tmp_path: Path, transcript: str) -> Path:
             "environment": {
                 "device_serial": "device-123",
                 "ground_truth_android_version": "15",
-                "operator_package": "com.clawperator.operator.dev",
+                "operator_package": "com.androperator.operator.dev",
             },
         },
     )
@@ -40,12 +40,12 @@ def _write_basic_run(tmp_path: Path, transcript: str) -> Path:
 
 
 def test_run_replay_skips_when_no_skill_emitted(tmp_path):
-    run_dir = _write_basic_run(tmp_path, "CLAWPERATOR_EVAL_ANSWER: 15\n")
+    run_dir = _write_basic_run(tmp_path, "ANDROPERATOR_EVAL_ANSWER: 15\n")
 
     skill_score = run_replay(
         run_dir=run_dir,
-        clawperator_cmd=["clawperator"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["androperator"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
         timeout_s=1,
     )
@@ -58,7 +58,7 @@ def test_run_replay_skips_when_no_skill_emitted(tmp_path):
 def test_run_replay_passes_with_materialized_skill(monkeypatch, tmp_path):
     transcript = (
         "before\n"
-        "CLAWPERATOR_SKILL_START\n"
+        "ANDROPERATOR_SKILL_START\n"
         "{"
         "\"id\":\"com.example.android-version\","
         "\"applicationId\":\"com.example\","
@@ -70,23 +70,23 @@ def test_run_replay_passes_with_materialized_skill(monkeypatch, tmp_path):
         "\"artifacts\":[],"
         "\"skillMarkdown\":\"# Generated skill\\n\","
         "\"scriptContents\":{"
-        "\"skills/com.example.android-version/scripts/run.js\":\"console.log('CLAWPERATOR_EVAL_ANSWER: 15')\\n\""
+        "\"skills/com.example.android-version/scripts/run.js\":\"console.log('ANDROPERATOR_EVAL_ANSWER: 15')\\n\""
         "}"
         "}"
-        "\nCLAWPERATOR_SKILL_END\n"
+        "\nANDROPERATOR_SKILL_END\n"
         "after\n"
     )
     run_dir = _write_basic_run(tmp_path, transcript)
 
     def fake_run(cmd, check, capture_output, text, env, timeout, cwd):
-        assert cmd[:3] == ["clawperator", "skills", "run"]
+        assert cmd[:3] == ["androperator", "skills", "run"]
         assert "--output" not in cmd
         assert "--json" not in cmd
         assert "SECRET_TOKEN" not in env
-        assert env["CLAWPERATOR_SKILLS_REGISTRY"].endswith("skills/skills-registry.json")
+        assert env["ANDROPERATOR_SKILLS_REGISTRY"].endswith("skills/skills-registry.json")
         payload = {
             "skillId": "com.example.android-version",
-            "output": "CLAWPERATOR_EVAL_ANSWER: 15\n",
+            "output": "ANDROPERATOR_EVAL_ANSWER: 15\n",
             "exitCode": 0,
             "durationMs": 12,
         }
@@ -96,8 +96,8 @@ def test_run_replay_passes_with_materialized_skill(monkeypatch, tmp_path):
 
     skill_score = run_replay(
         run_dir=run_dir,
-        clawperator_cmd=["clawperator"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["androperator"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
         timeout_s=1,
     )
@@ -113,7 +113,7 @@ def test_run_replay_passes_with_materialized_skill(monkeypatch, tmp_path):
 def test_run_replay_prefers_post_run_artifact_answer(monkeypatch, tmp_path):
     transcript = (
         "before\n"
-        "CLAWPERATOR_SKILL_START\n"
+        "ANDROPERATOR_SKILL_START\n"
         "{"
         "\"id\":\"com.example.android-version\","
         "\"applicationId\":\"com.example\","
@@ -125,13 +125,13 @@ def test_run_replay_prefers_post_run_artifact_answer(monkeypatch, tmp_path):
         "\"artifacts\":[\"skills/com.example.android-version/android-version.txt\"],"
         "\"skillMarkdown\":\"# Generated skill\\n\","
         "\"scriptContents\":{"
-        "\"skills/com.example.android-version/scripts/run.js\":\"console.log('CLAWPERATOR_EVAL_ANSWER: 15')\\n\""
+        "\"skills/com.example.android-version/scripts/run.js\":\"console.log('ANDROPERATOR_EVAL_ANSWER: 15')\\n\""
         "},"
         "\"artifactContents\":{"
         "\"skills/com.example.android-version/android-version.txt\":\"15\""
         "}"
         "}"
-        "\nCLAWPERATOR_SKILL_END\n"
+        "\nANDROPERATOR_SKILL_END\n"
         "after\n"
     )
     run_dir = _write_basic_run(tmp_path, transcript)
@@ -141,7 +141,7 @@ def test_run_replay_prefers_post_run_artifact_answer(monkeypatch, tmp_path):
         artifact_path.write_text("15", encoding="utf-8")
         payload = {
             "skillId": "com.example.android-version",
-            "output": "CLAWPERATOR_EVAL_ANSWER: 5\n",
+            "output": "ANDROPERATOR_EVAL_ANSWER: 5\n",
             "exitCode": 0,
             "durationMs": 12,
         }
@@ -151,8 +151,8 @@ def test_run_replay_prefers_post_run_artifact_answer(monkeypatch, tmp_path):
 
     skill_score = run_replay(
         run_dir=run_dir,
-        clawperator_cmd=["clawperator"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["androperator"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
         timeout_s=1,
     )
@@ -165,7 +165,7 @@ def test_run_replay_prefers_post_run_artifact_answer(monkeypatch, tmp_path):
 def test_run_replay_does_not_pass_from_seeded_artifact_when_skill_fails(monkeypatch, tmp_path):
     transcript = (
         "before\n"
-        "CLAWPERATOR_SKILL_START\n"
+        "ANDROPERATOR_SKILL_START\n"
         "{"
         "\"id\":\"com.example.android-version\","
         "\"applicationId\":\"com.example\","
@@ -183,7 +183,7 @@ def test_run_replay_does_not_pass_from_seeded_artifact_when_skill_fails(monkeypa
         "\"skills/com.example.android-version/android-version.txt\":\"15\""
         "}"
         "}"
-        "\nCLAWPERATOR_SKILL_END\n"
+        "\nANDROPERATOR_SKILL_END\n"
         "after\n"
     )
     run_dir = _write_basic_run(tmp_path, transcript)
@@ -201,8 +201,8 @@ def test_run_replay_does_not_pass_from_seeded_artifact_when_skill_fails(monkeypa
 
     skill_score = run_replay(
         run_dir=run_dir,
-        clawperator_cmd=["clawperator"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["androperator"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
         timeout_s=1,
     )
@@ -215,7 +215,7 @@ def test_run_replay_does_not_pass_from_seeded_artifact_when_skill_fails(monkeypa
 def test_run_replay_clears_answer_fields_when_process_exits_non_zero(monkeypatch, tmp_path):
     transcript = (
         "before\n"
-        "CLAWPERATOR_SKILL_START\n"
+        "ANDROPERATOR_SKILL_START\n"
         "{"
         "\"id\":\"com.example.android-version\","
         "\"applicationId\":\"com.example\","
@@ -227,10 +227,10 @@ def test_run_replay_clears_answer_fields_when_process_exits_non_zero(monkeypatch
         "\"artifacts\":[],"
         "\"skillMarkdown\":\"# Generated skill\\n\","
         "\"scriptContents\":{"
-        "\"skills/com.example.android-version/scripts/run.js\":\"console.log('CLAWPERATOR_EVAL_ANSWER: 15'); process.exit(1)\\n\""
+        "\"skills/com.example.android-version/scripts/run.js\":\"console.log('ANDROPERATOR_EVAL_ANSWER: 15'); process.exit(1)\\n\""
         "}"
         "}"
-        "\nCLAWPERATOR_SKILL_END\n"
+        "\nANDROPERATOR_SKILL_END\n"
         "after\n"
     )
     run_dir = _write_basic_run(tmp_path, transcript)
@@ -238,7 +238,7 @@ def test_run_replay_clears_answer_fields_when_process_exits_non_zero(monkeypatch
     def fake_run(cmd, check, capture_output, text, env, timeout, cwd):
         payload = {
             "skillId": "com.example.android-version",
-            "output": "CLAWPERATOR_EVAL_ANSWER: 15\n",
+            "output": "ANDROPERATOR_EVAL_ANSWER: 15\n",
             "exitCode": 1,
             "durationMs": 12,
         }
@@ -248,8 +248,8 @@ def test_run_replay_clears_answer_fields_when_process_exits_non_zero(monkeypatch
 
     skill_score = run_replay(
         run_dir=run_dir,
-        clawperator_cmd=["clawperator"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["androperator"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
         timeout_s=1,
     )
@@ -262,7 +262,7 @@ def test_run_replay_clears_answer_fields_when_process_exits_non_zero(monkeypatch
 def test_run_replay_skips_binary_artifact_and_falls_back_to_stdout(monkeypatch, tmp_path):
     transcript = (
         "before\n"
-        "CLAWPERATOR_SKILL_START\n"
+        "ANDROPERATOR_SKILL_START\n"
         "{"
         "\"id\":\"com.example.android-version\","
         "\"applicationId\":\"com.example\","
@@ -274,13 +274,13 @@ def test_run_replay_skips_binary_artifact_and_falls_back_to_stdout(monkeypatch, 
         "\"artifacts\":[\"skills/com.example.android-version/output.bin\"],"
         "\"skillMarkdown\":\"# Generated skill\\n\","
         "\"scriptContents\":{"
-        "\"skills/com.example.android-version/scripts/run.js\":\"console.log('CLAWPERATOR_EVAL_ANSWER: 15')\\n\""
+        "\"skills/com.example.android-version/scripts/run.js\":\"console.log('ANDROPERATOR_EVAL_ANSWER: 15')\\n\""
         "},"
         "\"artifactContents\":{"
         "\"skills/com.example.android-version/output.bin\":\"seed\""
         "}"
         "}"
-        "\nCLAWPERATOR_SKILL_END\n"
+        "\nANDROPERATOR_SKILL_END\n"
         "after\n"
     )
     run_dir = _write_basic_run(tmp_path, transcript)
@@ -290,7 +290,7 @@ def test_run_replay_skips_binary_artifact_and_falls_back_to_stdout(monkeypatch, 
         artifact_path.write_bytes(b"\x89PNG\r\n\x1a\n")
         payload = {
             "skillId": "com.example.android-version",
-            "output": "CLAWPERATOR_EVAL_ANSWER: 15\n",
+            "output": "ANDROPERATOR_EVAL_ANSWER: 15\n",
             "exitCode": 0,
             "durationMs": 12,
         }
@@ -300,8 +300,8 @@ def test_run_replay_skips_binary_artifact_and_falls_back_to_stdout(monkeypatch, 
 
     skill_score = run_replay(
         run_dir=run_dir,
-        clawperator_cmd=["clawperator"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["androperator"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
         timeout_s=1,
     )
@@ -315,7 +315,7 @@ def test_extract_skill_output_parses_single_line_json_before_fallback():
         {
             "durationMs": 999,
             "exitCode": 7,
-            "output": "CLAWPERATOR_EVAL_ANSWER: 15\n",
+            "output": "ANDROPERATOR_EVAL_ANSWER: 15\n",
         }
     )
 
@@ -333,22 +333,22 @@ def test_extract_skill_output_rejects_arbitrary_single_line_text():
     assert _extract_skill_output(output) is None
 
 
-def test_build_replay_env_sets_clawperator_bin_for_absolute_binary(tmp_path):
+def test_build_replay_env_sets_androperator_bin_for_absolute_binary(tmp_path):
     registry_path = tmp_path / "skills" / "skills-registry.json"
-    env = _build_replay_env(registry_path, ["/opt/homebrew/bin/clawperator"])
+    env = _build_replay_env(registry_path, ["/opt/homebrew/bin/androperator"])
 
-    assert env["CLAWPERATOR_BIN"] == "/opt/homebrew/bin/clawperator"
+    assert env["ANDROPERATOR_BIN"] == "/opt/homebrew/bin/androperator"
 
 
-def test_build_replay_env_sets_clawperator_bin_for_multipart_command(tmp_path):
+def test_build_replay_env_sets_androperator_bin_for_multipart_command(tmp_path):
     registry_path = tmp_path / "skills" / "skills-registry.json"
     env = _build_replay_env(
         registry_path,
         ["node", "/repo/apps/node/dist/cli/index.js"],
     )
 
-    wrapper_path = Path(env["CLAWPERATOR_BIN"])
-    assert wrapper_path == registry_path.parent / ".clawperator-bin-replay-wrapper.sh"
+    wrapper_path = Path(env["ANDROPERATOR_BIN"])
+    assert wrapper_path == registry_path.parent / ".androperator-bin-replay-wrapper.sh"
     assert wrapper_path.read_text(encoding="utf-8") == (
         "#!/bin/sh\n"
         "exec node /repo/apps/node/dist/cli/index.js \"$@\"\n"
@@ -383,7 +383,7 @@ def test_materialize_skill_package_writes_skill_json_with_registry_shape_only(tm
 def test_run_replay_rejects_path_traversal_in_skill_materialization(tmp_path):
     transcript = (
         "before\n"
-        "CLAWPERATOR_SKILL_START\n"
+        "ANDROPERATOR_SKILL_START\n"
         "{"
         "\"id\":\"com.example.android-version\","
         "\"applicationId\":\"com.example\","
@@ -395,18 +395,18 @@ def test_run_replay_rejects_path_traversal_in_skill_materialization(tmp_path):
         "\"artifacts\":[],"
         "\"skillMarkdown\":\"# Generated skill\\n\","
         "\"scriptContents\":{"
-        "\"skills/com.example.android-version/scripts/run.js\":\"console.log('CLAWPERATOR_EVAL_ANSWER: 15')\\n\""
+        "\"skills/com.example.android-version/scripts/run.js\":\"console.log('ANDROPERATOR_EVAL_ANSWER: 15')\\n\""
         "}"
         "}"
-        "\nCLAWPERATOR_SKILL_END\n"
+        "\nANDROPERATOR_SKILL_END\n"
         "after\n"
     )
     run_dir = _write_basic_run(tmp_path, transcript)
 
     skill_score = run_replay(
         run_dir=run_dir,
-        clawperator_cmd=["clawperator"],
-        operator_package="com.clawperator.operator.dev",
+        androperator_cmd=["androperator"],
+        operator_package="com.androperator.operator.dev",
         device_serial="device-123",
         timeout_s=1,
     )

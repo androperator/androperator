@@ -8,19 +8,19 @@ Reviewed range: `0c3ce93b9cac5d48635677f77f50b431d4231eca^..1f1943b75dda84273be4
 
 This review focused on whether the install compaction work actually moved
 post-bootstrap install ownership out of
-`sites/landing-clawperator/public/install.sh` and into the Node CLI, while keeping
+`sites/androperator-public/install.sh` and into the Node CLI, while keeping
 installer reliability and validation coverage intact.
 
 Surfaces inspected:
 
-- `sites/landing-clawperator/public/install.sh`
+- `sites/androperator-public/install.sh`
 - `validation/install/`
 - `apps/node/src/cli/commands/install.ts`
 - `apps/node/src/cli/commands/operatorRemediate.ts`
 - `apps/node/src/domain/host/hostSetup.ts`
 - `apps/node/src/cli/registry.ts`
 - `apps/node/src/test/unit/*install*`
-- `apps/node/bundled-skills/clawperator-upgrade/`
+- `apps/node/bundled-skills/androperator-upgrade/`
 - authored docs changed under `docs/`
 - task pack files under `tasks/install/compact/`
 
@@ -36,23 +36,23 @@ reduced install shell harnesses.
 Live validation after release:
 
 ```bash
-npm install -g clawperator@latest
-clawperator install
-clawperator doctor --json
-clawperator doctor --json --device <physical_device>
-clawperator doctor --json --device emulator-5554
-npm uninstall -g clawperator
-curl -fsSL https://clawperator.com/install.sh | bash
-clawperator doctor --json
-clawperator doctor --json --device <physical_device>
-clawperator doctor --json --device emulator-5554
+npm install -g androperator@latest
+androperator install
+androperator doctor --json
+androperator doctor --json --device <physical_device>
+androperator doctor --json --device emulator-5554
+npm uninstall -g androperator
+curl -fsSL https://androperator.com/install.sh | bash
+androperator doctor --json
+androperator doctor --json --device <physical_device>
+androperator doctor --json --device emulator-5554
 ```
 
-Result: passed. The global bundled `clawperator-upgrade` route upgraded a
+Result: passed. The global bundled `androperator-upgrade` route upgraded a
 `0.7.3` host to `0.7.4`, remediated both connected release-package Operator
 APKs to `0.7.4`, refreshed bundled skills, and left both devices doctor-ready.
 After global uninstall, the live public `install.sh` installed `0.7.4`,
-delegated to `clawperator install`, preserved existing `~/.clawperator` state,
+delegated to `androperator install`, preserved existing `~/.androperator` state,
 and left both devices doctor-ready. Both phases produced the expected
 multi-device warning that future device commands must pass `--device`.
 
@@ -63,7 +63,7 @@ post-bootstrap JSON, tracks parallel device arrays, or owns the final install
 summary tree. Its post-bootstrap role is now a narrow delegation to:
 
 ```bash
-clawperator install --output pretty --operator-package "$DEFAULT_OPERATOR_PACKAGE"
+androperator install --output pretty --operator-package "$DEFAULT_OPERATOR_PACKAGE"
 ```
 
 The installer is materially slimmer. The current shell script is 526 lines,
@@ -72,11 +72,11 @@ shell middleware shape. The remaining shell is mostly bootstrap work that the
 task explicitly kept in scope for the wrapper: OS detection, Java, Node, curl,
 adb, git, npm global CLI install, and shell activation hints.
 
-The Node CLI now has a real top-level `clawperator install` command. It owns the
+The Node CLI now has a real top-level `androperator install` command. It owns the
 post-bootstrap sequence across operator remediation, runtime skills install,
 bundled-skills install, and host setup. It also owns installer-facing status,
 summary, warning, and follow-up messaging. That is the right boundary for this
-project: shell bootstraps the CLI, then the CLI owns Clawperator behavior.
+project: shell bootstraps the CLI, then the CLI owns Androperator behavior.
 
 The old dead shell path for direct operator APK download was removed from the
 installer flow and from shell validation. Detailed behavior now has Node-owned
@@ -90,19 +90,19 @@ warning. This removes a duplicated bash policy branch and keeps the CLI as the
 source of truth.
 
 The reduced shell validation is pointed at the right shell-owned behavior:
-fresh npm binary resolution, wrapper delegation to `clawperator install`,
+fresh npm binary resolution, wrapper delegation to `androperator install`,
 operator package env normalization, bootstrap gate behavior, delegated failure
 propagation, and stdin entrypoint safety. The validation shrink was not just
 line deletion.
 
 Docs and host-agent guidance are broadly aligned with the new route. `docs/setup.md`,
 `docs/host-agents.md`, `docs/skills/authoring.md`, CLI help text, generated
-LLM surfaces, and `clawperator-upgrade` now consistently describe
-`clawperator install` as the canonical post-bootstrap path and keep
+LLM surfaces, and `androperator-upgrade` now consistently describe
+`androperator install` as the canonical post-bootstrap path and keep
 `install.sh` as bootstrap or recovery.
 
-The `clawperator-upgrade` bundled skill now explicitly handles multi-device
-verification. When `clawperator install` reports `deviceSelectionRequired` or
+The `androperator-upgrade` bundled skill now explicitly handles multi-device
+verification. When `androperator install` reports `deviceSelectionRequired` or
 top-level doctor reports `MULTIPLE_DEVICES_DEVICE_ID_REQUIRED`, the skill tells
 agents to run per-device doctor checks before claiming the host is ready.
 
@@ -116,7 +116,7 @@ release blockers, but they are still useful tightening work.
 
 The compact task recommendations already called out that the old dead
 `download_operator_apk_via_cli` path was the only place shell ever learned an
-operator version. The current Node-owned `clawperator install` path still calls
+operator version. The current Node-owned `androperator install` path still calls
 `setupHost` without an `apkVersion`, so `install-state.json` keeps
 `apkVersion: null` after normal install.
 
@@ -151,7 +151,7 @@ validation.
 ## Bottom Line
 
 The install compaction work achieved the intended architecture. The shell is
-now a bootstrap wrapper, `clawperator install` is the canonical post-bootstrap
+now a bootstrap wrapper, `androperator install` is the canonical post-bootstrap
 surface, and the detailed behavior moved to Node with meaningful tests. The
 released `0.7.4` public install and upgrade paths both passed live validation.
 

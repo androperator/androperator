@@ -8,7 +8,7 @@ caller-supplied test verdict.
 ## CLI capture
 
 ```bash
-clawperator evidence capture --device <device_serial> --operator-package com.clawperator.operator.dev --output-dir /absolute/new/bundle --label "Settings observation" --context-json '{"commandId":"original-command","originalVerdict":"failed"}'
+androperator evidence capture --device <device_serial> --operator-package com.androperator.operator.dev --output-dir /absolute/new/bundle --label "Settings observation" --context-json '{"commandId":"original-command","originalVerdict":"failed"}'
 ```
 
 | Option | Contract |
@@ -155,7 +155,7 @@ MCP `evidence_capture` accepts the common `deviceId`, `operatorPackage`, and
 `timeoutMs` fields, plus optional `label` and `context` (an object, not a JSON
 string). It rejects `outputDir`, raw paths, and unknown parameters. Each request
 allocates a new bundle beneath the server-owned
-`~/.clawperator/evidence/bundles` directory by default and returns its `manifestPath`.
+`~/.androperator/evidence/bundles` directory by default and returns its `manifestPath`.
 See [storage configuration](#evidence-storage-configuration) to change this root.
 Partial/failed results also set MCP `isError: true` while preserving that path.
 See [MCP Server](mcp.md#mcp-tool-evidence-capture).
@@ -169,8 +169,8 @@ dependencies support deterministic testing.
 
 ## Evidence storage configuration
 
-Set `CLAWPERATOR_EVIDENCE_DIR` to a writable evidence root when the default
-`~/.clawperator/evidence` is unavailable. Managed still and video bundles use
+Set `ANDROPERATOR_EVIDENCE_DIR` to a writable evidence root when the default
+`~/.androperator/evidence` is unavailable. Managed still and video bundles use
 `<evidence_root>/bundles/<session_id>`. The setting applies to Node and MCP
 callers and CLI video state preflight. CLI `--output-dir` remains a separate,
 absolute new bundle directory; it is not interpreted relative to this root.
@@ -182,8 +182,8 @@ working directory once at request entry. Detached workers use the absolute
 output and ownership paths saved in `session.json`.
 
 ```bash
-export CLAWPERATOR_EVIDENCE_DIR=/absolute/writable/evidence
-clawperator evidence video start --device <device_serial> --operator-package com.clawperator.operator.dev --output-dir /absolute/new/video-bundle --duration-seconds 30
+export ANDROPERATOR_EVIDENCE_DIR=/absolute/writable/evidence
+androperator evidence video start --device <device_serial> --operator-package com.androperator.operator.dev --output-dir /absolute/new/video-bundle --duration-seconds 30
 ```
 
 Video checks root, lock-directory and bundle writes before spawning its worker.
@@ -193,7 +193,7 @@ and permit access to the fixed host lock directory below. No permissions are
 changed. A failed preflight starts no recorder and releases any acquired device
 lock. It may leave newly created empty directories; use a new bundle directory
 on retry. Later filesystem failures can still prevent manifest persistence.
-`CLAWPERATOR_LOG_DIR` remains an independent logging setting.
+`ANDROPERATOR_LOG_DIR` remains an independent logging setting.
 
 Absolute manifest-path status/stop continues to work after changing or unsetting
 the root, even if its new value is invalid. MCP session-ID lookup requires the
@@ -211,13 +211,13 @@ lifecycle. It does not change accessibility-event `record start/stop` commands.
 
 Install [scrcpy](https://github.com/Genymobile/scrcpy#readme) 3.0 or newer,
 `ffprobe`, and `ffmpeg` 6.1 or newer with the `libx264` encoder on the host before starting
-video. All three commands must be available on `PATH`. Clawperator checks their
+video. All three commands must be available on `PATH`. Androperator checks their
 capabilities before dispatch and does not bundle or install these tools.
 On macOS, install them with `brew install scrcpy ffmpeg`. On other hosts, install
 scrcpy and an FFmpeg distribution that includes ffprobe and libx264, then expose
 the executables on the PATH used by the CLI or MCP server.
 
-`clawperator doctor --device <device_serial>` reports `host.video.dependencies`
+`androperator doctor --device <device_serial>` reports `host.video.dependencies`
 as an advisory warning when any requirement is unmet. This does not block normal
 device readiness or install anything, including with `--fix`. A passing check
 verifies host tooling only, not that a device can encode or record its screen.
@@ -252,27 +252,27 @@ Both segment encoding and full decode verification use those same timing options
 frames pass through without rate conversion, and the encoder retains the demuxer
 timebase. Frame-count checks and strict full-stream decoding remain required.
 
-For Clawperator 0.12.1, FFmpeg 8.1.3 is a tested temporary workaround for the
+For Androperator 0.12.1, FFmpeg 8.1.3 is a tested temporary workaround for the
 legacy arguments rejected by 9.0.2. This does not establish compatibility with
 all FFmpeg 8 releases or make 8.1.3 the minimum. To select an installed alternative
 without changing the host default, use a process-local environment:
 
 ```bash
-PATH="$(brew --prefix ffmpeg@8)/bin:$PATH" clawperator evidence video start --device <device_serial> --output-dir /absolute/new/video-bundle --duration-seconds 25
+PATH="$(brew --prefix ffmpeg@8)/bin:$PATH" androperator evidence video start --device <device_serial> --output-dir /absolute/new/video-bundle --duration-seconds 25
 ```
 
 Confirm the selected executable's version. Use the same environment for startup
 and any independently launched verification commands; the detached worker inherits
-its startup PATH. No host installation or global PATH changes are made by Clawperator.
+its startup PATH. No host installation or global PATH changes are made by Androperator.
 
 Still screenshots require only ADB: capture explicitly selects the active physical
 display, including a foldable's outer screen. Older Android dumps without
 viewport activity metadata retain default display selection.
 
 ```bash
-clawperator evidence video start --device <device_serial> --operator-package com.clawperator.operator.dev --output-dir /absolute/new/video-bundle --duration-seconds 30
-clawperator evidence video status --session /absolute/new/video-bundle/manifest.json
-clawperator evidence video stop --session /absolute/new/video-bundle/manifest.json
+androperator evidence video start --device <device_serial> --operator-package com.androperator.operator.dev --output-dir /absolute/new/video-bundle --duration-seconds 30
+androperator evidence video status --session /absolute/new/video-bundle/manifest.json
+androperator evidence video stop --session /absolute/new/video-bundle/manifest.json
 ffprobe -v error -show_streams /absolute/new/video-bundle/video.mp4
 ```
 
@@ -378,9 +378,9 @@ video fails the bundle, while an unreadable receipt or stderr makes usable video
 partial. Metadata failures also produce partial status when the video is usable.
 
 One exclusive lock per device and OS user lives in a fixed host directory:
-`/tmp/clawperator-evidence-locks-<uid>` on POSIX, or
-`<OS-account-home>/AppData/Local/Temp/clawperator-evidence-locks` on Windows.
-It is independent of `CLAWPERATOR_EVIDENCE_DIR`, `HOME`, `TMPDIR`, and `TEMP`.
+`/tmp/androperator-evidence-locks-<uid>` on POSIX, or
+`<OS-account-home>/AppData/Local/Temp/androperator-evidence-locks` on Windows.
+It is independent of `ANDROPERATOR_EVIDENCE_DIR`, `HOME`, `TMPDIR`, and `TEMP`.
 POSIX requires a real directory owned by the current user with no group/other
 permissions. A different evidence root cannot bypass an existing device lock.
 The lock filename hashes the device serial; exclusive file creation arbitrates
@@ -421,7 +421,7 @@ Windows graceful stop and other scrcpy versions remain unproven.
 `context`, `deviceId`, and `operatorPackage`. An explicit target configured in the
 MCP session can supply the device. It rejects output paths and unknown fields,
 allocates a bundle under the configured evidence root
-(`~/.clawperator/evidence/bundles` by default), and returns `sessionId`.
+(`~/.androperator/evidence/bundles` by default), and returns `sessionId`.
 `evidence_video_status` and `evidence_video_stop` accept only that opaque
 `sessionId`; path and target overrides are rejected. Failed and pending-stop
 results set `isError: true`.

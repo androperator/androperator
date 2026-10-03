@@ -23,7 +23,7 @@ with open(os.environ['FAKE_ADB_LOG'], 'a') as log:
 path = pathlib.Path(os.environ['FAKE_ADB_STATE'])
 state = json.loads(path.read_text()) if path.exists() else {
     'system.accelerometer_rotation': '1', 'system.user_rotation': '0', 'system.font_scale': '1',
-    'secure.enabled_accessibility_services': 'com.clawperator.operator.dev/clawperator.operator.accessibilityservice.OperatorAccessibilityService',
+    'secure.enabled_accessibility_services': 'com.androperator.operator.dev/androperator.operator.accessibilityservice.OperatorAccessibilityService',
     'secure.accessibility_enabled': '1'}
 if 'settings' in args:
     command, namespace, key, *value = args[args.index('settings') + 1:]
@@ -102,7 +102,7 @@ print(json.dumps({'envelope': {'status': 'success', 'stepResults': [{'success': 
 FAKE
 chmod +x "$test_dir/bin/"*
 export PATH="$test_dir/bin:$PATH"
-export CLAWPERATOR_CLI_PROOF_EXECUTABLE="$test_dir/bin/fake-cli"
+export ANDROPERATOR_CLI_PROOF_EXECUTABLE="$test_dir/bin/fake-cli"
 export FAKE_ADB_STATE="$test_dir/adb-state.json"
 export FAKE_ADB_LOG="$test_dir/adb.log"
 export FAKE_EVENTS="$test_dir/events.jsonl"
@@ -112,7 +112,7 @@ python3 - "$FAKE_LOG" "$test_dir/success/captures.tsv" <<'PY'
 import json, sys
 commands = [json.loads(line) for line in open(sys.argv[1])]
 assert all('--device' in c and c[c.index('--device') + 1] == 'example' for c in commands)
-assert all('--operator-package' in c and c[c.index('--operator-package') + 1] == 'com.clawperator.operator.dev' for c in commands)
+assert all('--operator-package' in c and c[c.index('--operator-package') + 1] == 'com.androperator.operator.dev' for c in commands)
 for cycle in range(1, 11):
     index = next(i for i, c in enumerate(commands) if f'CLI-CYCLE-{cycle}-A' in c)
     batch = commands[index:index + 5]
@@ -143,13 +143,13 @@ assert state['system.accelerometer_rotation'] == '1'
 assert state['system.user_rotation'] == '0'
 assert state['system.font_scale'] == '1'
 assert state['secure.accessibility_enabled'] == '1'
-assert state['secure.enabled_accessibility_services'] == 'com.clawperator.operator.dev/clawperator.operator.accessibilityservice.OperatorAccessibilityService'
+assert state['secure.enabled_accessibility_services'] == 'com.androperator.operator.dev/androperator.operator.accessibilityservice.OperatorAccessibilityService'
 PYRESTORE
     python3 - "$FAKE_EVENTS" "$mode" <<'PYCHANGED'
 import json, sys
 events = [json.loads(line) for line in open(sys.argv[1])]
 mode = sys.argv[2]
-component = 'com.clawperator.operator.dev/clawperator.operator.accessibilityservice.OperatorAccessibilityService'
+component = 'com.androperator.operator.dev/androperator.operator.accessibilityservice.OperatorAccessibilityService'
 assert events[-1]['trigger'] == 'clear'
 assert events[-1]['state']['secure.enabled_accessibility_services'] == component, 'Clear ran before service restoration'
 if mode == 'signal-service-disabled':

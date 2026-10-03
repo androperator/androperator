@@ -2,18 +2,18 @@
 
 ## Purpose
 
-Choose the correct Clawperator front door after install: runtime-skill discovery
-through `clawperator skills`, installed authoring-workflow discovery through
-`clawperator bundled-skills`, long-running tool registration through
-`clawperator mcp serve`, or direct action work through the CLI and local API.
+Choose the correct Androperator front door after install: runtime-skill discovery
+through `androperator skills`, installed authoring-workflow discovery through
+`androperator bundled-skills`, long-running tool registration through
+`androperator mcp serve`, or direct action work through the CLI and local API.
 This page also defines the zero-results route: when runtime-skill discovery
-finds no relevant match, start with `clawperator-skill-author-by-agent-discovery` and use
-`clawperator-skill-author-by-recording` only after discovery returns
+finds no relevant match, start with `androperator-skill-author-by-agent-discovery` and use
+`androperator-skill-author-by-recording` only after discovery returns
 `proceed_to_recording`, or when the route is already well understood.
-If packaged first-party bundled skills are installed, `clawperator-agent-orientation`
+If packaged first-party bundled skills are installed, `androperator-agent-orientation`
 is the first-run packaged front door for this route and should point back to
-this page, while `clawperator-upgrade` is the packaged whole-product upgrade
-route. It checks `clawperator --version`, verifies the installer-owned Node, npm, and
+this page, while `androperator-upgrade` is the packaged whole-product upgrade
+route. It checks `androperator --version`, verifies the installer-owned Node, npm, and
 Java prerequisites before choosing the CLI-first path, uses the CLI-first
 upgrade sequence when the host is already viable, and falls back to
 `install.sh` only as recovery when the CLI is not reachable or the bootstrap
@@ -21,7 +21,7 @@ prerequisites still need repair.
 
 ## Adaptive execution and goal coverage
 
-After orientation, use `clawperator-agent-control-loop` for bounded adaptive
+After orientation, use `androperator-agent-control-loop` for bounded adaptive
 navigation and independently verified extraction. It checks completeness,
 coverage, freshness and UI relationships, executes on the explicit target, and
 verifies each destination. Conditional references cover ambiguous selectors,
@@ -34,7 +34,7 @@ and build-number extraction. Partial coverage remains a discovery gap.
 
 For an explicit orchestrated-authoring request with sufficient bounded evidence,
 discovery can return `proceed_to_orchestrated_authoring` with `handoff_target`
-`clawperator-agent-control-loop`. Discovery stops before authoring; the control
+`androperator-agent-control-loop`. Discovery stops before authoring; the control
 loop then uses the canonical authoring workflow and the Settings examples linked
 from [Jev integration](skills/jev.md). Recording-based authoring retains
 `proceed_to_recording` and its dedicated proving workflow. One-shot requests do
@@ -47,26 +47,26 @@ Use the public setup skill before this page when the host is not installed,
 needs repair, or has not been verified yet:
 
 ```text
-Read https://clawperator.com/skill.md and get me set up with Clawperator.
+Read https://androperator.com/skill.md and get me set up with Androperator.
 ```
 
-`https://clawperator.com/skill.md` is the outside-agent setup entrypoint. It
-covers the installer fallback, direct npm install, `clawperator install`,
+`https://androperator.com/skill.md` is the outside-agent setup entrypoint. It
+covers the installer fallback, direct npm install, `androperator install`,
 readiness checks, local orientation files, MCP setup handoff, and stop
 conditions for human approval boundaries.
 
-After `clawperator install` succeeds, this page takes over as the durable
+After `androperator install` succeeds, this page takes over as the durable
 post-install routing guide. Read the local host guide first when present:
 
 ```bash
-cat ~/.clawperator/AGENTS.md
-cat ~/.clawperator/install-state.json
-cat ~/.clawperator/mcp-config-snippet.json
+cat ~/.androperator/AGENTS.md
+cat ~/.androperator/install-state.json
+cat ~/.androperator/mcp-config-snippet.json
 ```
 
-Use `~/.clawperator/mcp-config-snippet.json` only after deciding that the host
-should connect through stdio MCP and `clawperator mcp serve`. Use direct CLI
-commands or `clawperator skills` when the host does not need MCP.
+Use `~/.androperator/mcp-config-snippet.json` only after deciding that the host
+should connect through stdio MCP and `androperator mcp serve`. Use direct CLI
+commands or `androperator skills` when the host does not need MCP.
 
 ## When To Read This Page
 
@@ -76,15 +76,15 @@ checking device readiness.
 ### Select the CLI and target
 
 Respect an explicitly requested CLI. For installed-release workflows, use the
-installed `clawperator`; the presence of a newer checkout is not evidence that
+installed `androperator`; the presence of a newer checkout is not evidence that
 it needs an upgrade. For repository development, build with
 `npm --prefix apps/node run build` and invoke `node apps/node/dist/cli/index.js`
-from the repository root. Replace `clawperator` in the examples with the chosen
+from the repository root. Replace `androperator` in the examples with the chosen
 invocation. Inspect its `--version`, `--help`, and command-specific help before
 using features that may be newer than the installed release.
 
 ```bash
-clawperator devices
+androperator devices
 ```
 
 With zero reachable devices, stop device work and follow [Setup](setup.md).
@@ -98,13 +98,13 @@ devices, resolve the requested serial or ask the user. Carry that explicit
 Inspect packages on the selected device before recommending installation:
 
 ```bash
-adb -s <device_serial> shell pm list packages com.clawperator.operator
-clawperator version --check-compat --device <device_serial> --operator-package <operator_package> --output json
+adb -s <device_serial> shell pm list packages com.androperator.operator
+androperator version --check-compat --device <device_serial> --operator-package <operator_package> --output json
 ```
 
 The package listing is a substring search; distinguish exact names. Public releases
-normally use `com.clawperator.operator`; repository development defaults to
-`com.clawperator.operator.dev`. Run the compatibility check for each relevant
+normally use `com.androperator.operator`; repository development defaults to
+`com.androperator.operator.dev`. Run the compatibility check for each relevant
 installed candidate using the selected CLI. It reports `compatible` and the CLI/APK
 versions; current compatibility requires equal versions after normalizing the
 trailing debug `-d` suffix. See [Version Compatibility](troubleshooting/compatibility.md).
@@ -117,7 +117,7 @@ A failed package query is not proof that the package is absent.
 ### Check readiness for the selected pair
 
 ```bash
-clawperator doctor --device <device_serial> --operator-package <operator_package> --output json
+androperator doctor --device <device_serial> --operator-package <operator_package> --output json
 ```
 
 Continue device work only with exit code `0` and `criticalOk: true`. Inspect the
@@ -129,12 +129,12 @@ on later `snapshot`, `skills run`, and direct-action commands, or configure the
 same pair for MCP using [MCP Server](api/mcp.md).
 
 Host-agent readiness is separate. A missing Codex executable or unsupported model
-must be resolved for a route that requires it; neither establishes a Clawperator
+must be resolved for a route that requires it; neither establishes an Androperator
 transport failure. Doctor's device success does not prove a model can run.
 
 ### Interpret the first result
 
-The agent decides what to do and verifies the user outcome. Clawperator executes
+The agent decides what to do and verifies the user outcome. Androperator executes
 validated actions and returns structured evidence. A completed command does not
 alone prove a complete observation or a verified user outcome. Check source
 completeness and coverage using [Snapshot](api/snapshot.md), then inspect the
@@ -153,27 +153,27 @@ Use this order:
 
 1. Read this page.
 2. If packaged first-party bundled skills are installed and you are unfamiliar
-   with this host, start with `clawperator-agent-orientation`. It should verify
+   with this host, start with `androperator-agent-orientation`. It should verify
    readiness, separate runtime skills from bundled skills, and end with one
    concrete next step.
 3. If the user or calling workflow explicitly chose a whole-product refresh,
-   use `clawperator-upgrade`.
-4. If you need an app-specific capability, start with `clawperator skills`.
-5. If your host already speaks stdio MCP and wants registered tools, use `clawperator mcp serve`.
+   use `androperator-upgrade`.
+4. If you need an app-specific capability, start with `androperator skills`.
+5. If your host already speaks stdio MCP and wants registered tools, use `androperator mcp serve`.
 6. If you already know you need raw actions and result envelopes, continue to [Quickstart](quickstart.md).
 
 ## Choose The Front Door
 
 | Situation | Start here | Why |
 | --- | --- | --- |
-| You are unfamiliar with this host and want the packaged first-run orientation surface | `clawperator-agent-orientation` | Thin packaged router that points back to this page and the canonical docs. |
-| The user or calling workflow explicitly chose a whole-product refresh before you trust any downstream route | `clawperator-upgrade` | Checks `clawperator --version`, verifies Node 24+, npm reachability, and Java 17/21, then uses `npm install -g clawperator@latest`, `clawperator install`, and `clawperator doctor`. Uses `install.sh` only when the CLI is not reachable or the bootstrap prerequisites need repair. |
-| You know the Android package id and want the fastest answer to "what can this host do for this app?" | `clawperator skills for-app <package_id>` | `skills for-app` is the primary app-oriented discovery surface. |
-| You only know user-language terms such as app name or intent | `clawperator skills search --keyword <text>` | Search is the fallback when you do not have the package id yet. |
-| You already have a skill id and want the exact metadata | `clawperator skills get <skill_id>` | Confirms the registry entry before a run. |
-| You want to execute a skill through the wrapper | `clawperator skills run <skill_id> ...` | Uses the runtime-skill wrapper and its validation gate. |
-| Runtime-skill discovery returned no relevant match and you need the zero-results authoring route | `clawperator bundled-skills list` | Bundled skills are separate from runtime skills. Start with `clawperator-skill-author-by-agent-discovery`, then use `clawperator-skill-author-by-recording` only after discovery returns `proceed_to_recording`, or when the route is already well understood. |
-| Your host already supports stdio MCP and wants registered tools such as `devices`, `snapshot`, `execute`, and `configure` | `clawperator mcp serve` | MCP is the transport surface for long-running tool registration. |
+| You are unfamiliar with this host and want the packaged first-run orientation surface | `androperator-agent-orientation` | Thin packaged router that points back to this page and the canonical docs. |
+| The user or calling workflow explicitly chose a whole-product refresh before you trust any downstream route | `androperator-upgrade` | Checks `androperator --version`, verifies Node 24+, npm reachability, and Java 17/21, then uses `npm install -g androperator@latest`, `androperator install`, and `androperator doctor`. Uses `install.sh` only when the CLI is not reachable or the bootstrap prerequisites need repair. |
+| You know the Android package id and want the fastest answer to "what can this host do for this app?" | `androperator skills for-app <package_id>` | `skills for-app` is the primary app-oriented discovery surface. |
+| You only know user-language terms such as app name or intent | `androperator skills search --keyword <text>` | Search is the fallback when you do not have the package id yet. |
+| You already have a skill id and want the exact metadata | `androperator skills get <skill_id>` | Confirms the registry entry before a run. |
+| You want to execute a skill through the wrapper | `androperator skills run <skill_id> ...` | Uses the runtime-skill wrapper and its validation gate. |
+| Runtime-skill discovery returned no relevant match and you need the zero-results authoring route | `androperator bundled-skills list` | Bundled skills are separate from runtime skills. Start with `androperator-skill-author-by-agent-discovery`, then use `androperator-skill-author-by-recording` only after discovery returns `proceed_to_recording`, or when the route is already well understood. |
+| Your host already supports stdio MCP and wants registered tools such as `devices`, `snapshot`, `execute`, and `configure` | `androperator mcp serve` | MCP is the transport surface for long-running tool registration. |
 | You already know the exact action payload you want to send | [Quickstart](quickstart.md) | Quickstart covers the observe / decide / act loop directly. |
 
 ## Runtime-Skill Discovery Flow
@@ -181,10 +181,10 @@ Use this order:
 Use the shortest successful path first:
 
 ```bash
-clawperator skills for-app <package_id>
-clawperator skills search --keyword <text>
-clawperator skills get <skill_id>
-clawperator skills run <skill_id>
+androperator skills for-app <package_id>
+androperator skills search --keyword <text>
+androperator skills get <skill_id>
+androperator skills run <skill_id>
 ```
 
 Decision rules:
@@ -197,8 +197,8 @@ Decision rules:
   app-oriented discovery.
 - If discovery returns zero relevant matches and the next job is skill creation
   rather than raw execution, inspect installed bundled skills with
-  `clawperator bundled-skills list`, start with
-  `clawperator-skill-author-by-agent-discovery`, and continue to
+  `androperator bundled-skills list`, start with
+  `androperator-skill-author-by-agent-discovery`, and continue to
   [Authoring](skills/authoring.md).
 
 ## Zero-Results Route
@@ -208,19 +208,19 @@ relevant installed match.
 
 | Situation | Next surface | Expected outcome |
 | --- | --- | --- |
-| No relevant runtime skill match and the next job is choosing the truthful route | `clawperator bundled-skills list` | Confirm the installed bundled-skill front doors on this host. |
-| You need the bounded zero-results front door | `clawperator-skill-author-by-agent-discovery` | Produce one discovery artifact and choose exactly one next step. |
-| Discovery returns `proceed_to_recording`, or the route is already well understood | `clawperator-skill-author-by-recording` | Run the proving workflow from a fresh recording and one self-test. |
-| You explicitly want the low-level manual scaffold instead of the installed guided workflows | `clawperator skills new <skill_id>` | Create a local scaffold only. |
+| No relevant runtime skill match and the next job is choosing the truthful route | `androperator bundled-skills list` | Confirm the installed bundled-skill front doors on this host. |
+| You need the bounded zero-results front door | `androperator-skill-author-by-agent-discovery` | Produce one discovery artifact and choose exactly one next step. |
+| Discovery returns `proceed_to_recording`, or the route is already well understood | `androperator-skill-author-by-recording` | Run the proving workflow from a fresh recording and one self-test. |
+| You explicitly want the low-level manual scaffold instead of the installed guided workflows | `androperator skills new <skill_id>` | Create a local scaffold only. |
 
 The discovery pass should stay agent-driven by default. If discovery returns
 `proceed_to_recording`, the next phase changes boundary: use
-`clawperator-skill-author-by-recording` as a user-performed proving workflow rather than
+`androperator-skill-author-by-recording` as a user-performed proving workflow rather than
 continuing autonomous device driving through the recording step.
 
 ## MCP Decision Rule
 
-Use `clawperator mcp serve` only when the host already wants MCP.
+Use `androperator mcp serve` only when the host already wants MCP.
 
 Use [MCP Server](api/mcp.md) for:
 
@@ -230,7 +230,7 @@ Use [MCP Server](api/mcp.md) for:
 
 Do not use MCP as the first discovery surface when the real question is
 "what runtime skills are installed for this app?". Start with
-`clawperator skills` for that job.
+`androperator skills` for that job.
 
 ## When Discovery Stalls
 
@@ -239,39 +239,39 @@ Use this sequence:
 1. Confirm the registry is readable:
 
 ```bash
-clawperator skills list
+androperator skills list
 ```
 
 2. If registry discovery still fails, check the installed home path written by
    the install and sync flow:
 
 ```bash
-ls ~/.clawperator/skills/skills/skills-registry.json
+ls ~/.androperator/skills/skills/skills-registry.json
 ```
 
 3. If that file is missing or stale, reinstall the runtime skills:
 
 ```bash
-clawperator skills install
+androperator skills install
 ```
 
 4. If the host should connect through MCP instead of shelling out to the CLI,
-   read the installed snippet and then use `clawperator mcp serve`:
+   read the installed snippet and then use `androperator mcp serve`:
 
 ```bash
-cat ~/.clawperator/mcp-config-snippet.json
-clawperator mcp serve
+cat ~/.androperator/mcp-config-snippet.json
+androperator mcp serve
 ```
 
 5. If the registry is readable but no installed runtime skill matches the
    request, inspect the installed authoring-workflow helpers:
 
 ```bash
-clawperator bundled-skills list
+androperator bundled-skills list
 ```
 
 Then continue to [Authoring](skills/authoring.md), start with
-`clawperator-skill-author-by-agent-discovery`, and move to `clawperator-skill-author-by-recording`
+`androperator-skill-author-by-agent-discovery`, and move to `androperator-skill-author-by-recording`
 only after discovery returns `proceed_to_recording`, or when the route is
 already well understood.
 
@@ -281,45 +281,45 @@ These files help a host orient after install:
 
 | Path | Meaning | Next step |
 | --- | --- | --- |
-| `~/.clawperator/AGENTS.md` | Local Clawperator guide written by `clawperator host setup` during install | Use it as machine-local context after you read this public route. |
-| `~/.clawperator/install-state.json` | Durable install metadata written by `clawperator host setup` | Check `registryPath`, `cliVersion`, and `lastDeviceSerial` without rerunning install. |
-| `~/.clawperator/mcp-config-snippet.json` | Paste-ready MCP config written by `clawperator host setup` | Use it when you choose the MCP route. |
-| `~/.clawperator/skills/skills/skills-registry.json` | Installed runtime-skills registry | Verify it exists when `skills list` or `skills for-app` cannot discover skills. |
-| `~/.clawperator/bundled-skills/` | Installed first-party bundled skills | Inspect it through `clawperator bundled-skills list` when runtime discovery returns no relevant match. |
-| `~/.agents/skills/<clawperator-bundled-skill>/` | Managed real directory copies for generic agent skill discovery | Generic agents such as OpenClaw can discover packaged Clawperator bundled skills without following symlinks outside `~/.agents/skills`. |
+| `~/.androperator/AGENTS.md` | Local Androperator guide written by `androperator host setup` during install | Use it as machine-local context after you read this public route. |
+| `~/.androperator/install-state.json` | Durable install metadata written by `androperator host setup` | Check `registryPath`, `cliVersion`, and `lastDeviceSerial` without rerunning install. |
+| `~/.androperator/mcp-config-snippet.json` | Paste-ready MCP config written by `androperator host setup` | Use it when you choose the MCP route. |
+| `~/.androperator/skills/skills/skills-registry.json` | Installed runtime-skills registry | Verify it exists when `skills list` or `skills for-app` cannot discover skills. |
+| `~/.androperator/bundled-skills/` | Installed first-party bundled skills | Inspect it through `androperator bundled-skills list` when runtime discovery returns no relevant match. |
+| `~/.agents/skills/<androperator-bundled-skill>/` | Managed real directory copies for generic agent skill discovery | Generic agents such as OpenClaw can discover packaged Androperator bundled skills without following symlinks outside `~/.agents/skills`. |
 
 ## Verification
 
 Use these commands to confirm the intended surface is working:
 
 ```bash
-clawperator --help
-clawperator skills --help
-clawperator bundled-skills --help
-clawperator skills for-app com.android.settings
-clawperator skills search --keyword settings
-clawperator skills get com.android.settings.capture-overview
-clawperator skills list
-clawperator bundled-skills list
-test -d ~/.agents/skills/clawperator-agent-orientation
-test ! -L ~/.agents/skills/clawperator-agent-orientation
+androperator --help
+androperator skills --help
+androperator bundled-skills --help
+androperator skills for-app com.android.settings
+androperator skills search --keyword settings
+androperator skills get com.android.settings.capture-overview
+androperator skills list
+androperator bundled-skills list
+test -d ~/.agents/skills/androperator-agent-orientation
+test ! -L ~/.agents/skills/androperator-agent-orientation
 ```
 
 Check:
 
-- `clawperator --help` and `clawperator skills --help` name `clawperator-agent-orientation` as the first-run surface for unfamiliar hosts and point zero-match users to `clawperator bundled-skills list`
-- `clawperator --help` and `clawperator skills --help` name `clawperator-upgrade` as the packaged whole-product refresh route and note the Node, npm, and Java prerequisite gate
-- `clawperator bundled-skills --help` names `clawperator-agent-orientation` as the first-run orientation skill, `clawperator-upgrade` as the packaged whole-product upgrade route after explicit upgrade intent and prerequisite viability, `clawperator-skill-author-by-agent-discovery` as the zero-results front door, and `clawperator-skill-author-by-recording` as the proving workflow
+- `androperator --help` and `androperator skills --help` name `androperator-agent-orientation` as the first-run surface for unfamiliar hosts and point zero-match users to `androperator bundled-skills list`
+- `androperator --help` and `androperator skills --help` name `androperator-upgrade` as the packaged whole-product refresh route and note the Node, npm, and Java prerequisite gate
+- `androperator bundled-skills --help` names `androperator-agent-orientation` as the first-run orientation skill, `androperator-upgrade` as the packaged whole-product upgrade route after explicit upgrade intent and prerequisite viability, `androperator-skill-author-by-agent-discovery` as the zero-results front door, and `androperator-skill-author-by-recording` as the proving workflow
 - `skills for-app`, `skills search`, and `skills list` return top-level `skills` and `count`
 - `skills get` returns a top-level `skill`
 - `bundled-skills list` returns top-level `skills`, `count`, and `installedDir`
-- `bundled-skills list` includes `clawperator-agent-orientation`, `clawperator-upgrade`, `clawperator-skill-author-by-agent-discovery`, and `clawperator-skill-author-by-recording` in `skills[].name`
-- packaged Clawperator bundled skills under `~/.agents/skills/` are real directories, not symlinks
+- `bundled-skills list` includes `androperator-agent-orientation`, `androperator-upgrade`, `androperator-skill-author-by-agent-discovery`, and `androperator-skill-author-by-recording` in `skills[].name`
+- packaged Androperator bundled skills under `~/.agents/skills/` are real directories, not symlinks
 
 For MCP:
 
 ```bash
-clawperator mcp serve
+androperator mcp serve
 ```
 
 Check:

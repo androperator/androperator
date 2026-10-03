@@ -12,7 +12,7 @@ export async function cmdGrantDevicePermissions(options: {
 }): Promise<string> {
   const config = getDefaultRuntimeConfig({
     deviceId: options.deviceId,
-    operatorPackage: options.operatorPackage ?? process.env.CLAWPERATOR_OPERATOR_PACKAGE,
+    operatorPackage: options.operatorPackage ?? process.env.ANDROPERATOR_OPERATOR_PACKAGE,
     adbPath: process.env.ADB_PATH,
     logger: options.logger,
   });
@@ -47,7 +47,7 @@ export async function cmdGrantDevicePermissions(options: {
       notificationListener: result.notificationListener,
       message: result.accessibility.alreadyEnabled && result.notificationListener.alreadyEnabled
         ? "Required device permissions were already enabled."
-        : "Required device permissions enabled. Run clawperator doctor to verify.",
+        : "Required device permissions enabled. Run androperator doctor to verify.",
     },
     options
   );

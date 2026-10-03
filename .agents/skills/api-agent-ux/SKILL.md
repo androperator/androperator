@@ -1,12 +1,12 @@
 ---
 name: api-agent-ux
-description: Design or review Clawperator CLI/API ergonomics, including naming, selectors, errors, and output contracts.
+description: Design or review Androperator CLI/API ergonomics, including naming, selectors, errors, and output contracts.
 ---
 
 # API Agent UX
 
 Assess whether a capable agent's likely first attempt maps to a clear,
-deterministic Clawperator contract. Familiarity is a useful design signal, not
+deterministic Androperator contract. Familiarity is a useful design signal, not
 permission to weaken validation or infer hidden intent.
 
 Read the owning implementation for the surface under discussion; use

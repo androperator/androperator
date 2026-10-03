@@ -7,7 +7,7 @@ import { cmdObserveScreenshot, cmdObserveSnapshot } from "../../cli/commands/obs
 import { buildWaitExecution } from "../../domain/actions/wait.js";
 import { attachSnapshotsToStepResults, runExecution, type RunExecutionResult } from "../../domain/executions/runExecution.js";
 import { ERROR_CODES } from "../../contracts/errors.js";
-import { clawperatorEvents, CLAWPERATOR_EVENT_TYPES } from "../../domain/observe/events.js";
+import { androperatorEvents, ANDROPERATOR_EVENT_TYPES } from "../../domain/observe/events.js";
 import { applyMcpExecutionMetadata } from "../../mcp/tools/common.js";
 import type { DaemonProxyOptions } from "../../cli/daemonProxy.js";
 
@@ -119,7 +119,7 @@ describe("observe executions", () => {
       },
     }));
 
-    const executionEvent = once(clawperatorEvents, CLAWPERATOR_EVENT_TYPES.EXECUTION);
+    const executionEvent = once(androperatorEvents, ANDROPERATOR_EVENT_TYPES.EXECUTION);
     const result = await runExecution(largeExecution, { deviceId: "test-device", timeoutMs: 12_345 });
     assert.ok(!result.ok);
     assert.strictEqual(result.error.code, ERROR_CODES.PAYLOAD_TOO_LARGE);

@@ -19,11 +19,11 @@ describe("running emulator discovery", () => {
   let testHome: string;
 
   beforeEach(async () => {
-    testHome = await mkdtemp(join(tmpdir(), "clawperator-running-emulator-test-"));
+    testHome = await mkdtemp(join(tmpdir(), "androperator-running-emulator-test-"));
     process.env.HOME = testHome;
     await writeAvd(
       testHome,
-      "clawperator-pixel",
+      "androperator-pixel",
       [
         "PlayStore.enabled=true",
         "abi.type=arm64-v8a",
@@ -40,11 +40,11 @@ describe("running emulator discovery", () => {
 
   it("parses emulator console avd name output", async () => {
     const runner = new FakeProcessRunner();
-    runner.queueResult({ code: 0, stdout: "OK\nclawperator-pixel\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "OK\nandroperator-pixel\n", stderr: "" });
     const config = getDefaultRuntimeConfig({ runner });
 
     const avdName = await getRunningEmulatorAvdName(config, "emulator-5554");
-    assert.strictEqual(avdName, "clawperator-pixel");
+    assert.strictEqual(avdName, "androperator-pixel");
   });
 
   it("requires both boot properties to report booted state", async () => {
@@ -70,7 +70,7 @@ describe("running emulator discovery", () => {
       stdout: "List of devices attached\nemulator-5554\tdevice\nphysical-1\tdevice\n",
       stderr: "",
     });
-    runner.queueResult({ code: 0, stdout: "OK\nclawperator-pixel\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "OK\nandroperator-pixel\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" });
 
@@ -80,7 +80,7 @@ describe("running emulator discovery", () => {
     assert.deepStrictEqual(emulators, [
       {
         type: "emulator",
-        avdName: "clawperator-pixel",
+        avdName: "androperator-pixel",
         serial: "emulator-5554",
         booted: true,
         supported: true,
@@ -96,12 +96,12 @@ describe("running emulator discovery", () => {
       stdout: "List of devices attached\nemulator-5554\tdevice\n",
       stderr: "",
     });
-    runner.queueResult({ code: 0, stdout: "OK\nclawperator-pixel\n", stderr: "" });
+    runner.queueResult({ code: 0, stdout: "OK\nandroperator-pixel\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "1\n", stderr: "" });
 
     const config = getDefaultRuntimeConfig({ runner });
-    const emulator = await resolveRunningEmulatorByName(config, "clawperator-pixel");
+    const emulator = await resolveRunningEmulatorByName(config, "androperator-pixel");
     assert.ok(emulator);
     assert.strictEqual(emulator?.serial, "emulator-5554");
   });

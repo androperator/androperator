@@ -96,7 +96,7 @@ describe("operator remediate", () => {
             localPath: "/tmp/operator.apk",
             operatorVersion: "0.7.4",
             sha256: "a".repeat(64),
-            operatorPackage: "com.clawperator.operator",
+            operatorPackage: "com.androperator.operator",
             checksumSource: "inline",
             metadataUrl: "https://downloads.example.com/latest.json",
             apkUrl: "https://downloads.example.com/operator.apk",
@@ -106,10 +106,10 @@ describe("operator remediate", () => {
         setupOperatorImpl: async () => {
           setupCount += 1;
           return {
-            operatorPackage: "com.clawperator.operator",
+            operatorPackage: "com.androperator.operator",
             install: { ok: true },
             permissions: {
-              operatorPackage: "com.clawperator.operator",
+              operatorPackage: "com.androperator.operator",
               accessibility: { ok: true, alreadyEnabled: false },
               notification: { ok: true, skipped: false },
               notificationListener: { ok: true, alreadyEnabled: false },
@@ -166,7 +166,7 @@ describe("operator remediate", () => {
             localPath: "/tmp/operator.apk",
             operatorVersion: "0.7.4",
             sha256: "c".repeat(64),
-            operatorPackage: "com.clawperator.operator",
+            operatorPackage: "com.androperator.operator",
             checksumSource: "inline",
             metadataUrl: "https://downloads.example.com/latest.json",
             apkUrl: "https://downloads.example.com/operator.apk",
@@ -176,10 +176,10 @@ describe("operator remediate", () => {
         setupOperatorImpl: async () => {
           setupCount += 1;
           return {
-            operatorPackage: "com.clawperator.operator",
+            operatorPackage: "com.androperator.operator",
             install: { ok: true },
             permissions: {
-              operatorPackage: "com.clawperator.operator",
+              operatorPackage: "com.androperator.operator",
               accessibility: { ok: true, alreadyEnabled: false },
               notification: { ok: true, skipped: false },
               notificationListener: { ok: true, alreadyEnabled: false },
@@ -244,7 +244,7 @@ describe("operator remediate", () => {
           localPath: "/tmp/operator.apk",
           operatorVersion: "0.7.4",
           sha256: "e".repeat(64),
-          operatorPackage: "com.clawperator.operator",
+          operatorPackage: "com.androperator.operator",
           checksumSource: "inline",
           metadataUrl: "https://downloads.example.com/latest.json",
           apkUrl: "https://downloads.example.com/operator.apk",
@@ -253,10 +253,10 @@ describe("operator remediate", () => {
         setupOperatorImpl: async () => {
           setupCount += 1;
           return {
-            operatorPackage: "com.clawperator.operator",
+            operatorPackage: "com.androperator.operator",
             install: { ok: true },
             permissions: {
-              operatorPackage: "com.clawperator.operator",
+              operatorPackage: "com.androperator.operator",
               accessibility: { ok: true, alreadyEnabled: false },
               notification: { ok: true, skipped: false },
               notificationListener: { ok: true, alreadyEnabled: false },
@@ -326,7 +326,7 @@ describe("operator remediate", () => {
             localPath: "/tmp/operator.apk",
             operatorVersion: "0.7.4",
             sha256: "d".repeat(64),
-            operatorPackage: "com.clawperator.operator",
+            operatorPackage: "com.androperator.operator",
             checksumSource: "inline",
             metadataUrl: "https://downloads.example.com/latest.json",
             apkUrl: "https://downloads.example.com/operator.apk",
@@ -336,10 +336,10 @@ describe("operator remediate", () => {
         setupOperatorImpl: async () => {
           setupCount += 1;
           return {
-            operatorPackage: "com.clawperator.operator",
+            operatorPackage: "com.androperator.operator",
             install: { ok: true },
             permissions: {
-              operatorPackage: "com.clawperator.operator",
+              operatorPackage: "com.androperator.operator",
               accessibility: { ok: true, alreadyEnabled: false },
               notification: { ok: true, skipped: false },
               notificationListener: { ok: true, alreadyEnabled: false },
@@ -423,7 +423,7 @@ describe("operator remediate", () => {
             localPath: "/tmp/operator.apk",
             operatorVersion: "0.7.4",
             sha256: "b".repeat(64),
-            operatorPackage: "com.clawperator.operator",
+            operatorPackage: "com.androperator.operator",
             checksumSource: "inline",
             metadataUrl: "https://downloads.example.com/latest.json",
             apkUrl: "https://downloads.example.com/operator.apk",
@@ -433,10 +433,10 @@ describe("operator remediate", () => {
         setupOperatorImpl: async () => {
           setupCount += 1;
           return {
-            operatorPackage: "com.clawperator.operator",
+            operatorPackage: "com.androperator.operator",
             install: { ok: true },
             permissions: {
-              operatorPackage: "com.clawperator.operator",
+              operatorPackage: "com.androperator.operator",
               accessibility: { ok: true, alreadyEnabled: false },
               notification: { ok: true, skipped: false },
               notificationListener: { ok: true, alreadyEnabled: false },
@@ -487,7 +487,7 @@ describe("operator remediate", () => {
 
   it("keeps user-facing debug APK remediation paths in canonical tilde form", async () => {
     const output = await cmdOperatorRemediate(
-      { format: "json", operatorPackage: "com.clawperator.operator.dev" },
+      { format: "json", operatorPackage: "com.androperator.operator.dev" },
       {
         listDevicesImpl: async () => [{ serial: "device-debug", state: "device" }],
         doctorServiceFactory: () => ({
@@ -503,7 +503,7 @@ describe("operator remediate", () => {
 
     const parsed = JSON.parse(output);
     assert.strictEqual(parsed.ok, false);
-    assert.strictEqual(parsed.devices[0].message, "Automatic APK download is only available for com.clawperator.operator. Provide a matching local APK at ~/.clawperator/downloads/operator-debug.apk for com.clawperator.operator.dev.");
+    assert.strictEqual(parsed.devices[0].message, "Automatic APK download is only available for com.androperator.operator. Provide a matching local APK at ~/.androperator/downloads/operator-debug.apk for com.androperator.operator.dev.");
   });
 
   it("uses grammatically correct warning summaries for a single warning device", async () => {

@@ -8,8 +8,8 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-OPERATOR = 'com.clawperator.operator.dev'
-FIXTURE = 'com.clawperator.fixture.media'
+OPERATOR = 'com.androperator.operator.dev'
+FIXTURE = 'com.androperator.fixture.media'
 LISTENER = OPERATOR + '/action.notification.NotificationListenerService'
 
 
@@ -51,7 +51,7 @@ def main():
         return payload(cli('notifications', 'list', '--app', FIXTURE))['notifications']
 
     def control(operation):
-        adb('am', 'broadcast', '--receiver-foreground', '-n', FIXTURE + '/clawperator.operator.debug.MediaProofActivity$Control', '--es', 'operation', operation)
+        adb('am', 'broadcast', '--receiver-foreground', '-n', FIXTURE + '/androperator.operator.debug.MediaProofActivity$Control', '--es', 'operation', operation)
         time.sleep(0.2)
 
     def sample():

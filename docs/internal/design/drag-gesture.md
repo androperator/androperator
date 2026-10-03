@@ -55,5 +55,5 @@ follow-up work.
 
 ## Implementation sources
 
-- `apps/android/shared/data/uitree/src/main/kotlin/clawperator/accessibilityservice/DragGestureAndroid.kt`
-- `apps/android/shared/test/src/test/kotlin/clawperator/uitree/DragGestureAndroidTest.kt`
+- `apps/android/shared/data/uitree/src/main/kotlin/androperator/accessibilityservice/DragGestureAndroid.kt`
+- `apps/android/shared/test/src/test/kotlin/androperator/uitree/DragGestureAndroidTest.kt`

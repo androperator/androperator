@@ -45,7 +45,7 @@ def classify_result(stdout, exit_code, full_query=False, internet=False):
         outcome['code'] = value.get('code')
         # The branch-local CLI only exposes an envelope after transport validation.
         # Require its canonical shape before counting delivery, even on nonzero exit.
-        if (value.get('isCanonicalTerminal') is True and value.get('terminalSource') == 'clawperator_result'
+        if (value.get('isCanonicalTerminal') is True and value.get('terminalSource') == 'androperator_result'
                 and isinstance(envelope, dict) and envelope.get('commandId') and envelope.get('taskId')
                 and envelope.get('status') in ('success', 'failed')
                 and isinstance(envelope.get('stepResults'), list)):
@@ -117,10 +117,10 @@ def main():
     parser.add_argument('--out', required=True, type=Path)
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=False)
-    environment = {**os.environ, 'CLAWPERATOR_NO_DAEMON': '1'}
+    environment = {**os.environ, 'ANDROPERATOR_NO_DAEMON': '1'}
     if args.trace_adb_shell:
         environment['ADB_TRACE'] = 'shell'
-    lock = open(Path(tempfile.gettempdir()) / ('clawperator-device-' + hashlib.sha256(args.device.encode()).hexdigest() + '.lock'), 'w')
+    lock = open(Path(tempfile.gettempdir()) / ('androperator-device-' + hashlib.sha256(args.device.encode()).hexdigest() + '.lock'), 'w')
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     adb = ['adb', '-s', args.device]
     def shell(*command):
@@ -128,7 +128,7 @@ def main():
     assert shell('getprop', 'ro.build.version.sdk') == '35'
     locale = shell('getprop', 'persist.sys.locale') or shell('getprop', 'ro.product.locale')
     assert locale.startswith('en'), locale
-    service = args.operator_package + '/clawperator.operator.accessibilityservice.OperatorAccessibilityService'
+    service = args.operator_package + '/androperator.operator.accessibilityservice.OperatorAccessibilityService'
     assert shell('settings', 'get', 'secure', 'enabled_accessibility_services') == service
     sources = {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
                for p in sorted((ROOT / 'apps/node/dist').rglob('*.js')) if 'test' not in p.parts}

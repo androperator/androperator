@@ -1,7 +1,7 @@
 # Install Validation
 
 This directory contains the install-specific validation harnesses for the
-shell bootstrap wrapper in `sites/landing-clawperator/public/install.sh`.
+shell bootstrap wrapper in `sites/androperator-public/install.sh`.
 
 ## Entry Point
 
@@ -41,11 +41,11 @@ dependencies for you.
     installed CLI binary selection
 - `test_main_delegation.sh`
   - covers hermetic `main()` smoke paths for bootstrap gating, delegation to
-    `clawperator install`, and top-level exit-code/message propagation
+    `androperator install`, and top-level exit-code/message propagation
 
 ## Maintenance Rule
 
-When a change adds or changes behavior in `sites/landing-clawperator/public/install.sh`,
+When a change adds or changes behavior in `sites/androperator-public/install.sh`,
 update or add the matching coverage here in the same change. Do not rely on the
 existing harnesses as generic coverage for new install branches.
 

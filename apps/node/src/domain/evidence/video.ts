@@ -50,7 +50,7 @@ export async function startVideo(options: VideoStartOptions, dependencies: Video
   const outputDir = options.outputDir === undefined ? join(root, "bundles", sessionId) : resolve(options.outputDir);
   const state: VideoState = { sessionId, nonce, deviceId: runtime.deviceId, operatorPackage: runtime.operatorPackage, adbPath: runtime.adbPath,
     outputDir, lockPath, managed: options.outputDir === undefined, durationSeconds: options.durationSeconds, size,
-    hostPid: null, hostStartedAt: null, remotePid: null, remoteStart: null, remotePath: `/data/local/tmp/clawperator-video-${sessionId}.mp4`,
+    hostPid: null, hostStartedAt: null, remotePid: null, remoteStart: null, remotePath: `/data/local/tmp/androperator-video-${sessionId}.mp4`,
     deadline: Date.now() + options.durationSeconds * 1000 + 5000, updatedAt: Date.now(), recoveryRequired: false,
     backend: "scrcpy", maxEdge: options.size === undefined ? 1280 : Math.max(...size.split("x").map(Number)) };
   await acquireVideoLock(lockPath, { sessionId, nonce, outputDir });

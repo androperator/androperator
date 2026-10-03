@@ -25,7 +25,7 @@ from .scorer import extract_answer_from_transcript, extract_skill, score, valida
 from .timeutil import format_timestamp
 
 
-DOCS_URL = "https://docs.clawperator.com"
+DOCS_URL = "https://docs.androperator.com"
 TRANSCRIPT_CAP_BYTES = 10 * 1024 * 1024
 _SENSITIVE_KEY_RE = ("KEY", "SECRET", "TOKEN", "PASSWORD")
 _DISCOVERY_ARTIFACT_REQUIRED_KEYS = {
@@ -75,7 +75,7 @@ def _load_prompt_path(spec: dict, knowledge_mode: str, skill_prompt_name: str | 
 def _minimal_base_env(
     device_serial: str,
     operator_package: str,
-    clawperator_cmd: list[str],
+    androperator_cmd: list[str],
     path_prefix: str | None = None,
 ) -> dict[str, str]:
     path = os.environ["PATH"]
@@ -89,26 +89,26 @@ def _minimal_base_env(
         "LANG": os.environ.get("LANG", "C.UTF-8"),
         "LC_ALL": os.environ.get("LC_ALL", "C.UTF-8"),
         "ANDROID_SERIAL": device_serial,
-        "CLAWPERATOR_CMD": shlex.join(clawperator_cmd),
-        "CLAWPERATOR_OPERATOR_PACKAGE": operator_package,
+        "ANDROPERATOR_CMD": shlex.join(androperator_cmd),
+        "ANDROPERATOR_OPERATOR_PACKAGE": operator_package,
     }
 
 
-def _prepare_clawperator_launcher(
+def _prepare_androperator_launcher(
     work_dir: Path,
-    clawperator_cmd: list[str],
+    androperator_cmd: list[str],
     knowledge_mode: str,
     runtime_target: str,
 ) -> tuple[list[str], str | None]:
     if runtime_target == "published" or knowledge_mode != "public-surface":
-        return clawperator_cmd, None
-    if len(clawperator_cmd) == 1 and clawperator_cmd[0] == "clawperator":
-        return clawperator_cmd, None
-    wrapper_path = work_dir / "clawperator"
-    script = "#!/bin/sh\nexec " + shlex.join(clawperator_cmd) + ' "$@"\n'
+        return androperator_cmd, None
+    if len(androperator_cmd) == 1 and androperator_cmd[0] == "androperator":
+        return androperator_cmd, None
+    wrapper_path = work_dir / "androperator"
+    script = "#!/bin/sh\nexec " + shlex.join(androperator_cmd) + ' "$@"\n'
     wrapper_path.write_text(script, encoding="utf-8")
     wrapper_path.chmod(0o755)
-    return ["clawperator"], str(work_dir)
+    return ["androperator"], str(work_dir)
 
 
 def _display_work_dir(work_dir: Path, knowledge_mode: str) -> str:
@@ -144,7 +144,7 @@ def _ensure_context_file_if_needed(work_dir: Path, agent: BaseAgent, knowledge_m
     context_path = work_dir / "CLAUDE.md"
     if context_path.exists():
         return
-    context_path.write_text("https://docs.clawperator.com\n", encoding="utf-8")
+    context_path.write_text("https://docs.androperator.com\n", encoding="utf-8")
 
 
 def _run_keyevent(device_serial: str, keyevent: str, logger) -> None:
@@ -169,10 +169,10 @@ def _run_keyevent(device_serial: str, keyevent: str, logger) -> None:
         logger.warning("device_keyevent_failed", keyevent=keyevent, returncode=result.returncode, stderr=result.stderr.strip())
 
 
-def _count_clawperator_results(transcript: str) -> int:
+def _count_androperator_results(transcript: str) -> int:
     count = 0
     for line in transcript.splitlines():
-        if line.startswith("[Clawperator-Result]"):
+        if line.startswith("[Androperator-Result]"):
             count += 1
     return count
 
@@ -420,7 +420,7 @@ def _validate_discovery_artifact(
         if isinstance(skill_generation, dict) and isinstance(skill_generation.get("required_proving_handoff"), str)
         else None
     )
-    expected_recording_handoff = required_proving_handoff or "clawperator-skill-author-by-recording"
+    expected_recording_handoff = required_proving_handoff or "androperator-skill-author-by-recording"
 
     target_app_package = artifact.get("target_app_package")
     if not isinstance(target_app_package, dict):
@@ -534,9 +534,9 @@ def _validate_discovery_artifact(
 
     recommended_next_step = artifact.get("recommended_next_step")
     handoff_target = artifact.get("handoff_target")
-    if handoff_target not in {"clawperator-skill-author-by-recording", "raw-clawperator", "human", "none"}:
+    if handoff_target not in {"androperator-skill-author-by-recording", "raw-androperator", "human", "none"}:
         errors.append(
-            "discovery artifact handoff_target must be one of `clawperator-skill-author-by-recording`, `raw-clawperator`, `human`, or `none`"
+            "discovery artifact handoff_target must be one of `androperator-skill-author-by-recording`, `raw-androperator`, `human`, or `none`"
         )
     if recommended_next_step not in {
         "use_existing_skill",
@@ -553,7 +553,7 @@ def _validate_discovery_artifact(
         "use_existing_skill": "none",
         "proceed_to_recording": expected_recording_handoff,
         "iterate_discovery": "none",
-        "one_shot_direct_automation": "raw-clawperator",
+        "one_shot_direct_automation": "raw-androperator",
         "escalate_to_human": "human",
         "decline": "none",
     }
@@ -633,12 +633,12 @@ def _evaluate_skill_route_requirements(transcript: str, skill_generation: Any) -
     start_marker = (
         skill_generation.get("skill_start_marker")
         if isinstance(skill_generation, dict) and isinstance(skill_generation.get("skill_start_marker"), str)
-        else "CLAWPERATOR_SKILL_START"
+        else "ANDROPERATOR_SKILL_START"
     )
     end_marker = (
         skill_generation.get("skill_end_marker")
         if isinstance(skill_generation, dict) and isinstance(skill_generation.get("skill_end_marker"), str)
-        else "CLAWPERATOR_SKILL_END"
+        else "ANDROPERATOR_SKILL_END"
     )
     route_transcript = _strip_marked_blocks(transcript, start_marker, end_marker)
     command_execution_records = list(_iter_command_execution_records(route_transcript))
@@ -687,7 +687,7 @@ def _evaluate_skill_route_requirements(transcript: str, skill_generation: Any) -
         )
         if bundled_skills_list_line_numbers and discovery_artifact_line_number <= min(bundled_skills_list_line_numbers):
             discovery_artifact_errors.append(
-                "structured discovery artifact must appear after `clawperator bundled-skills list`"
+                "structured discovery artifact must appear after `androperator bundled-skills list`"
             )
     elif discovery_artifact_count > 1:
         discovery_artifact_errors.append("expected exactly one structured discovery artifact before skill emission")
@@ -723,15 +723,15 @@ def _evaluate_skill_route_requirements(transcript: str, skill_generation: Any) -
     if required_authoring_front_door is not None or required_proving_handoff is not None:
         if not runtime_skill_discovery_seen:
             route_requirement_errors.append(
-                "missing structured command evidence for runtime-skill discovery (`clawperator skills for-app/search/get`)"
+                "missing structured command evidence for runtime-skill discovery (`androperator skills for-app/search/get`)"
             )
         elif not runtime_skill_discovery_before_authoring:
             route_requirement_errors.append(
-                "runtime-skill discovery must appear before `clawperator bundled-skills list`"
+                "runtime-skill discovery must appear before `androperator bundled-skills list`"
             )
         if not bundled_skills_list_seen:
             route_requirement_errors.append(
-                "missing structured command evidence for `clawperator bundled-skills list`"
+                "missing structured command evidence for `androperator bundled-skills list`"
             )
     route_requirement_errors.extend(discovery_artifact_errors)
     if required_authoring_front_door is not None and not required_authoring_front_door_explicitly_seen:
@@ -740,7 +740,7 @@ def _evaluate_skill_route_requirements(transcript: str, skill_generation: Any) -
         )
     elif required_authoring_front_door is not None and not required_authoring_front_door_after_authoring:
         route_requirement_errors.append(
-            f"required_authoring_front_door `{required_authoring_front_door}` must appear after `clawperator bundled-skills list`"
+            f"required_authoring_front_door `{required_authoring_front_door}` must appear after `androperator bundled-skills list`"
         )
     if required_authoring_front_door is not None and not required_authoring_front_door_seen:
         route_requirement_errors.append(
@@ -787,7 +787,7 @@ def _synthesize_skill_score_for_contract(
     *,
     transcript: str,
     skill_generation: Any,
-    clawperator_cmd: list[str],
+    androperator_cmd: list[str],
     operator_package: str,
     existing_skill_score: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -795,12 +795,12 @@ def _synthesize_skill_score_for_contract(
     start_marker = (
         skill_generation.get("skill_start_marker")
         if isinstance(skill_generation, dict) and isinstance(skill_generation.get("skill_start_marker"), str)
-        else "CLAWPERATOR_SKILL_START"
+        else "ANDROPERATOR_SKILL_START"
     )
     end_marker = (
         skill_generation.get("skill_end_marker")
         if isinstance(skill_generation, dict) and isinstance(skill_generation.get("skill_end_marker"), str)
-        else "CLAWPERATOR_SKILL_END"
+        else "ANDROPERATOR_SKILL_END"
     )
 
     skill_json = extract_skill(transcript, start_marker, end_marker)
@@ -810,7 +810,7 @@ def _synthesize_skill_score_for_contract(
     if skill_json is not None:
         skill_valid, skill_validation_errors = validate_skill(
             skill_json,
-            clawperator_cmd,
+            androperator_cmd,
             operator_package,
         )
 
@@ -872,12 +872,12 @@ def _attach_skill_score(
     start_marker = (
         skill_generation.get("skill_start_marker")
         if isinstance(skill_generation, dict) and isinstance(skill_generation.get("skill_start_marker"), str)
-        else "CLAWPERATOR_SKILL_START"
+        else "ANDROPERATOR_SKILL_START"
     )
     end_marker = (
         skill_generation.get("skill_end_marker")
         if isinstance(skill_generation, dict) and isinstance(skill_generation.get("skill_end_marker"), str)
-        else "CLAWPERATOR_SKILL_END"
+        else "ANDROPERATOR_SKILL_END"
     )
     transcript_path = run_dir / "transcript.txt"
     transcript = transcript_path.read_text(encoding="utf-8") if transcript_path.exists() else ""
@@ -888,13 +888,13 @@ def _attach_skill_score(
     if skill_json is not None:
         skill_valid, skill_validation_errors = validate_skill(
             skill_json,
-            env.clawperator_cmd,
+            env.androperator_cmd,
             env.operator_package,
         )
     try:
         skill_score = run_replay(
             run_dir=run_dir,
-            clawperator_cmd=env.clawperator_cmd,
+            androperator_cmd=env.androperator_cmd,
             operator_package=env.operator_package,
             device_serial=env.device_serial,
             timeout_s=replay_timeout_s,
@@ -927,7 +927,7 @@ def _classify_failure(status: str, transcript: str, used_disallowed_tool: bool) 
         return "tool_usage"
     if "settings" in lowered or "android version" in lowered or "about phone" in lowered or "about device" in lowered:
         return "navigation"
-    if "docs.clawperator.com" in lowered or "clawperator.com" in lowered:
+    if "docs.androperator.com" in lowered or "androperator.com" in lowered:
         return "docs"
     return "unknown"
 
@@ -1009,7 +1009,7 @@ def _build_config(
     timeout_s: int,
     max_turns: int | None,
     agent_binary_version: str,
-    display_clawperator_cmd: list[str],
+    display_androperator_cmd: list[str],
     display_work_dir: str,
     display_cwd: str,
     display_runs_dir: str,
@@ -1048,11 +1048,11 @@ def _build_config(
             "agent_binary_version": agent_binary_version,
             "env_hash": _hash_env(env_overrides),
             "runs_dir": display_runs_dir,
-            "clawperator_cmd": display_clawperator_cmd,
-            "runtime_clawperator_cmd": env.clawperator_cmd,
-            "clawperator_version": env.clawperator_version,
+            "androperator_cmd": display_androperator_cmd,
+            "runtime_androperator_cmd": env.androperator_cmd,
+            "androperator_version": env.androperator_version,
             "ground_truth_android_version": env.ground_truth_android_version,
-            "clawperator_npm_version": env.clawperator_npm_version,
+            "androperator_npm_version": env.androperator_npm_version,
             "operator_package": env.operator_package,
         },
         "timeout_s": timeout_s,
@@ -1087,13 +1087,13 @@ def _build_result(
     max_turns: int | None,
     first_result_seen_at: float | None,
     turns_counted: int | None,
-    display_clawperator_cmd: list[str],
+    display_androperator_cmd: list[str],
     display_work_dir: str,
     display_cwd: str,
     display_runs_dir: str,
     skill_prompt_path: Path | None = None,
 ) -> dict[str, Any]:
-    clawperator_commands_detected = _count_clawperator_results(transcript)
+    androperator_commands_detected = _count_androperator_results(transcript)
     answer_emitted = score_result.answer_extracted_raw is not None
     violations = {"used_adb": bool(score_result.used_disallowed_tool)}
     diagnostics = {
@@ -1132,9 +1132,9 @@ def _build_result(
             "ground_truth_android_version": env.ground_truth_android_version,
             "ground_truth_collected_at": env.ground_truth_collected_at,
             "ground_truth_rechecked_at": ground_truth_rechecked_at,
-            "clawperator_cmd": display_clawperator_cmd,
-            "clawperator_version": env.clawperator_version,
-            "clawperator_npm_version": env.clawperator_npm_version,
+            "androperator_cmd": display_androperator_cmd,
+            "androperator_version": env.androperator_version,
+            "androperator_npm_version": env.androperator_npm_version,
             "operator_package": env.operator_package,
             "cwd": display_cwd,
             "runs_dir": display_runs_dir,
@@ -1149,9 +1149,9 @@ def _build_result(
         },
         "metrics": {
             "wall_clock_s": wall_clock_s,
-            "time_to_first_clawperator_command_s": first_result_seen_at,
+            "time_to_first_androperator_command_s": first_result_seen_at,
             "timeout_budget_s": timeout_s,
-            "clawperator_commands_detected": clawperator_commands_detected,
+            "androperator_commands_detected": androperator_commands_detected,
             "actions_per_turn": None,
             "answer_emitted": answer_emitted,
             "violations": violations,
@@ -1215,7 +1215,7 @@ def run_eval(
     transcript_bytes_written = 0
     transcript_truncated = False
     answer_found_logged = False
-    display_clawperator_cmd: list[str] = ["clawperator"]
+    display_androperator_cmd: list[str] = ["androperator"]
     display_work_dir = "<tempdir>"
     display_cwd = "<redacted>"
     display_runs_dir = "<redacted>"
@@ -1223,9 +1223,9 @@ def run_eval(
     try:
         _ensure_agent_binary_available(agent)
         prompt_path = _load_prompt_path(spec, knowledge_mode, skill_prompt_name)
-        display_clawperator_cmd, path_prefix = _prepare_clawperator_launcher(
+        display_androperator_cmd, path_prefix = _prepare_androperator_launcher(
             work_dir,
-            env.clawperator_cmd,
+            env.androperator_cmd,
             knowledge_mode,
             runtime_target,
         )
@@ -1235,23 +1235,23 @@ def run_eval(
         prompt_text = build_prompt(
             str(prompt_path),
             {
-                "CLAWPERATOR_CMD": shlex.join(display_clawperator_cmd),
-                "CLAWPERATOR_OPERATOR_PACKAGE": env.operator_package,
+                "ANDROPERATOR_CMD": shlex.join(display_androperator_cmd),
+                "ANDROPERATOR_OPERATOR_PACKAGE": env.operator_package,
                 "DEVICE_SERIAL": env.device_serial,
                 "DOCS_URL": DOCS_URL,
                 **({"REPO_ROOT": str(REPO_ROOT)} if knowledge_mode == "full-repo" else {}),
             },
         )
         prompt_sha256 = hashlib.sha256(prompt_text.encode("utf-8")).hexdigest()
-        base_env = _minimal_base_env(env.device_serial, env.operator_package, display_clawperator_cmd, path_prefix=path_prefix)
+        base_env = _minimal_base_env(env.device_serial, env.operator_package, display_androperator_cmd, path_prefix=path_prefix)
         agent_overrides = agent.build_env(base_env)
         final_env = {**base_env, **agent_overrides}
         command = agent.build_command(prompt_text, str(work_dir))
         agent_binary_version = _probe_agent_binary_version(agent)
         config_env_overrides = {
             "ANDROID_SERIAL": env.device_serial,
-            "CLAWPERATOR_CMD": shlex.join(display_clawperator_cmd),
-            "CLAWPERATOR_OPERATOR_PACKAGE": env.operator_package,
+            "ANDROPERATOR_CMD": shlex.join(display_androperator_cmd),
+            "ANDROPERATOR_OPERATOR_PACKAGE": env.operator_package,
             **({"EVAL_LABEL": label} if label is not None else {}),
             **agent_overrides,
         }
@@ -1273,7 +1273,7 @@ def run_eval(
             timeout_s=timeout_s,
             max_turns=max_turns,
             agent_binary_version=agent_binary_version,
-            display_clawperator_cmd=display_clawperator_cmd,
+            display_androperator_cmd=display_androperator_cmd,
             display_work_dir=display_work_dir,
             display_cwd=display_cwd,
             display_runs_dir=display_runs_dir,
@@ -1282,10 +1282,10 @@ def run_eval(
         logger.env_summary(
             runtime_target=runtime_target,
             device_serial=env.device_serial,
-            clawperator_cmd=display_clawperator_cmd,
+            androperator_cmd=display_androperator_cmd,
             operator_package=env.operator_package,
-            clawperator_version=env.clawperator_version,
-            clawperator_npm_version=env.clawperator_npm_version,
+            androperator_version=env.androperator_version,
+            androperator_npm_version=env.androperator_npm_version,
         )
         if (
             runtime_target == "published"
@@ -1367,7 +1367,7 @@ def run_eval(
             except Exception as exc:
                 turn_count_parse_failed = True
                 logger.warning("turn_count_failed", error=str(exc) if str(exc) else exc.__class__.__name__)
-            if line.startswith("[Clawperator-Result]") and first_result_seen_at is None:
+            if line.startswith("[Androperator-Result]") and first_result_seen_at is None:
                 first_result_seen_at = time.monotonic() - started_mono
 
         proc.wait()
@@ -1444,7 +1444,7 @@ def run_eval(
             max_turns=max_turns,
             first_result_seen_at=first_result_seen_at,
             turns_counted=turns_counted,
-            display_clawperator_cmd=display_clawperator_cmd,
+            display_androperator_cmd=display_androperator_cmd,
             display_work_dir=display_work_dir,
             display_cwd=display_cwd,
             display_runs_dir=display_runs_dir,
@@ -1466,7 +1466,7 @@ def run_eval(
             timeout_s=timeout_s,
             max_turns=max_turns,
             agent_binary_version=agent_binary_version,
-            display_clawperator_cmd=display_clawperator_cmd,
+            display_androperator_cmd=display_androperator_cmd,
             display_work_dir=display_work_dir,
             display_cwd=display_cwd,
             display_runs_dir=display_runs_dir,
@@ -1530,8 +1530,8 @@ def run_eval(
             env=env,
             env_overrides=_sanitize_env_overrides({
                 "ANDROID_SERIAL": env.device_serial,
-                "CLAWPERATOR_CMD": shlex.join(display_clawperator_cmd),
-                "CLAWPERATOR_OPERATOR_PACKAGE": env.operator_package,
+                "ANDROPERATOR_CMD": shlex.join(display_androperator_cmd),
+                "ANDROPERATOR_OPERATOR_PACKAGE": env.operator_package,
             }),
             ground_truth_rechecked_at=ground_truth_rechecked_at,
             transcript=transcript_text,
@@ -1543,7 +1543,7 @@ def run_eval(
             max_turns=max_turns,
             first_result_seen_at=first_result_seen_at,
             turns_counted=turns_counted,
-            display_clawperator_cmd=display_clawperator_cmd,
+            display_androperator_cmd=display_androperator_cmd,
             display_work_dir=display_work_dir,
             display_cwd=display_cwd,
             display_runs_dir=display_runs_dir,
@@ -1563,15 +1563,15 @@ def run_eval(
             command=command,
             env_overrides=_sanitize_env_overrides({
                 "ANDROID_SERIAL": env.device_serial,
-                "CLAWPERATOR_CMD": shlex.join(display_clawperator_cmd),
-                "CLAWPERATOR_OPERATOR_PACKAGE": env.operator_package,
+                "ANDROPERATOR_CMD": shlex.join(display_androperator_cmd),
+                "ANDROPERATOR_OPERATOR_PACKAGE": env.operator_package,
                 **agent_overrides,
             }),
             label=label,
             timeout_s=timeout_s,
             max_turns=max_turns,
             agent_binary_version="unknown",
-            display_clawperator_cmd=display_clawperator_cmd,
+            display_androperator_cmd=display_androperator_cmd,
             display_work_dir=display_work_dir,
             display_cwd=display_cwd,
             display_runs_dir=display_runs_dir,

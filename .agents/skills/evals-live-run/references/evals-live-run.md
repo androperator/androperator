@@ -25,7 +25,7 @@ npm --prefix apps/node run build
   testing the release path:
 
 ```bash
---operator-package com.clawperator.operator.dev
+--operator-package com.androperator.operator.dev
 ```
 
 - When multiple devices are connected, always pass `--device <serial>`.
@@ -82,7 +82,7 @@ The script wraps:
 uv run --project evals --extra dev \
   python evals/run_eval.py solax-orchestrated-cold-start \
   --device <device_serial> \
-  --operator-package com.clawperator.operator.dev \
+  --operator-package com.androperator.operator.dev \
   --runs <runs> \
   --label <label>
 ```
@@ -92,7 +92,7 @@ Artifacts land under:
 - `evals/artifacts/`
 
 If a batch is worth retaining, copy the sanitized batch into the private
-`clawperator-artifacts` repo instead of committing it in the product repo.
+`androperator-artifacts` repo instead of committing it in the product repo.
 
 ## Debug The Solax Skill Directly
 
@@ -109,14 +109,14 @@ That script wraps:
 
 ```bash
 env \
-  CLAWPERATOR_SKILLS_REGISTRY=../clawperator-skills/skills/skills-registry.json \
-  CLAWPERATOR_SKILL_RETAIN_LOGS=1 \
-  CLAWPERATOR_SKILL_LOG_DIR=/tmp/solax-orchestrated-debug \
-  CLAWPERATOR_SKILL_AGENT_TIMEOUT_MS=120000 \
+  ANDROPERATOR_SKILLS_REGISTRY=<workspace>/skills/skills-registry.json \
+  ANDROPERATOR_SKILL_RETAIN_LOGS=1 \
+  ANDROPERATOR_SKILL_LOG_DIR=/tmp/solax-orchestrated-debug \
+  ANDROPERATOR_SKILL_AGENT_TIMEOUT_MS=120000 \
   node apps/node/dist/cli/index.js skills run \
   com.solaxcloud.starter.set-discharge-to-limit-orchestrated \
   --device <device_serial> \
-  --operator-package com.clawperator.operator.dev \
+  --operator-package com.androperator.operator.dev \
   --output json \
   -- <percent>
 ```

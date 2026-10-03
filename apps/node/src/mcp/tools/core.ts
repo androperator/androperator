@@ -261,7 +261,7 @@ export function getCoreMcpTools(
     },
     {
       name: "execute",
-      description: "Run a validated Clawperator execution payload over the canonical execution engine.",
+      description: "Run a validated Androperator execution payload over the canonical execution engine.",
       inputSchema: buildCommonExecutionSchema({
         actions: {
           type: "array",

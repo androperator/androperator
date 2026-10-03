@@ -1,6 +1,6 @@
 ---
 name: com.test.echo
-clawperator-skill-type: replay
+androperator-skill-type: replay
 description: Test fixture that echoes forwarded args.
 ---
 

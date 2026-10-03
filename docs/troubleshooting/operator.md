@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Diagnose installation, permission, handshake, and crash-recovery problems involving the Clawperator Operator APK.
+Diagnose installation, permission, handshake, and crash-recovery problems involving the Androperator Operator APK.
 
 ## Sources
 
@@ -14,7 +14,7 @@ Diagnose installation, permission, handshake, and crash-recovery problems involv
 
 ## Operator Setup Phases
 
-`clawperator operator setup` is a three-phase workflow:
+`androperator operator setup` is a three-phase workflow:
 
 1. install APK
 2. grant accessibility and notification permissions
@@ -33,7 +33,7 @@ Successful setup returns all three phase objects plus a follow-up message:
 
 ```json
 {
-  "operatorPackage": "com.clawperator.operator.dev",
+  "operatorPackage": "com.androperator.operator.dev",
   "install": {
     "ok": true
   },
@@ -53,16 +53,16 @@ Successful setup returns all three phase objects plus a follow-up message:
     "ok": true,
     "packageInstalled": true
   },
-  "message": "Operator installed and ready. Run clawperator doctor to verify."
+  "message": "Operator installed and ready. Run androperator doctor to verify."
 }
 ```
 
 Verification pattern after any repair:
 
 ```bash
-clawperator operator setup --apk <path> --device <device_serial> --operator-package <package>
-clawperator doctor --device <device_serial> --operator-package <package>
-clawperator snapshot --device <device_serial> --operator-package <package>
+androperator operator setup --apk <path> --device <device_serial> --operator-package <package>
+androperator doctor --device <device_serial> --operator-package <package>
+androperator snapshot --device <device_serial> --operator-package <package>
 ```
 
 Treat the repair as complete only when:
@@ -83,7 +83,7 @@ Meaning:
 Fix:
 
 - verify the path on disk
-- rerun `clawperator operator setup --apk <path>`
+- rerun `androperator operator setup --apk <path>`
 
 Exact failure shape:
 
@@ -91,7 +91,7 @@ Exact failure shape:
 {
   "code": "OPERATOR_APK_NOT_FOUND",
   "message": "APK file not found: /abs/path/to/operator.apk",
-  "operatorPackage": "com.clawperator.operator.dev",
+  "operatorPackage": "com.androperator.operator.dev",
   "install": {
     "ok": false,
     "error": "APK file not found: /abs/path/to/operator.apk"
@@ -119,7 +119,7 @@ Exact failure shape:
 {
   "code": "OPERATOR_INSTALL_FAILED",
   "message": "adb: failed to install /abs/path/to/operator.apk: Failure [INSTALL_FAILED_VERSION_DOWNGRADE]",
-  "operatorPackage": "com.clawperator.operator.dev",
+  "operatorPackage": "com.androperator.operator.dev",
   "install": {
     "ok": false,
     "error": "adb: failed to install /abs/path/to/operator.apk: Failure [INSTALL_FAILED_VERSION_DOWNGRADE]",
@@ -144,15 +144,15 @@ Exact failure shape:
 ```json
 {
   "code": "OPERATOR_VERIFY_FAILED",
-  "message": "Package com.clawperator.operator.dev was not found after install.",
-  "operatorPackage": "com.clawperator.operator.dev",
+  "message": "Package com.androperator.operator.dev was not found after install.",
+  "operatorPackage": "com.androperator.operator.dev",
   "install": {
     "ok": true
   },
   "verification": {
     "ok": false,
     "packageInstalled": false,
-    "error": "Package com.clawperator.operator.dev was not found after install."
+    "error": "Package com.androperator.operator.dev was not found after install."
   }
 }
 ```
@@ -182,7 +182,7 @@ Exact failure shape:
 {
   "code": "OPERATOR_GRANT_FAILED",
   "message": "Could not set accessibility_enabled",
-  "operatorPackage": "com.clawperator.operator.dev",
+  "operatorPackage": "com.androperator.operator.dev",
   "install": {
     "ok": true
   },
@@ -209,20 +209,20 @@ This usually appears from doctor or handshake flows when the APK is installed bu
 Recovery:
 
 ```bash
-clawperator grant-device-permissions --device <device_serial> --operator-package <package>
-clawperator doctor --device <device_serial> --operator-package <package>
+androperator grant-device-permissions --device <device_serial> --operator-package <package>
+androperator doctor --device <device_serial> --operator-package <package>
 ```
 
 Check the doctor response for:
 
 - `checks[].id == "readiness.handshake"`
 - `checks[].code == "DEVICE_ACCESSIBILITY_NOT_RUNNING"` when accessibility is still the problem
-- `nextActions` including `clawperator grant-device-permissions --device <device_serial> --operator-package <package>`
+- `nextActions` including `androperator grant-device-permissions --device <device_serial> --operator-package <package>`
 
 If that does not recover the device:
 
 - reopen Android Accessibility Settings
-- ensure the Clawperator accessibility service is enabled
+- ensure the Androperator accessibility service is enabled
 - rerun `doctor`
 
 ## Variant Mismatch
@@ -237,10 +237,10 @@ Typical cases:
 
 | Requested | Installed | Fix |
 | --- | --- | --- |
-| `com.clawperator.operator` | `com.clawperator.operator.dev` | pass `--operator-package com.clawperator.operator.dev` or reinstall release |
-| `com.clawperator.operator.dev` | `com.clawperator.operator` | pass `--operator-package com.clawperator.operator` or reinstall debug |
+| `com.androperator.operator` | `com.androperator.operator.dev` | pass `--operator-package com.androperator.operator.dev` or reinstall release |
+| `com.androperator.operator.dev` | `com.androperator.operator` | pass `--operator-package com.androperator.operator` or reinstall debug |
 
-Use `clawperator doctor` to confirm which variant the readiness check found.
+Use `androperator doctor` to confirm which variant the readiness check found.
 
 The readiness check emits a warning, not a hard setup failure:
 
@@ -250,7 +250,7 @@ The readiness check emits a warning, not a hard setup failure:
   "status": "warn",
   "code": "OPERATOR_VARIANT_MISMATCH",
   "summary": "Wrong Operator variant installed.",
-  "detail": "Expected com.clawperator.operator.dev but found com.clawperator.operator.",
+  "detail": "Expected com.androperator.operator.dev but found com.androperator.operator.",
   "fix": {
     "title": "Switch variant"
   }
@@ -263,7 +263,7 @@ The readiness check emits a warning, not a hard setup failure:
 
 Meaning:
 
-- Node sent the command, but no `[Clawperator-Result]` envelope was received before the timeout
+- Node sent the command, but no `[Androperator-Result]` envelope was received before the timeout
 
 The doctor handshake check uses:
 
@@ -278,7 +278,7 @@ Exact doctor failure shape:
   "status": "fail",
   "code": "RESULT_ENVELOPE_TIMEOUT",
   "summary": "Handshake timed out.",
-  "detail": "No [Clawperator-Result] envelope received within 7000ms. Broadcast dispatch: sent. Operator package: com.clawperator.operator.dev. Device: <device_serial>. No correlated Android log lines were captured. This often indicates an APK/CLI version mismatch or an accessibility service issue. Run 'clawperator doctor --device <device_serial> --operator-package <package>' to diagnose."
+  "detail": "No [Androperator-Result] envelope received within 7000ms. Broadcast dispatch: sent. Operator package: com.androperator.operator.dev. Device: <device_serial>. No correlated Android log lines were captured. This often indicates an APK/CLI version mismatch or an accessibility service issue. Run 'androperator doctor --device <device_serial> --operator-package <package>' to diagnose."
 }
 ```
 
@@ -287,9 +287,9 @@ The trailing `Re-run with --verbose to inspect correlated Android log lines.` se
 Recommended recovery:
 
 ```bash
-clawperator grant-device-permissions --device <device_serial> --operator-package <package>
-clawperator snapshot --device <device_serial> --operator-package <package> --timeout 5000 --verbose
-clawperator doctor --device <device_serial> --operator-package <package>
+androperator grant-device-permissions --device <device_serial> --operator-package <package>
+androperator snapshot --device <device_serial> --operator-package <package> --timeout 5000 --verbose
+androperator doctor --device <device_serial> --operator-package <package>
 ```
 
 ### `BROADCAST_FAILED`
@@ -313,7 +313,7 @@ Typical failure shape:
   "message": "Failed to dispatch broadcast to Operator package.",
   "details": {
     "broadcastDispatchStatus": "failed",
-    "operatorPackage": "com.clawperator.operator.dev",
+    "operatorPackage": "com.androperator.operator.dev",
     "deviceId": "<device_serial>"
   }
 }
@@ -321,7 +321,7 @@ Typical failure shape:
 
 Recovery pattern:
 
-- if the package is missing, reinstall with `clawperator operator setup --apk <path> ...`
+- if the package is missing, reinstall with `androperator operator setup --apk <path> ...`
 - if the package is present, rerun `doctor --verbose` and inspect the handshake detail plus `adb logcat`
 
 ## Crash Recovery
@@ -334,21 +334,21 @@ There is no dedicated "operator crashed" error code in the Node API. In practice
 
 Recovery sequence:
 
-1. rerun `clawperator doctor --device <serial> --operator-package <pkg>`
-2. if accessibility is down, run `clawperator grant-device-permissions ...`
-3. if package presence is wrong or missing, rerun `clawperator operator setup --apk <path> ...`
+1. rerun `androperator doctor --device <serial> --operator-package <pkg>`
+2. if accessibility is down, run `androperator grant-device-permissions ...`
+3. if package presence is wrong or missing, rerun `androperator operator setup --apk <path> ...`
 4. rerun `doctor`
-5. confirm with `clawperator snapshot ...`
+5. confirm with `androperator snapshot ...`
 
 The runtime hint generated by execution failures also points here. When accessibility is down, `runExecution.ts` adds a hint like:
 
-- `clawperator doctor --fix --device <device_id>`
-- `clawperator operator setup --apk <path-to-apk> --device <device_id>`
+- `androperator doctor --fix --device <device_id>`
+- `androperator operator setup --apk <path-to-apk> --device <device_id>`
 
 If you need a fresh stable release APK outside `install.sh`, always redownload
 it from the canonical public URL before rerunning setup:
 
-- `https://clawperator.com/operator.apk`
+- `https://androperator.com/operator.apk`
 
 ## Crash Logs Access
 
@@ -358,14 +358,14 @@ Useful commands:
 
 ```bash
 adb -s <device_serial> logcat
-adb -s <device_serial> logcat | rg 'clawperator|AndroidRuntime|FATAL EXCEPTION'
+adb -s <device_serial> logcat | rg 'androperator|AndroidRuntime|FATAL EXCEPTION'
 adb -s <device_serial> logcat -d
 ```
 
 For command-specific correlation, also use:
 
 ```bash
-clawperator snapshot --device <device_serial> --operator-package <package> --verbose
+androperator snapshot --device <device_serial> --operator-package <package> --verbose
 ```
 
 That helps line up CLI execution with Android-side logging.
@@ -374,19 +374,19 @@ Verification pattern:
 
 - clear or dump logcat close to the failing command
 - rerun one failing command such as `snapshot --verbose`
-- search for `clawperator`, `AndroidRuntime`, and `FATAL EXCEPTION`
+- search for `androperator`, `AndroidRuntime`, and `FATAL EXCEPTION`
 - correlate the timestamp with the CLI command that failed
 
 ## Recommended Recovery Order
 
 Use this order for a broken Operator state:
 
-1. verify device connectivity with `clawperator devices`
-2. run `clawperator doctor --device <serial> --operator-package <pkg>`
-3. fix permissions with `clawperator grant-device-permissions ...` if accessibility is the problem
-4. rerun `clawperator operator setup --apk <path> ...` if install or variant state is wrong
+1. verify device connectivity with `androperator devices`
+2. run `androperator doctor --device <serial> --operator-package <pkg>`
+3. fix permissions with `androperator grant-device-permissions ...` if accessibility is the problem
+4. rerun `androperator operator setup --apk <path> ...` if install or variant state is wrong
 5. rerun `doctor`
-6. confirm with `clawperator snapshot ...`
+6. confirm with `androperator snapshot ...`
 
 ## What Success Looks Like
 
@@ -399,31 +399,31 @@ Treat the Operator as recovered only when:
 
 ## Diagnostics and Logging
 
-Use `clawperator logs` to stream the log file in real time:
+Use `androperator logs` to stream the log file in real time:
 
 ```bash
 # In Terminal 1: start streaming logs
-clawperator logs
+androperator logs
 
 # In Terminal 2: run the failing command
-clawperator snapshot --device <device_serial> --operator-package <package>
+androperator snapshot --device <device_serial> --operator-package <package>
 ```
 
 The logs command dumps all existing log entries then streams new ones as they arrive. Press Ctrl+C to stop.
 
-Log file location: `~/.clawperator/logs/clawperator-YYYY-MM-DD.log`
+Log file location: `~/.androperator/logs/androperator-YYYY-MM-DD.log`
 
 Useful patterns:
 
 ```bash
 # Check for skill lifecycle events
-grep '"event":"skills.run.start"' ~/.clawperator/logs/clawperator-$(date +%F).log
+grep '"event":"skills.run.start"' ~/.androperator/logs/androperator-$(date +%F).log
 
 # Parse events with jq
-jq -c 'select(.event | startswith("skills.run."))' ~/.clawperator/logs/clawperator-$(date +%F).log
+jq -c 'select(.event | startswith("skills.run."))' ~/.androperator/logs/androperator-$(date +%F).log
 
 # Follow logs in real time
-tail -f ~/.clawperator/logs/clawperator-$(date +%F).log
+tail -f ~/.androperator/logs/androperator-$(date +%F).log
 ```
 
 See [Logging](../api/logging.md) for complete documentation.

@@ -207,7 +207,7 @@ export async function cmdDaemonStart(options: DaemonCommandOptions): Promise<str
     }
     return formatError({
       code: ERROR_CODES.DAEMON_START_FAILED,
-      message: "Daemon socket is responding but is not owned by a managed Clawperator daemon.",
+      message: "Daemon socket is responding but is not owned by a managed Androperator daemon.",
       details: { socketPath },
     }, { format: options.format });
   }
@@ -228,7 +228,7 @@ export async function cmdDaemonStart(options: DaemonCommandOptions): Promise<str
         }
         return formatError({
           code: ERROR_CODES.DAEMON_START_FAILED,
-          message: "Daemon socket is responding but is not owned by a managed Clawperator daemon.",
+          message: "Daemon socket is responding but is not owned by a managed Androperator daemon.",
           details: { socketPath },
         }, { format: options.format });
       }
@@ -277,7 +277,7 @@ export async function cmdDaemonStart(options: DaemonCommandOptions): Promise<str
       }
       return formatError({
         code: ERROR_CODES.DAEMON_START_FAILED,
-        message: "Daemon socket is responding but is not owned by a managed Clawperator daemon.",
+        message: "Daemon socket is responding but is not owned by a managed Androperator daemon.",
         details: { socketPath },
       }, { format: options.format });
     }
@@ -294,7 +294,7 @@ export async function cmdDaemonStart(options: DaemonCommandOptions): Promise<str
   } catch (error) {
     return formatError({
       code: ERROR_CODES.DAEMON_START_FAILED,
-      message: "Failed to spawn the Clawperator daemon.",
+      message: "Failed to spawn the Androperator daemon.",
       details: { socketPath, error: String(error) },
     }, { format: options.format });
   }
@@ -318,7 +318,7 @@ export async function cmdDaemonStop(options: DaemonCommandOptions): Promise<stri
   } catch (error) {
     return formatError({
       code: ERROR_CODES.DAEMON_STOP_FAILED,
-      message: "Failed to stop the Clawperator daemon.",
+      message: "Failed to stop the Androperator daemon.",
       details: { socketPath, error: String(error) },
     }, { format: options.format });
   }

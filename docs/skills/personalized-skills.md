@@ -6,23 +6,23 @@ Define when a local agent-facing skill may encode one user's labels, devices,
 account state, profile defaults, or workflow preferences, and how to keep that
 skill truthful without presenting it as shared runtime capability.
 
-This page covers personalized agent-facing wrappers that call Clawperator
+This page covers personalized agent-facing wrappers that call Androperator
 runtime skills. It does not change the runtime skills registry contract
-documented in [Overview](overview.md), and it does not add a Clawperator memory
+documented in [Overview](overview.md), and it does not add an Androperator memory
 or preference store.
 
 ## Skill Types
 
-Clawperator documentation uses these skill categories. Keep the names separate:
+Androperator documentation uses these skill categories. Keep the names separate:
 
 | Skill type | Primary home | Who discovers it | Purpose |
 | --- | --- | --- | --- |
-| Runtime skill | Installed skills repo, normally `~/.clawperator/skills/skills/` | `clawperator skills list`, `clawperator skills search`, `clawperator skills get`, `clawperator skills run` | Reusable app automation package with `skill.json`, `SKILL.md`, scripts, artifacts, and registry metadata. Public runtime skills are authored in the `clawperator-skills` repository. |
-| Bundled skill | `~/.clawperator/bundled-skills/`, copied or linked into host-agent skill directories | Claude Code, Codex, OpenClaw-compatible hosts, or `clawperator bundled-skills list` | First-party agent workflow shipped with Clawperator, such as orientation, upgrade, discovery, or recording-authoring guidance. It helps an agent operate Clawperator, but it is not a runtime app automation package. |
-| Personalized skill | User-owned host-agent skill directory, commonly `~/.agents/skills/` | Host-agent skill discovery, such as OpenClaw `agents-skills-personal` | User-scoped wrapper that may hold local assumptions and usually calls one or more runtime skills with `clawperator skills run ... --output json`. |
+| Runtime skill | Installed skills repo, normally `~/.androperator/skills/skills/` | `androperator skills list`, `androperator skills search`, `androperator skills get`, `androperator skills run` | Reusable app automation package with `skill.json`, `SKILL.md`, scripts, artifacts, and registry metadata. Public runtime skills are authored in the `local skill workspace` repository. |
+| Bundled skill | `~/.androperator/bundled-skills/`, copied or linked into host-agent skill directories | Claude Code, Codex, OpenClaw-compatible hosts, or `androperator bundled-skills list` | First-party agent workflow shipped with Androperator, such as orientation, upgrade, discovery, or recording-authoring guidance. It helps an agent operate Androperator, but it is not a runtime app automation package. |
+| Personalized skill | User-owned host-agent skill directory, commonly `~/.agents/skills/` | Host-agent skill discovery, such as OpenClaw `agents-skills-personal` | User-scoped wrapper that may hold local assumptions and usually calls one or more runtime skills with `androperator skills run ... --output json`. |
 | OpenClaw workspace skill | `~/.openclaw/workspace/skills/` | OpenClaw workspace context loading | Workspace-scoped agent instruction. It may be personalized, but its scope is the OpenClaw workspace rather than the user's shared personal skill home. |
 
-The public `clawperator-skills` repository is the source for shared runtime
+The public `local skill workspace` repository is the source for shared runtime
 skills. It is not the home for personal defaults. A personalized skill may call
 a shared runtime skill, but it does not become a runtime skill unless it is
 converted into the runtime skill file layout and registry contract.
@@ -34,7 +34,7 @@ Create or maintain a personalized skill when all of these are true:
 | Condition | Required signal |
 | --- | --- |
 | The user repeats a local workflow | The same intent comes up often enough that a wrapper reduces risk or toil. |
-| Generic runtime skills already exist or can be called directly | `clawperator skills search`, `clawperator skills for-app`, or `clawperator skills get` identifies the runtime skill to invoke. |
+| Generic runtime skills already exist or can be called directly | `androperator skills search`, `androperator skills for-app`, or `androperator skills get` identifies the runtime skill to invoke. |
 | The missing piece is local context | The workflow depends on local labels, room names, account profile choice, device graph, preferred defaults, or user-specific navigation state. |
 | The skill is scoped honestly | The skill name, description, or notes make clear that the assumptions are local or user-scoped. |
 | Private values can stay out of public artifacts | Examples use placeholders such as `<device_serial>`, `<profile_name>`, `<room_label>`, or `<account_label>`. |
@@ -65,8 +65,8 @@ it maps `<user_room_alias>` to one user's actual `<zone_label>`.
 
 Use this decision model before creating or invoking a personalized skill:
 
-1. Discover runtime skills first with `clawperator skills search`,
-   `clawperator skills for-app`, or `clawperator skills get`.
+1. Discover runtime skills first with `androperator skills search`,
+   `androperator skills for-app`, or `androperator skills get`.
 2. If the runtime skill is a clear match but needs local defaults, create a
    personalized host-agent wrapper rather than changing the runtime registry.
 3. Put user-specific defaults in the personal skill home or local config, not
@@ -98,7 +98,7 @@ shared skill packages:
 | Personal routines or schedules | `<local_routine>` |
 | Local paths that reveal private setup | `<local_config_path>` |
 
-Do not invent storage behavior. Current Clawperator runtime skill contracts in
+Do not invent storage behavior. Current Androperator runtime skill contracts in
 `apps/node/src/contracts/skills.ts` define registry entries, optional agent
 runtime config, and optional skill contracts. They do not define a general
 encrypted personal preference store.
@@ -109,10 +109,10 @@ Use this table to choose the correct home and claim:
 
 | Skill shape | Home | Claim allowed |
 | --- | --- | --- |
-| Runtime skill from `clawperator-skills` | Installed runtime skills repo and registry, normally under `~/.clawperator/skills/skills/` | Generic execution package when its inputs and verification do not depend on one user's private setup. |
+| Runtime skill from `local skill workspace` | Installed runtime skills repo and registry, normally under `~/.androperator/skills/skills/` | Generic execution package when its inputs and verification do not depend on one user's private setup. |
 | Personalized host-agent wrapper | User-owned agent skill directory such as `~/.agents/skills/` | Local or user-scoped wrapper that may encode private defaults outside public artifacts. |
 | OpenClaw workspace skill | `~/.openclaw/workspace/skills/` | Workspace-scoped agent skill for one OpenClaw workspace. |
-| Bundled Clawperator skill | `~/.clawperator/bundled-skills/` plus host discovery entries | First-party Clawperator workflow for agents, not a runtime app automation skill. |
+| Bundled Androperator skill | `~/.androperator/bundled-skills/` plus host discovery entries | First-party Androperator workflow for agents, not a runtime app automation skill. |
 
 Promotion from local to shared requires one of these changes:
 
@@ -134,7 +134,7 @@ Before presenting a personalized skill as shared, verify:
 | Inputs | Every formerly personal value is an explicit input, documented config, or discovered live value. |
 | Privacy | Public files contain placeholders only. |
 | Runtime contract | The shared skill has a registry entry and file layout that match [Overview](overview.md). |
-| Validation | `clawperator skills validate <skill_id> --dry-run` passes for runtime skills. |
+| Validation | `androperator skills validate <skill_id> --dry-run` passes for runtime skills. |
 | Off-device tests | Parser, normalizer, or command-shape logic has tests that fail on wrong argv or unsafe defaults. |
 | Live proof | Device-affecting behavior is proven on a safe target or the blocker is recorded. |
 | Result truthfulness | The wrapper reports success only from verified runtime output. |
@@ -148,20 +148,20 @@ No-argument personal wrapper:
 ~~~markdown
 ---
 name: home-battery-get-level
-description: Read the current home battery level through the local Clawperator runtime skill.
+description: Read the current home battery level through the local Androperator runtime skill.
 ---
 
 Run:
 
 ```bash
-clawperator skills run com.example.energy.get-battery --output json
+androperator skills run com.example.energy.get-battery --output json
 ```
 ~~~
 
 Argument-bearing personal wrapper:
 
 ```bash
-clawperator skills run com.example.media.set-list-state \
+androperator skills run com.example.media.set-list-state \
   --output json \
   -- \
   --action add \
@@ -172,7 +172,7 @@ clawperator skills run com.example.media.set-list-state \
 Local alias wrapper:
 
 ```bash
-clawperator skills run com.example.hvac.set-zone-state \
+androperator skills run com.example.hvac.set-zone-state \
   --output json \
   -- \
   --zone-name "<zone_label>" \
@@ -191,7 +191,7 @@ Use this sequence for a personalized wrapper:
 2. Confirm host discovery.
 3. Inspect the skill metadata.
 4. Run a safe forward test through the host agent, or record a concrete blocker.
-5. Interpret Clawperator runtime output using the trust order from
+5. Interpret Androperator runtime output using the trust order from
    [Device Prep and Runtime](runtime.md#skill-result-trust-order-and-json-wrapper-policy).
 
 Command pattern:

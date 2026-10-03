@@ -13,9 +13,9 @@ Define the canonical `ExecutionAction.type` values, the exact parameters each ac
 - Shared parameter shape: `apps/node/src/contracts/execution.ts`
 - Validation rules: `apps/node/src/domain/executions/validateExecution.ts`
 - CLI-built payload defaults: `apps/node/src/domain/actions/` and `apps/node/src/domain/observe/`
-- Android payload parsing: `apps/android/shared/data/operator/src/main/kotlin/clawperator/operator/agent/AgentCommandParser.kt`
-- Android action/result behavior: `apps/android/shared/data/task/src/main/kotlin/clawperator/task/runner/UiAction.kt` and `UiActionEngine.kt`
-- Android text-entry runtime behavior: `apps/android/shared/data/uitree/src/main/kotlin/clawperator/uitree/UiTreeManagerAndroid.kt`
+- Android payload parsing: `apps/android/shared/data/operator/src/main/kotlin/androperator/operator/agent/AgentCommandParser.kt`
+- Android action/result behavior: `apps/android/shared/data/task/src/main/kotlin/androperator/task/runner/UiAction.kt` and `UiActionEngine.kt`
+- Android text-entry runtime behavior: `apps/android/shared/data/uitree/src/main/kotlin/androperator/uitree/UiTreeManagerAndroid.kt`
 
 ## General Rules
 
@@ -26,7 +26,7 @@ Define the canonical `ExecutionAction.type` values, the exact parameters each ac
 | `params` is optional at the schema level | Action-specific validation then decides whether it is actually required. |
 | Selectors live on a separate page | `matcher`, `container`, `expectedNode`, and `labelMatcher` all use the [Selectors](selectors.md) `NodeMatcher` contract. |
 | `StepResult.data` is a string map | Node may attach known keys such as `text`, `path`, `warn`, `application_id`, `error`, or `message`, but most actions do not have a richer static success schema. |
-| CLI coverage is narrower than raw JSON | Some advanced fields in `ActionParams` are accepted only through `clawperator exec` JSON, not through flat CLI flags. |
+| CLI coverage is narrower than raw JSON | Some advanced fields in `ActionParams` are accepted only through `androperator exec` JSON, not through flat CLI flags. |
 | Runtime details are not always Node guarantees | When this page calls out Android-returned success keys, treat them as current runtime behavior verified from Android code, not as a stricter Node-side schema guarantee. |
 
 ## Action receipts and failure evidence
@@ -80,7 +80,7 @@ post-dispatch observation.
 
 ## Retry Object Shape
 
-Several actions accept `retry`, `scrollRetry`, or `clickRetry` objects in raw `clawperator exec` JSON. Node accepts these fields as part of `ActionParams`, and Android parses them into a retry policy with these keys:
+Several actions accept `retry`, `scrollRetry`, or `clickRetry` objects in raw `androperator exec` JSON. Node accepts these fields as part of `ActionParams`, and Android parses them into a retry policy with these keys:
 
 ```json
 {
@@ -176,7 +176,7 @@ The on-screen log actions have a deliberately narrow input-alias rule:
 ## `query_ui`
 
 Read-only structured inspection from one fresh Android tree capture. The CLI is
-`clawperator query`; the named MCP tool is `query_ui`. All use the Android resolver
+`androperator query`; the named MCP tool is `query_ui`. All use the Android resolver
 shared with existing node-targeted actions.
 
 | Parameter | Default | Contract |
@@ -186,7 +186,7 @@ shared with existing node-targeted actions.
 | `limit` | `100` | Integer from `1` through `1000` |
 
 Queries do not wait for navigation to settle. After a navigation action, use
-`clawperator wait` with the expected destination selector (MCP: `wait`; raw:
+`androperator wait` with the expected destination selector (MCP: `wait`; raw:
 `wait_for_node`), then query. Zero matches describe that capture only; they do not
 prove that a destination has finished loading. A wait is also a separate capture,
 so callers must still inspect the subsequent query result.
@@ -282,8 +282,8 @@ separate from the execution request size limit. Raw XML snapshots remain
 available and add `visible-to-user` without restructuring the hierarchy.
 
 ```bash
-clawperator query --device <device_serial> --operator-package com.clawperator.operator.dev --visibility all --limit 100
-clawperator query --matcher-json '{"descendant":{"textEquals":"Display"}}'
+androperator query --device <device_serial> --operator-package com.androperator.operator.dev --visibility all --limit 100
+androperator query --matcher-json '{"descendant":{"textEquals":"Display"}}'
 ```
 
 The CLI accepts each of `--limit` and `--visibility` at most once. Repeating
@@ -293,12 +293,12 @@ exit code `1` before device execution.
 ### Runnable Node consumer
 
 From a repository checkout, build and run the tested
-[query consumer example](https://github.com/clawperator/clawperator/blob/main/apps/node/src/examples/query-consumer.ts):
+[query consumer example](https://github.com/androperator/androperator/blob/main/apps/node/src/examples/query-consumer.ts):
 
 ```bash
 npm --prefix apps/node ci
 npm --prefix apps/node run build
-node apps/node/dist/examples/query-consumer.js --device <device_serial> --operator-package com.clawperator.operator.dev --visibility all --limit 1000
+node apps/node/dist/examples/query-consumer.js --device <device_serial> --operator-package com.androperator.operator.dev --visibility all --limit 1000
 ```
 
 The example invokes the CLI built in that checkout. It accepts query flags and
@@ -324,7 +324,7 @@ remain null; an omitted `accessibilityDataSensitive` remains unknown.
 To observe refusal of a partial inventory on a screen with multiple nodes:
 
 ```bash
-node apps/node/dist/examples/query-consumer.js --device <device_serial> --operator-package com.clawperator.operator.dev --visibility all --limit 1
+node apps/node/dist/examples/query-consumer.js --device <device_serial> --operator-package com.androperator.operator.dev --visibility all --limit 1
 ```
 
 A truncated inventory cannot prove absence or uniqueness. Increase the limit
@@ -455,7 +455,7 @@ Gesture injection requires Android 7.0 (API 24) or later and an available
 accessibility service.
 
 ```bash
-clawperator swipe --start 100 500 --end 800 500 --duration-ms 300
+androperator swipe --start 100 500 --end 800 500 --duration-ms 300
 ```
 
 Raw execution action (also usable through HTTP `POST /execute`):
@@ -513,7 +513,7 @@ Choosing a destination and interpreting the result belong in the agent or
 app-specific skill.
 
 ```bash
-clawperator drag --start 600 1600 --end 200 1000 \
+androperator drag --start 600 1600 --end 200 1000 \
   --hold-duration-ms 1200 --move-duration-ms 800 --device <device_serial>
 ```
 
@@ -521,7 +521,7 @@ The flat CLI defaults to a 30000 ms execution budget; `--timeout <ms>` overrides
 it. Budget for the hold, movement, and scheduling overhead. In a multi-action
 execution, `timeoutMs` covers the entire sequence, not each gesture separately.
 For a local development Operator, also pass
-`--operator-package com.clawperator.operator.dev` consistently on every command.
+`--operator-package com.androperator.operator.dev` consistently on every command.
 
 Raw execution action, also usable through HTTP `POST /execute` and the MCP
 `drag` tool with the same four parameter fields:
@@ -653,7 +653,7 @@ Semantics:
 
 - without `clickAfter`, the action scrolls until the target becomes visible or the loop terminates
 - with `clickAfter: true`, the same action requires `matcher` and turns into “scroll then click”
-- the flat CLI exposes only the core controls; advanced tuning requires raw JSON via `clawperator exec`
+- the flat CLI exposes only the core controls; advanced tuning requires raw JSON via `androperator exec`
 - Android defaults omitted `direction` to `down`, `distanceRatio` to `0.7`, `settleDelayMs` to `250`, `maxScrolls` to `20`, `maxDurationMs` to `10000`, `noPositionChangeThreshold` to `3`, and `findFirstScrollableChild` to `true`
 - `maxScrolls` is the hard cap on how many scroll steps Android will attempt
 - `maxDurationMs` is checked against monotonic elapsed time before each gesture; the current gesture and bounded settle/target checks may finish after that threshold, while the command timeout cancels execution
@@ -891,7 +891,7 @@ Example:
 Verification pattern:
 
 ```bash
-clawperator type "battery" --id "com.android.settings:id/search_src_text" --clear
+androperator type "battery" --id "com.android.settings:id/search_src_text" --clear
 ```
 
 Success conditions:
@@ -1092,14 +1092,14 @@ and [toast guidance](https://developer.android.com/guide/topics/ui/notifiers/toa
 CLI examples:
 
 ```bash
-clawperator toast "Starting test run"
-clawperator toast "Test run complete" --duration long
-clawperator toast --cancel
+androperator toast "Starting test run"
+androperator toast "Test run complete" --duration long
+androperator toast --cancel
 ```
 
 Common flags include `--device <device_serial>`, `--operator-package <package>`,
 `--timeout <ms>`, `--output json|pretty`, and `--no-daemon`. For local development,
-use `--operator-package com.clawperator.operator.dev`. To send text beginning with
+use `--operator-package com.androperator.operator.dev`. To send text beginning with
 `-`, put options first and use `toast -- "--literal text"`. The CLI validates before
 dispatch and does not automatically replay an uncertain dispatch.
 
@@ -1120,7 +1120,7 @@ process; it does not survive a process restart.
 { "id": "dismiss-announcement", "type": "cancel_toast" }
 ```
 
-The CLI form is `clawperator toast --cancel`, exclusive with text and `--duration`.
+The CLI form is `androperator toast --cancel`, exclusive with text and `--duration`.
 Success step data is exactly `{"submitted":"true"}`. This acknowledges completion
 of the cancellation request, not observation that the toast has disappeared.
 
@@ -1361,7 +1361,7 @@ Semantics:
 - `navigationTimeoutMs` controls the readiness wait only. It does not change the execution-level timeout.
 - already-foreground launches succeed without a package-transition race.
 - callers that need content to be present after the package is foreground should follow with `wait_for_node`.
-- the `clawperator open` CLI exposes `--skip-navigation-wait` and `--navigation-timeout-ms` for package targets only; URI targets reject both flags with `EXECUTION_VALIDATION_FAILED`.
+- the `androperator open` CLI exposes `--skip-navigation-wait` and `--navigation-timeout-ms` for package targets only; URI targets reject both flags with `EXECUTION_VALIDATION_FAILED`.
 
 Success data:
 
@@ -1410,7 +1410,7 @@ Example:
   "id": "open-uri-1",
   "type": "open_uri",
   "params": {
-    "uri": "https://clawperator.com"
+    "uri": "https://androperator.com"
   }
 }
 ```
@@ -1499,7 +1499,7 @@ Example:
 | `scroll-until` | `scroll_until` or `scroll_and_click` | `--click` switches to `scroll_and_click` |
 | `scroll-and-click` | `scroll_and_click` | alias that implies click-after |
 
-`on-screen-log set --text <text>` and `on-screen-log clear` map to `set_on_screen_log` and `clear_on_screen_log`. See [On-screen logs](on-screen-logs.md#cli-commands) for the flags and separate-execution capture sequence. Raw `clawperator exec` and existing generic execute transports remain supported.
+`on-screen-log set --text <text>` and `on-screen-log clear` map to `set_on_screen_log` and `clear_on_screen_log`. See [On-screen logs](on-screen-logs.md#cli-commands) for the flags and separate-execution capture sequence. Raw `androperator exec` and existing generic execute transports remain supported.
 
 ## Result Data You Can Rely On
 

@@ -14,7 +14,7 @@ RUNTIME_MODE="${4:-both}"
 ROOT="$(git rev-parse --show-toplevel)"
 DEBUG_APK="$ROOT/apps/android/app/build/outputs/apk/debug/app-debug.apk"
 LOCAL_CLI="$ROOT/apps/node/dist/cli/index.js"
-DOWNLOAD_DIR="${HOME}/.clawperator/evals-downloads"
+DOWNLOAD_DIR="${HOME}/.androperator/evals-downloads"
 
 sha256_file() {
   local file="$1"
@@ -43,7 +43,7 @@ run_eval() {
 setup_local_dev() {
   npm --prefix "$ROOT/apps/node" run build
   "$ROOT/gradlew" :app:assembleDebug
-  CLAWPERATOR_OPERATOR_PACKAGE=com.clawperator.operator.dev \
+  ANDROPERATOR_OPERATOR_PACKAGE=com.androperator.operator.dev \
     node "$LOCAL_CLI" operator setup \
       --apk "$DEBUG_APK" \
       --device "$DEVICE_SERIAL"
@@ -51,8 +51,8 @@ setup_local_dev() {
 
 setup_published() {
   local published_version apk_url sha_url apk_path sha_path
-  published_version="$(clawperator version --output json | python3 -c 'import json,sys; print(json.load(sys.stdin)["cliVersion"])')"
-  apk_url="https://downloads.clawperator.com/operator/v${published_version}/operator-v${published_version}.apk"
+  published_version="$(androperator version --output json | python3 -c 'import json,sys; print(json.load(sys.stdin)["cliVersion"])')"
+  apk_url="https://downloads.androperator.com/operator/v${published_version}/operator-v${published_version}.apk"
   sha_url="${apk_url}.sha256"
   apk_path="${DOWNLOAD_DIR}/operator-v${published_version}.apk"
   sha_path="${apk_path}.sha256"
@@ -67,8 +67,8 @@ setup_published() {
     echo "actual:   $actual_sha" >&2
     exit 3
   fi
-  CLAWPERATOR_OPERATOR_PACKAGE=com.clawperator.operator \
-    clawperator operator setup \
+  ANDROPERATOR_OPERATOR_PACKAGE=com.androperator.operator \
+    androperator operator setup \
       --apk "$apk_path" \
       --device "$DEVICE_SERIAL"
 }

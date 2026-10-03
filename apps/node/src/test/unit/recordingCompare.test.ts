@@ -284,8 +284,8 @@ describe("recording compare outcomes", () => {
 });
 
 describe("recording compare cross-repo baseline sync", () => {
-  it("skills-repo retained baseline matches the Clawperator fixture structurally", async () => {
-    const skillsRootInput = process.env.CLAWPERATOR_SKILLS_ROOT;
+  it("skills-repo retained baseline matches the Androperator fixture structurally", async () => {
+    const skillsRootInput = process.env.ANDROPERATOR_SKILLS_ROOT;
     if (!skillsRootInput) {
       return;
     }
@@ -336,7 +336,7 @@ describe("recording compare file loading", () => {
   });
 
   it("rejects a saved skills run wrapper whose SkillResult contract major version is unsupported", async () => {
-    const dir = await makeTempDir("clawperator-recording-compare-contract-version-");
+    const dir = await makeTempDir("androperator-recording-compare-contract-version-");
     const resultPath = join(dir, "unsupported-contract-version.json");
     const wrapper = await readJsonFixture<{ skillResult: SkillResult }>("solax-skills-run-success.json");
     const unsupportedWrapper = {
@@ -361,7 +361,7 @@ describe("recording compare file loading", () => {
   });
 
   it("rejects a saved skills run wrapper whose top-level status is indeterminate even when nested skillResult is successful", async () => {
-    const dir = await makeTempDir("clawperator-recording-compare-wrapper-status-");
+    const dir = await makeTempDir("androperator-recording-compare-wrapper-status-");
     const resultPath = join(dir, "wrapper-indeterminate.json");
     const wrapper = await readJsonFixture<Record<string, unknown> & { skillResult: SkillResult }>("solax-skills-run-success.json");
     const indeterminateWrapper = {
@@ -537,7 +537,7 @@ describe("recording compare CLI", () => {
   });
 
   it("returns a typed compare error for malformed baseline JSON", async () => {
-    const dir = await makeTempDir("clawperator-recording-compare-");
+    const dir = await makeTempDir("androperator-recording-compare-");
     const baselinePath = join(dir, "bad-baseline.json");
     await writeFile(baselinePath, "{not json}\n", "utf-8");
 
@@ -559,7 +559,7 @@ describe("recording compare CLI", () => {
   });
 
   it("returns a typed compare error for malformed result JSON", async () => {
-    const dir = await makeTempDir("clawperator-recording-compare-");
+    const dir = await makeTempDir("androperator-recording-compare-");
     const resultPath = join(dir, "bad-result.json");
     await writeFile(resultPath, "{not json}\n", "utf-8");
 

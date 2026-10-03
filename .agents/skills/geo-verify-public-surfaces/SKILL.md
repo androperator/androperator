@@ -1,11 +1,11 @@
 ---
 name: geo-verify-public-surfaces
-description: Verify live Clawperator machine-facing routes, headers, redirects, and bot access after deployment.
+description: Verify live Androperator machine-facing routes, headers, redirects, and bot access after deployment.
 ---
 
 # GEO Verify Public Surfaces
 
-This skill validates the live machine-facing surfaces for Clawperator and
+This skill validates the live machine-facing surfaces for Androperator and
 produces a concise summary that an agent can relay without asking a human to
 scan raw headers.
 
@@ -15,17 +15,17 @@ present.
 
 ## What this skill covers
 
-- `https://clawperator.com/robots.txt`
-- `https://clawperator.com/llms.txt`
-- `https://clawperator.com/llms-full.txt`
-- `https://clawperator.com/index.md`
-- `https://clawperator.com/agents`
-- `https://clawperator.com/sitemap.xml`
+- `https://androperator.com/robots.txt`
+- `https://androperator.com/llms.txt`
+- `https://androperator.com/llms-full.txt`
+- `https://androperator.com/index.md`
+- `https://androperator.com/agents`
+- `https://androperator.com/sitemap.xml`
 - alias redirects such as `/agent.md`, `/agents.md`, and `/for-agents`
-- `https://docs.clawperator.com/robots.txt`
-- `https://docs.clawperator.com/llms.txt`
-- `https://docs.clawperator.com/llms-full.txt`
-- `https://docs.clawperator.com/sitemap.xml`
+- `https://docs.androperator.com/robots.txt`
+- `https://docs.androperator.com/llms.txt`
+- `https://docs.androperator.com/llms-full.txt`
+- `https://docs.androperator.com/sitemap.xml`
 - key docs entrypoints such as the Node API guide and CLI reference
 - Cloudflare behavior for named bot user agents such as `GPTBot`,
   `ChatGPT-User`, `ClaudeBot`, `PerplexityBot`, and `Googlebot`
@@ -54,12 +54,12 @@ present.
 ## Targeting rules
 
 - If no flags are provided, the helper checks production:
-  - `https://clawperator.com`
-  - `https://docs.clawperator.com`
+  - `https://androperator.com`
+  - `https://docs.androperator.com`
 - If `--preview` is provided and no explicit base URLs are set, the helper uses
   Cloudflare branch aliases:
-  - `https://<branch>.clawperator.pages.dev`
-  - `https://<branch>.clawperator-docs.pages.dev`
+  - `https://<branch>.androperator.pages.dev`
+  - `https://<branch>.androperator-docs.pages.dev`
 - The branch defaults to the current git branch name when available.
 - For preview validation, pass both preview hosts explicitly.
 - For preview validation, usually also pass `--allow-noindex` because branch

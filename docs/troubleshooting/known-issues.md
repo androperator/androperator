@@ -34,9 +34,9 @@ What this page does not mean:
 When you suspect a current issue, verify it with a reproducible command and its exact JSON output:
 
 ```bash
-clawperator doctor --device <device_serial> --operator-package <package>
-clawperator version --check-compat --device <device_serial> --operator-package <package>
-clawperator snapshot --device <device_serial> --operator-package <package>
+androperator doctor --device <device_serial> --operator-package <package>
+androperator version --check-compat --device <device_serial> --operator-package <package>
+androperator snapshot --device <device_serial> --operator-package <package>
 ```
 
 Use those outputs to decide where the issue belongs:
@@ -47,7 +47,7 @@ Use those outputs to decide where the issue belongs:
 
 ## Where To Track New Issues
 
-- GitHub issues for project-level bugs and regressions: `https://github.com/clawperator/clawperator/issues`
+- GitHub issues for project-level bugs and regressions: `https://github.com/androperator/androperator/issues`
 - [Operator App](operator.md) for operational recovery guidance
 - [Version Compatibility](compatibility.md) for CLI and APK mismatch problems
 
@@ -67,23 +67,23 @@ When investigating issues:
 
 1. **Check versions first** - Many issues are version mismatches:
    ```bash
-   clawperator version
-   clawperator version --check-compat --device <device_serial> --operator-package <package>
+   androperator version
+   androperator version --check-compat --device <device_serial> --operator-package <package>
    ```
 
 2. **Run doctor** for a comprehensive health check:
    ```bash
-   clawperator doctor --device <device_serial> --operator-package <package>
+   androperator doctor --device <device_serial> --operator-package <package>
    ```
 
 3. **Stream logs** to see what is happening in real time:
    ```bash
-   clawperator logs
+   androperator logs
    ```
 
 4. **Check the log file** directly:
    ```bash
-   cat ~/.clawperator/logs/clawperator-$(date +%F).log
+   cat ~/.androperator/logs/androperator-$(date +%F).log
    ```
 
 See [Logging](../api/logging.md) for log format details and [Version Compatibility](compatibility.md) for compatibility rules.

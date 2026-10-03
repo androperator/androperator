@@ -93,14 +93,14 @@ main() {
   printf 'github_release=%s assets=%s\n' "$release_url" "$release_assets"
 
   local npm_json
-  npm_json="$(npm view "clawperator@${version}" version time --json)" || die "npm package clawperator@${version} not found"
-  [[ "$(json_field "$npm_json" "version")" == "$version" ]] || die "npm returned unexpected version for clawperator@${version}"
+  npm_json="$(npm view "androperator@${version}" version time --json)" || die "npm package androperator@${version} not found"
+  [[ "$(json_field "$npm_json" "version")" == "$version" ]] || die "npm returned unexpected version for androperator@${version}"
   printf 'npm_version=%s published_at=%s\n' \
     "$(json_field "$npm_json" "version")" \
     "$(json_time_for_version "$npm_json" "$version")"
 
   local latest_json
-  latest_json="$(curl -fsSL https://downloads.clawperator.com/operator/latest.json)" || die "failed to fetch latest.json"
+  latest_json="$(curl -fsSL https://downloads.androperator.com/operator/latest.json)" || die "failed to fetch latest.json"
   [[ "$(json_field "$latest_json" "version")" == "$version" ]] || die "latest.json version does not match ${version}"
   local latest_apk_url latest_sha_url latest_sha
   latest_apk_url="$(json_field "$latest_json" "apk_url")"
@@ -109,7 +109,7 @@ main() {
   printf 'latest_json_version=%s apk_url=%s sha256=%s\n' "$version" "$latest_apk_url" "$latest_sha"
 
   local expected_apk_url expected_sha_url
-  expected_apk_url="https://downloads.clawperator.com/operator/${tag_name}/operator-${tag_name}.apk"
+  expected_apk_url="https://downloads.androperator.com/operator/${tag_name}/operator-${tag_name}.apk"
   expected_sha_url="${expected_apk_url}.sha256"
   [[ "$latest_apk_url" == "$expected_apk_url" ]] || die "latest.json apk_url does not match ${expected_apk_url}"
   [[ "$latest_sha_url" == "$expected_sha_url" ]] || die "latest.json sha256_url does not match ${expected_sha_url}"
@@ -124,7 +124,7 @@ main() {
   printf 'checksum_match=ok value=%s\n' "$sha_text"
 
   local redirect_headers redirect_location
-  redirect_headers="$(curl -fsSI https://clawperator.com/operator.apk)" || die "stable redirect is not reachable"
+  redirect_headers="$(curl -fsSI https://androperator.com/operator.apk)" || die "stable redirect is not reachable"
   redirect_location="$(printf '%s\n' "$redirect_headers" | awk 'BEGIN{IGNORECASE=1}/^location:/{print $2}' | tr -d '\r')"
   [[ "$redirect_location" == "$expected_apk_url" ]] || die "stable redirect points to ${redirect_location}, expected ${expected_apk_url}"
   printf 'stable_redirect=%s\n' "$redirect_location"

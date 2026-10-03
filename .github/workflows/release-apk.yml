@@ -17,15 +17,15 @@ jobs:
     name: Build and Publish APK
     runs-on: ubuntu-latest
     env:
-      CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID }}
-      CLAWPERATOR_CLOUDFLARE_ACCESS_KEY_ID: ${{ secrets.CLAWPERATOR_CLOUDFLARE_ACCESS_KEY_ID }}
-      CLAWPERATOR_CLOUDFLARE_SECRET_ACCESS_KEY: ${{ secrets.CLAWPERATOR_CLOUDFLARE_SECRET_ACCESS_KEY }}
-      CLAWPERATOR_CLOUDFLARE_R2_BUCKET: ${{ secrets.CLAWPERATOR_CLOUDFLARE_R2_BUCKET }}
-      CLAWPERATOR_CLOUDFLARE_DOWNLOADS_BASE_URL: ${{ secrets.CLAWPERATOR_CLOUDFLARE_DOWNLOADS_BASE_URL }}
-      CLAWPERATOR_ANDROID_KEYSTORE_BASE64: ${{ secrets.CLAWPERATOR_ANDROID_KEYSTORE_BASE64 }}
-      CLAWPERATOR_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.CLAWPERATOR_ANDROID_KEYSTORE_PASSWORD }}
-      CLAWPERATOR_ANDROID_KEY_ALIAS: ${{ secrets.CLAWPERATOR_ANDROID_KEY_ALIAS }}
-      CLAWPERATOR_ANDROID_KEY_PASSWORD: ${{ secrets.CLAWPERATOR_ANDROID_KEY_PASSWORD }}
+      ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID }}
+      ANDROPERATOR_CLOUDFLARE_ACCESS_KEY_ID: ${{ secrets.ANDROPERATOR_CLOUDFLARE_ACCESS_KEY_ID }}
+      ANDROPERATOR_CLOUDFLARE_SECRET_ACCESS_KEY: ${{ secrets.ANDROPERATOR_CLOUDFLARE_SECRET_ACCESS_KEY }}
+      ANDROPERATOR_CLOUDFLARE_R2_BUCKET: ${{ secrets.ANDROPERATOR_CLOUDFLARE_R2_BUCKET }}
+      ANDROPERATOR_CLOUDFLARE_DOWNLOADS_BASE_URL: ${{ secrets.ANDROPERATOR_CLOUDFLARE_DOWNLOADS_BASE_URL }}
+      ANDROPERATOR_ANDROID_KEYSTORE_BASE64: ${{ secrets.CLAWPERATOR_ANDROID_KEYSTORE_BASE64 }}
+      ANDROPERATOR_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.CLAWPERATOR_ANDROID_KEYSTORE_PASSWORD }}
+      ANDROPERATOR_ANDROID_KEY_ALIAS: ${{ secrets.CLAWPERATOR_ANDROID_KEY_ALIAS }}
+      ANDROPERATOR_ANDROID_KEY_PASSWORD: ${{ secrets.CLAWPERATOR_ANDROID_KEY_PASSWORD }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -65,12 +65,12 @@ jobs:
           latest_metadata_name="latest.json"
           latest_channel="stable"
 
-          if [[ -z "${CLAWPERATOR_ANDROID_KEYSTORE_BASE64}" || -z "${CLAWPERATOR_ANDROID_KEYSTORE_PASSWORD}" || -z "${CLAWPERATOR_ANDROID_KEY_ALIAS}" || -z "${CLAWPERATOR_ANDROID_KEY_PASSWORD}" ]]; then
+          if [[ -z "${ANDROPERATOR_ANDROID_KEYSTORE_BASE64}" || -z "${ANDROPERATOR_ANDROID_KEYSTORE_PASSWORD}" || -z "${ANDROPERATOR_ANDROID_KEY_ALIAS}" || -z "${ANDROPERATOR_ANDROID_KEY_PASSWORD}" ]]; then
             echo "Android signing secrets are required for tagged releases." >&2
             exit 1
           fi
 
-          if [[ -z "${CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID}" || -z "${CLAWPERATOR_CLOUDFLARE_ACCESS_KEY_ID}" || -z "${CLAWPERATOR_CLOUDFLARE_SECRET_ACCESS_KEY}" || -z "${CLAWPERATOR_CLOUDFLARE_R2_BUCKET}" || -z "${CLAWPERATOR_CLOUDFLARE_DOWNLOADS_BASE_URL}" ]]; then
+          if [[ -z "${ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID}" || -z "${ANDROPERATOR_CLOUDFLARE_ACCESS_KEY_ID}" || -z "${ANDROPERATOR_CLOUDFLARE_SECRET_ACCESS_KEY}" || -z "${ANDROPERATOR_CLOUDFLARE_R2_BUCKET}" || -z "${ANDROPERATOR_CLOUDFLARE_DOWNLOADS_BASE_URL}" ]]; then
             echo "Cloudflare R2 secrets are required for tagged releases." >&2
             exit 1
           fi
@@ -90,18 +90,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "$CLAWPERATOR_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/android-release.keystore"
+          echo "$ANDROPERATOR_ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/android-release.keystore"
 
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
       - name: Build release APK
         env:
-          CLAWPERATOR_VERSION_NAME: ${{ steps.release_meta.outputs.version }}
-          CLAWPERATOR_ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/android-release.keystore
-          CLAWPERATOR_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.CLAWPERATOR_ANDROID_KEYSTORE_PASSWORD }}
-          CLAWPERATOR_ANDROID_KEY_ALIAS: ${{ secrets.CLAWPERATOR_ANDROID_KEY_ALIAS }}
-          CLAWPERATOR_ANDROID_KEY_PASSWORD: ${{ secrets.CLAWPERATOR_ANDROID_KEY_PASSWORD }}
+          ANDROPERATOR_VERSION_NAME: ${{ steps.release_meta.outputs.version }}
+          ANDROPERATOR_ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/android-release.keystore
+          ANDROPERATOR_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.CLAWPERATOR_ANDROID_KEYSTORE_PASSWORD }}
+          ANDROPERATOR_ANDROID_KEY_ALIAS: ${{ secrets.CLAWPERATOR_ANDROID_KEY_ALIAS }}
+          ANDROPERATOR_ANDROID_KEY_PASSWORD: ${{ secrets.CLAWPERATOR_ANDROID_KEY_PASSWORD }}
         run: ./gradlew :app:assembleRelease
 
       - name: Prepare release artifacts
@@ -157,8 +157,8 @@ jobs:
         env:
           RELEASE_VERSION: ${{ steps.release_meta.outputs.version }}
           LATEST_CHANNEL: ${{ steps.release_meta.outputs.latest_channel }}
-          APK_URL: ${{ env.CLAWPERATOR_CLOUDFLARE_DOWNLOADS_BASE_URL }}/${{ steps.release_meta.outputs.artifact_prefix }}/${{ steps.release_meta.outputs.artifact_name }}
-          SHA256_URL: ${{ env.CLAWPERATOR_CLOUDFLARE_DOWNLOADS_BASE_URL }}/${{ steps.release_meta.outputs.artifact_prefix }}/${{ steps.release_meta.outputs.checksum_name }}
+          APK_URL: ${{ env.ANDROPERATOR_CLOUDFLARE_DOWNLOADS_BASE_URL }}/${{ steps.release_meta.outputs.artifact_prefix }}/${{ steps.release_meta.outputs.artifact_name }}
+          SHA256_URL: ${{ env.ANDROPERATOR_CLOUDFLARE_DOWNLOADS_BASE_URL }}/${{ steps.release_meta.outputs.artifact_prefix }}/${{ steps.release_meta.outputs.checksum_name }}
           GITHUB_RELEASE_URL: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}
           LATEST_METADATA_NAME: ${{ steps.release_meta.outputs.latest_metadata_name }}
 
@@ -169,8 +169,8 @@ jobs:
           cat <<'EOF' > release-notes.md
           ## Install
 
-          - Stable APK URL: ${{ env.CLAWPERATOR_CLOUDFLARE_DOWNLOADS_BASE_URL }}/${{ steps.release_meta.outputs.artifact_prefix }}/${{ steps.release_meta.outputs.artifact_name }}
-          - Latest APK URL: https://clawperator.com/operator.apk
+          - Stable APK URL: ${{ env.ANDROPERATOR_CLOUDFLARE_DOWNLOADS_BASE_URL }}/${{ steps.release_meta.outputs.artifact_prefix }}/${{ steps.release_meta.outputs.artifact_name }}
+          - Latest APK URL: https://androperator.com/operator.apk
           - Setup guide: https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/setup.md
           - Release reference: https://github.com/${{ github.repository }}/blob/${{ github.sha }}/docs/internal/release-reference.md
 
@@ -224,27 +224,27 @@ jobs:
       - name: Upload artifacts to Cloudflare R2
         shell: bash
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.CLAWPERATOR_CLOUDFLARE_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.CLAWPERATOR_CLOUDFLARE_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.ANDROPERATOR_CLOUDFLARE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.ANDROPERATOR_CLOUDFLARE_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
           AWS_REGION: auto
           AWS_EC2_METADATA_DISABLED: "true"
         run: |
           set -euo pipefail
-          endpoint="https://${CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          endpoint="https://${ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com"
 
-          aws s3 cp "${{ steps.release_meta.outputs.artifact_name }}" "s3://${CLAWPERATOR_CLOUDFLARE_R2_BUCKET}/${{ steps.release_meta.outputs.artifact_prefix }}/${{ steps.release_meta.outputs.artifact_name }}" \
+          aws s3 cp "${{ steps.release_meta.outputs.artifact_name }}" "s3://${ANDROPERATOR_CLOUDFLARE_R2_BUCKET}/${{ steps.release_meta.outputs.artifact_prefix }}/${{ steps.release_meta.outputs.artifact_name }}" \
             --endpoint-url "$endpoint" \
             --content-type "application/vnd.android.package-archive" \
             --content-disposition "attachment; filename=\"${{ steps.release_meta.outputs.artifact_name }}\"" \
             --cache-control "public, max-age=31536000, immutable"
 
-          aws s3 cp "${{ steps.release_meta.outputs.checksum_name }}" "s3://${CLAWPERATOR_CLOUDFLARE_R2_BUCKET}/${{ steps.release_meta.outputs.artifact_prefix }}/${{ steps.release_meta.outputs.checksum_name }}" \
+          aws s3 cp "${{ steps.release_meta.outputs.checksum_name }}" "s3://${ANDROPERATOR_CLOUDFLARE_R2_BUCKET}/${{ steps.release_meta.outputs.artifact_prefix }}/${{ steps.release_meta.outputs.checksum_name }}" \
             --endpoint-url "$endpoint" \
             --content-type "text/plain; charset=utf-8" \
             --cache-control "public, max-age=31536000, immutable"
 
-          aws s3 cp "${{ steps.release_meta.outputs.latest_metadata_name }}" "s3://${CLAWPERATOR_CLOUDFLARE_R2_BUCKET}/operator/${{ steps.release_meta.outputs.latest_metadata_name }}" \
+          aws s3 cp "${{ steps.release_meta.outputs.latest_metadata_name }}" "s3://${ANDROPERATOR_CLOUDFLARE_R2_BUCKET}/operator/${{ steps.release_meta.outputs.latest_metadata_name }}" \
             --endpoint-url "$endpoint" \
             --content-type "application/json; charset=utf-8" \
             --cache-control "public, max-age=60"

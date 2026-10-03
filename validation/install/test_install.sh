@@ -5,13 +5,13 @@ cd "$(dirname "$0")/../.."
 
 run_node_install_validation() {
     env \
-        -u CLAWPERATOR_SKILLS_REGISTRY \
-        -u CLAWPERATOR_DEFAULT_ANDROID_DEVICE_ID \
-        -u CLAWPERATOR_OPERATOR_PACKAGE \
-        -u CLAWPERATOR_BUNDLED_SKILLS \
-        -u CLAWPERATOR_BIN \
-        -u CLAWPERATOR_SKILL_AGENT_CLI \
-        -u CLAWPERATOR_LOG_DIR \
+        -u ANDROPERATOR_SKILLS_REGISTRY \
+        -u ANDROPERATOR_DEFAULT_ANDROID_DEVICE_ID \
+        -u ANDROPERATOR_OPERATOR_PACKAGE \
+        -u ANDROPERATOR_BUNDLED_SKILLS \
+        -u ANDROPERATOR_BIN \
+        -u ANDROPERATOR_SKILL_AGENT_CLI \
+        -u ANDROPERATOR_LOG_DIR \
         "$@"
 }
 
@@ -22,7 +22,7 @@ ensure_node_build() {
     fi
 }
 
-if [ "${CLAWPERATOR_INSTALL_SKIP_NODE_TESTS:-0}" != "1" ]; then
+if [ "${ANDROPERATOR_INSTALL_SKIP_NODE_TESTS:-0}" != "1" ]; then
     if [ ! -d "apps/node/node_modules" ]; then
         echo "ERROR: apps/node dependencies are not installed." >&2
         echo "Run: npm --prefix apps/node ci" >&2
@@ -35,7 +35,7 @@ if [ "${CLAWPERATOR_INSTALL_SKIP_NODE_TESTS:-0}" != "1" ]; then
     echo "=== Running Node test suite for installer-facing CLI contracts ==="
     run_node_install_validation npm --prefix apps/node run test
 else
-    echo "=== Skipping Node build/tests (CLAWPERATOR_INSTALL_SKIP_NODE_TESTS=1) ==="
+    echo "=== Skipping Node build/tests (ANDROPERATOR_INSTALL_SKIP_NODE_TESTS=1) ==="
     ensure_node_build
 fi
 

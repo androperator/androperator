@@ -12,7 +12,7 @@ function buildHeader(overrides?: { schemaVersion?: number; sessionId?: string })
     schemaVersion,
     sessionId,
     startedAt: 1710000000000,
-    operatorPackage: "com.clawperator.operator.test",
+    operatorPackage: "com.androperator.operator.test",
   });
 }
 
@@ -377,7 +377,7 @@ describe("parseRecording", () => {
       type: "recording_header",
       schemaVersion: 1,
       startedAt: 1710000000000,
-      operatorPackage: "com.clawperator.operator.test",
+      operatorPackage: "com.androperator.operator.test",
       // sessionId is missing
     });
 

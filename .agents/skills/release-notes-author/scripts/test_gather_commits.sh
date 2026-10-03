@@ -304,13 +304,13 @@ release_fixture_err="$(mktemp)"
   git config user.email "release-notes-test@example.com"
   mkdir -p docs/troubleshooting sites/landing-clawperator/public
   printf 'Compatibility guide.\n' > docs/troubleshooting/compatibility.md
-  printf '#!/usr/bin/env bash\n' > sites/landing-clawperator/public/install.sh
-  git add docs/troubleshooting/compatibility.md sites/landing-clawperator/public/install.sh
+  printf '#!/usr/bin/env bash\n' > sites/androperator-public/install.sh
+  git add docs/troubleshooting/compatibility.md sites/androperator-public/install.sh
   git commit -q -m "docs: add public install docs"
   git tag v1.0.0
   printf 'Compatibility guide for 1.0.0.\n' > docs/troubleshooting/compatibility.md
-  printf '#!/usr/bin/env bash\n# install 1.0.0\n' > sites/landing-clawperator/public/install.sh
-  git add docs/troubleshooting/compatibility.md sites/landing-clawperator/public/install.sh
+  printf '#!/usr/bin/env bash\n# install 1.0.0\n' > sites/androperator-public/install.sh
+  git add docs/troubleshooting/compatibility.md sites/androperator-public/install.sh
   git commit -q -m "docs(release): update published version to 1.0.0"
   git tag v1.0.1
 )

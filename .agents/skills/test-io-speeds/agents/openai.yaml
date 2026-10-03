@@ -1,4 +1,4 @@
 interface:
   display_name: "Test I/O Speeds"
-  short_description: "Measure Clawperator Android snapshot latency"
+  short_description: "Measure Androperator Android snapshot latency"
   default_prompt: "Use $test-io-speeds to measure repeated snapshot latency. Read SKILL.md, list connected devices, build branch-local Node and the requested Operator APK, run the bundled harness for the requested app list, and summarize CLI, direct daemon, Android operator, payload, and device findings without committing raw artifacts."

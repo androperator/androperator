@@ -1,6 +1,6 @@
 import { getDefaultRuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 import { type ProcessRunner } from "../../adapters/android-bridge/processRunner.js";
-import { type ClawperatorError } from "../../contracts/errors.js";
+import { type AndroperatorError } from "../../contracts/errors.js";
 import { resolveDevice } from "../../domain/devices/resolveDevice.js";
 import { getCliVersion, probeVersionCompatibility } from "../../domain/version/compatibility.js";
 import type { OutputOptions } from "../output.js";
@@ -29,7 +29,7 @@ export async function cmdVersion(options: OutputOptions & {
 
   const config = getDefaultRuntimeConfig({
     deviceId: options.deviceId,
-    operatorPackage: options.operatorPackage ?? process.env.CLAWPERATOR_OPERATOR_PACKAGE,
+    operatorPackage: options.operatorPackage ?? process.env.ANDROPERATOR_OPERATOR_PACKAGE,
     adbPath: process.env.ADB_PATH,
     runner: options.runner,
     logger: options.logger,
@@ -52,6 +52,6 @@ export async function cmdVersion(options: OutputOptions & {
     }, options);
   } catch (error) {
     process.exitCode = 1;
-    return formatError(error as ClawperatorError, options);
+    return formatError(error as AndroperatorError, options);
   }
 }

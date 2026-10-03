@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Capture the Android platform distinctions and Clawperator-specific findings
+Capture the Android platform distinctions and Androperator-specific findings
 around:
 
 - screen on vs screen off
@@ -20,7 +20,7 @@ These states are related, but they are not interchangeable.
 
 ### `screen on` / `interactive`
 
-For Clawperator's purposes, the most useful "is the device awake enough to
+For Androperator's purposes, the most useful "is the device awake enough to
 interact?" signal is `PowerManager.isInteractive()`.
 
 In this repo, that is wrapped by:
@@ -78,7 +78,7 @@ In this repo, that is exposed as:
 
 - `isUserUnlocked`
 
-## Current Clawperator Android State Model
+## Current Androperator Android State Model
 
 The current operator app already has the primitives needed to model readiness:
 
@@ -187,7 +187,7 @@ later readiness work can depend on:
   - `device_locked`
   - `user_unlocked`
 - those `doctor_ping` fields come from direct `DeviceState` queries in
-  [`UiActionEngine.kt`](../../../apps/android/shared/data/task/src/main/kotlin/clawperator/task/runner/UiActionEngine.kt),
+  [`UiActionEngine.kt`](../../../apps/android/shared/data/task/src/main/kotlin/androperator/task/runner/UiActionEngine.kt),
   not from event flows
 - Node now has internal helpers in
   [`deviceInteractivity.ts`](../../../apps/node/src/domain/doctor/checks/deviceInteractivity.ts)
@@ -220,7 +220,7 @@ The shipped Node wake helper:
 ## 2026-04-21 Samsung Validation
 
 Live validation on a physical Samsung device used the debug package
-`com.clawperator.operator.dev` and the branch-local Node build.
+`com.androperator.operator.dev` and the branch-local Node build.
 
 What was verified:
 
@@ -280,7 +280,7 @@ Current supported accessibility system actions in this repo:
 Relevant code:
 
 - [`SystemAccessibilityActionType.kt`](../../../apps/android/shared/core/common/src/main/kotlin/action/system/accessibility/SystemAccessibilityActionType.kt)
-- [`SystemAccessibilityActionTypeExt.kt`](../../../apps/android/shared/app/app-adapter/src/main/kotlin/clawperator/system/accessibility/SystemAccessibilityActionTypeExt.kt)
+- [`SystemAccessibilityActionTypeExt.kt`](../../../apps/android/shared/app/app-adapter/src/main/kotlin/androperator/system/accessibility/SystemAccessibilityActionTypeExt.kt)
 
 There is no current wake-screen accessibility action in the operator app.
 

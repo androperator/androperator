@@ -22,7 +22,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "clawperator"
+rootProject.name = "androperator"
 
 include(":apps:android")
 project(":apps:android").projectDir = file("apps/android")

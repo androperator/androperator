@@ -7,7 +7,7 @@ export function buildSleepExecution(durationMs: number, globalTimeoutMs?: number
   return {
     commandId,
     taskId: commandId,
-    source: "clawperator-cli",
+    source: "androperator-cli",
     timeoutMs: executionTimeoutMs,
     expectedFormat: "android-ui-automator",
     actions: [

@@ -5,7 +5,7 @@ Created: 2026-03-12
 ## Goal
 
 Add a repo-local agent workflow that uses Cloudflare Browser Rendering APIs to
-audit `https://clawperator.com` and `https://docs.clawperator.com` for
+audit `https://androperator.com` and `https://docs.androperator.com` for
 agent-ingestibility, not generic SEO vanity metrics.
 
 The audit should answer:
@@ -32,8 +32,8 @@ observer so we can answer:
 
 Hosts:
 
-- `https://clawperator.com`
-- `https://docs.clawperator.com`
+- `https://androperator.com`
+- `https://docs.androperator.com`
 
 Critical URLs:
 
@@ -95,8 +95,8 @@ Browser Rendering path.
 
 Environment:
 
-- `CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID`
-- `CLAWPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN`
+- `ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID`
+- `ANDROPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN`
 
 Optional:
 
@@ -192,4 +192,4 @@ Tooling blocker:
 - Cloudflare crawl result lookup fails after successful job creation
 
 This should be reported clearly but separated from site-behavior findings so we
-do not confuse a Cloudflare API issue with a Clawperator GEO issue.
+do not confuse a Cloudflare API issue with an Androperator GEO issue.

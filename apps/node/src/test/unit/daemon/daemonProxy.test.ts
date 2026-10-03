@@ -18,7 +18,7 @@ import { getDaemonLockPath, getDaemonSocketPath } from "../../../domain/daemon/l
 import { DEFAULT_OPERATOR_PACKAGE } from "../../../domain/config/resolveOperatorPackage.js";
 import { getCliBuildIdentity, getCliVersion } from "../../../domain/version/compatibility.js";
 import { ERROR_CODES } from "../../../contracts/errors.js";
-import { CLAWPERATOR_SKILL_RUN_ID_ENV_VAR } from "../../../contracts/logging.js";
+import { ANDROPERATOR_SKILL_RUN_ID_ENV_VAR } from "../../../contracts/logging.js";
 import type { RunExecutionResult } from "../../../domain/executions/runExecution.js";
 
 const tempDirs: string[] = [];
@@ -38,7 +38,7 @@ const execution = {
 const successResult: RunExecutionResult = {
   ok: true,
   deviceId: "device-1",
-  terminalSource: "clawperator_result",
+  terminalSource: "androperator_result",
   envelope: {
     commandId: "daemon-proxy-test",
     taskId: "daemon-proxy-test",
@@ -49,7 +49,7 @@ const successResult: RunExecutionResult = {
 };
 
 async function makeBaseDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "clawperator-daemon-proxy-test-"));
+  const dir = await mkdtemp(join(tmpdir(), "androperator-daemon-proxy-test-"));
   tempDirs.push(dir);
   return dir;
 }
@@ -69,19 +69,19 @@ function makeOwnedDaemonDeps(): { isDaemonRunningFn: () => Promise<boolean> } {
 afterEach(async () => {
   await Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
   if (originalNoDaemon === undefined) {
-    delete process.env.CLAWPERATOR_NO_DAEMON;
+    delete process.env.ANDROPERATOR_NO_DAEMON;
   } else {
-    process.env.CLAWPERATOR_NO_DAEMON = originalNoDaemon;
+    process.env.ANDROPERATOR_NO_DAEMON = originalNoDaemon;
   }
   if (originalOperatorPackage === undefined) {
-    delete process.env.CLAWPERATOR_OPERATOR_PACKAGE;
+    delete process.env.ANDROPERATOR_OPERATOR_PACKAGE;
   } else {
-    process.env.CLAWPERATOR_OPERATOR_PACKAGE = originalOperatorPackage;
+    process.env.ANDROPERATOR_OPERATOR_PACKAGE = originalOperatorPackage;
   }
   if (originalSkillRunId === undefined) {
-    delete process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR];
+    delete process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
   } else {
-    process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR] = originalSkillRunId;
+    process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = originalSkillRunId;
   }
 });
 
@@ -92,9 +92,9 @@ describe("tryDaemonExecution", () => {
     assert.equal(getDaemonPostTimeoutMs({ execution: { timeoutMs: "30000" } }), 35000);
   });
 
-  it("returns null when CLAWPERATOR_NO_DAEMON=1 is set", async () => {
-    originalNoDaemon = process.env.CLAWPERATOR_NO_DAEMON;
-    process.env.CLAWPERATOR_NO_DAEMON = "1";
+  it("returns null when ANDROPERATOR_NO_DAEMON=1 is set", async () => {
+    originalNoDaemon = process.env.ANDROPERATOR_NO_DAEMON;
+    process.env.ANDROPERATOR_NO_DAEMON = "1";
 
     const result = await tryDaemonExecution(execution, {}, {
       httpPostFn: async () => {
@@ -162,8 +162,8 @@ describe("tryDaemonExecution", () => {
 
   it("passes inherited skillRunId to the daemon execute request", async () => {
     const parentSkillRunId = "skillrun_parent_daemon_request";
-    originalSkillRunId = process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR];
-    process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR] = parentSkillRunId;
+    originalSkillRunId = process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
+    process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = parentSkillRunId;
     let postedBody: unknown;
 
     const result = await tryDaemonExecution(execution, { rawDeviceId: "device-1" }, {
@@ -185,8 +185,8 @@ describe("tryDaemonExecution", () => {
   });
 
   it("does not pass malformed inherited skillRunId to the daemon execute request", async () => {
-    originalSkillRunId = process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR];
-    process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR] = "not a skill run id";
+    originalSkillRunId = process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
+    process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = "not a skill run id";
     let postedBody: unknown;
 
     const result = await tryDaemonExecution(execution, { rawDeviceId: "device-1" }, {
@@ -466,7 +466,7 @@ describe("tryDaemonExecution", () => {
   });
 
   it("passes effective operator package using explicit, env, blank env, and default precedence", async () => {
-    originalOperatorPackage = process.env.CLAWPERATOR_OPERATOR_PACKAGE;
+    originalOperatorPackage = process.env.ANDROPERATOR_OPERATOR_PACKAGE;
     const bodies: unknown[] = [];
     const deps = {
       ...makeOwnedDaemonDeps(),
@@ -477,12 +477,12 @@ describe("tryDaemonExecution", () => {
       },
     };
 
-    process.env.CLAWPERATOR_OPERATOR_PACKAGE = "env.package";
+    process.env.ANDROPERATOR_OPERATOR_PACKAGE = "env.package";
     await tryDaemonExecution(execution, { operatorPackage: "explicit.package" }, deps);
     await tryDaemonExecution(execution, {}, deps);
-    process.env.CLAWPERATOR_OPERATOR_PACKAGE = " ";
+    process.env.ANDROPERATOR_OPERATOR_PACKAGE = " ";
     await tryDaemonExecution(execution, {}, deps);
-    delete process.env.CLAWPERATOR_OPERATOR_PACKAGE;
+    delete process.env.ANDROPERATOR_OPERATOR_PACKAGE;
     await tryDaemonExecution(execution, {}, deps);
 
     assert.deepEqual(bodies.map((body) => (body as { operatorPackage: string }).operatorPackage), [
@@ -642,7 +642,7 @@ describe("on-screen-log public mutation proxy", () => {
           params: operation === "set" ? { text: "proxy proof" } : undefined,
           format: "json",
           deviceId: "device-1",
-          operatorPackage: "com.clawperator.operator.dev",
+          operatorPackage: "com.androperator.operator.dev",
           tryDaemonExecutionFn: (payload, options) => tryDaemonExecution(payload, options, {
             ...makeOwnedDaemonDeps(),
             httpGetFn: makeAliveGet(),

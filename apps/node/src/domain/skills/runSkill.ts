@@ -4,7 +4,7 @@ import { access, readFile } from "node:fs/promises";
 import { extname, join } from "node:path";
 import { loadRegistry, findSkillById, getRepoRoot } from "../../adapters/skills-repo/localSkillsRegistry.js";
 import type { Logger } from "../../adapters/logger.js";
-import { CLAWPERATOR_SKILL_RUN_ID_ENV_VAR, normalizeSkillRunId } from "../../contracts/logging.js";
+import { ANDROPERATOR_SKILL_RUN_ID_ENV_VAR, normalizeSkillRunId } from "../../contracts/logging.js";
 import {
   hasMeaningfulSkillContract,
   parseSkillContractInputSchema,
@@ -38,16 +38,16 @@ import {
   resolveAgentCliExecutable,
   SKILL_AGENT_CLI_ENV_VAR,
 } from "./agentCli.js";
-import { CLAWPERATOR_DEVICE_ID_ENV_VAR } from "./skillsConfig.js";
+import { ANDROPERATOR_DEVICE_ID_ENV_VAR } from "./skillsConfig.js";
 import { isOrchestratedHarnessScriptPath, resolveRepoRelativeSkillPath } from "./pathUtils.js";
 
 const DEFAULT_TIMEOUT_MS = 120_000;
-const SKILL_AGENT_CLI_PATH_ENV_VAR = "CLAWPERATOR_SKILL_AGENT_CLI_PATH";
-const SKILL_AGENT_TIMEOUT_MS_ENV_VAR = "CLAWPERATOR_SKILL_AGENT_TIMEOUT_MS";
-const SKILL_INPUTS_ENV_VAR = "CLAWPERATOR_SKILL_INPUTS";
-const SKILL_PROGRAM_ENV_VAR = "CLAWPERATOR_SKILL_PROGRAM";
-const SKILL_ID_ENV_VAR = "CLAWPERATOR_SKILL_ID";
-const SKILLS_REGISTRY_ENV_VAR = "CLAWPERATOR_SKILLS_REGISTRY";
+const SKILL_AGENT_CLI_PATH_ENV_VAR = "ANDROPERATOR_SKILL_AGENT_CLI_PATH";
+const SKILL_AGENT_TIMEOUT_MS_ENV_VAR = "ANDROPERATOR_SKILL_AGENT_TIMEOUT_MS";
+const SKILL_INPUTS_ENV_VAR = "ANDROPERATOR_SKILL_INPUTS";
+const SKILL_PROGRAM_ENV_VAR = "ANDROPERATOR_SKILL_PROGRAM";
+const SKILL_ID_ENV_VAR = "ANDROPERATOR_SKILL_ID";
+const SKILLS_REGISTRY_ENV_VAR = "ANDROPERATOR_SKILLS_REGISTRY";
 
 export interface SkillRunSuccess {
   ok: true;
@@ -96,11 +96,11 @@ export type SkillRunResult = SkillRunSuccess | SkillRunIndeterminate;
 
 export interface SkillRunEnv {
   /** Path to CLI binary used by skill scripts */
-  CLAWPERATOR_BIN?: string;
+  ANDROPERATOR_BIN?: string;
   /** Operator package passed as --operator-package on every CLI call within a skill */
-  CLAWPERATOR_OPERATOR_PACKAGE?: string;
+  ANDROPERATOR_OPERATOR_PACKAGE?: string;
   /** Selected device id propagated by the CLI wrapper */
-  CLAWPERATOR_DEVICE_ID?: string;
+  ANDROPERATOR_DEVICE_ID?: string;
   [key: string]: string | undefined;
 }
 
@@ -651,10 +651,10 @@ export async function runSkill(
     }
   }
   const inheritedSkillRunId =
-    normalizeSkillRunId(env?.[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR]) ??
-    normalizeSkillRunId(process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR]);
+    normalizeSkillRunId(env?.[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR]) ??
+    normalizeSkillRunId(process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR]);
   const skillRunId = normalizeSkillRunId(callbacks?.skillRunId) ?? inheritedSkillRunId ?? createSkillRunId();
-  childEnv[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR] = skillRunId;
+  childEnv[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = skillRunId;
   const skillLogger = callbacks?.logger?.child({ skillId, skillRunId });
   const initialLogPath = skillLogger?.logPath();
   const tailCommand = initialLogPath !== undefined ? buildTailCommand(initialLogPath) : undefined;
@@ -837,8 +837,8 @@ export async function runSkill(
   const cmd = ext === ".js" ? process.execPath : resolvedPath;
   const forwardedArgs = resolvedAgentConfig
     ? args
-    : childEnv[CLAWPERATOR_DEVICE_ID_ENV_VAR]
-      ? [childEnv[CLAWPERATOR_DEVICE_ID_ENV_VAR], ...args]
+    : childEnv[ANDROPERATOR_DEVICE_ID_ENV_VAR]
+      ? [childEnv[ANDROPERATOR_DEVICE_ID_ENV_VAR], ...args]
       : args;
   const cmdArgs = ext === ".js" ? [resolvedPath, ...forwardedArgs] : forwardedArgs;
   const timeout = effectiveTimeoutMs;

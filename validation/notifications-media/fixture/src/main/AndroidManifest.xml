@@ -1,10 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <application android:label="Clawperator media fixture" android:theme="@android:style/Theme.Material.Light.NoActionBar">
-        <activity android:name="clawperator.operator.debug.MediaProofActivity"
+    <application android:label="Androperator media fixture" android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <activity android:name="androperator.operator.debug.MediaProofActivity"
             android:exported="true" android:permission="android.permission.DUMP" />
-        <receiver android:name="clawperator.operator.debug.MediaProofActivity$Control"
+        <receiver android:name="androperator.operator.debug.MediaProofActivity$Control"
             android:exported="true" android:permission="android.permission.DUMP" />
     </application>
 </manifest>

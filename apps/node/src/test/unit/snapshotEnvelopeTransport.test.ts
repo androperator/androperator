@@ -13,10 +13,10 @@ const ready = async () => ({ ok: true as const, state: { screenOn: true, deviceL
 const xml = `<hierarchy>${Array.from({ length: 4500 }, (_, i) => `<node text="${i} 界😀 &amp; ${"content ".repeat(60)}"/>`).join("")}</hierarchy>`;
 
 function frames(envelope: ResultEnvelope): string[] {
-  const bytes = Buffer.from(`[Clawperator-Result] ${JSON.stringify(envelope)}`);
+  const bytes = Buffer.from(`[Androperator-Result] ${JSON.stringify(envelope)}`);
   const sha256 = createHash("sha256").update(bytes).digest("hex");
   return Array.from({ length: Math.ceil(bytes.length / 1024) }, (_, index) =>
-    `D/Result: [Clawperator-Result-Chunk] ${JSON.stringify({ commandId, taskId, index,
+    `D/Result: [Androperator-Result-Chunk] ${JSON.stringify({ commandId, taskId, index,
       count: Math.ceil(bytes.length / 1024), byteLength: bytes.length, sha256,
       data: bytes.subarray(index * 1024, (index + 1) * 1024).toString("base64") })}\n`);
 }

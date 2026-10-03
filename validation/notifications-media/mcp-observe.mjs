@@ -10,12 +10,12 @@ const { StdioClientTransport } = require('@modelcontextprotocol/sdk/client/stdio
 const [deviceId, sessionId, output, expectedScreenOn = "false"] = process.argv.slice(2);
 if (!deviceId || !sessionId || !output) throw new Error('Usage: mcp-observe.mjs <device> <session> <output.json>');
 const client = new Client({ name: 'notification-media-proof', version: '1' });
-const transport = new StdioClientTransport({ command: process.execPath, args: [resolve(root, 'apps/node/dist/cli/index.js'), 'mcp', 'serve'], env: { ...process.env, CLAWPERATOR_NO_DAEMON: '1' } });
+const transport = new StdioClientTransport({ command: process.execPath, args: [resolve(root, 'apps/node/dist/cli/index.js'), 'mcp', 'serve'], env: { ...process.env, ANDROPERATOR_NO_DAEMON: '1' } });
 try {
   await client.connect(transport);
   const result = await client.callTool({ name: 'execute', arguments: {
-    deviceId, operatorPackage: 'com.clawperator.operator.dev', actions: [
-      { id: 'notifications', type: 'list_notifications', params: { applicationId: 'com.clawperator.fixture.media' } },
+    deviceId, operatorPackage: 'com.androperator.operator.dev', actions: [
+      { id: 'notifications', type: 'list_notifications', params: { applicationId: 'com.androperator.fixture.media' } },
       { id: 'sessions', type: 'list_media_sessions' },
       { id: 'status', type: 'get_media_status', params: { mediaSessionId: sessionId } },
     ],

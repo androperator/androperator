@@ -1,12 +1,12 @@
 ---
 name: geo-crawl-browser-rendering
-description: Audit Clawperator site crawl coverage and rendered extraction through Cloudflare Browser Rendering.
+description: Audit Androperator site crawl coverage and rendered extraction through Cloudflare Browser Rendering.
 ---
 
 # GEO Crawl Browser Rendering
 
 Use this skill when an agent needs a Cloudflare Browser Rendering-based GEO
-audit of the Clawperator public web surfaces.
+audit of the Androperator public web surfaces.
 
 This skill complements `geo-verify-public-surfaces`. It does not replace the
 live-edge header and route verification pass.
@@ -18,13 +18,13 @@ live-edge header and route verification pass.
 - Browser Rendering `/links` extraction for landing and docs entry pages
 - comparison of static-friendly versus rendered extraction
 - findings focused on agent-ingestibility, not generic SEO boilerplate
-- landing-host crawl isolation using `https://clawperator.com/landing-sitemap.xml`
+- landing-host crawl isolation using `https://androperator.com/landing-sitemap.xml`
   to avoid mixed-host sitemap-index noise
 
 ## Required environment
 
-- `CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID`
-- `CLAWPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN`
+- `ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID`
+- `ANDROPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN`
 
 Optional overrides:
 
@@ -33,8 +33,8 @@ Optional overrides:
 
 ## Default targets
 
-- landing: `https://clawperator.com`
-- docs: `https://docs.clawperator.com`
+- landing: `https://androperator.com`
+- docs: `https://docs.androperator.com`
 
 ## Workflow
 
@@ -66,7 +66,7 @@ Optional overrides:
   immediate proof of a bad URL or bad site behavior.
 - Only treat crawl lookup as a tooling blocker after a reasonable polling
   window is exhausted.
-- For the landing host, use `https://clawperator.com/landing-sitemap.xml` as
+- For the landing host, use `https://androperator.com/landing-sitemap.xml` as
   the crawl entrypoint instead of the root host when testing sitemap-led
   landing coverage. The root host sitemap index also advertises the docs host,
   which causes noisy `skipped` and `cancelled` records in Cloudflare crawl

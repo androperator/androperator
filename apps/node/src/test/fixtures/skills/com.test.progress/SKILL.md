@@ -1,6 +1,6 @@
 ---
 name: com.test.progress
-clawperator-skill-type: replay
+androperator-skill-type: replay
 description: Test fixture that emits progress lines before a framed result.
 ---
 

@@ -3,7 +3,7 @@
 ## Runtime Target Selection
 
 - `local-dev` uses the branch-local Node CLI build and the `.dev` Operator APK.
-- `published` uses the globally installed `clawperator` binary and the release Operator APK.
+- `published` uses the globally installed `androperator` binary and the release Operator APK.
 - The code version is typically ahead of the published version. Do not mix runtime targets unless the CLI and APK versions are intentionally aligned.
 
 ## Before Running
@@ -116,7 +116,7 @@ version before setup.
 
 - `VERSION_INCOMPATIBLE` usually means the CLI and APK versions do not match.
 - For `local-dev`, rebuild the debug APK from the same checkout before rerunning.
-- For `published`, download and install the APK that matches `clawperator version`.
+- For `published`, download and install the APK that matches `androperator version`.
 - `doctor_preflight_failed` means preflight stopped the run before the agent started.
 - `no_answer` means the transcript needs inspection for the answer marker and scorer behavior.
 - Pack A red-baseline expectation before the new discovery skill ships:

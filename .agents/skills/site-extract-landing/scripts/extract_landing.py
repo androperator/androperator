@@ -26,15 +26,15 @@ def main():
     # Ensure parent directory exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    account_id = os.environ.get('CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID')
-    token = os.environ.get('CLAWPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN')
+    account_id = os.environ.get('ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID')
+    token = os.environ.get('ANDROPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN')
 
     if not account_id or not token:
         print("Error: Missing required environment variables:")
         if not account_id:
-            print("- CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID")
+            print("- ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID")
         if not token:
-            print("- CLAWPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN")
+            print("- ANDROPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN")
         sys.exit(1)
 
     api_url = f'https://api.cloudflare.com/client/v4/accounts/{account_id}/browser-rendering/markdown'

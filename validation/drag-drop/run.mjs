@@ -12,7 +12,7 @@ const { values } = parseArgs({ options: {
   device: { type: 'string' }, label: { type: 'string' },
   x: { type: 'string' }, y: { type: 'string' },
   'output-dir': { type: 'string' }, restore: { type: 'boolean', default: false },
-  'operator-package': { type: 'string', default: 'com.clawperator.operator.dev' },
+  'operator-package': { type: 'string', default: 'com.androperator.operator.dev' },
 }});
 for (const key of ['device', 'label', 'x', 'y', 'output-dir', 'operator-package']) {
   if (values[key] === undefined || values[key].trim() === '') throw new Error(`Missing --${key}`);
@@ -29,7 +29,7 @@ const pause = ms => new Promise(done => setTimeout(done, ms));
 
 function run(command, args) {
   return execFileSync(command, args, { encoding: 'utf8', timeout: 60000, maxBuffer: 16 * 1024 * 1024,
-    env: { ...process.env, CLAWPERATOR_LOG_DIR: resolve(output, 'logs') } });
+    env: { ...process.env, ANDROPERATOR_LOG_DIR: resolve(output, 'logs') } });
 }
 function api(...args) {
   const result = JSON.parse(run(process.execPath, [cli, ...args, '--device', values.device,

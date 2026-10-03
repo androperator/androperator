@@ -1,4 +1,4 @@
 #!/usr/bin/env node
-console.log("CLAWPERATOR_BIN:" + (process.env.CLAWPERATOR_BIN || "undefined"));
-console.log("CLAWPERATOR_OPERATOR_PACKAGE:" + (process.env.CLAWPERATOR_OPERATOR_PACKAGE || "undefined"));
-console.log("CLAWPERATOR_DEVICE_ID:" + (process.env.CLAWPERATOR_DEVICE_ID || "undefined"));
+console.log("ANDROPERATOR_BIN:" + (process.env.ANDROPERATOR_BIN || "undefined"));
+console.log("ANDROPERATOR_OPERATOR_PACKAGE:" + (process.env.ANDROPERATOR_OPERATOR_PACKAGE || "undefined"));
+console.log("ANDROPERATOR_DEVICE_ID:" + (process.env.ANDROPERATOR_DEVICE_ID || "undefined"));

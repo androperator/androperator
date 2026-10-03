@@ -1,6 +1,6 @@
 ---
 name: docs-build
-description: Build or regenerate the Clawperator docs site and llms-full.txt from canonical sources.
+description: Build or regenerate the Androperator docs site and llms-full.txt from canonical sources.
 ---
 
 # Docs Build
@@ -21,7 +21,9 @@ before a normal build.
 `docs/` owns authored pages; `apps/node/src/` owns CLI/API behavior.
 `sites/docs/static/` owns static root files. `sites/docs/.build/` and
 `sites/docs/site/` are generated: fix the source or generator and rebuild.
-Commit source fixes and tracked generated changes together.
+Commit source fixes and tracked generated changes together. The pipeline generates
+`sites/docs/static/llms-full.txt` and `sites/androperator-public/llms-full.txt`;
+these outputs are ignored and must not be committed.
 
 For content work, use `docs-author`. For pipeline or routing changes, consult
 [references/repo-docs.md](references/repo-docs.md), `sites/docs/mkdocs.yml`,

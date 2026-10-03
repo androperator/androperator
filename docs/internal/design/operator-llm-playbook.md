@@ -1,6 +1,6 @@
 # Operator Automation Playbook
 
-This is a secondary background document for Clawperator runtime conventions.
+This is a secondary background document for Androperator runtime conventions.
 
 If you are starting cold, begin with the operational docs first:
 
@@ -20,12 +20,12 @@ Use this playbook after that, when you need deeper context for:
 
 These are runtime components (not debug-only):
 
-- `com.clawperator.operator.runtime.OperatorCommandService`
-- `com.clawperator.operator.runtime.OperatorCommandReceiver`
+- `com.androperator.operator.runtime.OperatorCommandService`
+- `com.androperator.operator.runtime.OperatorCommandReceiver`
 
 They own broadcast ingress for:
-- **Action Namespace:** `com.clawperator.operator.ACTION_AGENT_COMMAND` (stable)
-- **Package Target:** Varies by build (e.g., `com.clawperator.operator` or `com.clawperator.operator.dev`)
+- **Action Namespace:** `com.androperator.operator.ACTION_AGENT_COMMAND` (stable)
+- **Package Target:** Varies by build (e.g., `com.androperator.operator` or `com.androperator.operator.dev`)
 
 ---
 
@@ -47,7 +47,7 @@ For app automation commands, default to:
 
 ### Determinism Doctrine
 1. **Validation First:** No side effects if the payload is malformed.
-2. **Exactly One Envelope:** Every command must emit a `[Clawperator-Result]`.
+2. **Exactly One Envelope:** Every command must emit a `[Androperator-Result]`.
 3. **No Retries:** The runtime never retries a failed step; it reports the failure immediately to the Brain.
 4. **Stable IDs:** Correlate `commandId` and `taskId` end-to-end.
 
@@ -113,7 +113,7 @@ adb exec-out screencap -p > ./tmp/ui-check.png
 Canonical unit is a skill package, not a standalone recipe file.
 
 ### Required structure
-Skills are maintained in a dedicated sibling repository: `../clawperator-skills`.
+Skills are maintained in a dedicated sibling repository: `<workspace>`.
 Each skill follows this structure:
 - `skills/<applicationId>.<intent>/SKILL.md`
 - `skills/<applicationId>.<intent>/scripts/*.sh`

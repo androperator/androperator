@@ -17,7 +17,7 @@ This page focuses on composition. For full per-action parameter rules, use [Acti
 
 ## Why Compose Navigation
 
-Neither `open_app` nor `open_uri` proves that the target screen is ready. In current Clawperator, deterministic navigation usually means:
+Neither `open_app` nor `open_uri` proves that the target screen is ready. In current Androperator, deterministic navigation usually means:
 
 1. trigger navigation
 2. wait for the expected package or expected node
@@ -32,7 +32,7 @@ The normal three-step shape is:
 Verification pattern - preview a composed navigation payload without dispatching:
 
 ```bash
-clawperator exec --dry-run --execution '{"commandId":"settings-nav-1","taskId":"settings-nav-1","source":"docs","expectedFormat":"android-ui-automator","timeoutMs":30000,"actions":[{"id":"open","type":"open_app","params":{"applicationId":"com.android.settings"}},{"id":"wait","type":"wait_for_navigation","params":{"expectedPackage":"com.android.settings","timeoutMs":5000}},{"id":"snap","type":"snapshot"}]}'
+androperator exec --dry-run --execution '{"commandId":"settings-nav-1","taskId":"settings-nav-1","source":"docs","expectedFormat":"android-ui-automator","timeoutMs":30000,"actions":[{"id":"open","type":"open_app","params":{"applicationId":"com.android.settings"}},{"id":"wait","type":"wait_for_navigation","params":{"expectedPackage":"com.android.settings","timeoutMs":5000}},{"id":"snap","type":"snapshot"}]}'
 ```
 
 ## Launcher And Home-Screen Navigation
@@ -50,7 +50,7 @@ Practical rules:
 Why this matters:
 
 - launcher pages may appear in the snapshot XML even when the visible workspace
-  does not expose a container that Clawperator can drive with `scroll`
+  does not expose a container that Androperator can drive with `scroll`
 - a home-screen attempt that looks swipeable to a human can still fail with a
   container-level error such as `CONTAINER_NOT_SCROLLABLE`
 - chooser windows, permission prompts, and other overlays can complicate
@@ -87,7 +87,7 @@ Builder example:
 {
   "commandId": "open_app_1700000000000",
   "taskId": "cli-action-open-app",
-  "source": "clawperator-cli",
+  "source": "androperator-cli",
   "timeoutMs": 15000,
   "expectedFormat": "android-ui-automator",
   "actions": [
@@ -105,23 +105,23 @@ Builder example:
 Exact builder literals from `buildOpenAppExecution()`:
 
 - `taskId: "cli-action-open-app"`
-- `source: "clawperator-cli"`
+- `source: "androperator-cli"`
 - `timeoutMs: 15000`
 - action id: `a1`
 
 CLI routing pattern:
 
 ```bash
-clawperator open com.android.settings
+androperator open com.android.settings
 ```
 
 The `open` command treats a non-URI target as an app package and dispatches to `open_app`.
 
 Accepted CLI aliases for the same intent:
 
-- `clawperator open-app com.android.settings`
-- `clawperator open_app com.android.settings`
-- `clawperator open --package com.android.settings`
+- `androperator open-app com.android.settings`
+- `androperator open_app com.android.settings`
+- `androperator open --package com.android.settings`
 
 Exact classification rule from `isOpenCliUriTarget()`:
 
@@ -131,7 +131,7 @@ Exact classification rule from `isOpenCliUriTarget()`:
 Verification:
 
 ```bash
-clawperator open com.android.settings
+androperator open com.android.settings
 ```
 
 Expected live success shape:
@@ -154,7 +154,7 @@ Expected live success shape:
 }
 ```
 
-If you want to verify the builder shape without dispatching, use the example payload above with `clawperator exec --validate-only --execution '<json>'`.
+If you want to verify the builder shape without dispatching, use the example payload above with `androperator exec --validate-only --execution '<json>'`.
 
 What to verify after `open_app`:
 
@@ -189,7 +189,7 @@ Builder example:
 {
   "commandId": "open_uri_1700000000000",
   "taskId": "cli-action-open-uri",
-  "source": "clawperator-cli",
+  "source": "androperator-cli",
   "timeoutMs": 15000,
   "expectedFormat": "android-ui-automator",
   "actions": [
@@ -197,7 +197,7 @@ Builder example:
       "id": "a1",
       "type": "open_uri",
       "params": {
-        "uri": "https://clawperator.com"
+        "uri": "https://androperator.com"
       }
     }
   ]
@@ -207,27 +207,27 @@ Builder example:
 Exact builder literals from `buildOpenUriExecution()`:
 
 - `taskId: "cli-action-open-uri"`
-- `source: "clawperator-cli"`
+- `source: "androperator-cli"`
 - `timeoutMs: 15000`
 - action id: `a1`
 
 CLI routing pattern:
 
 ```bash
-clawperator open https://clawperator.com
+androperator open https://androperator.com
 ```
 
 The `open` command uses `isOpenCliUriTarget()` and routes to `open_uri` when the target matches a URI-with-scheme pattern.
 
 Accepted CLI aliases for the same intent:
 
-- `clawperator open --url https://clawperator.com`
-- `clawperator open --uri https://clawperator.com`
+- `androperator open --url https://androperator.com`
+- `androperator open --uri https://androperator.com`
 
 Verification:
 
 ```bash
-clawperator open https://clawperator.com
+androperator open https://androperator.com
 ```
 
 Expected live success shape:
@@ -242,7 +242,7 @@ Expected live success shape:
         "actionType": "open_uri",
         "success": true,
         "data": {
-          "uri": "https://clawperator.com"
+          "uri": "https://androperator.com"
         }
       }
     ]
@@ -250,7 +250,7 @@ Expected live success shape:
 }
 ```
 
-If you want to verify the builder shape without dispatching, use the example payload above with `clawperator exec --validate-only --execution '<json>'`.
+If you want to verify the builder shape without dispatching, use the example payload above with `androperator exec --validate-only --execution '<json>'`.
 
 What Node validates versus what it does not:
 
@@ -305,7 +305,7 @@ Builder inflation rule:
 
 Exact builder literals from `buildWaitForNavExecution()`:
 
-- `source: "clawperator-action"`
+- `source: "androperator-action"`
 - action id: `wait-for-nav`
 - action type: `wait_for_navigation`
 - default execution timeout when `navTimeoutMs` is omitted: `30000`
@@ -342,7 +342,7 @@ CLI validation failures:
 Verification:
 
 ```bash
-clawperator wait-for-nav --app com.android.settings --timeout 5000 --validate-only
+androperator wait-for-nav --app com.android.settings --timeout 5000 --validate-only
 ```
 
 Expected validated execution shape:
@@ -352,7 +352,7 @@ Expected validated execution shape:
   "ok": true,
   "validated": true,
   "execution": {
-    "source": "clawperator-action",
+    "source": "androperator-action",
     "timeoutMs": 30000,
     "actions": [
       {
@@ -422,7 +422,7 @@ Machine-checkable success conditions:
 Verification command:
 
 ```bash
-clawperator exec --execution '{"commandId":"settings-nav-1","taskId":"settings-nav-1","source":"docs","expectedFormat":"android-ui-automator","timeoutMs":30000,"actions":[{"id":"open","type":"open_app","params":{"applicationId":"com.android.settings"}},{"id":"wait","type":"wait_for_navigation","params":{"expectedPackage":"com.android.settings","timeoutMs":5000}},{"id":"snap","type":"snapshot"}]}' --device <device_serial>
+androperator exec --execution '{"commandId":"settings-nav-1","taskId":"settings-nav-1","source":"docs","expectedFormat":"android-ui-automator","timeoutMs":30000,"actions":[{"id":"open","type":"open_app","params":{"applicationId":"com.android.settings"}},{"id":"wait","type":"wait_for_navigation","params":{"expectedPackage":"com.android.settings","timeoutMs":5000}},{"id":"snap","type":"snapshot"}]}' --device <device_serial>
 ```
 
 ## Complete JSON Example
@@ -463,7 +463,7 @@ clawperator exec --execution '{"commandId":"settings-nav-1","taskId":"settings-n
     "error": null
   },
   "deviceId": "<device_serial>",
-  "terminalSource": "clawperator_result",
+  "terminalSource": "androperator_result",
   "isCanonicalTerminal": true
 }
 ```

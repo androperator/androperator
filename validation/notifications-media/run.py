@@ -9,8 +9,8 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PACKAGE = 'com.clawperator.fixture.media'
-OPERATOR = 'com.clawperator.operator.dev'
+PACKAGE = 'com.androperator.fixture.media'
+OPERATOR = 'com.androperator.operator.dev'
 
 
 def main():
@@ -55,7 +55,7 @@ def main():
         return json.loads(adb('shell', 'run-as', PACKAGE, 'cat', 'files/media-proof.json'))
 
     def control(operation):
-        adb('shell', 'am', 'broadcast', '--receiver-foreground', '-n', PACKAGE + '/clawperator.operator.debug.MediaProofActivity$Control', '--es', 'operation', operation)
+        adb('shell', 'am', 'broadcast', '--receiver-foreground', '-n', PACKAGE + '/androperator.operator.debug.MediaProofActivity$Control', '--es', 'operation', operation)
 
     try:
         adb('shell', 'am', 'force-stop', PACKAGE)
@@ -66,7 +66,7 @@ def main():
             adb('push', str(media), '/data/local/tmp/media-proof.mp4')
         adb('shell', 'run-as', PACKAGE, 'mkdir', '-p', 'files')
         adb('shell', 'run-as', PACKAGE, 'cp', '/data/local/tmp/media-proof.mp4', 'files/media-proof.mp4')
-        adb('shell', 'am', 'start', '-n', PACKAGE + '/clawperator.operator.debug.MediaProofActivity')
+        adb('shell', 'am', 'start', '-n', PACKAGE + '/androperator.operator.debug.MediaProofActivity')
         time.sleep(2)
         control('resume')
         listed = payload(cli('media', 'list', '--app', PACKAGE))
@@ -162,7 +162,7 @@ def main():
                 # Locked replacement proof deliberately leaves a controller with no callbacks.
                 # Start a fresh fixture only after credential cleanup, outside that proof.
                 adb('shell', 'am', 'force-stop', PACKAGE)
-                adb('shell', 'am', 'start', '-n', PACKAGE + '/clawperator.operator.debug.MediaProofActivity')
+                adb('shell', 'am', 'start', '-n', PACKAGE + '/androperator.operator.debug.MediaProofActivity')
                 time.sleep(2)
                 session_id = payload(cli('media', 'list', '--app', PACKAGE))['sessions'][0]['mediaSessionId']
             control('resume')

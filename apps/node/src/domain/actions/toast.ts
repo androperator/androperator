@@ -8,7 +8,7 @@ export function buildToastExecution(
   return {
     commandId: `toast-${operation}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     taskId: `cli-toast-${operation}`,
-    source: "clawperator-cli",
+    source: "androperator-cli",
     timeoutMs,
     expectedFormat: "android-ui-automator",
     actions: [{ id: "a1", type: operation === "show" ? "show_toast" : "cancel_toast",

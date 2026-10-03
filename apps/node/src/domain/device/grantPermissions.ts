@@ -1,10 +1,10 @@
 import { runAdb } from "../../adapters/android-bridge/adbClient.js";
 import { type RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 
-const DEFAULT_DEBUG_PACKAGE = "com.clawperator.operator.dev";
-const DEFAULT_RELEASE_PACKAGE = "com.clawperator.operator";
+const DEFAULT_DEBUG_PACKAGE = "com.androperator.operator.dev";
+const DEFAULT_RELEASE_PACKAGE = "com.androperator.operator";
 const ACCESSIBILITY_SERVICE_CLASS =
-  "clawperator.operator.accessibilityservice.OperatorAccessibilityService";
+  "androperator.operator.accessibilityservice.OperatorAccessibilityService";
 const NOTIFICATION_LISTENER_SERVICE_CLASS =
   "action.notification.NotificationListenerService";
 
@@ -174,7 +174,7 @@ export async function grantDevicePermissions(
       accessibility: {
         ok: false,
         alreadyEnabled: false,
-        error: "No Clawperator Operator APK found on device. Install the APK first.",
+        error: "No Androperator Operator APK found on device. Install the APK first.",
       },
       notification: { ok: false, skipped: true },
       notificationListener: { ok: false, alreadyEnabled: false },

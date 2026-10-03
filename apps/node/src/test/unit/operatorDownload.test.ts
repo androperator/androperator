@@ -11,8 +11,8 @@ import { downloadOperatorApk } from "../../domain/version/operatorDownload.js";
 
 const ENV_KEYS = [
   "HOME",
-  "CLAWPERATOR_APK_METADATA_URL",
-  "CLAWPERATOR_OPERATOR_PACKAGE",
+  "ANDROPERATOR_APK_METADATA_URL",
+  "ANDROPERATOR_OPERATOR_PACKAGE",
 ] as const;
 
 const ORIGINAL_ENV = new Map<string, string | undefined>(
@@ -31,7 +31,7 @@ afterEach(() => {
 });
 
 async function makeTempHome(): Promise<string> {
-  return mkdtemp(join(tmpdir(), "clawperator-operator-download-"));
+  return mkdtemp(join(tmpdir(), "androperator-operator-download-"));
 }
 
 function sha256Hex(value: string): string {
@@ -94,13 +94,13 @@ describe("operator download", () => {
         res.writeHead(404);
         res.end();
       }, async (baseUrl) => {
-        process.env.CLAWPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
+        process.env.ANDROPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
         const result = await downloadOperatorApk();
 
-        assert.strictEqual(result.localPath, join(homeDir, ".clawperator", "downloads", "operator.apk"));
+        assert.strictEqual(result.localPath, join(homeDir, ".androperator", "downloads", "operator.apk"));
         assert.strictEqual(result.operatorVersion, "0.7.4");
         assert.strictEqual(result.sha256, checksum);
-        assert.strictEqual(result.operatorPackage, "com.clawperator.operator");
+        assert.strictEqual(result.operatorPackage, "com.androperator.operator");
         assert.strictEqual(result.checksumSource, "inline");
         assert.strictEqual(await readFile(result.localPath, "utf8"), apkContents);
       });
@@ -141,7 +141,7 @@ describe("operator download", () => {
         res.writeHead(404);
         res.end();
       }, async (baseUrl) => {
-        process.env.CLAWPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
+        process.env.ANDROPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
         const result = await downloadOperatorApk();
 
         assert.strictEqual(result.checksumSource, "external");
@@ -153,14 +153,14 @@ describe("operator download", () => {
     }
   });
 
-  it("treats a blank CLAWPERATOR_OPERATOR_PACKAGE env var as unset", async () => {
+  it("treats a blank ANDROPERATOR_OPERATOR_PACKAGE env var as unset", async () => {
     const homeDir = await makeTempHome();
     const apkContents = "apk-blank-operator-package-env";
     const checksum = sha256Hex(apkContents);
 
     try {
       process.env.HOME = homeDir;
-      process.env.CLAWPERATOR_OPERATOR_PACKAGE = "";
+      process.env.ANDROPERATOR_OPERATOR_PACKAGE = "";
 
       await withHttpServer((req, res) => {
         if (req.url === "/latest.json") {
@@ -182,11 +182,11 @@ describe("operator download", () => {
         res.writeHead(404);
         res.end();
       }, async (baseUrl) => {
-        process.env.CLAWPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
+        process.env.ANDROPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
         const result = await downloadOperatorApk();
 
-        assert.strictEqual(result.operatorPackage, "com.clawperator.operator");
-        assert.strictEqual(result.localPath, join(homeDir, ".clawperator", "downloads", "operator.apk"));
+        assert.strictEqual(result.operatorPackage, "com.androperator.operator");
+        assert.strictEqual(result.localPath, join(homeDir, ".androperator", "downloads", "operator.apk"));
         assert.strictEqual(await readFile(result.localPath, "utf8"), apkContents);
       });
     } finally {
@@ -198,7 +198,7 @@ describe("operator download", () => {
     const homeDir = await makeTempHome();
     const apkContents = "apk-existing-destination";
     const checksum = sha256Hex(apkContents);
-    const existingDestination = join(homeDir, ".clawperator", "downloads", "operator.apk");
+    const existingDestination = join(homeDir, ".androperator", "downloads", "operator.apk");
 
     try {
       process.env.HOME = homeDir;
@@ -224,7 +224,7 @@ describe("operator download", () => {
         res.writeHead(404);
         res.end();
       }, async (baseUrl) => {
-        process.env.CLAWPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
+        process.env.ANDROPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
         const result = await downloadOperatorApk();
 
         assert.strictEqual(result.localPath, existingDestination);
@@ -249,7 +249,7 @@ describe("operator download", () => {
       res.writeHead(404);
       res.end();
     }, async (baseUrl) => {
-      process.env.CLAWPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
+      process.env.ANDROPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
       await assert.rejects(
         () => downloadOperatorApk(),
         (error: unknown) => {
@@ -272,7 +272,7 @@ describe("operator download", () => {
       res.writeHead(404);
       res.end();
     }, async (baseUrl) => {
-      process.env.CLAWPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
+      process.env.ANDROPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
       await assert.rejects(
         () => downloadOperatorApk(),
         (error: unknown) => {
@@ -311,7 +311,7 @@ describe("operator download", () => {
         res.writeHead(404);
         res.end();
       }, async (baseUrl) => {
-        process.env.CLAWPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
+        process.env.ANDROPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
         await assert.rejects(
           () => downloadOperatorApk(),
           (error: unknown) => {
@@ -321,7 +321,7 @@ describe("operator download", () => {
           },
         );
 
-        const downloadsDir = join(homeDir, ".clawperator", "downloads");
+        const downloadsDir = join(homeDir, ".androperator", "downloads");
         assert.deepStrictEqual(await readdir(downloadsDir), []);
       });
     } finally {
@@ -336,7 +336,7 @@ describe("operator download", () => {
 
     try {
       process.env.HOME = homeDir;
-      await writeFile(join(homeDir, ".clawperator"), "not-a-directory");
+      await writeFile(join(homeDir, ".androperator"), "not-a-directory");
 
       await withHttpServer((req, res) => {
         if (req.url === "/latest.json") {
@@ -358,7 +358,7 @@ describe("operator download", () => {
         res.writeHead(404);
         res.end();
       }, async (baseUrl) => {
-        process.env.CLAWPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
+        process.env.ANDROPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
         const output = await cmdOperatorDownload({ format: "json" });
         const parsed = JSON.parse(output) as {
           code: string;
@@ -372,7 +372,7 @@ describe("operator download", () => {
         assert.strictEqual(parsed.code, ERROR_CODES.OPERATOR_DOWNLOAD_FAILED);
         assert.match(parsed.message, /failed to write operator apk/i);
         assert.match(parsed.hint ?? "", /download directory is writable/i);
-        assert.strictEqual(parsed.details?.localPath, join(homeDir, ".clawperator", "downloads", "operator.apk"));
+        assert.strictEqual(parsed.details?.localPath, join(homeDir, ".androperator", "downloads", "operator.apk"));
         assert.strictEqual(process.exitCode, 1);
       });
     } finally {
@@ -408,7 +408,7 @@ describe("operator download", () => {
         res.writeHead(404);
         res.end();
       }, async (baseUrl) => {
-        process.env.CLAWPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
+        process.env.ANDROPERATOR_APK_METADATA_URL = `${baseUrl}/latest.json`;
         const output = await cmdOperatorDownload({ format: "json" });
         const parsed = JSON.parse(output) as {
           localPath: string;
@@ -417,10 +417,10 @@ describe("operator download", () => {
           operatorPackage: string;
         };
 
-        assert.strictEqual(parsed.localPath, join(homeDir, ".clawperator", "downloads", "operator.apk"));
+        assert.strictEqual(parsed.localPath, join(homeDir, ".androperator", "downloads", "operator.apk"));
         assert.strictEqual(parsed.operatorVersion, "0.7.4");
         assert.strictEqual(parsed.sha256, checksum);
-        assert.strictEqual(parsed.operatorPackage, "com.clawperator.operator");
+        assert.strictEqual(parsed.operatorPackage, "com.androperator.operator");
         assert.strictEqual(process.exitCode, undefined);
       });
     } finally {

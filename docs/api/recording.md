@@ -6,9 +6,9 @@ The commands on this page record accessibility events.
 ## Purpose
 
 Document the current recording workflow, the raw NDJSON schema written by the
-Operator app, the parsed step-log format produced by `clawperator record parse`,
-the agent-context export produced by `clawperator recording export`, and the
-compare workflow exposed by `clawperator recording compare`. Recording start
+Operator app, the parsed step-log format produced by `androperator record parse`,
+the agent-context export produced by `androperator recording export`, and the
+compare workflow exposed by `androperator recording compare`. Recording start
 and stop commands are execution-backed and return the shared
 [result envelope](overview.md#result-envelope) wrapper.
 
@@ -31,9 +31,9 @@ are not executable skills.
 Current durable rules:
 
 - retain the pulled NDJSON as the raw capture
-- retain `clawperator recording export` output as the canonical structured
+- retain `androperator recording export` output as the canonical structured
   artifact for authoring and compare
-- use `clawperator record parse` as lossy human inspection only
+- use `androperator record parse` as lossy human inspection only
 - do not treat a recording export or parsed step log as a reusable skill with
   only light cleanup
 
@@ -65,13 +65,13 @@ Practical evidence quality rules:
 
 The current flow is:
 
-1. `clawperator record start [--session-id <id>]`
+1. `androperator record start [--session-id <id>]`
 2. interact with the device
-3. `clawperator record stop [--session-id <id>]`
-4. `clawperator record pull [--session-id <id>] [--out <dir>]`
-5. `clawperator recording export --input <file|directory> [--out <file>] [--snapshots <omit|include>]`
-6. `clawperator record parse --input <file> [--out <file>]`
-7. `clawperator recording compare --baseline <export.json> --result <skills-run.json> [--mode <auto|literal|semantic>]`
+3. `androperator record stop [--session-id <id>]`
+4. `androperator record pull [--session-id <id>] [--out <dir>]`
+5. `androperator recording export --input <file|directory> [--out <file>] [--snapshots <omit|include>]`
+6. `androperator record parse --input <file> [--out <file>]`
+7. `androperator recording compare --baseline <export.json> --result <skills-run.json> [--mode <auto|literal|semantic>]`
 
 Notes:
 
@@ -90,7 +90,7 @@ Notes:
 - `recording compare` defaults to `--mode auto`
 - if `recording export --input` points at a file and `--out` is omitted, the output path is `<input without .ndjson>.export.json` when the input ends with `.ndjson`, otherwise `<input>.export.json`
 - if `recording export --input` points at a directory, the command picks the newest `*.ndjson` file in that directory and derives the default export path from that resolved file
-- `recording compare` reads a saved `clawperator skills run` JSON wrapper file
+- `recording compare` reads a saved `androperator skills run` JSON wrapper file
   and extracts its top-level `skillResult` (the durable compare input is still
   the full wrapper; compare logic continues to use `skillResult.checkpoints`
   and `skillResult.terminalVerification` as defined by the compare
@@ -108,12 +108,12 @@ Notes:
 Recommended pre-recording reset:
 
 - ask which target app or apps the user intends to record
-- close those apps through Clawperator before `recording start`
+- close those apps through Androperator before `recording start`
 - do not rely on the user manually swiping apps away unless the workflow makes
   that explicit
 - for a single app reset, prefer the flat CLI:
-  `clawperator close --app <application_id> --device <device_id> --operator-package <operator_package>`
-- for multiple app resets, use a small `clawperator exec` with one or more
+  `androperator close --app <application_id> --device <device_id> --operator-package <operator_package>`
+- for multiple app resets, use a small `androperator exec` with one or more
   `close_app` actions before you start recording
 - the underlying API action is `close_app`, which Node executes as an adb
   `am force-stop` pre-flight and normalizes to a successful close only when
@@ -134,7 +134,7 @@ Recommended recording-count stance:
 ### Start
 
 ```bash
-clawperator record start [--session-id <id>] [--device <serial>] [--operator-package <pkg>]
+androperator record start [--session-id <id>] [--device <serial>] [--operator-package <pkg>]
 ```
 
 Current builder payload:
@@ -143,7 +143,7 @@ Current builder payload:
 {
   "commandId": "start_recording_1700000000000",
   "taskId": "cli-record-start",
-  "source": "clawperator-cli",
+  "source": "androperator-cli",
   "timeoutMs": 10000,
   "expectedFormat": "android-ui-automator",
   "actions": [
@@ -161,14 +161,14 @@ Current builder payload:
 Exact builder literals:
 
 - `taskId: "cli-record-start"`
-- `source: "clawperator-cli"`
+- `source: "androperator-cli"`
 - `timeoutMs: 10000`
 - action id: `a1`
 
 Verification:
 
 ```bash
-clawperator record start --session-id demo-session --device <device_serial>
+androperator record start --session-id demo-session --device <device_serial>
 ```
 
 Expected success wrapper shape:
@@ -183,13 +183,13 @@ Expected success wrapper shape:
         "success": true,
         "data": {
           "sessionId": "demo-session",
-          "filePath": "/sdcard/Android/data/com.clawperator.operator.dev/files/recordings/demo-session.ndjson"
+          "filePath": "/sdcard/Android/data/com.androperator.operator.dev/files/recordings/demo-session.ndjson"
         }
       }
     ]
   },
   "deviceId": "<device_serial>",
-  "terminalSource": "clawperator_result",
+  "terminalSource": "androperator_result",
   "isCanonicalTerminal": true
 }
 ```
@@ -198,7 +198,7 @@ Expected success wrapper shape:
 ### Stop
 
 ```bash
-clawperator record stop [--session-id <id>] [--device <serial>] [--operator-package <pkg>]
+androperator record stop [--session-id <id>] [--device <serial>] [--operator-package <pkg>]
 ```
 
 Current builder payload:
@@ -207,7 +207,7 @@ Current builder payload:
 {
   "commandId": "stop_recording_1700000000000",
   "taskId": "cli-record-stop",
-  "source": "clawperator-cli",
+  "source": "androperator-cli",
   "timeoutMs": 15000,
   "expectedFormat": "android-ui-automator",
   "actions": [
@@ -225,14 +225,14 @@ Current builder payload:
 Exact builder literals:
 
 - `taskId: "cli-record-stop"`
-- `source: "clawperator-cli"`
+- `source: "androperator-cli"`
 - `timeoutMs: 15000`
 - action id: `a1`
 
 Verification:
 
 ```bash
-clawperator record stop --session-id demo-session --device <device_serial>
+androperator record stop --session-id demo-session --device <device_serial>
 ```
 
 Expected success wrapper shape:
@@ -247,7 +247,7 @@ Expected success wrapper shape:
         "success": true,
         "data": {
           "sessionId": "demo-session",
-          "filePath": "/sdcard/Android/data/com.clawperator.operator.dev/files/recordings/demo-session.ndjson",
+          "filePath": "/sdcard/Android/data/com.androperator.operator.dev/files/recordings/demo-session.ndjson",
           "eventCount": "17"
         }
       }
@@ -260,7 +260,7 @@ Expected success wrapper shape:
 ### Pull
 
 ```bash
-clawperator record pull [--session-id <id>] [--out <dir>] [--device <serial>] [--operator-package <pkg>]
+androperator record pull [--session-id <id>] [--out <dir>] [--device <serial>] [--operator-package <pkg>]
 ```
 
 Successful response shape:
@@ -280,7 +280,7 @@ Exact default:
 Verification:
 
 ```bash
-clawperator record pull --session-id demo-session --device <device_serial>
+androperator record pull --session-id demo-session --device <device_serial>
 ```
 
 Check:
@@ -293,7 +293,7 @@ Check:
 ### Parse
 
 ```bash
-clawperator record parse --input <file> [--out <file>]
+androperator record parse --input <file> [--out <file>]
 ```
 
 Successful response shape:
@@ -317,7 +317,7 @@ Exact default output-file rule from `cmdRecordParse()`:
 Verification:
 
 ```bash
-clawperator record parse --input ./recordings/demo-session.ndjson
+androperator record parse --input ./recordings/demo-session.ndjson
 ```
 
 Check:
@@ -331,8 +331,8 @@ Check:
 ### Export
 
 ```bash
-clawperator recording export --input <file|directory> [--out <file>] [--snapshots <omit|include>] [--output <json|pretty>]
-clawperator record export --input <file|directory> [--out <file>] [--snapshots <omit|include>] [--output <json|pretty>]
+androperator recording export --input <file|directory> [--out <file>] [--snapshots <omit|include>] [--output <json|pretty>]
+androperator record export --input <file|directory> [--out <file>] [--snapshots <omit|include>] [--output <json|pretty>]
 ```
 
 What the command does:
@@ -381,7 +381,7 @@ Success wrapper shape:
 Verification:
 
 ```bash
-clawperator recording export --input ./recordings/export-demo.ndjson
+androperator recording export --input ./recordings/export-demo.ndjson
 ```
 
 Check:
@@ -409,7 +409,7 @@ Export file contract:
     "sessionId": "demo-session",
     "schemaVersion": 1,
     "startedAt": 1710000000000,
-    "operatorPackage": "com.clawperator.operator.dev"
+    "operatorPackage": "com.androperator.operator.dev"
   },
   "snapshotMode": "omit",
   "events": [
@@ -456,14 +456,14 @@ Exported event types:
 ### Compare
 
 ```bash
-clawperator recording compare --baseline <export.json> --result <skills-run.json> [--mode <auto|literal|semantic>] [--output <json|pretty>]
-clawperator record compare --baseline <export.json> --result <skills-run.json> [--mode <auto|literal|semantic>] [--output <json|pretty>]
+androperator recording compare --baseline <export.json> --result <skills-run.json> [--mode <auto|literal|semantic>] [--output <json|pretty>]
+androperator record compare --baseline <export.json> --result <skills-run.json> [--mode <auto|literal|semantic>] [--output <json|pretty>]
 ```
 
 What the command does:
 
 - reads a recording export artifact from `--baseline`
-- reads a saved `clawperator skills run` JSON wrapper from `--result`
+- reads a saved `androperator skills run` JSON wrapper from `--result`
 - extracts the wrapper's top-level `skillResult`
 - normalizes the export into a checkpoint baseline
 - compares that baseline against `skillResult.checkpoints` plus `skillResult.terminalVerification`
@@ -609,7 +609,7 @@ Divergence example:
 Verification:
 
 ```bash
-clawperator recording compare \
+androperator recording compare \
   --baseline ./skills/com.solaxcloud.starter.set-discharge-to-limit-orchestrated/references/compare-baseline.export.json \
   --result ./runs/demo.skills-run.json
 ```
@@ -661,7 +661,7 @@ The first non-empty line must be a `recording_header`.
 Verification pattern - minimum valid file skeleton:
 
 ```json
-{"type":"recording_header","schemaVersion":1,"sessionId":"demo-session","startedAt":1710000000000,"operatorPackage":"com.clawperator.operator.dev"}
+{"type":"recording_header","schemaVersion":1,"sessionId":"demo-session","startedAt":1710000000000,"operatorPackage":"com.androperator.operator.dev"}
 {"ts":1710000000001,"seq":0,"type":"window_change","packageName":"com.android.settings","className":"com.android.settings.Settings","title":"Settings","snapshot":"<hierarchy .../>"}
 ```
 
@@ -680,7 +680,7 @@ Current header schema:
 Example:
 
 ```json
-{"type":"recording_header","schemaVersion":1,"sessionId":"demo-session","startedAt":1710000000000,"operatorPackage":"com.clawperator.operator.dev"}
+{"type":"recording_header","schemaVersion":1,"sessionId":"demo-session","startedAt":1710000000000,"operatorPackage":"com.androperator.operator.dev"}
 ```
 
 ### Event Types
@@ -841,7 +841,7 @@ Current normalization rules in `parseRecording.ts`:
 Verification:
 
 ```bash
-clawperator record parse --input ./recordings/demo-session.ndjson
+androperator record parse --input ./recordings/demo-session.ndjson
 ```
 
 Then open the written `.steps.json` file and confirm:
@@ -931,7 +931,7 @@ Typical failure shape:
 
 Recovery:
 
-- run `clawperator record start --session-id <id>` before trying to pull
+- run `androperator record start --session-id <id>` before trying to pull
 - if you expected the latest pointer to exist, stop the active recording first so the device writes the finished session metadata
 - if you passed `--session-id`, confirm it matches `^[a-zA-Z0-9_-]+$`
 
@@ -948,14 +948,14 @@ Typical failure shape:
   "code": "RECORDING_ALREADY_IN_PROGRESS",
   "message": "Recording is already in progress",
   "sessionId": "record-123",
-  "filePath": "/storage/emulated/0/Android/data/com.clawperator.operator.dev/files/recordings/record-123.ndjson",
-  "hint": "Run 'clawperator recording stop --session-id record-123 --device <device_serial> --operator-package <package>' before starting a new recording."
+  "filePath": "/storage/emulated/0/Android/data/com.androperator.operator.dev/files/recordings/record-123.ndjson",
+  "hint": "Run 'androperator recording stop --session-id record-123 --device <device_serial> --operator-package <package>' before starting a new recording."
 }
 ```
 
 Recovery:
 
-- run `clawperator recording stop --session-id <active_session_id> --device <device_serial> --operator-package <package>`
+- run `androperator recording stop --session-id <active_session_id> --device <device_serial> --operator-package <package>`
 - then pull or parse the finished session before starting a new one
 - if your workflow uses explicit session ids, reuse the active session id instead of starting a second overlapping recording
 - use the `sessionId` and `filePath` fields in the error payload to target the exact session that is still active
@@ -964,8 +964,8 @@ Recovery:
 Verification pattern:
 
 ```bash
-clawperator record stop --device <device_serial>
-clawperator record pull --device <device_serial>
+androperator record stop --device <device_serial>
+androperator record pull --device <device_serial>
 ```
 
 ### `RECORDING_NOT_IN_PROGRESS`
@@ -985,14 +985,14 @@ Typical failure shape:
 
 Recovery:
 
-- start a recording first with `clawperator record start --session-id <id> --device <device_serial>`
+- start a recording first with `androperator record start --session-id <id> --device <device_serial>`
 - only call `record stop` after the session has actually started
 
 Verification pattern:
 
 ```bash
-clawperator record start --session-id demo-session --device <device_serial>
-clawperator record stop --session-id demo-session --device <device_serial>
+androperator record start --session-id demo-session --device <device_serial>
+androperator record stop --session-id demo-session --device <device_serial>
 ```
 
 ### `RECORDING_PULL_FAILED`
@@ -1008,22 +1008,22 @@ Typical failure shape:
 ```json
 {
   "code": "RECORDING_PULL_FAILED",
-  "message": "Failed to pull recording from device: adb: error: failed to stat remote object '/sdcard/Android/data/com.clawperator.operator.dev/files/recordings/demo-session.ndjson': No such file or directory"
+  "message": "Failed to pull recording from device: adb: error: failed to stat remote object '/sdcard/Android/data/com.androperator.operator.dev/files/recordings/demo-session.ndjson': No such file or directory"
 }
 ```
 
 Recovery:
 
-- confirm the device is still visible in `clawperator devices`
-- rerun `clawperator record stop --session-id <id>` if the session may still be open
+- confirm the device is still visible in `androperator devices`
+- rerun `androperator record stop --session-id <id>` if the session may still be open
 - retry `record pull` with the exact `--session-id` you just stopped
 - if adb itself is failing, fix the transport problem before retrying
 
 Verification pattern:
 
 ```bash
-clawperator devices
-clawperator record pull --session-id demo-session --device <device_serial>
+androperator devices
+androperator record pull --session-id demo-session --device <device_serial>
 ```
 
 ## Runtime Step Errors Outside The Public Node Error Enum

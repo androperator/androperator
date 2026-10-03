@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "clawperator.resources"
+    namespace = "androperator.resources"
     compileSdk = 35
 
     defaultConfig {

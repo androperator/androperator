@@ -2,35 +2,35 @@
 
 ## Purpose
 
-Clawperator logs every significant event to a local NDJSON file for post-run diagnostics. An agent can inspect this file after a timeout or failure to determine what happened step by step.
+Androperator logs every significant event to a local NDJSON file for post-run diagnostics. An agent can inspect this file after a timeout or failure to determine what happened step by step.
 
 ## Log File Location
 
 Logs are written to a daily file at:
 
 ```
-~/.clawperator/logs/clawperator-YYYY-MM-DD.log
+~/.androperator/logs/androperator-YYYY-MM-DD.log
 ```
 
 The path components are:
 
 | Component | Value | Source |
 |-----------|-------|--------|
-| Base directory | `~/.clawperator/logs` | Default, or `CLAWPERATOR_LOG_DIR` env var |
-| Filename prefix | `clawperator-` | Hardcoded in `formatLogPath()` in `contracts/logging.ts` |
+| Base directory | `~/.androperator/logs` | Default, or `ANDROPERATOR_LOG_DIR` env var |
+| Filename prefix | `androperator-` | Hardcoded in `formatLogPath()` in `contracts/logging.ts` |
 | Date format | `YYYY-MM-DD` | Local calendar date of the log entry (from `formatDate()` in `contracts/logging.ts`) |
 | Extension | `.log` | Hardcoded in `formatLogPath()` in `contracts/logging.ts` |
 
-Example path: `/home/user/.clawperator/logs/clawperator-2026-03-28.log`
+Example path: `/home/user/.androperator/logs/androperator-2026-03-28.log`
 
-To change the base directory, set the `CLAWPERATOR_LOG_DIR` environment variable. See [Environment Variables](environment.md) for details.
+To change the base directory, set the `ANDROPERATOR_LOG_DIR` environment variable. See [Environment Variables](environment.md) for details.
 
 ## Doctor Log Diagnostics
 
-`clawperator doctor` includes the advisory `host.logs.writable` check. Its
+`androperator doctor` includes the advisory `host.logs.writable` check. Its
 `evidence` contains the resolved `logDir`, daily `logPath`, and boolean `writable`.
 It uses the logger's destination: an explicit logger directory takes precedence
-over `CLAWPERATOR_LOG_DIR`, then `~/.clawperator/logs`. Existing blank-value
+over `ANDROPERATOR_LOG_DIR`, then `~/.androperator/logs`. Existing blank-value
 fallback behavior is unchanged. The resolved directory stays attached to the
 logger and its children even if file logging becomes disabled.
 
@@ -38,7 +38,7 @@ Doctor creates the directory if needed and opens the daily file for append,
 then closes it without truncating or adding synthetic content. Its normal
 `doctor.check` event uses the configured logger and log-level rules. If opening
 the destination fails, the check warns with `LOG_DIRECTORY_UNWRITABLE`, the exact
-attempted path, and the `CLAWPERATOR_LOG_DIR` remedy. It does not redirect logs or
+attempted path, and the `ANDROPERATOR_LOG_DIR` remedy. It does not redirect logs or
 change permissions. Otherwise healthy device readiness still succeeds.
 
 ## NDJSON Format
@@ -66,7 +66,7 @@ Events may include additional context fields:
 | `taskId` | string | Part of a larger task sequence |
 | `deviceId` | string | Event targets a specific device |
 | `skillId` | string | Skill execution event |
-| `skillRunId` | string | Events belong to one `clawperator skills run` invocation |
+| `skillRunId` | string | Events belong to one `androperator skills run` invocation |
 | `logPath` | string | Event points at the active daily log file |
 | `tailCommand` | string | Event supplies a ready-to-run command for observing the log |
 | `stream` | string | `stdout` or `stderr` for skill output lines |
@@ -77,7 +77,7 @@ Events may include additional context fields:
 ### Example Log Lines
 
 ```jsonl
-{"ts":"2026-03-28T10:15:30.100Z","level":"info","event":"skills.run.log_location","message":"Skill com.example.app.get-status run skillrun_1777600000000_00000000-0000-4000-8000-000000000000 logging to /home/user/.clawperator/logs/clawperator-2026-03-28.log; observe with: tail -f '/home/user/.clawperator/logs/clawperator-2026-03-28.log'","skillId":"com.example.app.get-status","skillRunId":"skillrun_1777600000000_00000000-0000-4000-8000-000000000000","logPath":"/home/user/.clawperator/logs/clawperator-2026-03-28.log","tailCommand":"tail -f '/home/user/.clawperator/logs/clawperator-2026-03-28.log'"}
+{"ts":"2026-03-28T10:15:30.100Z","level":"info","event":"skills.run.log_location","message":"Skill com.example.app.get-status run skillrun_1777600000000_00000000-0000-4000-8000-000000000000 logging to /home/user/.androperator/logs/androperator-2026-03-28.log; observe with: tail -f '/home/user/.androperator/logs/androperator-2026-03-28.log'","skillId":"com.example.app.get-status","skillRunId":"skillrun_1777600000000_00000000-0000-4000-8000-000000000000","logPath":"/home/user/.androperator/logs/androperator-2026-03-28.log","tailCommand":"tail -f '/home/user/.androperator/logs/androperator-2026-03-28.log'"}
 {"ts":"2026-03-28T10:15:30.123Z","level":"info","event":"skills.run.start","message":"Skill com.example.app.get-status started","skillId":"com.example.app.get-status","skillRunId":"skillrun_1777600000000_00000000-0000-4000-8000-000000000000","commandId":"cmd-123"}
 {"ts":"2026-03-28T10:15:30.456Z","level":"info","event":"skills.run.output","message":"Opening app...","skillId":"com.example.app.get-status","skillRunId":"skillrun_1777600000000_00000000-0000-4000-8000-000000000000","stream":"stdout"}
 {"ts":"2026-03-28T10:15:32.789Z","level":"info","event":"skills.run.complete","message":"Skill com.example.app.get-status completed successfully in 2345ms","skillId":"com.example.app.get-status","skillRunId":"skillrun_1777600000000_00000000-0000-4000-8000-000000000000","durationMs":2345,"exitCode":0}
@@ -96,7 +96,7 @@ Four levels are available, in order of increasing severity:
 
 ### Threshold Behavior
 
-The `--log-level` flag (or `CLAWPERATOR_LOG_LEVEL` env var) controls which events are written to the file. Events at or above the threshold are logged.
+The `--log-level` flag (or `ANDROPERATOR_LOG_LEVEL` env var) controls which events are written to the file. Events at or above the threshold are logged.
 
 | Setting | Events Logged |
 |---------|---------------|
@@ -126,22 +126,22 @@ Events use dot-separated names with prefix-based categories:
 
 ### Skill Run Correlation
 
-Every `clawperator skills run` invocation creates a `skillRunId` and emits a
+Every `androperator skills run` invocation creates a `skillRunId` and emits a
 `skills.run.log_location` event at `info` level as the run starts, before
 validation, readiness preflight, or child process execution. That event
 contains the daily `logPath` and a `tailCommand` for human or agent observers.
 JSON errors from early validation or preflight failures include the same
 additive `logs` object when the CLI has a logger available.
 
-The log file remains the same daily NDJSON file. Clawperator does not create a
+The log file remains the same daily NDJSON file. Androperator does not create a
 separate per-run log file. The `skillRunId` is additive correlation metadata
 for filtering events that belong to one invocation.
 
-Skill scripts receive the same value in `CLAWPERATOR_SKILL_RUN_ID`. When a
-script invokes nested Clawperator CLI commands, those short-lived child CLI
+Skill scripts receive the same value in `ANDROPERATOR_SKILL_RUN_ID`. When a
+script invokes nested Androperator CLI commands, those short-lived child CLI
 processes inherit the id and attach it to their log events.
 
-Long-lived daemon processes do not inherit `CLAWPERATOR_SKILL_RUN_ID` from the
+Long-lived daemon processes do not inherit `ANDROPERATOR_SKILL_RUN_ID` from the
 script that happened to start them. For daemon-backed execution, the nested CLI
 passes the id on the individual daemon `/execute` request instead. This keeps
 request-specific execution events such as `serve.http.request`,
@@ -149,16 +149,16 @@ request-specific execution events such as `serve.http.request`,
 correlated to the skill run without permanently tagging unrelated future daemon
 events.
 
-<a id="the-clawperator-logs-command"></a>
+<a id="the-androperator-logs-command"></a>
 
-## The `clawperator logs` Command
+## The `androperator logs` Command
 
 Stream the log file in real time.
 
 ### Usage
 
 ```bash
-clawperator logs
+androperator logs
 ```
 
 ### Behavior
@@ -177,19 +177,19 @@ Raw NDJSON lines on stdout. No formatting, no filtering, no color.
 
 ### No Flags
 
-The command accepts no flags. It always operates on the current daily log file determined by `CLAWPERATOR_LOG_DIR` (or the default `~/.clawperator/logs`).
+The command accepts no flags. It always operates on the current daily log file determined by `ANDROPERATOR_LOG_DIR` (or the default `~/.androperator/logs`).
 
 ### Missing File Behavior
 
 If the log file does not exist, the command writes a message to stderr and exits with code 0:
 
 ```
-No log file found at /home/user/.clawperator/logs/clawperator-2026-03-28.log
+No log file found at /home/user/.androperator/logs/androperator-2026-03-28.log
 ```
 
 ## Fail-Open Behavior
 
-If the log directory cannot be written to (permissions, disk full, path does not exist), Clawperator:
+If the log directory cannot be written to (permissions, disk full, path does not exist), Androperator:
 
 1. Writes one warning to stderr
 2. Disables file logging for the remainder of the process
@@ -198,7 +198,7 @@ If the log directory cannot be written to (permissions, disk full, path does not
 Example warning (includes the error message when available):
 
 ```
-[clawperator] WARN: logging disabled after write failure for /home/user/.clawperator/logs/clawperator-2026-03-28.log: EACCES: permission denied, mkdir '/home/user/.clawperator'
+[androperator] WARN: logging disabled after write failure for /home/user/.androperator/logs/androperator-2026-03-28.log: EACCES: permission denied, mkdir '/home/user/.androperator'
 ```
 
 The command or skill still executes normally. Only the log file is affected.
@@ -209,36 +209,36 @@ Confirm logging is active:
 
 ```bash
 # Check the log file exists and has recent content
-ls -la ~/.clawperator/logs/
+ls -la ~/.androperator/logs/
 
 # Stream logs in real time
-clawperator logs
+androperator logs
 ```
 
 Generate log entries:
 
 ```bash
 # Skill runs produce lifecycle and output events
-clawperator skills run <skill_id> --device <device_serial>
+androperator skills run <skill_id> --device <device_serial>
 
 # Snapshot commands produce execution lifecycle events
-clawperator snapshot --device <device_serial>
+androperator snapshot --device <device_serial>
 ```
 
 Verify entries appear:
 
 ```bash
 # Check for skill lifecycle events
-grep '"event":"skills.run.start"' ~/.clawperator/logs/clawperator-$(date +%F).log
+grep '"event":"skills.run.start"' ~/.androperator/logs/androperator-$(date +%F).log
 
 # Check for the CLI banner (emitted at debug level during skill runs)
-grep '"event":"cli.banner"' ~/.clawperator/logs/clawperator-$(date +%F).log
+grep '"event":"cli.banner"' ~/.androperator/logs/androperator-$(date +%F).log
 
 # Parse the NDJSON file with jq to see all events from a specific category
-jq -c 'select(.event | startswith("skills.run."))' ~/.clawperator/logs/clawperator-$(date +%F).log
+jq -c 'select(.event | startswith("skills.run."))' ~/.androperator/logs/androperator-$(date +%F).log
 
 # Filter one skill invocation by run id
-jq -c 'select(.skillRunId == "skillrun_1777600000000_00000000-0000-4000-8000-000000000000")' ~/.clawperator/logs/clawperator-$(date +%F).log
+jq -c 'select(.skillRunId == "skillrun_1777600000000_00000000-0000-4000-8000-000000000000")' ~/.androperator/logs/androperator-$(date +%F).log
 ```
 
 Note: `cli.banner` is logged at `debug` level. To see it in the file, use `--log-level debug`.
@@ -247,8 +247,8 @@ Note: `cli.banner` is logged at `debug` level. To see it in the file, use `--log
 
 See [Environment Variables](environment.md) for complete details on:
 
-- `CLAWPERATOR_LOG_DIR` - Change the log directory base path
-- `CLAWPERATOR_LOG_LEVEL` - Set the file logging threshold
+- `ANDROPERATOR_LOG_DIR` - Change the log directory base path
+- `ANDROPERATOR_LOG_LEVEL` - Set the file logging threshold
 
 ## JSON Mode Cleanliness
 

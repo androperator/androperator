@@ -26,8 +26,8 @@ done
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # Executable injection is for the offline harness tests; production uses the checkout build.
 cli=(node "$repo_root/apps/node/dist/cli/index.js")
-if [[ -n "${CLAWPERATOR_CLI_PROOF_EXECUTABLE:-}" ]]; then cli=("$CLAWPERATOR_CLI_PROOF_EXECUTABLE"); fi
-common=(--device "$device" --operator-package com.clawperator.operator.dev --output json --no-daemon)
+if [[ -n "${ANDROPERATOR_CLI_PROOF_EXECUTABLE:-}" ]]; then cli=("$ANDROPERATOR_CLI_PROOF_EXECUTABLE"); fi
+common=(--device "$device" --operator-package com.androperator.operator.dev --output json --no-daemon)
 adb_cmd=(adb -s "$device")
 mkdir -p "$output_dir"
 printf 'case\texit_status\tassertion\n' > "$output_dir/results.tsv"
@@ -190,7 +190,7 @@ set_label font-scale 'CLI-FONT-SCALE' --width-dp 180
 capture font-scale-image 'CLI-FONT-SCALE'
 restore_setting system font_scale "$original_font_scale"
 set_label before-service-restart 'CLI-BEFORE-RESTART'
-service_component='com.clawperator.operator.dev/clawperator.operator.accessibilityservice.OperatorAccessibilityService'
+service_component='com.androperator.operator.dev/androperator.operator.accessibilityservice.OperatorAccessibilityService'
 services_without_operator="$(python3 - "$original_services" "$service_component" <<'PYFILTER'
 import sys
 print(':'.join(s for s in sys.argv[1].split(':') if s != sys.argv[2]))

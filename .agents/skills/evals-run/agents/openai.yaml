@@ -1,4 +1,4 @@
 interface:
   display_name: "Evals Run"
-  short_description: "Run Clawperator evals on an emulator"
-  default_prompt: "Use $evals-run to run, debug, replay, or rescore Clawperator evals, including the self-configuring emulator workflow that handles both local-dev and published runtime targets."
+  short_description: "Run Androperator evals on an emulator"
+  default_prompt: "Use $evals-run to run, debug, replay, or rescore Androperator evals, including the self-configuring emulator workflow that handles both local-dev and published runtime targets."

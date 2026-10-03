@@ -143,11 +143,11 @@ export class DoctorService {
     const nextActions: string[] = [];
     let remediationAttempted = false;
     if (criticalOk && allOk) {
-      nextActions.push("Docs: https://docs.clawperator.com/getting-started/first-time-setup/");
+      nextActions.push("Docs: https://docs.androperator.com/getting-started/first-time-setup/");
       nextActions.push(
         config.deviceId
-          ? `Try: clawperator snapshot --device ${config.deviceId}`
-          : "Try: clawperator snapshot --device <device_id>"
+          ? `Try: androperator snapshot --device ${config.deviceId}`
+          : "Try: androperator snapshot --device <device_id>"
       );
     }
 

@@ -34,8 +34,8 @@ package and runs a real `snapshot_ui` smoke.
 
 Acceptance criteria:
 
-- The smoke targets `com.clawperator.operator`, not only
-  `com.clawperator.operator.dev`.
+- The smoke targets `com.androperator.operator`, not only
+  `com.androperator.operator.dev`.
 - The smoke verifies `envelope.status == "success"`.
 - The smoke verifies the snapshot step has `success == true`.
 - The smoke verifies `stepResults[0].data.text` is present.
@@ -49,9 +49,9 @@ path rather than hand-writing a one-off script.
 
 Likely files to inspect:
 
-- `scripts/clawperator_smoke_core.sh`
-- `scripts/clawperator_smoke_skills.sh`
-- `scripts/clawperator_validate_operator_ingress.sh`
+- `scripts/androperator_smoke_core.sh`
+- `scripts/androperator_smoke_skills.sh`
+- `scripts/androperator_validate_operator_ingress.sh`
 - `apps/node/src/domain/doctor/checks/readinessChecks.ts`
 - `apps/android/app/app.gradle.kts`
 

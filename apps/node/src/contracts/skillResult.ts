@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { ResultEnvelope, StepResult, StepResultData } from "./result.js";
 
-export const SKILL_RESULT_FRAME_PREFIX = "[Clawperator-Skill-Result]";
+export const SKILL_RESULT_FRAME_PREFIX = "[Androperator-Skill-Result]";
 export const SKILL_RESULT_CONTRACT_VERSION = "1.0.0";
 export const SKILL_RESULT_CONTRACT_MAJOR_VERSION = 1;
 export const SKILL_RESULT_CONTRACT_MINOR_VERSION = 0;

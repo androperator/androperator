@@ -18,7 +18,7 @@ describe("extractSnapshotFromLogs", () => {
       "D/E       : <hierarchy rotation=\"0\">",
       "D/E       :   <node index=\"0\" text=\"Settings\" resource-id=\"android:id/title\" />",
       "D/E       : </hierarchy>",
-      "D/o       : [Clawperator-Command] stage-success commandId=cmd-1 taskId=task-1 id=logUiTree",
+      "D/o       : [Androperator-Command] stage-success commandId=cmd-1 taskId=task-1 id=logUiTree",
     ];
 
     assert.strictEqual(

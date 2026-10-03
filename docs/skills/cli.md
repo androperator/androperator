@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define the canonical `clawperator skills` command contract for runtime-skill
+Define the canonical `androperator skills` command contract for runtime-skill
 discovery, validation, artifact compilation, local scaffolding, install/sync,
 and execution.
 
@@ -23,19 +23,19 @@ output shapes, success conditions, and recovery rules for the Skills CLI.
 ## Command Summary
 
 ```bash
-clawperator skills list
-clawperator skills get <skill_id>
-clawperator skills for-app <package_id>
-clawperator skills search --app <package_id> [--intent <intent>] [--keyword <text>]
-clawperator skills search <keyword>
-clawperator skills compile-artifact <skill_id> --artifact <name> [--vars <json>]
-clawperator skills new <skill_id> [--summary <text>] [--recording-context <file>]
-clawperator skills validate <skill_id> [--dry-run]
-clawperator skills validate --all [--dry-run]
-clawperator skills run <skill_id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>] [--expect-contains <text>] [--skip-validate] [skill_args...]
-clawperator skills install
-clawperator skills update [--ref <git-ref>]
-clawperator skills sync --ref <git-ref>
+androperator skills list
+androperator skills get <skill_id>
+androperator skills for-app <package_id>
+androperator skills search --app <package_id> [--intent <intent>] [--keyword <text>]
+androperator skills search <keyword>
+androperator skills compile-artifact <skill_id> --artifact <name> [--vars <json>]
+androperator skills new <skill_id> [--summary <text>] [--recording-context <file>]
+androperator skills validate <skill_id> [--dry-run]
+androperator skills validate --all [--dry-run]
+androperator skills run <skill_id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>] [--expect-contains <text>] [--skip-validate] [skill_args...]
+androperator skills install
+androperator skills update [--ref <git-ref>]
+androperator skills sync --ref <git-ref>
 ```
 
 Public command lookup remains in the generated [CLI Reference](../api/cli.md#command-skills).
@@ -92,18 +92,18 @@ registry cannot be read, they return:
 ```json
 {
   "code": "REGISTRY_READ_FAILED",
-  "message": "Registry not found at configured path: /tmp/missing-registry.json. Update CLAWPERATOR_SKILLS_REGISTRY or run clawperator skills install."
+  "message": "Registry not found at configured path: /tmp/missing-registry.json. Update ANDROPERATOR_SKILLS_REGISTRY or run androperator skills install."
 }
 ```
 
 Recovery depends on how the path was chosen:
 
-- if `CLAWPERATOR_SKILLS_REGISTRY` points at a missing or invalid file, fix or
+- if `ANDROPERATOR_SKILLS_REGISTRY` points at a missing or invalid file, fix or
   unset that env var
 - if no env var is set, verify
-  `~/.clawperator/skills/skills/skills-registry.json`
-- run `clawperator skills install` when the installed skills repo is absent
-- run `clawperator skills list` again and require a parsed `skills` array
+  `~/.androperator/skills/skills/skills-registry.json`
+- run `androperator skills install` when the installed skills repo is absent
+- run `androperator skills list` again and require a parsed `skills` array
 
 If the registry loads but a requested id is absent, `skills get`, `skills
 validate`, and `skills run` can return `SKILL_NOT_FOUND`.
@@ -112,17 +112,17 @@ validate`, and `skills run` can return `SKILL_NOT_FOUND`.
 
 | Command | Behavior |
 | --- | --- |
-| `skills install` | Calls the sync path with `main`, cloning or refreshing the default skills repo under `~/.clawperator/skills/`. |
-| `skills update [--ref <git-ref>]` | Calls sync with the supplied ref, or `main` when omitted. |
-| `skills sync --ref <git-ref>` | Requires `--ref` and pins the local skills checkout to that ref. |
+| `skills install` | Initializes or validates an empty local registry under `~/.androperator/skills/`; preserves existing skills and downloads nothing. |
+| `skills update [--ref <git-ref>]` | Validates the local workspace; only `main` is accepted. |
+| `skills sync --ref <git-ref>` | Requires `--ref main`; other refs return `SKILLS_SYNC_FAILED`. |
 
 Successful `skills install` responses include the registry path:
 
 ```json
 {
   "synced": true,
-  "message": "Skills synced.",
-  "registryPath": "/Users/<local_user>/.clawperator/skills/skills/skills-registry.json"
+  "message": "Local skill workspace ready.",
+  "registryPath": "/Users/<local_user>/.androperator/skills/skills/skills-registry.json"
 }
 ```
 
@@ -143,13 +143,13 @@ Successful `skills update` and `skills sync` responses include `synced` and
 Validate one skill:
 
 ```bash
-clawperator skills validate <skill_id> [--dry-run]
+androperator skills validate <skill_id> [--dry-run]
 ```
 
 Validate every registry entry:
 
 ```bash
-clawperator skills validate --all [--dry-run]
+androperator skills validate --all [--dry-run]
 ```
 
 Successful single-skill validation includes the registry entry, registry path,
@@ -161,12 +161,12 @@ and concrete file paths checked by the validator:
   "skill": {
     "id": "com.android.settings.capture-overview"
   },
-  "registryPath": "/Users/<local_user>/.clawperator/skills/skills/skills-registry.json",
+  "registryPath": "/Users/<local_user>/.androperator/skills/skills/skills-registry.json",
   "checks": {
-    "skillJsonPath": "/Users/<local_user>/.clawperator/skills/skills/com.android.settings.capture-overview/skill.json",
-    "skillFilePath": "/Users/<local_user>/.clawperator/skills/skills/com.android.settings.capture-overview/SKILL.md",
+    "skillJsonPath": "/Users/<local_user>/.androperator/skills/skills/com.android.settings.capture-overview/skill.json",
+    "skillFilePath": "/Users/<local_user>/.androperator/skills/skills/com.android.settings.capture-overview/SKILL.md",
     "scriptPaths": [
-      "/Users/<local_user>/.clawperator/skills/skills/com.android.settings.capture-overview/scripts/run.js"
+      "/Users/<local_user>/.androperator/skills/skills/com.android.settings.capture-overview/scripts/run.js"
     ],
     "artifactPaths": []
   }
@@ -193,8 +193,8 @@ missing files, registry parity mismatches, or invalid compiled payloads.
 ## Compile Artifact
 
 ```bash
-clawperator skills compile-artifact <skill_id> --artifact <name> [--vars <json>]
-clawperator skills compile-artifact --skill-id <id> --artifact <name> [--vars <json>]
+androperator skills compile-artifact <skill_id> --artifact <name> [--vars <json>]
+androperator skills compile-artifact --skill-id <id> --artifact <name> [--vars <json>]
 ```
 
 Rules:
@@ -229,13 +229,13 @@ The command and task ids are generated deterministically from the skill id,
 artifact name, and sorted compile vars unless the artifact template supplies
 `COMMAND_ID` or `TASK_ID`.
 
-Run `clawperator exec --validate-only --payload <file-or-json>` when you want a
+Run `androperator exec --validate-only --payload <file-or-json>` when you want a
 second contract-only check before live execution.
 
 ## New Skill Scaffold
 
 ```bash
-clawperator skills new <skill_id> [--summary <text>] [--recording-context <file>]
+androperator skills new <skill_id> [--summary <text>] [--recording-context <file>]
 ```
 
 Behavior:
@@ -265,13 +265,13 @@ low-level `skills new` command only scaffolds files.
 ## Run
 
 ```bash
-clawperator skills run <skill_id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>] [--expect-contains <text>] [--skip-validate] [skill_args...]
+androperator skills run <skill_id> [--device <id>] [--operator-package <pkg>] [--timeout <ms>] [--expect-contains <text>] [--skip-validate] [skill_args...]
 ```
 
 Wrapper sequence:
 
-1. resolve `CLAWPERATOR_BIN` for the child process
-2. resolve `CLAWPERATOR_OPERATOR_PACKAGE`
+1. resolve `ANDROPERATOR_BIN` for the child process
+2. resolve `ANDROPERATOR_OPERATOR_PACKAGE`
 3. validate the skill with `validateSkill(skillId, undefined, { dryRun: true })` unless `--skip-validate` is passed
 4. resolve the target device and verify interactive readiness
 5. load the registry entry
@@ -283,17 +283,17 @@ Wrapper sequence:
 Argument and env rules:
 
 - if `--device` was provided, the wrapper injects it through
-  `CLAWPERATOR_DEVICE_ID`
+  `ANDROPERATOR_DEVICE_ID`
 - for script-driven skills, that explicit device id is also prepended as the
   first child argument, so Node scripts receive `argv[2] = <device_serial>`
   before forwarded args
 - if `--device` was omitted, preflight may resolve one target, but inherited
-  ambient `CLAWPERATOR_DEVICE_ID` is cleared for the child process and no
+  ambient `ANDROPERATOR_DEVICE_ID` is cleared for the child process and no
   synthetic device argument is added
 - unknown trailing tokens are forwarded to the skill script unchanged
 - use `--` before literal passthrough args that would otherwise look like
   wrapper flags
-- `CLAWPERATOR_BIN` and `CLAWPERATOR_OPERATOR_PACKAGE` are injected into the
+- `ANDROPERATOR_BIN` and `ANDROPERATOR_OPERATOR_PACKAGE` are injected into the
   script environment
 - `--timeout` overrides the wrapper timeout for this run only; `--timeout-ms`
   is accepted as an alias
@@ -303,7 +303,7 @@ Default runtime values:
 | Field | Default |
 | --- | --- |
 | wrapper timeout | `120000` milliseconds |
-| operator package | `com.clawperator.operator` |
+| operator package | `com.androperator.operator` |
 | JSON output | default output mode |
 
 ### Wrapper status and exit behavior
@@ -390,7 +390,7 @@ Common wrapper failures:
 
 | Code | When it appears | Recovery |
 | --- | --- | --- |
-| `REGISTRY_READ_FAILED` | registry cannot be loaded | repair `CLAWPERATOR_SKILLS_REGISTRY` or reinstall/sync skills |
+| `REGISTRY_READ_FAILED` | registry cannot be loaded | repair `ANDROPERATOR_SKILLS_REGISTRY` or reinstall/sync skills |
 | `SKILL_NOT_FOUND` | requested id is absent | confirm the id with `skills list`, `skills search`, or `skills get` |
 | `SKILL_VALIDATION_FAILED` | pre-run validation found missing files or invalid artifacts | repair the skill before rerunning |
 | `SKILL_SCRIPT_NOT_FOUND` | chosen script path is missing | restore the script or fix the registry entry |
@@ -445,17 +445,17 @@ for route-local request and response details.
 Discovery verification:
 
 ```bash
-clawperator skills list
-clawperator skills for-app com.android.settings
-clawperator skills search --keyword settings
-clawperator skills get com.android.settings.capture-overview
+androperator skills list
+androperator skills for-app com.android.settings
+androperator skills search --keyword settings
+androperator skills get com.android.settings.capture-overview
 ```
 
 Run verification:
 
 ```bash
-clawperator skills validate com.android.settings.capture-overview --dry-run
-clawperator skills run com.android.settings.capture-overview --timeout 3210
+androperator skills validate com.android.settings.capture-overview --dry-run
+androperator skills run com.android.settings.capture-overview --timeout 3210
 ```
 
 Machine-checkable success:

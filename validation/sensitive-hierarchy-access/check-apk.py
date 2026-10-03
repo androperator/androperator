@@ -12,7 +12,7 @@ for apk in args.apks:
     resources = subprocess.run([args.aapt2, 'dump', 'resources', apk], check=True, capture_output=True, text=True).stdout
     resource_id = re.search(r'resource (0x[0-9a-f]+) xml/accessibility_service_config', resources)[1]
     manifest = subprocess.run([args.aapt2, 'dump', 'xmltree', apk, '--file', 'AndroidManifest.xml'], check=True, capture_output=True, text=True).stdout
-    service = manifest.split('clawperator.operator.accessibilityservice.OperatorAccessibilityService', 1)[1].split('E: service', 1)[0]
+    service = manifest.split('androperator.operator.accessibilityservice.OperatorAccessibilityService', 1)[1].split('E: service', 1)[0]
     assert 'android.accessibilityservice' in service and '@' + resource_id in service, 'Service metadata is not bound to the inspected configuration'
     block = resources.split('xml/accessibility_service_config\n', 1)[1].split('    resource ', 1)[0]
     entries = re.findall(r'\((?:v([0-9]+))?\) \(file\) (\S+)', block)

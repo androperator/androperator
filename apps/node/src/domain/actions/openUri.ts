@@ -4,7 +4,7 @@ export function buildOpenUriExecution(uri: string): Execution {
     return {
         commandId: `open_uri_${Date.now()}`,
         taskId: "cli-action-open-uri",
-        source: "clawperator-cli",
+        source: "androperator-cli",
         timeoutMs: 15000,
         expectedFormat: "android-ui-automator",
         actions: [

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel)"
-test_root="$(mktemp -d "${TMPDIR:-/tmp}/clawperator-blocked-terms-test.XXXXXX")"
+test_root="$(mktemp -d "${TMPDIR:-/tmp}/androperator-blocked-terms-test.XXXXXX")"
 test_repo="$test_root/repo"
 terms_file="$test_root/blocked-terms.txt"
 
@@ -23,12 +23,12 @@ git -C "$test_repo" init --quiet
 git -C "$test_repo" config user.name "Blocked Terms Test"
 git -C "$test_repo" config user.email "blocked-terms-test@example.invalid"
 git -C "$test_repo" config core.hooksPath .githooks
-CLAWPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" git -C "$test_repo" commit --allow-empty -m "test: fixture" --quiet
+ANDROPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" git -C "$test_repo" commit --allow-empty -m "test: fixture" --quiet
 blocked_lower="$(printf '%s%s' 'bra' 've')"
 blocked_upper="$(printf '%s' "$blocked_lower" | tr '[:lower:]' '[:upper:]')"
 blocked_mixed="$(printf '%s%s' 'bRa' 'Ve')"
 printf '%s\n' "$blocked_mixed" > "$terms_file"
-export CLAWPERATOR_BLOCKED_TERMS_FILE="$terms_file"
+export ANDROPERATOR_BLOCKED_TERMS_FILE="$terms_file"
 
 assert_rejected() {
   if "$@"; then
@@ -61,7 +61,7 @@ git -C "$test_repo" push --quiet origin HEAD:refs/heads/clean
 clean_head="$(git -C "$test_repo" rev-parse HEAD)"
 
 # Simulate a commit created before the local terms were configured.
-CLAWPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" GIT_COMMITTER_EMAIL="person@${blocked_lower}.invalid" \
+ANDROPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" GIT_COMMITTER_EMAIL="person@${blocked_lower}.invalid" \
   git -C "$test_repo" commit --allow-empty -m "test: imported history" --quiet
 git -C "$test_repo" commit --allow-empty -m "test: clean tip" --quiet
 assert_rejected git -C "$test_repo" push origin HEAD:refs/heads/clean
@@ -73,11 +73,11 @@ git -C "$test_repo" reset --hard --quiet "$clean_head"
 
 # Previously published history is not introduced by a new branch. A stale local
 # remote-tracking ref must not hide an unpublished identity from the server check.
-CLAWPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" git -C "$test_repo" commit --allow-empty -m "test: historical $blocked_lower" --quiet
-CLAWPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" git -C "$test_repo" push --quiet origin HEAD:refs/heads/published
+ANDROPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" git -C "$test_repo" commit --allow-empty -m "test: historical $blocked_lower" --quiet
+ANDROPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" git -C "$test_repo" push --quiet origin HEAD:refs/heads/published
 git -C "$test_repo" commit --allow-empty -m "test: new allowed branch" --quiet
 git -C "$test_repo" push --quiet origin HEAD:refs/heads/allowed-branch
-CLAWPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" GIT_AUTHOR_EMAIL="person@${blocked_lower}.invalid" \
+ANDROPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" GIT_AUTHOR_EMAIL="person@${blocked_lower}.invalid" \
   git -C "$test_repo" commit --allow-empty -m "test: unpublished author" --quiet
 git -C "$test_repo" update-ref refs/remotes/origin/stale HEAD
 assert_rejected git -C "$test_repo" push origin HEAD:refs/heads/stale-check
@@ -90,30 +90,54 @@ git -C "$test_repo" config user.email "blocked-terms-test@example.invalid"
 # Both direct message checks and identity checks must fail closed for invalid files.
 mkdir "$test_root/not-a-file"
 printf 'test: allowed\n' > "$test_root/message"
-assert_rejected env CLAWPERATOR_BLOCKED_TERMS_FILE="$test_root/not-a-file" bash "$test_repo/.githooks/commit-msg" "$test_root/message"
-assert_rejected env CLAWPERATOR_BLOCKED_TERMS_FILE="$test_root/not-a-file" git -C "$test_repo" commit --allow-empty -m "test: invalid terms file"
+assert_rejected env ANDROPERATOR_BLOCKED_TERMS_FILE="$test_root/not-a-file" bash "$test_repo/.githooks/commit-msg" "$test_root/message"
+assert_rejected env ANDROPERATOR_BLOCKED_TERMS_FILE="$test_root/not-a-file" git -C "$test_repo" commit --allow-empty -m "test: invalid terms file"
 
 # Binary content already present in HEAD is not newly introduced by an exact rename.
-printf '\000%s\000' "$blocked_lower" > "$test_repo/existing binary.png"
+printf '\000%s\000' "$blocked_lower" > "$test_repo/existing binary.bin"
 printf '%s\n' "$blocked_lower" > "$test_repo/existing-text.txt"
-CLAWPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" git -C "$test_repo" add .
-CLAWPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" git -C "$test_repo" commit -m "test: preexisting assets" --quiet
-git -C "$test_repo" mv "existing binary.png" "renamed binary.png"
+ANDROPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" git -C "$test_repo" add .
+ANDROPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" git -C "$test_repo" commit -m "test: preexisting assets" --quiet
+git -C "$test_repo" mv "existing binary.bin" "renamed binary.bin"
 git -C "$test_repo" commit -m "test: exact binary rename" --quiet
 
 git -C "$test_repo" mv existing-text.txt renamed-text.txt
 assert_rejected git -C "$test_repo" commit -m "test: text rename still scanned"
 git -C "$test_repo" reset --hard --quiet HEAD
 
-cp "$test_repo/renamed binary.png" "$test_repo/new-binary.png"
-git -C "$test_repo" add new-binary.png
+cp "$test_repo/renamed binary.bin" "$test_repo/new-binary.bin"
+git -C "$test_repo" add new-binary.bin
 assert_rejected git -C "$test_repo" commit -m "test: binary copy still scanned"
 git -C "$test_repo" reset --hard --quiet HEAD
 
-git -C "$test_repo" mv "renamed binary.png" "modified binary.png"
-printf 'changed' >> "$test_repo/modified binary.png"
-git -C "$test_repo" add "modified binary.png"
+git -C "$test_repo" mv "renamed binary.bin" "modified binary.bin"
+printf 'changed' >> "$test_repo/modified binary.bin"
+git -C "$test_repo" add "modified binary.bin"
 assert_rejected git -C "$test_repo" commit -m "test: modified binary rename still scanned"
 git -C "$test_repo" reset --hard --quiet HEAD
+
+# PNG signatures exempt opaque payloads for additions and subsequent changes.
+printf '\211PNG\r\n\032\n\000%s\000' "$blocked_lower" > "$test_repo/image.png"
+git -C "$test_repo" add image.png
+git -C "$test_repo" commit -m "test: new PNG payload" --quiet
+printf '%s' "$blocked_upper" >> "$test_repo/image.png"
+git -C "$test_repo" add image.png
+git -C "$test_repo" commit -m "test: modified PNG payload" --quiet
+printf '%s\n' "$blocked_lower" > "$test_repo/text.png"
+git -C "$test_repo" add text.png
+assert_rejected git -C "$test_repo" commit -m "test: PNG extension alone is not exempt"
+git -C "$test_repo" reset --hard --quiet HEAD
+
+# Exclude the app catalog file family, without exempting other Kotlin files.
+for path in KnownAppsRepository.kt KnownAppsRepositoryDefault.kt; do
+  printf '%s\n' "$blocked_lower" > "$test_repo/$path"
+done
+git -C "$test_repo" add KnownAppsRepository.kt KnownAppsRepositoryDefault.kt
+git -C "$test_repo" commit -m "test: app catalog exclusions" --quiet
+printf '%s\n' "$blocked_lower" > "$test_repo/OtherRepository.kt"
+git -C "$test_repo" add OtherRepository.kt
+assert_rejected git -C "$test_repo" commit -m "test: other Kotlin files still scanned"
+git -C "$test_repo" reset --hard --quiet HEAD
+assert_rejected git -C "$test_repo" commit --allow-empty -m "test: $blocked_lower"
 
 echo "blocked-terms policy tests passed"

@@ -4,11 +4,11 @@ import { existsSync } from "node:fs";
 import { type ProcessRunner, NodeProcessRunner } from "./processRunner.js";
 import type { Logger } from "../logger.js";
 
-export const DEFAULT_ACTION_AGENT_COMMAND = "app.clawperator.operator.ACTION_AGENT_COMMAND";
+export const DEFAULT_ACTION_AGENT_COMMAND = "app.androperator.operator.ACTION_AGENT_COMMAND";
 export const EXTRA_AGENT_PAYLOAD = "payload";
 
 export interface RuntimeConfig {
-  /** Root directory of the clawperator project */
+  /** Root directory of the androperator project */
   projectRoot: string;
   /** adb binary path */
   adbPath: string;
@@ -56,7 +56,7 @@ function resolveOperatorPackageValue(
     }
   }
 
-  return "com.clawperator.operator";
+  return "com.androperator.operator";
 }
 
 export function getDefaultRuntimeConfig(overrides?: Partial<RuntimeConfig>): RuntimeConfig {
@@ -89,7 +89,7 @@ export function getDefaultRuntimeConfig(overrides?: Partial<RuntimeConfig>): Run
     avdmanagerPath: defaultAvdmanagerPath,
     operatorPackage: resolveOperatorPackageValue(
       overrideOperatorPackage,
-      process.env.CLAWPERATOR_OPERATOR_PACKAGE,
+      process.env.ANDROPERATOR_OPERATOR_PACKAGE,
     ),
     actionAgentCommand: DEFAULT_ACTION_AGENT_COMMAND,
     payloadExtraKey: EXTRA_AGENT_PAYLOAD,

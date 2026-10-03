@@ -4,7 +4,7 @@
 
 Reorganize the four shipped first-party host-agent skills so they live under
 `apps/node/bundled-skills/`, stop masquerading as repo-local maintenance
-skills, and present a consistent `clawperator-` branded identity. This is a
+skills, and present a consistent `androperator-` branded identity. This is a
 cross-surface cleanup that spans Node packaging, shipped skill contents, CLI
 help, installer behavior, doctor output, eval harness expectations, and public
 docs.
@@ -32,8 +32,8 @@ After this task ships:
 - the four shipped first-party host-agent skills live as real directories under
   `apps/node/bundled-skills/`
 - `.agents/skills/` once again means repo-local maintenance skills only
-- all four shipped skill ids use the `clawperator-` prefix
-- the primary external surface is `clawperator bundled-skills`
+- all four shipped skill ids use the `androperator-` prefix
+- the primary external surface is `androperator bundled-skills`
 - the old `agent-skills` API surface is removed instead of carried forward
 
 ## Why Now
@@ -58,10 +58,10 @@ wrong mental model.
 - remove the `apps/node/agent-skills/` symlink-packaging dance and the related
   prepack or postpack script
 - rename the two unprefixed skill ids to:
-  - `clawperator-skill-author-by-agent-discovery`
-  - `clawperator-skill-author-by-recording`
+  - `androperator-skill-author-by-agent-discovery`
+  - `androperator-skill-author-by-recording`
 - tighten frontmatter and opening copy on all four shipped skills so they read
-  unambiguously as Clawperator first-party bundled skills
+  unambiguously as Androperator first-party bundled skills
 - rename the external surface from `agent-skills` to `bundled-skills` across
   the CLI noun, install dir, env var, doctor check id, installer text, docs,
   and eval references
@@ -69,8 +69,8 @@ wrong mental model.
 
 ## Out of Scope
 
-- folding bundled skills into the runtime `clawperator skills` namespace
-- changing or versioning the sibling `../clawperator-skills` repo
+- folding bundled skills into the runtime `androperator skills` namespace
+- changing or versioning the sibling `<workspace>` repo
 - adding new bundled skills beyond the current four shipped entries
 - redesigning runtime-skill behavior, registry format, or runtime-skill docs organization
 - rewriting unrelated repo-local maintenance skills under `.agents/skills/`
@@ -89,7 +89,7 @@ wrong mental model.
   `apps/node/src/cli/registry.ts`, and
   `apps/node/src/domain/doctor/checks/hostChecks.ts` are in scope for the
   relocation and rename work only. Do not redesign unrelated skills behavior.
-- `sites/landing-clawperator/public/install.sh`, `validation/install/`, `docs/`, and
+- `sites/androperator-public/install.sh`, `validation/install/`, `docs/`, and
   `evals/` are in scope only for bundled-skills terminology, skill-id
   references, and the validation needed to prove the rename. Preserve unrelated
   behavior and content.
@@ -108,7 +108,7 @@ wrong mental model.
 | `apps/node/src/cli/commands/agentSkills.ts`, `registry.ts` | External noun rename and removal of the old command surface | PR-2 / Phase 3 |
 | `apps/node/src/domain/skills/skillsConfig.ts` | Default bundled-skills install dir and env-var plumbing | PR-2 / Phase 3 |
 | `apps/node/src/domain/doctor/checks/hostChecks.ts` | Doctor id and fix text rename | PR-2 / Phase 3 |
-| `sites/landing-clawperator/public/install.sh` | Bundled-skills install path and guide text | PR-1 / Phase 2, PR-2 / Phase 3 |
+| `sites/androperator-public/install.sh` | Bundled-skills install path and guide text | PR-1 / Phase 2, PR-2 / Phase 3 |
 | `validation/install/` | Installer regression expectations | PR-1 / Phase 2, PR-2 / Phase 3 |
 | `docs/host-agents.md`, `docs/skills/authoring.md`, `docs/skills/overview.md`, `docs/setup.md`, `docs/api/doctor.md`, `docs/internal/design/agent-host-integration.md` | Public and internal docs updates | PR-1 / Phase 2, PR-2 / Phase 3 |
 | `evals/harness/`, `evals/specs/` | Authoring-front-door command expectations and any prompt text that actually names the shipped ids or surface | PR-1 / Phase 2, PR-2 / Phase 3 |
@@ -123,7 +123,7 @@ wrong mental model.
 | Packaged-skill install behavior | `apps/node/src/domain/skills/copyAgentSkills.ts`, `apps/node/src/domain/skills/skillsConfig.ts` |
 | Doctor behavior | `apps/node/src/domain/doctor/checks/hostChecks.ts`, `apps/node/src/contracts/errors.ts`, `docs/api/doctor.md` |
 | Ad-hoc error-code string literals on the install or list paths | `apps/node/src/domain/skills/copyAgentSkills.ts`, `apps/node/src/cli/commands/agentSkills.ts` |
-| Installer behavior and guide text | `sites/landing-clawperator/public/install.sh`, `validation/install/README.md` |
+| Installer behavior and guide text | `sites/androperator-public/install.sh`, `validation/install/README.md` |
 | Existing Node-side regression patterns | `apps/node/src/test/unit/agentSkills.test.ts`, `apps/node/src/test/unit/cliHelp.test.ts`, `apps/node/src/test/unit/doctor/hostChecks.test.ts` |
 | Existing packaging test coverage | `apps/node/src/test/unit/agentSkillsPack.test.ts` |
 | Authored docs surfaces | `docs/` |
@@ -136,10 +136,10 @@ wrong mental model.
 - The real shipped files move to `apps/node/bundled-skills/`. Do not keep a
   second source-of-truth copy under `.agents/skills/`.
 - The four final bundled-skill ids are:
-  - `clawperator-agent-orientation`
-  - `clawperator-upgrade`
-  - `clawperator-skill-author-by-agent-discovery`
-  - `clawperator-skill-author-by-recording`
+  - `androperator-agent-orientation`
+  - `androperator-upgrade`
+  - `androperator-skill-author-by-agent-discovery`
+  - `androperator-skill-author-by-recording`
 - The primary external noun becomes `bundled-skills`. Do not preserve
   `agent-skills` as an alias or fallback path.
 - Keep discovery fan-out paths unchanged:
@@ -189,7 +189,7 @@ wrong mental model.
 | Which references move in PR-1 / Phase 2? | Concrete skill ids, skill frontmatter, first-paragraph branding, guide text, docs references, validation fixtures, and eval references. Keep the public noun `agent-skills` until PR-2. |
 | Which references move in PR-2 / Phase 3? | Public command noun, install dir, env var, doctor check id, primary docs vocabulary, installer summaries, and the tests plus validations that prove the breaking rename. |
 | What happens to the old API surface after the public rename? | Remove it. Do not add parser aliases, env-var fallbacks, dual install-path support, or shadow doctor ids for `agent-skills`. |
-| What happens to the old install dir? | The primary and only supported install dir becomes `~/.clawperator/bundled-skills/`. Do not add migration or fallback logic for `~/.clawperator/agent-skills/` in this task. |
+| What happens to the old install dir? | The primary and only supported install dir becomes `~/.androperator/bundled-skills/`. Do not add migration or fallback logic for `~/.androperator/agent-skills/` in this task. |
 | What happens to the doctor id? | Use `host.bundled-skills.staleness` as the only durable id after Phase 3. |
 | How should docs be authored? | Use `.agents/skills/docs-author/SKILL.md` for public docs touched in Phases 2 and 3. Do not hand-edit `sites/docs/.build/` or `sites/docs/site/`. |
 | How should `evals/specs/android-version/prompt-skill.md` be handled? | Use judgment. Edit it in Phase 2 if it names the old bare skill ids, edit it in Phase 3 if it names `agent-skills`, and do not touch it in a phase where the prompt text is unaffected. |
@@ -221,15 +221,15 @@ After PR-1:
 - `apps/node/package.json` ships `bundled-skills/` directly without prepack or
   postpack swapping
 - the four shipped skill ids are the final branded ids listed above
-- the shipped skill descriptions open with `Clawperator first-party bundled skill`
+- the shipped skill descriptions open with `Androperator first-party bundled skill`
 - docs, installer guide text, tests, and eval fixtures refer to the final skill
   ids even though the public noun is still `agent-skills`
 
 After PR-2:
 
-- `clawperator bundled-skills` is the primary command surface
-- the primary install dir is `~/.clawperator/bundled-skills/`
-- the primary env var is `CLAWPERATOR_BUNDLED_SKILLS`
+- `androperator bundled-skills` is the primary command surface
+- the primary install dir is `~/.androperator/bundled-skills/`
+- the primary env var is `ANDROPERATOR_BUNDLED_SKILLS`
 - the primary doctor id is `host.bundled-skills.staleness`
 - public docs use `bundled skills` as the primary product term
 
@@ -248,7 +248,7 @@ After PR-2:
 | Knowledge | Permanent home |
 | --- | --- |
 | Canonical packaged-skill location and install-dir behavior | `apps/node/src/domain/skills/` plus public docs in `docs/skills/authoring.md` and `docs/host-agents.md` |
-| Primary external noun and install guidance | `apps/node/src/cli/registry.ts`, `sites/landing-clawperator/public/install.sh`, `docs/host-agents.md`, `docs/setup.md` |
+| Primary external noun and install guidance | `apps/node/src/cli/registry.ts`, `sites/androperator-public/install.sh`, `docs/host-agents.md`, `docs/setup.md` |
 | Bundled-skill first-party branding rules | `apps/node/bundled-skills/*/SKILL.md` |
 | Doctor terminology and remediation path | `apps/node/src/domain/doctor/checks/hostChecks.ts` and any user-facing docs that describe it |
 | Eval command expectations for the authoring front door | `evals/harness/runner.py`, `evals/harness/test_run_eval.py`, `evals/specs/android-version/prompt-skill.md` |

@@ -3,10 +3,10 @@ plugins {
 }
 
 android {
-    namespace = "clawperator.fixture.media"
+    namespace = "androperator.fixture.media"
     compileSdk = 35
     defaultConfig {
-        applicationId = "com.clawperator.fixture.media"
+        applicationId = "com.androperator.fixture.media"
         minSdk = 21
         targetSdk = 35
         versionCode = 1

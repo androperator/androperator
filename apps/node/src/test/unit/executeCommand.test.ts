@@ -175,7 +175,7 @@ describe("cmdExecute daemon proxy", () => {
         return {
           ok: true,
           deviceId: "device-1",
-          terminalSource: "clawperator_result",
+          terminalSource: "androperator_result",
           envelope: {
             commandId: "cmd-proxy-timeout",
             taskId: "cmd-proxy-timeout",
@@ -212,7 +212,7 @@ describe("cmdExecute daemon proxy", () => {
         return {
           ok: true,
           deviceId: "device-1",
-          terminalSource: "clawperator_result",
+          terminalSource: "androperator_result",
           envelope: {
             commandId: "cmd-proxy-alias-timeout",
             taskId: "cmd-proxy-alias-timeout",
@@ -262,7 +262,7 @@ describe("cmdExecute inline JSON vs file path", () => {
   });
 });
 
-describe("clawperator exec CLI", () => {
+describe("androperator exec CLI", () => {
   it("surfaces action context for invalid fixture files before device contact", async () => {
     const fixturePath = join(packageRoot, "src", "test", "fixtures", "execution-invalid-action-0.json");
     const { stdout, code } = await runCli(["exec", "--execution", fixturePath]);
@@ -327,7 +327,7 @@ describe("clawperator exec CLI", () => {
   });
 });
 
-describe("clawperator wait-for-nav CLI", () => {
+describe("androperator wait-for-nav CLI", () => {
   it("builds wait_for_navigation with --app and --timeout (validate-only)", async () => {
     const { stdout, code } = await runCli([
       "wait-for-nav",
@@ -382,7 +382,7 @@ describe("clawperator wait-for-nav CLI", () => {
   });
 });
 
-describe("clawperator read-value CLI", () => {
+describe("androperator read-value CLI", () => {
   it("builds read_key_value_pair with --label (validate-only)", async () => {
     const { stdout, code } = await runCli(["read-value", "--label", "Battery", "--validate-only", "--json"]);
     assert.strictEqual(code, 0);
@@ -470,7 +470,7 @@ describe("clawperator read-value CLI", () => {
     const result = JSON.parse(stdout);
     assert.strictEqual(result.code, "EXECUTION_VALIDATION_FAILED");
     assert.match(result.message, /JSON output/i);
-    assert.match(result.message, /clawperator read-value --label "Battery" --all/);
+    assert.match(result.message, /androperator read-value --label "Battery" --all/);
   });
 
   it("returns MISSING_ARGUMENT when no label flags", async () => {
@@ -498,7 +498,7 @@ describe("clawperator read-value CLI", () => {
   });
 });
 
-describe("clawperator read CLI", () => {
+describe("androperator read CLI", () => {
   it("builds read_text with --validate-only without requiring a device", async () => {
     const { stdout, code } = await runCli([
       "read",
@@ -573,6 +573,6 @@ describe("clawperator read CLI", () => {
     const result = JSON.parse(stdout);
     assert.strictEqual(result.code, "EXECUTION_VALIDATION_FAILED");
     assert.match(result.message, /JSON output/i);
-    assert.match(result.message, /clawperator read --text "Price" --all/);
+    assert.match(result.message, /androperator read --text "Price" --all/);
   });
 });

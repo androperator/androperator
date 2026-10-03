@@ -9,11 +9,11 @@ import { FakeProcessRunner } from "./fakes/FakeProcessRunner.js";
 
 describe("android emulator foundation", () => {
   it("defines deterministic emulator defaults", () => {
-    assert.strictEqual(DEFAULT_EMULATOR_AVD_NAME, "clawperator-pixel");
+    assert.strictEqual(DEFAULT_EMULATOR_AVD_NAME, "androperator-pixel");
     assert.strictEqual(DEFAULT_EMULATOR_DEVICE_PROFILE, "pixel_7");
     assert.strictEqual(DEFAULT_EMULATOR_DATA_PARTITION_SIZE, "12G");
-    assert.strictEqual(buildDefaultEmulatorAvdName(), "clawperator-pixel-12gb");
-    assert.strictEqual(buildDefaultEmulatorAvdName("16GB"), "clawperator-pixel-16gb");
+    assert.strictEqual(buildDefaultEmulatorAvdName(), "androperator-pixel-12gb");
+    assert.strictEqual(buildDefaultEmulatorAvdName("16GB"), "androperator-pixel-16gb");
     assert.strictEqual(SUPPORTED_EMULATOR_API_LEVEL, 35);
     assert.strictEqual(
       DEFAULT_EMULATOR_SYSTEM_IMAGE,

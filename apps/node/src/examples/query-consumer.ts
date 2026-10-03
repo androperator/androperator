@@ -22,7 +22,7 @@ const querySchema: z.ZodType<NodeQueryResult> = z.object({
   })),
 });
 const responseSchema = z.object({
-  terminalSource: z.literal("clawperator_result"), isCanonicalTerminal: z.literal(true),
+  terminalSource: z.literal("androperator_result"), isCanonicalTerminal: z.literal(true),
   envelope: z.object({
     commandId: identifier, taskId: identifier, status: z.literal("success"),
     error: z.null().optional(), errorCode: z.null().optional(),

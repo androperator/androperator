@@ -17,6 +17,6 @@ cd "${repo_root}"
 uv run --project "${repo_root}/evals" --extra dev \
   python "${repo_root}/evals/run_eval.py" solax-orchestrated-cold-start \
   --device "${device_serial}" \
-  --operator-package com.clawperator.operator.dev \
+  --operator-package com.androperator.operator.dev \
   --runs "${runs}" \
   --label "${label}"

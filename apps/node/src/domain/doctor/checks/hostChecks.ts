@@ -24,9 +24,9 @@ import {
 import { getCliVersion } from "../../version/compatibility.js";
 
 const DEFAULT_ORCHESTRATED_SKILL_AGENT_CLI = "codex";
-const ORCHESTRATED_SKILL_AGENT_CLI_ENV_VAR = "CLAWPERATOR_SKILL_AGENT_CLI";
+const ORCHESTRATED_SKILL_AGENT_CLI_ENV_VAR = "ANDROPERATOR_SKILL_AGENT_CLI";
 const BUNDLED_SKILLS_VERSION_FILENAME = "version.txt";
-const BUNDLED_SKILLS_UPDATE_COMMAND = "clawperator bundled-skills update";
+const BUNDLED_SKILLS_UPDATE_COMMAND = "androperator bundled-skills update";
 
 export interface CheckBundledSkillsStalenessOptions {
   installedDir?: string;
@@ -77,7 +77,7 @@ function buildBundledSkillsPathRepairFix(installedDir: string): DoctorCheckResul
         kind: "manual",
         value: `Remove or rename the conflicting path at ${installedDir}.`,
       },
-      { kind: "shell", value: "clawperator bundled-skills install" },
+      { kind: "shell", value: "androperator bundled-skills install" },
     ],
   };
 }
@@ -164,7 +164,7 @@ export async function checkNodeVersion(): Promise<DoctorCheckResult> {
       status: "fail",
       code: ERROR_CODES.NODE_TOO_OLD,
       summary: `Node version ${version} is too old.`,
-      detail: `Clawperator requires Node.js v${MIN_NODE_VERSION} or newer.`,
+      detail: `Androperator requires Node.js v${MIN_NODE_VERSION} or newer.`,
       fix: {
         title: "Upgrade Node.js",
         platform: "any",
@@ -308,7 +308,7 @@ export async function checkInstalledOrchestratedSkillAgentCliAvailability(_confi
     registryResult = await loadRegistry();
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    const registryNotConfigured = process.env.CLAWPERATOR_SKILLS_REGISTRY === undefined
+    const registryNotConfigured = process.env.ANDROPERATOR_SKILLS_REGISTRY === undefined
       && isUnsetRegistryConfigurationError(detail);
     if (registryNotConfigured) {
       return {
@@ -329,7 +329,7 @@ export async function checkInstalledOrchestratedSkillAgentCliAvailability(_confi
         platform: "any",
         steps: [
           { kind: "manual", value: "Fix the configured skills-registry.json path or repair the registry JSON contents." },
-          { kind: "manual", value: "If no registry is installed yet, run clawperator skills install first." },
+          { kind: "manual", value: "If no registry is installed yet, run androperator skills install first." },
         ],
         docsUrl: DOCTOR_DOCS_URLS.setup,
       },

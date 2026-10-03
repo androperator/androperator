@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "clawperator.trigger"
+    namespace = "androperator.trigger"
     compileSdk = 35
 
     defaultConfig {

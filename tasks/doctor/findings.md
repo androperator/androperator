@@ -32,9 +32,9 @@ and not resolvable on PATH), it should:
    skip installation entirely.
 2. Check if tools are resolvable on PATH - if they are, skip installation.
 3. Only if both checks fail: download and install the Android command-line tools
-   to a well-known Clawperator-managed location (e.g. `~/.clawperator/android-sdk/`).
-4. After install, export `ANDROID_HOME=~/.clawperator/android-sdk/` into the
-   user's shell RC (same pattern as `CLAWPERATOR_SKILLS_REGISTRY` in `install.sh`).
+   to a well-known Androperator-managed location (e.g. `~/.androperator/android-sdk/`).
+4. After install, export `ANDROID_HOME=~/.androperator/android-sdk/` into the
+   user's shell RC (same pattern as `ANDROPERATOR_SKILLS_REGISTRY` in `install.sh`).
 
 ## Contract for any doctor SDK install implementation
 
@@ -58,7 +58,7 @@ DEFAULT_EMULATOR_SYSTEM_IMAGE = "system-images;android-35;google_apis_playstore;
 
 If this image is absent, `provision emulator` will either:
 - Fail with `ANDROID_SDK_TOOL_MISSING` (if `sdkmanager` is not on PATH), or
-- Fail with `EMULATOR_UNSUPPORTED` if a `clawperator-pixel` AVD already exists
+- Fail with `EMULATOR_UNSUPPORTED` if a `androperator-pixel` AVD already exists
   but was created against a different API level.
 
 `doctor` should verify that the required system image is installed and, if not,
@@ -77,4 +77,4 @@ also run read-only in diagnostic mode (reporting "missing" vs. installing).
 
 - `apps/node/src/adapters/android-bridge/runtimeConfig.ts` - path resolution
 - `apps/node/src/cli/commands/doctor.ts` - doctor command entry point
-- `sites/landing-clawperator/public/install.sh` - shell RC export pattern to follow
+- `sites/androperator-public/install.sh` - shell RC export pattern to follow

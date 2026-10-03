@@ -4,7 +4,7 @@
 
 - Python 3.11 or newer
 - A connected Android device
-- The Clawperator Operator APK installed and permissioned
+- The Androperator Operator APK installed and permissioned
 
 ## Run The Eval Harness
 
@@ -36,15 +36,15 @@ Command:
 ```bash
 uv run --project evals --extra dev python evals/run_eval.py solax-orchestrated-cold-start \
   --device <serial> \
-  --operator-package com.clawperator.operator.dev \
+  --operator-package com.androperator.operator.dev \
   --runs 4
 ```
 
 The Solax live eval follows the normal eval runtime resolution rules:
 
 - `--runtime local-dev` uses the branch-local Node CLI build and defaults to
-  `com.clawperator.operator.dev`
-- `--runtime published` uses the published `clawperator` binary and the release
+  `com.androperator.operator.dev`
+- `--runtime published` uses the published `androperator` binary and the release
   operator package
 - `--operator-package` overrides the local-dev default, and published runtime
   still resolves to the release package
@@ -52,7 +52,7 @@ The Solax live eval follows the normal eval runtime resolution rules:
 Optional flags:
 
 - `--skills-registry <path>` overrides the default sibling-repo registry path
-  `../clawperator-skills/skills/skills-registry.json`
+  `<workspace>/skills/skills-registry.json`
 - `--artifacts-dir <path>` overrides the default batch root
   `evals/artifacts/`
 - `--label <text>` adds a readable suffix to the batch id
@@ -69,7 +69,7 @@ Retention boundary:
 - `evals/artifacts/` is local working output in this repo and is ignored by
   git
 - if a live batch is worth preserving, copy the sanitized batch into the
-  private `clawperator-artifacts` repo instead of committing it here
+  private `androperator-artifacts` repo instead of committing it here
 
 This eval encodes the cold-start proving policy in code. For every run it:
 
@@ -79,7 +79,7 @@ This eval encodes the cold-start proving policy in code. For every run it:
 4. opens SolaX and probes the current persisted discharge row
 5. force-stops SolaX again and re-proves outside-app state before the skill run
 6. chooses a configured target percent that differs from the observed value
-7. runs `clawperator skills run ...`
+7. runs `androperator skills run ...`
 8. classifies the run as cold-start proof, outside-app proof failure, skill timeout, or a
    specific failure mode
 
@@ -151,18 +151,18 @@ Replay runs also write `result-replay.json`. Rescore runs write
 Runtime targets:
 
 - `--runtime local-dev` uses the branch-local `apps/node/dist/cli/index.js`
-  build and the `.dev` Operator APK (`com.clawperator.operator.dev`). This is
+  build and the `.dev` Operator APK (`com.androperator.operator.dev`). This is
   the default for day-to-day development.
-- `--runtime published` uses the globally installed `clawperator` binary and
-  the release Operator APK (`com.clawperator.operator`). Use this to verify
+- `--runtime published` uses the globally installed `androperator` binary and
+  the release Operator APK (`com.androperator.operator`). Use this to verify
   the shipped runtime path.
 
 ### Runtime Target Version Compatibility
 
 The two runtime targets use different version sources that can diverge:
 
-- `local-dev`: CLI version comes from `apps/node/package.json` (code version), and the APK is the local debug build in `com.clawperator.operator.dev`.
-- `published`: CLI version comes from `npm install -g clawperator` (published version), and the APK is the downloaded release in `com.clawperator.operator`.
+- `local-dev`: CLI version comes from `apps/node/package.json` (code version), and the APK is the local debug build in `com.androperator.operator.dev`.
+- `published`: CLI version comes from `npm install -g androperator` (published version), and the APK is the downloaded release in `com.androperator.operator`.
 
 The **code version** is typically ahead of the **published version** because
 it includes unreleased changes. This means you cannot mix runtime targets
@@ -181,12 +181,12 @@ without version alignment.
 - For `published` (published version): Install matching versions of the CLI
   and APK:
   ```bash
-  npm install -g clawperator@<version>
-  clawperator operator setup --apk <downloaded-apk> --device <serial>
+  npm install -g androperator@<version>
+  androperator operator setup --apk <downloaded-apk> --device <serial>
   ```
 
 The published APK download URL follows the pattern:
-`https://downloads.clawperator.com/operator/v{VERSION}/operator-v{VERSION}.apk`
+`https://downloads.androperator.com/operator/v{VERSION}/operator-v{VERSION}.apk`
 
 Knowledge modes:
 
@@ -208,8 +208,8 @@ is:
 1. keep the eval id as `android-version`
 2. run with `--mode full-repo`
 3. use `--skill-prompt prompt-skill.md`
-4. treat `clawperator-skill-author-by-agent-discovery` as the required discovery front door
-5. treat `clawperator-skill-author-by-recording` as the proving handoff when discovery says
+4. treat `androperator-skill-author-by-agent-discovery` as the required discovery front door
+5. treat `androperator-skill-author-by-recording` as the proving handoff when discovery says
    `proceed_to_recording`
 
 Current Pack A device matrix:
@@ -251,7 +251,7 @@ Truth boundary for that red baseline:
   `outcome.status` stays `fail` until the Pack A discovery-to-proving route is
   actually proven
 - `skill_emitted = false` and `replay_status = "skipped"` are still truthful
-  red outcomes before `clawperator-skill-author-by-agent-discovery` is implemented, but
+  red outcomes before `androperator-skill-author-by-agent-discovery` is implemented, but
   they now fail the run instead of leaving it green
 - when `skill_generation_passed = false`, the harness applies the skill gate
   to the top-level run outcome and typically records
@@ -284,7 +284,7 @@ Replay uses the device serial recorded in the original run config. It writes
 `result-replay.json` alongside the original artifacts. If the original run did
 not emit a valid skill, replay reports `replay_status = "skipped"`.
 Replay only reports `pass`, `fail`, or `no_answer` when the replayed
-`clawperator skills run` process exits cleanly. Non-zero exit codes are always
+`androperator skills run` process exits cleanly. Non-zero exit codes are always
 recorded as `replay_status = "error"`.
 
 Other supported agents:
@@ -374,9 +374,9 @@ agent prompt, and the harness only forwards a minimal environment. This is
 soft isolation, not a sandbox. The agent can still access the broader machine
 filesystem if it chooses to.
 
-The harness uses the branch-local `clawperator` build when available. Public
+The harness uses the branch-local `androperator` build when available. Public
 surface runs avoid leaking repo paths into the prompt and use a temp-directory
-shim so the agent can invoke `clawperator` without seeing the underlying
+shim so the agent can invoke `androperator` without seeing the underlying
 workspace path.
 
 ## Parallel Runs
@@ -396,15 +396,15 @@ Implement:
 
 ## Internal Answer Marker
 
-`CLAWPERATOR_EVAL_ANSWER` is an internal eval marker only. It is not a public
+`ANDROPERATOR_EVAL_ANSWER` is an internal eval marker only. It is not a public
 API and must not appear in public-facing documentation or production usage.
 
 ## Common Failure Patterns
 
 - The agent loops on the same screen
-- The agent never emits `CLAWPERATOR_EVAL_ANSWER`
+- The agent never emits `ANDROPERATOR_EVAL_ANSWER`
 - The agent uses `adb` directly and the run only records the violation
-- The agent guesses the answer without using Clawperator
+- The agent guesses the answer without using Androperator
 - Gemini `delta: true` chunks count as turn boundaries for `--max-turns`, so a
   long answer can consume more than one counted turn
 - `skill_score.replay_status = "skipped"` means the run did not emit a valid

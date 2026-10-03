@@ -9,8 +9,8 @@ import { RESULT_ENVELOPE_PREFIX } from "../../contracts/result.js";
 const CMD_ID = "cmd-123";
 
 describe("parseResultEnvelope", () => {
-  /** Canonical regression: CI gate — logcat-formatted [Clawperator-Result] must parse. Do not remove. */
-  it("canonical regression: logcat-formatted [Clawperator-Result] line parses to envelope (CI gate)", () => {
+  /** Canonical regression: CI gate — logcat-formatted [Androperator-Result] must parse. Do not remove. */
+  it("canonical regression: logcat-formatted [Androperator-Result] line parses to envelope (CI gate)", () => {
     const json = `{"commandId":"${CMD_ID}","taskId":"t1","status":"success","stepResults":[{"id":"s1","actionType":"snapshot_ui","success":true,"data":{}}],"error":null}`;
     const logcatLine = `02-19 12:00:00.000  1234  5678 I AgentCommandExecutorDefault: ${RESULT_ENVELOPE_PREFIX} ${json}`;
     const env = parseResultEnvelope(logcatLine, CMD_ID);
@@ -22,7 +22,7 @@ describe("parseResultEnvelope", () => {
     }
   });
 
-  it("parses [Clawperator-Result] JSON", () => {
+  it("parses [Androperator-Result] JSON", () => {
     const line = `${RESULT_ENVELOPE_PREFIX} {"commandId":"${CMD_ID}","taskId":"t1","status":"success","stepResults":[],"error":null}`;
     const env = parseResultEnvelope(line, CMD_ID);
     assert.ok(env && typeof env === "object");
@@ -47,9 +47,9 @@ describe("parseResultEnvelope", () => {
     assert.strictEqual(parseResultEnvelope(line, CMD_ID), "malformed");
   });
 
-  it("parses canonical line in logcat format (tag prefix before [Clawperator-Result])", () => {
+  it("parses canonical line in logcat format (tag prefix before [Androperator-Result])", () => {
     const json = `{"commandId":"${CMD_ID}","taskId":"t1","status":"success","stepResults":[],"error":null}`;
-    const line = `02-19 12:00:00.000  1234  5678 I ClawperatorResult: ${RESULT_ENVELOPE_PREFIX} ${json}`;
+    const line = `02-19 12:00:00.000  1234  5678 I AndroperatorResult: ${RESULT_ENVELOPE_PREFIX} ${json}`;
     const env = parseResultEnvelope(line, CMD_ID);
     assert.ok(env && typeof env === "object");
     if (typeof env === "object") {
@@ -60,17 +60,17 @@ describe("parseResultEnvelope", () => {
 });
 
 describe("parseTerminalEnvelope", () => {
-  it("returns [Clawperator-Result] with terminalSource clawperator_result", () => {
+  it("returns [Androperator-Result] with terminalSource androperator_result", () => {
     const line = `${RESULT_ENVELOPE_PREFIX} {"commandId":"${CMD_ID}","taskId":"t1","status":"success","stepResults":[],"error":null}`;
     const parsed = parseTerminalEnvelope(line, CMD_ID);
     assert.ok(parsed && typeof parsed === "object");
     if (typeof parsed === "object") {
-      assert.strictEqual(parsed.terminalSource, "clawperator_result");
+      assert.strictEqual(parsed.terminalSource, "androperator_result");
       assert.strictEqual(parsed.envelope.commandId, CMD_ID);
     }
   });
 
-  it("returns null for line without [Clawperator-Result]", () => {
+  it("returns null for line without [Androperator-Result]", () => {
     const line = `02-19 12:00:00.000 I SomeTag: [Some-Other-Event] status=ok commandId=${CMD_ID}`;
     assert.strictEqual(parseTerminalEnvelope(line, CMD_ID), null);
   });
@@ -82,11 +82,11 @@ describe("parseTerminalEnvelope", () => {
 
   it("accepts canonical line in logcat format", () => {
     const json = `{"commandId":"${CMD_ID}","taskId":"t1","status":"success","stepResults":[{"id":"s1","actionType":"snapshot_ui","success":true}],"error":null}`;
-    const line = `02-19 12:00:00.000  1234  5678 I ClawperatorResult: ${RESULT_ENVELOPE_PREFIX} ${json}`;
+    const line = `02-19 12:00:00.000  1234  5678 I AndroperatorResult: ${RESULT_ENVELOPE_PREFIX} ${json}`;
     const parsed = parseTerminalEnvelope(line, CMD_ID);
     assert.ok(parsed && typeof parsed === "object");
     if (typeof parsed === "object") {
-      assert.strictEqual(parsed.terminalSource, "clawperator_result");
+      assert.strictEqual(parsed.terminalSource, "androperator_result");
       assert.strictEqual(parsed.envelope.commandId, CMD_ID);
       assert.strictEqual(parsed.envelope.stepResults.length, 1);
       assert.strictEqual(parsed.envelope.stepResults[0].id, "s1");
@@ -200,7 +200,7 @@ for (const errorCode of ["WAIT_TIMEOUT", "ACTION_FAILED", "UI_TREE_UNAVAILABLE",
     };
     const parsed = parseResultEnvelope(`${RESULT_ENVELOPE_PREFIX} ${JSON.stringify(envelope)}`, "command");
     assert.deepStrictEqual(parsed, envelope);
-    const output = formatRunExecutionResultForCli({ ok: true, envelope, deviceId: "test-device", terminalSource: "clawperator_result" }, { format: "json" });
+    const output = formatRunExecutionResultForCli({ ok: true, envelope, deviceId: "test-device", terminalSource: "androperator_result" }, { format: "json" });
     assert.deepStrictEqual(JSON.parse(output).envelope, envelope);
     assert.strictEqual(shouldCliStdoutForceExitCode1(output, false), true);
   });

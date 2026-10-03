@@ -2,7 +2,7 @@ import { createRequire } from "node:module";
 import { realpathSync, statSync } from "node:fs";
 import { runAdb } from "../../adapters/android-bridge/adbClient.js";
 import { type RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
-import { ERROR_CODES, type ClawperatorError } from "../../contracts/errors.js";
+import { ERROR_CODES, type AndroperatorError } from "../../contracts/errors.js";
 import { hasListedPackage } from "../device/grantPermissions.js";
 
 const require = createRequire(import.meta.url);
@@ -31,7 +31,7 @@ export interface VersionCompatibilityProbe {
   apkVersionCode?: number;
   operatorPackage: string;
   compatible: boolean;
-  error?: ClawperatorError;
+  error?: AndroperatorError;
   remediation?: string[];
 }
 
@@ -53,8 +53,8 @@ export function getAlternateOperatorVariant(operatorPackage: string): string {
 
 export function getOperatorPackageApkPath(operatorPackage: string): string {
   return operatorPackage.endsWith(".dev")
-    ? "~/.clawperator/downloads/operator-debug.apk"
-    : "~/.clawperator/downloads/operator.apk";
+    ? "~/.androperator/downloads/operator-debug.apk"
+    : "~/.androperator/downloads/operator.apk";
 }
 
 export function readCliVersion(pkg: CliPackageMetadata): string {
@@ -67,14 +67,14 @@ export function readCliVersion(pkg: CliPackageMetadata): string {
 interface InstalledOperatorVariantResult {
   installed: boolean;
   alternateVariant?: string;
-  error?: ClawperatorError;
+  error?: AndroperatorError;
 }
 
 function buildOperatorProbeError(
   operatorPackage: string,
   stderr: string,
   exitCode: number | null
-): ClawperatorError {
+): AndroperatorError {
   return {
     code: ERROR_CODES.DEVICE_SHELL_UNAVAILABLE,
     message: `Could not query installed packages for ${operatorPackage}.`,
@@ -150,19 +150,19 @@ export function normalizeCompatibilityVersion(versionName: string): string {
 
 export function getOperatorApkDownloadUrl(versionName: string): string {
   const normalized = normalizeCompatibilityVersion(versionName);
-  return `https://downloads.clawperator.com/operator/v${normalized}/operator-v${normalized}.apk`;
+  return `https://downloads.androperator.com/operator/v${normalized}/operator-v${normalized}.apk`;
 }
 
 export function getOperatorApkSha256Url(versionName: string): string {
   const normalized = normalizeCompatibilityVersion(versionName);
-  return `https://downloads.clawperator.com/operator/v${normalized}/operator-v${normalized}.apk.sha256`;
+  return `https://downloads.androperator.com/operator/v${normalized}/operator-v${normalized}.apk.sha256`;
 }
 
 export function parseCompatibilityVersion(versionName: string): ParsedCompatibilityVersion {
   const normalized = normalizeCompatibilityVersion(versionName);
   const match = COMPATIBILITY_VERSION_REGEX.exec(normalized);
   if (!match) {
-    throw new Error(`Unsupported Clawperator version format: ${versionName}`);
+    throw new Error(`Unsupported Androperator version format: ${versionName}`);
   }
 
   return {
@@ -209,7 +209,7 @@ export async function probeVersionCompatibility(config: RuntimeConfig): Promise<
         details: { cause: String(error) },
       },
       remediation: [
-        "Reinstall the CLI: npm install -g clawperator@latest",
+        "Reinstall the CLI: npm install -g androperator@latest",
       ],
     };
   }
@@ -231,7 +231,7 @@ export async function probeVersionCompatibility(config: RuntimeConfig): Promise<
         details: { cause: String(error) },
       },
       remediation: [
-        "Reinstall the CLI: npm install -g clawperator@latest",
+        "Reinstall the CLI: npm install -g androperator@latest",
       ],
     };
   }
@@ -281,7 +281,7 @@ export async function probeVersionCompatibility(config: RuntimeConfig): Promise<
         `Download the matching APK: ${getOperatorApkDownloadUrl(parsedCli.normalized)}`,
         `Download the checksum: ${getOperatorApkSha256Url(parsedCli.normalized)}`,
         `Verify the checksum: sha256sum -c operator-v${parsedCli.normalized}.apk.sha256`,
-        `Install the matching APK: clawperator operator setup --apk operator-v${parsedCli.normalized}.apk --device <device_id>${operatorPackage.endsWith(".dev") ? " --operator-package com.clawperator.operator.dev" : ""}`,
+        `Install the matching APK: androperator operator setup --apk operator-v${parsedCli.normalized}.apk --device <device_id>${operatorPackage.endsWith(".dev") ? " --operator-package com.androperator.operator.dev" : ""}`,
         operatorPackage.endsWith(".dev")
           ? "If you are targeting the local debug package, rebuild and reinstall the debug APK from the same source checkout instead of using the release download."
           : "If you are using the release package, the versioned download above is the exact APK to install.",
@@ -348,13 +348,13 @@ export async function probeVersionCompatibility(config: RuntimeConfig): Promise<
         error: {
           code: ERROR_CODES.VERSION_INCOMPATIBLE,
           message: `CLI ${cliVersion} is not compatible with installed APK ${installed.versionName}.`,
-          hint: "Clawperator requires the exact same version between the CLI and APK, ignoring only the debug suffix.",
+          hint: "Androperator requires the exact same version between the CLI and APK, ignoring only the debug suffix.",
         },
         remediation: [
           `Download the matching APK: ${apkUrl}`,
           `Download the checksum: ${sha256Url}`,
           `Verify the checksum: sha256sum -c operator-v${parsedCli.normalized}.apk.sha256`,
-          `Install the matching APK: clawperator operator setup --apk operator-v${parsedCli.normalized}.apk --device <device_id>`,
+          `Install the matching APK: androperator operator setup --apk operator-v${parsedCli.normalized}.apk --device <device_id>`,
           operatorPackage.endsWith(".dev")
             ? "If you are targeting the local debug package, rebuild and reinstall the debug APK from the same source checkout instead of using the release download."
             : "If you are using the release package, the versioned download above is the exact APK to install.",
@@ -379,7 +379,7 @@ export async function probeVersionCompatibility(config: RuntimeConfig): Promise<
       error: {
         code: ERROR_CODES.APK_VERSION_INVALID,
         message: `Installed APK version ${installed.versionName} is not parseable for compatibility checks.`,
-        hint: "Reinstall the APK with a supported Clawperator version string.",
+        hint: "Reinstall the APK with a supported Androperator version string.",
         details: { cause: String(error) },
       },
       remediation: [

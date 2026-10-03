@@ -3,8 +3,8 @@
 import { spawn } from "node:child_process";
 import { extname } from "node:path";
 
-const agentCliPath = process.env.CLAWPERATOR_SKILL_AGENT_CLI_PATH;
-const skillProgramPath = process.env.CLAWPERATOR_SKILL_PROGRAM;
+const agentCliPath = process.env.ANDROPERATOR_SKILL_AGENT_CLI_PATH;
+const skillProgramPath = process.env.ANDROPERATOR_SKILL_PROGRAM;
 
 if (!agentCliPath || !skillProgramPath) {
   console.error("Missing orchestrated skill runtime env");

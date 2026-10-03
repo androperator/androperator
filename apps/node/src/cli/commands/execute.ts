@@ -183,7 +183,7 @@ export async function cmdExecute(options: {
     });
     const result = proxyResult ?? await runExecutionFn(executionForRun, {
       deviceId: options.deviceId,
-      operatorPackage: options.operatorPackage ?? process.env.CLAWPERATOR_OPERATOR_PACKAGE,
+      operatorPackage: options.operatorPackage ?? process.env.ANDROPERATOR_OPERATOR_PACKAGE,
       timeoutMs: options.timeoutMs,
       warn: message => process.stderr.write(message),
       logger: options.logger,

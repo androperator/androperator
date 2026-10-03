@@ -19,6 +19,6 @@ describe("readAllRequiresJsonOutputError", () => {
     assert.match(out, /read --all requires JSON output/i);
     assert.match(out, /do not use --output pretty/i);
     const parsed = JSON.parse(out) as { message: string };
-    assert.match(parsed.message, /clawperator read --text "Price" --all/);
+    assert.match(parsed.message, /androperator read --text "Price" --all/);
   });
 });

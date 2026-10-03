@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "clawperator.di"
+    namespace = "androperator.di"
     compileSdk = 35
 
     defaultConfig {

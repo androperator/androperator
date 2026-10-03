@@ -4,7 +4,7 @@
     "sessionId": "energy-demo-20260413-false-positive",
     "schemaVersion": 1,
     "startedAt": 1776000010000,
-    "operatorPackage": "com.clawperator.operator.dev"
+    "operatorPackage": "com.androperator.operator.dev"
   },
   "snapshotMode": "omit",
   "events": [

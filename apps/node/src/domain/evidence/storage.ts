@@ -5,18 +5,18 @@ import { join, resolve } from "node:path";
 
 /** Resolve once at request entry, before asynchronous work or worker dispatch. */
 export function evidenceRoot(dependencies: { baseDir?: string } = {}): string {
-  const configured = dependencies.baseDir ?? process.env.CLAWPERATOR_EVIDENCE_DIR;
+  const configured = dependencies.baseDir ?? process.env.ANDROPERATOR_EVIDENCE_DIR;
   if (configured !== undefined && (configured.trim().length === 0 || configured.includes("\0"))) {
-    throw { code: "EXECUTION_VALIDATION_FAILED", message: "CLAWPERATOR_EVIDENCE_DIR must be a nonblank filesystem path" };
+    throw { code: "EXECUTION_VALIDATION_FAILED", message: "ANDROPERATOR_EVIDENCE_DIR must be a nonblank filesystem path" };
   }
-  return resolve(configured ?? join(homedir(), ".clawperator", "evidence"));
+  return resolve(configured ?? join(homedir(), ".androperator", "evidence"));
 }
 
 /** Never derive ownership from HOME, TMPDIR, TEMP, or the selected evidence root. */
 export function videoLockRoot(): string {
   return process.platform === "win32"
-    ? join(userInfo().homedir, "AppData", "Local", "Temp", "clawperator-evidence-locks")
-    : `/tmp/clawperator-evidence-locks-${process.geteuid!()}`;
+    ? join(userInfo().homedir, "AppData", "Local", "Temp", "androperator-evidence-locks")
+    : `/tmp/androperator-evidence-locks-${process.geteuid!()}`;
 }
 
 export function storageError(error: unknown, path: string): never {
@@ -25,7 +25,7 @@ export function storageError(error: unknown, path: string): never {
     code: "EVIDENCE_STORAGE_UNWRITABLE", path,
     message: `Cannot write evidence storage at ${path}: ${cause.message ?? String(error)}`,
     causeCode: cause.code ?? null,
-    recovery: "Choose a writable CLAWPERATOR_EVIDENCE_DIR and a new writable output directory; ensure the fixed host video lock directory is accessible. No permissions were changed.",
+    recovery: "Choose a writable ANDROPERATOR_EVIDENCE_DIR and a new writable output directory; ensure the fixed host video lock directory is accessible. No permissions were changed.",
   };
 }
 

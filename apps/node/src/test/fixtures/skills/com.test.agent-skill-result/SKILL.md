@@ -1,6 +1,6 @@
 ---
 name: com.test.agent-skill-result
-clawperator-skill-type: orchestrated
+androperator-skill-type: orchestrated
 description: Emit framed SkillResult payloads for an agent-driven fixture.
 ---
 

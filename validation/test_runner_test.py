@@ -43,7 +43,7 @@ class RunnerTests(unittest.TestCase):
                                    lambda *a, **k: subprocess.CompletedProcess([], 0))
         self.assertEqual(status, 0)
         self.assertEqual(calls[0].kwargs['env']['ANDROID_SERIAL'], 'test-device')
-        self.assertEqual(calls[0].kwargs['env']['CLAWPERATOR_SMOKE_DEVICE'], 'test-device')
+        self.assertEqual(calls[0].kwargs['env']['ANDROPERATOR_SMOKE_DEVICE'], 'test-device')
 
     def test_default_never_runs_device_commands(self):
         status, calls = self.invoke([], lambda *a, **k: subprocess.CompletedProcess([], 0))

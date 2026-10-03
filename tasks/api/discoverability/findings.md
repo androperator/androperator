@@ -18,7 +18,7 @@ product decisions or code.
 
 ## Sources
 
-- `~/.clawperator/findings/openclaw-usage-2026-04-22/findings-and-recommendations.md`
+- `~/.androperator/findings/openclaw-usage-2026-04-22/findings-and-recommendations.md`
 - `docs/quickstart.md`
 - `docs/api/navigation.md`
 - `docs/api/selectors.md`
@@ -33,9 +33,9 @@ The immediate-opportunity pass shipped these changes:
 - `docs/api/navigation.md` now documents launcher and home-screen navigation as
   a special-case surface
 - `docs/api/selectors.md` now includes practical selector stability guidance
-- `clawperator exec --help` and `clawperator snapshot --help` now point
-  unfamiliar hosts toward `clawperator bundled-skills list` and
-  `clawperator-agent-orientation`
+- `androperator exec --help` and `androperator snapshot --help` now point
+  unfamiliar hosts toward `androperator bundled-skills list` and
+  `androperator-agent-orientation`
 
 Those shipped changes should be treated as complete unless future validation
 finds a concrete problem in the current behavior or wording.
@@ -84,7 +84,7 @@ may be on the lock screen, home screen, or in the wrong app.
 
 Suggested scope:
 
-- add `clawperator status --json` or an equivalent MCP tool
+- add `androperator status --json` or an equivalent MCP tool
 - return a compact structured state summary
 - allow current snapshot data to be included directly or via an explicit option
 - if a bundled skill is added later, keep it as a thin wrapper around the

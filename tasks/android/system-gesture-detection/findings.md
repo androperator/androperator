@@ -2,7 +2,7 @@
 
 Created: 2026-03-19
 
-This document captures runtime findings about how Android system navigation is exposed through accessibility during recording. It is the findings log for the dedicated system-gesture-detection task, and it should be read together with [plan.md](~/src/clawperator/tasks/android/system-gesture-detection/plan.md) when implementation begins.
+This document captures runtime findings about how Android system navigation is exposed through accessibility during recording. It is the findings log for the dedicated system-gesture-detection task, and it should be read together with [plan.md](~/src/androperator/tasks/android/system-gesture-detection/plan.md) when implementation begins.
 
 The main question is not just "did Back happen?", but "what accessibility evidence do we get when Back or Home happens under different navigation modes, and is that evidence strong enough to reconstruct replayable intent?"
 
@@ -12,7 +12,7 @@ This task is intentionally deferred until recording is complete enough that its 
 
 These findings are based on:
 
-- `com.clawperator.operator.dev`
+- `com.androperator.operator.dev`
 - Play Store flows used as the primary manual test surface
 - direct inspection of recorded NDJSON output after each manual interaction
 
@@ -116,7 +116,7 @@ Session:
 
 Manual flow:
 
-1. Leave Clawperator.
+1. Leave Androperator.
 2. Open Play Store.
 3. Dismiss Play Pass popup.
 4. Open account menu.
@@ -155,7 +155,7 @@ Session:
 
 Manual flow:
 
-1. Leave Clawperator.
+1. Leave Androperator.
 2. Open Play Store.
 3. Open account dialog.
 4. Perform successful edge Back gesture.
@@ -630,7 +630,7 @@ Cons:
 
 ## Implementation Readiness
 
-An implementation agent should be able to start a first-pass Back / Home / Recents normalization layer from this document and [plan.md](~/src/clawperator/tasks/android/system-gesture-detection/plan.md) alone.
+An implementation agent should be able to start a first-pass Back / Home / Recents normalization layer from this document and [plan.md](~/src/androperator/tasks/android/system-gesture-detection/plan.md) alone.
 
 What this document already provides:
 
@@ -649,9 +649,9 @@ What an implementation agent would still need beyond these task documents:
 
 What the agent should not need:
 
-- access to `~/src/clawperator-dumps/recordings/` just to understand the findings in this document
+- access to `~/src/androperator-dumps/recordings/` just to understand the findings in this document
 
-The `~/src/clawperator-dumps/recordings/` files were useful during investigation, but the key findings and representative event sequences are preserved here precisely so future work does not depend on local capture artifacts.
+The `~/src/androperator-dumps/recordings/` files were useful during investigation, but the key findings and representative event sequences are preserved here precisely so future work does not depend on local capture artifacts.
 
 ## Current Bottom Line
 

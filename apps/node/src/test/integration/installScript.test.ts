@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const repoRoot = join(packageRoot, "..", "..");
-const installScript = join(repoRoot, "sites", "landing-clawperator", "public", "install.sh");
+const installScript = join(repoRoot, "sites", "androperator-public", "install.sh");
 const installedNodeVersion = "v24.14.1";
 
 describe("landing install.sh Node upgrade path", () => {
@@ -20,7 +20,7 @@ describe("landing install.sh Node upgrade path", () => {
   let logFile: string;
 
   before(async () => {
-    tempRoot = await mkdtemp(join(tmpdir(), "clawperator-install-script-"));
+    tempRoot = await mkdtemp(join(tmpdir(), "androperator-install-script-"));
     fakeBinDir = join(tempRoot, "bin");
     nvmDir = join(tempRoot, ".nvm");
     stateFile = join(tempRoot, "node-version");

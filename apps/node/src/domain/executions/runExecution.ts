@@ -23,7 +23,7 @@ import type { TimeoutDiagnostics, ExecutionFailureEvidence } from "../../contrac
 import { extractSnapshotRecordsFromLogs, inspectSnapshotXml, validateSnapshotXml, hasLegacyUntaggedSnapshotMarker } from "./snapshotHelper.js";
 import { emitResult, emitExecution } from "../observe/events.js";
 import { LIMITS } from "../../contracts/limits.js";
-import { ERROR_CODES, isClawperatorError } from "../../contracts/errors.js";
+import { ERROR_CODES, isAndroperatorError } from "../../contracts/errors.js";
 import type { RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 import type { Logger } from "../../adapters/logger.js";
 import { buildResultEnvelopeTimeoutHint } from "./timeoutGuidance.js";
@@ -200,7 +200,7 @@ export function markExtractionFailedSnapshotSteps(
         : ERROR_CODES.SNAPSHOT_EXTRACTION_FAILED;
       const message = options.sawLegacyUntaggedSnapshotMarker
         ? "Snapshot hierarchy logs used the legacy untagged marker. Install a matching Operator APK that emits commandId-tagged snapshot logs, or use a compatible CLI."
-        : "UI hierarchy source validation failed. Inspect earlier action effects, invalidate stale candidates, and use bounded orchestrator observation recovery. See https://docs.clawperator.com/api/snapshot/.";
+        : "UI hierarchy source validation failed. Inspect earlier action effects, invalidate stale candidates, and use bounded orchestrator observation recovery. See https://docs.androperator.com/api/snapshot/.";
       step.data = {
         ...remainingData,
         error,
@@ -214,10 +214,10 @@ export function markExtractionFailedSnapshotSteps(
       };
       warn?.(
         options.sawLegacyUntaggedSnapshotMarker
-          ? `[clawperator] WARN: snapshot step "${step.id}" saw legacy untagged snapshot logs. ` +
-            `Install a matching Operator APK or run 'clawperator version --check-compat' to diagnose.\n`
-          : `[clawperator] WARN: snapshot step "${step.id}" UI hierarchy extraction produced missing or invalid XML. ` +
-            `Source category: ${extractionReason}. Inspect earlier effects before bounded observation recovery; see https://docs.clawperator.com/api/snapshot/.\n`
+          ? `[androperator] WARN: snapshot step "${step.id}" saw legacy untagged snapshot logs. ` +
+            `Install a matching Operator APK or run 'androperator version --check-compat' to diagnose.\n`
+          : `[androperator] WARN: snapshot step "${step.id}" UI hierarchy extraction produced missing or invalid XML. ` +
+            `Source category: ${extractionReason}. Inspect earlier effects before bounded observation recovery; see https://docs.androperator.com/api/snapshot/.\n`
       );
     }
   }
@@ -253,7 +253,7 @@ export function injectServiceUnavailableHint(envelope: ResultEnvelope, deviceId:
     return;
   }
 
-  envelope.hint = `Accessibility service not running. Run 'clawperator doctor --fix --device ${deviceId}' to diagnose and repair, or 'clawperator operator setup --apk <path-to-apk> --device ${deviceId}' to reinstall.`;
+  envelope.hint = `Accessibility service not running. Run 'androperator doctor --fix --device ${deviceId}' to diagnose and repair, or 'androperator operator setup --apk <path-to-apk> --device ${deviceId}' to reinstall.`;
 }
 
 /**
@@ -446,7 +446,7 @@ export async function runCloseAppPreflight(
 
 function executionCancellationError(signal?: AbortSignal): { code: string; message: string; [k: string]: unknown } | undefined {
   if (!signal?.aborted) return undefined;
-  if (isClawperatorError(signal.reason) && signal.reason.code === ERROR_CODES.COMMAND_TIMEOUT) return { ...signal.reason };
+  if (isAndroperatorError(signal.reason) && signal.reason.code === ERROR_CODES.COMMAND_TIMEOUT) return { ...signal.reason };
   return { code: ERROR_CODES.RESULT_TRANSPORT_CANCELLED, message: "Execution canceled before dispatch" };
 }
 
@@ -482,7 +482,7 @@ async function performExecution(
 ): Promise<PerformExecutionResult> {
   const config = getDefaultRuntimeConfig({
     deviceId: options.deviceId,
-    operatorPackage: options.operatorPackage ?? process.env.CLAWPERATOR_OPERATOR_PACKAGE,
+    operatorPackage: options.operatorPackage ?? process.env.ANDROPERATOR_OPERATOR_PACKAGE,
     adbPath: options.adbPath ?? process.env.ADB_PATH,
     runner: options.runner,
     logger: options.logger,
@@ -614,7 +614,7 @@ async function performExecution(
     cancelEarlyResultWaiter();
     const isMissing = apkCheck.code === ERROR_CODES.OPERATOR_NOT_INSTALLED;
     const installCommand = isMissing
-      ? `clawperator operator setup --apk ${getOperatorPackageApkPath(config.operatorPackage)} --device ${deviceId}${config.operatorPackage !== "com.clawperator.operator" ? ` --operator-package ${config.operatorPackage}` : ""}`
+      ? `androperator operator setup --apk ${getOperatorPackageApkPath(config.operatorPackage)} --device ${deviceId}${config.operatorPackage !== "com.androperator.operator" ? ` --operator-package ${config.operatorPackage}` : ""}`
       : undefined;
     const message = isMissing
       ? `Operator APK (${config.operatorPackage}) is not installed on ${deviceId}. Install it with: ${installCommand}`
@@ -651,7 +651,7 @@ async function performExecution(
 
   if (apkCheck.status === "warn") {
     options.warn?.(
-      `[clawperator] WARN: ${apkCheck.id} ${apkCheck.summary}${apkCheck.detail ? ` - ${apkCheck.detail}` : ""}\n`
+      `[androperator] WARN: ${apkCheck.id} ${apkCheck.summary}${apkCheck.detail ? ` - ${apkCheck.detail}` : ""}\n`
     );
   }
 
@@ -700,7 +700,7 @@ async function performExecution(
           ok: true,
           envelope,
           deviceId,
-          terminalSource: "clawperator_result",
+          terminalSource: "androperator_result",
         },
       };
     }
@@ -836,7 +836,7 @@ async function performExecution(
       const screenAction = execution.actions.find(a => a.type === "take_screenshot");
       if (hasScreenshot) {
         try {
-          const screenshotPath = screenAction?.params?.path ?? join(tmpdir(), `clawperator-screenshot-${execution.commandId}-${Date.now()}.png`);
+          const screenshotPath = screenAction?.params?.path ?? join(tmpdir(), `androperator-screenshot-${execution.commandId}-${Date.now()}.png`);
           const screenStep = result.envelope.stepResults.find(s => s.actionType === "take_screenshot");
 
           const buffer = await captureScreenshot(config, {
@@ -921,7 +921,7 @@ async function performExecution(
       },
     };
   } catch (error) {
-    return { execution, result: { ok: false, deviceId, error: isClawperatorError(error) ? { ...error } : {
+    return { execution, result: { ok: false, deviceId, error: isAndroperatorError(error) ? { ...error } : {
       code: ERROR_CODES.RESULT_TRANSPORT_FAILED,
       message: error instanceof Error ? error.message : String(error),
     } } };

@@ -28,7 +28,7 @@ export function buildWaitForNavExecution(
   return {
     commandId,
     taskId: commandId,
-    source: "clawperator-action",
+    source: "androperator-action",
     expectedFormat: "android-ui-automator",
     timeoutMs: executionTimeoutMs,
     actions: [

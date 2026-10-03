@@ -12,19 +12,19 @@ const { Client } = require('@modelcontextprotocol/sdk/client/index.js');
 const { StdioClientTransport } = require('@modelcontextprotocol/sdk/client/stdio.js');
 const [deviceId, mediaSessionId, notificationKey, actionId, output] = process.argv.slice(2);
 assert.ok(output);
-const operatorPackage = 'com.clawperator.operator.dev';
-const packageName = 'com.clawperator.fixture.media';
+const operatorPackage = 'com.androperator.operator.dev';
+const packageName = 'com.androperator.fixture.media';
 const sample = () => JSON.parse(execFileSync('adb', ['-s', deviceId, 'shell', 'run-as', packageName, 'cat', 'files/media-proof.json'], { encoding: 'utf8' }));
 const evidence = [];
 const client = new Client({ name: 'mutation-proof', version: '1' });
 const server = await startServer({ port: 0, host: '127.0.0.1', verbose: false, operatorPackage });
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 try {
-  await client.connect(new StdioClientTransport({ command: process.execPath, args: [resolve(root, 'apps/node/dist/cli/index.js'), 'mcp', 'serve'], env: { ...process.env, CLAWPERATOR_NO_DAEMON: '1' } }));
+  await client.connect(new StdioClientTransport({ command: process.execPath, args: [resolve(root, 'apps/node/dist/cli/index.js'), 'mcp', 'serve'], env: { ...process.env, ANDROPERATOR_NO_DAEMON: '1' } }));
   let item = { key: notificationKey, actions: [{ actionId }] };
   for (const transport of ['typed', 'http', 'mcp']) {
     if (transport !== 'typed') {
-      execFileSync('adb', ['-s', deviceId, 'shell', 'am', 'broadcast', '--receiver-foreground', '-n', "'" + packageName + "/clawperator.operator.debug.MediaProofActivity$Control'", '--es', 'operation', 'post']);
+      execFileSync('adb', ['-s', deviceId, 'shell', 'am', 'broadcast', '--receiver-foreground', '-n', "'" + packageName + "/androperator.operator.debug.MediaProofActivity$Control'", '--es', 'operation', 'post']);
       // Allow the repost and listener revision callback to settle before advertising a handle.
       await wait(1000);
       const listed = await runNotificationMedia('list_notifications', { applicationId: packageName }, { deviceId, operatorPackage });

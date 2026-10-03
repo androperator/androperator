@@ -1,6 +1,6 @@
 ---
 name: docs-author
-description: Author or revise Clawperator documentation in docs/. For building the site, use docs-build.
+description: Author or revise Androperator documentation in docs/. For building the site, use docs-build.
 ---
 
 # Docs Author

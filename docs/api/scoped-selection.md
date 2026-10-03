@@ -8,14 +8,14 @@ App navigation and the meaning of a successful test remain the caller's decision
 ## Check readiness and discover candidates
 
 Select one device and the matching Operator explicitly. In a development checkout,
-use the built CLI with `node apps/node/dist/cli/index.js` in place of `clawperator`.
+use the built CLI with `node apps/node/dist/cli/index.js` in place of `androperator`.
 The examples use a generic fixture package; replace its IDs and labels with values
 observed in your app. Replace `<device_serial>` before running the commands.
 
 ```bash
-clawperator doctor --device <device_serial> --operator-package com.clawperator.operator.dev
-clawperator query --device <device_serial> --operator-package com.clawperator.operator.dev --text Open --visibility all --limit 100
-clawperator query --device <device_serial> --operator-package com.clawperator.operator.dev --visibility all --limit 200
+androperator doctor --device <device_serial> --operator-package com.androperator.operator.dev
+androperator query --device <device_serial> --operator-package com.androperator.operator.dev --text Open --visibility all --limit 100
+androperator query --device <device_serial> --operator-package com.androperator.operator.dev --visibility all --limit 200
 ```
 
 Inspect the terminal envelope and each step's success before decoding the
@@ -37,9 +37,9 @@ If the observed structure offers no unique selector, stop rather than guessing.
 A non-strict single read can expose the default selection warning without clicking:
 
 ```bash
-clawperator read --device <device_serial> --operator-package com.clawperator.operator.dev --text Open
-clawperator read --device <device_serial> --operator-package com.clawperator.operator.dev --text Open --strict
-clawperator read --device <device_serial> --operator-package com.clawperator.operator.dev --strict --matcher-json '{"textEquals":"Open","ancestor":{"resourceId":"com.example.scopedselection:id/detail_pane"}}'
+androperator read --device <device_serial> --operator-package com.androperator.operator.dev --text Open
+androperator read --device <device_serial> --operator-package com.androperator.operator.dev --text Open --strict
+androperator read --device <device_serial> --operator-package com.androperator.operator.dev --strict --matcher-json '{"textEquals":"Open","ancestor":{"resourceId":"com.example.scopedselection:id/detail_pane"}}'
 ```
 
 For duplicate labels, the first call retains first-match behavior and includes
@@ -62,9 +62,9 @@ ancestor to the container matcher, then confirm that the resulting query returns
 exactly one node:
 
 ```bash
-clawperator query --device <device_serial> --operator-package com.clawperator.operator.dev --id com.example.scopedselection:id/list --visibility all
-clawperator query --device <device_serial> --operator-package com.clawperator.operator.dev --matcher-json '{"resourceId":"com.example.scopedselection:id/list","ancestor":{"resourceId":"com.example.scopedselection:id/detail_pane"}}'
-clawperator scroll-until down --device <device_serial> --operator-package com.clawperator.operator.dev --text 'Target item' --strict --container-json '{"resourceId":"com.example.scopedselection:id/list","ancestor":{"resourceId":"com.example.scopedselection:id/detail_pane"}}'
+androperator query --device <device_serial> --operator-package com.androperator.operator.dev --id com.example.scopedselection:id/list --visibility all
+androperator query --device <device_serial> --operator-package com.androperator.operator.dev --matcher-json '{"resourceId":"com.example.scopedselection:id/list","ancestor":{"resourceId":"com.example.scopedselection:id/detail_pane"}}'
+androperator scroll-until down --device <device_serial> --operator-package com.androperator.operator.dev --text 'Target item' --strict --container-json '{"resourceId":"com.example.scopedselection:id/list","ancestor":{"resourceId":"com.example.scopedselection:id/detail_pane"}}'
 ```
 
 Inspect `resolved_container`, `scrolls_executed`, `termination_reason`, and the
@@ -92,10 +92,10 @@ Click the observed target within the same selected scope, then wait for a
 unique destination-only marker:
 
 ```bash
-clawperator click --device <device_serial> --operator-package com.clawperator.operator.dev --text 'Target item' --strict --container-json '{"resourceId":"com.example.scopedselection:id/list","ancestor":{"resourceId":"com.example.scopedselection:id/detail_pane"}}'
-clawperator wait --device <device_serial> --operator-package com.clawperator.operator.dev --text 'Detail destination ready' --strict --timeout 5000
-clawperator query --device <device_serial> --operator-package com.clawperator.operator.dev --text 'Detail destination ready'
-clawperator evidence capture --device <device_serial> --operator-package com.clawperator.operator.dev --output-dir /absolute/new/bundle --label 'Scoped destination' --context-json '{"originalVerdict":"passed"}'
+androperator click --device <device_serial> --operator-package com.androperator.operator.dev --text 'Target item' --strict --container-json '{"resourceId":"com.example.scopedselection:id/list","ancestor":{"resourceId":"com.example.scopedselection:id/detail_pane"}}'
+androperator wait --device <device_serial> --operator-package com.androperator.operator.dev --text 'Detail destination ready' --strict --timeout 5000
+androperator query --device <device_serial> --operator-package com.androperator.operator.dev --text 'Detail destination ready'
+androperator evidence capture --device <device_serial> --operator-package com.androperator.operator.dev --output-dir /absolute/new/bundle --label 'Scoped destination' --context-json '{"originalVerdict":"passed"}'
 ```
 
 Require a successful wait and assert the query's intended label, uniqueness, and
@@ -135,5 +135,5 @@ bounded diagnostic capture when available. If it visibly shows an Android
 application-not-responding dialog, classify that observation as an app ANR;
 a timeout alone is not proof of one. If the capture also fails, record the state
 as unconfirmed and stop the attempt. Do not automatically dismiss the dialog,
-repeat an uncertain mutation, or infer a Clawperator regression from an ANR.
+repeat an uncertain mutation, or infer an Androperator regression from an ANR.
 See [doctor](doctor.md) and [timeouts](timeouts.md).

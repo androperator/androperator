@@ -34,7 +34,7 @@ export async function verifyDimensionChanges(root, runner) {
   const state = { sessionId, nonce: randomUUID(), outputDir, lockPath: join(outputDir, 'lock.json'), managed: false,
     deviceId: 'test-device', operatorPackage: 'com.example.operator', adbPath: 'fixture-adb', durationSeconds: 10,
     size: '320x240', hostPid: null, hostStartedAt: null, remotePid: null, remoteStart: null,
-    remotePath: `/data/local/tmp/clawperator-video-${sessionId}.mp4`, deadline: 0,
+    remotePath: `/data/local/tmp/androperator-video-${sessionId}.mp4`, deadline: 0,
     updatedAt: Date.now(), recoveryRequired: false, backend: 'scrcpy', maxEdge: 320 };
   const manifestPath = join(outputDir, 'manifest.json');
   await atomicJson(join(outputDir, 'session.json'), state);

@@ -128,7 +128,7 @@
       "id": "com.test.env-echo",
       "applicationId": "com.test",
       "intent": "env-echo",
-      "summary": "Test skill that echoes env vars CLAWPERATOR_BIN and CLAWPERATOR_OPERATOR_PACKAGE.",
+      "summary": "Test skill that echoes env vars ANDROPERATOR_BIN and ANDROPERATOR_OPERATOR_PACKAGE.",
       "path": "skills/com.test.env-echo",
       "skillFile": "skills/com.test.env-echo/SKILL.md",
       "scripts": [

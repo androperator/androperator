@@ -12,7 +12,7 @@ interface StarHintState {
 }
 
 function stateFilePath(): string {
-  return join(homedir(), ".clawperator", "star-hint-state.json");
+  return join(homedir(), ".androperator", "star-hint-state.json");
 }
 
 function readState(): StarHintState {
@@ -47,7 +47,7 @@ function isSuppressed(): boolean {
   if (process.stderr.isTTY !== true) {
     return true;
   }
-  if (process.env.CLAWPERATOR_DISABLE_STAR_SUGGESTIONS) {
+  if (process.env.ANDROPERATOR_DISABLE_STAR_SUGGESTIONS) {
     return true;
   }
   if (process.argv.slice(2).includes("--disable-star-suggestions")) {
@@ -57,11 +57,11 @@ function isSuppressed(): boolean {
 }
 
 const HINT_TEXT = `
-Clawperator is open source. If it helped, consider starring the repo:
-https://github.com/clawperator/clawperator
+Androperator is open source. If it helped, consider starring the repo:
+https://github.com/androperator/androperator
 
 GitHub CLI:
-gh api -X PUT /user/starred/clawperator/clawperator -H "X-GitHub-Api-Version: 2026-03-10"
+gh api -X PUT /user/starred/androperator/androperator -H "X-GitHub-Api-Version: 2026-03-10"
 
 Disable this hint with: --disable-star-suggestions
 `;

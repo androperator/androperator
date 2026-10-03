@@ -1,6 +1,6 @@
 ---
 name: com.test.echo-all
-clawperator-skill-type: replay
+androperator-skill-type: replay
 description: Test fixture that echoes all forwarded args.
 ---
 

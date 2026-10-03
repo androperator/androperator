@@ -10,7 +10,7 @@ export function buildOpenAppExecution(
   return {
     commandId: `open_app_${Date.now()}`,
     taskId: "cli-action-open-app",
-    source: "clawperator-cli",
+    source: "androperator-cli",
     timeoutMs: 15000,
     expectedFormat: "android-ui-automator",
     actions: [

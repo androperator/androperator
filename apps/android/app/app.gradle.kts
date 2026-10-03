@@ -17,7 +17,7 @@ data class ParsedVersion(
 fun parseVersionName(versionName: String): ParsedVersion {
     val match = Regex("""^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z]+)(?:\.(\d+))?)?$""")
         .matchEntire(versionName)
-        ?: throw GradleException("Unsupported Clawperator version format: $versionName")
+        ?: throw GradleException("Unsupported Androperator version format: $versionName")
 
     return ParsedVersion(
         name = versionName,
@@ -60,17 +60,17 @@ fun readNodePackageVersion(): String {
     return versionLine
 }
 
-val baseApplicationId = "com.clawperator.operator"
+val baseApplicationId = "com.androperator.operator"
 
 android {
-    namespace = "com.clawperator.operator"
+    namespace = "com.androperator.operator"
 
-    val resolvedVersionName = System.getenv("CLAWPERATOR_VERSION_NAME") ?: readNodePackageVersion()
+    val resolvedVersionName = System.getenv("ANDROPERATOR_VERSION_NAME") ?: readNodePackageVersion()
     val resolvedVersion = parseVersionName(resolvedVersionName)
 
     defaultConfig {
         applicationId = baseApplicationId
-        versionCode = System.getenv("CLAWPERATOR_VERSION_CODE")?.toInt() ?: computeVersionCode(resolvedVersion)
+        versionCode = System.getenv("ANDROPERATOR_VERSION_CODE")?.toInt() ?: computeVersionCode(resolvedVersion)
         versionName = resolvedVersion.name
     }
 
@@ -83,16 +83,16 @@ android {
         }
         create("release") {
             // Fall back to using debug keystore if environment variables are not set. Required for CI.
-            storeFile = env("CLAWPERATOR_ANDROID_KEYSTORE_PATH")?.let { file(it) }
+            storeFile = env("ANDROPERATOR_ANDROID_KEYSTORE_PATH")?.let { file(it) }
                 ?: env("ANDROID_KEYSTORE_PATH", "KEYSTORE_LOCATION")?.let { file(it) }
                 ?: file("../../../.android/debug.keystore")
-            storePassword = env("CLAWPERATOR_ANDROID_KEYSTORE_PASSWORD")
+            storePassword = env("ANDROPERATOR_ANDROID_KEYSTORE_PASSWORD")
                 ?: env("ANDROID_KEYSTORE_PASSWORD", "KEYSTORE_PASSWORD")
                 ?: "android"
-            keyAlias = env("CLAWPERATOR_ANDROID_KEY_ALIAS")
+            keyAlias = env("ANDROPERATOR_ANDROID_KEY_ALIAS")
                 ?: env("ANDROID_KEY_ALIAS", "ACTION_LAUNCHER_KEY_ALIAS")
                 ?: "androiddebugkey"
-            keyPassword = env("CLAWPERATOR_ANDROID_KEY_PASSWORD")
+            keyPassword = env("ANDROPERATOR_ANDROID_KEY_PASSWORD")
                 ?: env("ANDROID_KEY_PASSWORD", "ACTION_LAUNCHER_KEY_PASSWORD")
                 ?: "android"
 
@@ -177,9 +177,9 @@ tasks.register("runDebug") {
     doLast {
         val debugApplicationId = "$baseApplicationId.dev"
 
-        println("Launching $debugApplicationId/clawperator.activity.MainActivity")
+        println("Launching $debugApplicationId/androperator.activity.MainActivity")
         val launchResult =
-            ProcessBuilder("adb", "shell", "am", "start", "-n", "$debugApplicationId/clawperator.activity.MainActivity")
+            ProcessBuilder("adb", "shell", "am", "start", "-n", "$debugApplicationId/androperator.activity.MainActivity")
                 .inheritIO()
                 .start()
                 .waitFor()
@@ -191,7 +191,7 @@ tasks.register("runDebug") {
         println("🔧 Granting permissions for $debugApplicationId...")
         val grantResult =
             ProcessBuilder(
-                rootProject.file("scripts/clawperator_grant_android_permissions.sh").absolutePath,
+                rootProject.file("scripts/androperator_grant_android_permissions.sh").absolutePath,
                 "--package",
                 debugApplicationId,
             )

@@ -3,8 +3,8 @@
 const args = process.argv.slice(2);
 const skillProgramPath = args[0];
 const mode = args[1] || "valid";
-const skillId = process.env.CLAWPERATOR_SKILL_ID || "com.test.agent-skill-result";
-const prefix = "[Clawperator-Skill-Result]";
+const skillId = process.env.ANDROPERATOR_SKILL_ID || "com.test.agent-skill-result";
+const prefix = "[Androperator-Skill-Result]";
 
 if (!skillProgramPath) {
   console.error("missing skill program");
@@ -20,8 +20,8 @@ if (
 }
 
 if (
-  process.env.CLAWPERATOR_SKILL_INPUTS !== undefined &&
-  process.env.CLAWPERATOR_SKILL_INPUTS !== JSON.stringify(args.slice(1))
+  process.env.ANDROPERATOR_SKILL_INPUTS !== undefined &&
+  process.env.ANDROPERATOR_SKILL_INPUTS !== JSON.stringify(args.slice(1))
 ) {
   console.error("unexpected forwarded skill inputs");
   process.exit(4);
@@ -29,7 +29,7 @@ if (
 
 if (
   process.env.EXPECTED_SKILLS_REGISTRY !== undefined &&
-  process.env.CLAWPERATOR_SKILLS_REGISTRY !== process.env.EXPECTED_SKILLS_REGISTRY
+  process.env.ANDROPERATOR_SKILLS_REGISTRY !== process.env.EXPECTED_SKILLS_REGISTRY
 ) {
   console.error("unexpected skills registry path");
   process.exit(6);
@@ -37,7 +37,7 @@ if (
 
 if (
   process.env.EXPECTED_SKILL_TIMEOUT_MS !== undefined &&
-  process.env.CLAWPERATOR_SKILL_AGENT_TIMEOUT_MS !== process.env.EXPECTED_SKILL_TIMEOUT_MS
+  process.env.ANDROPERATOR_SKILL_AGENT_TIMEOUT_MS !== process.env.EXPECTED_SKILL_TIMEOUT_MS
 ) {
   console.error("unexpected skill timeout env");
   process.exit(7);
@@ -45,7 +45,7 @@ if (
 
 if (
   process.env.EXPECTED_DEVICE_ID !== undefined &&
-  process.env.CLAWPERATOR_DEVICE_ID !== process.env.EXPECTED_DEVICE_ID
+  process.env.ANDROPERATOR_DEVICE_ID !== process.env.EXPECTED_DEVICE_ID
 ) {
   console.error("unexpected device id env");
   process.exit(10);

@@ -9,7 +9,7 @@ import sys
 import tempfile
 
 
-USER_AGENT = "Mozilla/5.0 (compatible; ClawperatorGeoVerifier/1.0; +https://clawperator.com/)"
+USER_AGENT = "Mozilla/5.0 (compatible; AndroperatorGeoVerifier/1.0; +https://androperator.com/)"
 CONNECT_TIMEOUT_SECONDS = "5"
 MAX_TIME_SECONDS = "20"
 RETRY_COUNT = "2"
@@ -49,7 +49,7 @@ def build_checks(landing_base_url, docs_base_url):
             "kind": "url",
             "url": f"{landing_base_url}/index.md",
             "content_type": r"text/markdown|text/plain",
-            "body_pattern": r"(?im)^#\s+Clawperator",
+            "body_pattern": r"(?im)^#\s+Androperator",
             "probe_bots": True,
         },
         {"kind": "url", "url": f"{landing_base_url}/agents", "content_type": r"text/html"},
@@ -68,14 +68,14 @@ def build_checks(landing_base_url, docs_base_url):
             "kind": "url",
             "url": f"{docs_base_url}/llms.txt",
             "content_type": r"text/plain",
-            "body_pattern": r"(?im)^#\s+Clawperator Documentation",
+            "body_pattern": r"(?im)^#\s+Androperator Documentation",
             "probe_bots": True,
         },
         {
             "kind": "url",
             "url": f"{docs_base_url}/llms-full.txt",
             "content_type": r"text/plain",
-            "body_pattern": r"(?im)^#\s+Clawperator Full Documentation",
+            "body_pattern": r"(?im)^#\s+Androperator Full Documentation",
             "probe_bots": True,
         },
         {"kind": "url", "url": f"{docs_base_url}/sitemap.xml", "content_type": r"application/xml|text/xml"},
@@ -92,8 +92,8 @@ def build_checks(landing_base_url, docs_base_url):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--landing-base-url", default="https://clawperator.com")
-    parser.add_argument("--docs-base-url", default="https://docs.clawperator.com")
+    parser.add_argument("--landing-base-url", default="https://androperator.com")
+    parser.add_argument("--docs-base-url", default="https://docs.androperator.com")
     parser.add_argument("--allow-noindex", action="store_true")
     parser.add_argument("--preview", action="store_true")
     parser.add_argument("--branch-name")
@@ -128,8 +128,8 @@ def resolve_preview_urls(args):
     branch_slug = slugify_branch_name(branch_name)
     if not branch_slug:
         raise SystemExit(f"--preview branch name {branch_name!r} cannot be converted to a valid hostname")
-    landing = f"https://{branch_slug}.clawperator.pages.dev"
-    docs = f"https://{branch_slug}.clawperator-docs.pages.dev"
+    landing = f"https://{branch_slug}.androperator.pages.dev"
+    docs = f"https://{branch_slug}.androperator-docs.pages.dev"
     return landing, docs
 
 
@@ -251,7 +251,7 @@ def verify_url(check, allow_noindex=False):
                 reasons.append(f"expected GET 200, got {get_status or 'no status line'}")
             if not re.search(check["body_pattern"], body, re.IGNORECASE):
                 reasons.append("unexpected body content")
-            if re.search(r"(?i)content signals|attention required|just a moment|captcha|verify you are human|access denied|403 forbidden|404 - clawperator", body):
+            if re.search(r"(?i)content signals|attention required|just a moment|captcha|verify you are human|access denied|403 forbidden|404 - androperator", body):
                 reasons.append("response body looks like an anti-bot, policy, or fallback page")
 
     if check.get("probe_bots"):
@@ -327,8 +327,8 @@ def verify_redirect(check):
 def main():
     args = parse_args()
     if args.preview and (
-        args.landing_base_url == "https://clawperator.com"
-        and args.docs_base_url == "https://docs.clawperator.com"
+        args.landing_base_url == "https://androperator.com"
+        and args.docs_base_url == "https://docs.androperator.com"
     ):
         landing_base_url, docs_base_url = resolve_preview_urls(args)
         args.allow_noindex = True

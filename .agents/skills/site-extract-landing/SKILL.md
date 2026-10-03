@@ -1,6 +1,6 @@
 ---
 name: site-extract-landing
-description: Extract rendered Clawperator landing-page Markdown through Cloudflare Browser Rendering.
+description: Extract rendered preserved Clawperator landing-page Markdown through Cloudflare Browser Rendering.
 ---
 
 # Site Extract Landing
@@ -11,8 +11,8 @@ Extract the fully rendered markdown content of `https://clawperator.com` using C
 
 The following environment variables must be set:
 
-- `CLAWPERATOR_CLOUDFLARE_ACCOUNT_ID`
-- `CLAWPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN`
+- `ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID`
+- `ANDROPERATOR_CLOUDFLARE_DOCS_WRANGLER_API_TOKEN`
 
 ## Workflow
 

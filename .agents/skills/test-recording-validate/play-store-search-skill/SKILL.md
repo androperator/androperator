@@ -33,7 +33,7 @@ Examples:
 ./skills/com.android.vending.search-app/scripts/search_play_store.sh <device_serial> "VLC"
 
 # Direct entry path
-./skills/com.android.vending.search-app/scripts/search_play_store.sh <device_serial> "VLC" com.clawperator.operator org.videolan.vlc
+./skills/com.android.vending.search-app/scripts/search_play_store.sh <device_serial> "VLC" com.androperator.operator org.videolan.vlc
 ```
 
 ## Output
@@ -64,5 +64,5 @@ On success, prints a summary of the app details page including:
 - From the direct path, the market:// URI opens a bottom sheet details view. Both support
   the Install button in the same way.
 - This embedded copy is used by `test-recording-validate` and is expected to run
-  against the branch-local Clawperator CLI build and the `.dev` Operator APK.
-  It should not depend on the globally installed `clawperator` binary.
+  against the branch-local Androperator CLI build and the `.dev` Operator APK.
+  It should not depend on the globally installed `androperator` binary.

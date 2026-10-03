@@ -5,7 +5,7 @@ description: Smoke-test recording start, Play Store interaction, stop, pull, and
 
 # Test Recording Validate
 
-Validates the Clawperator recording API surface end-to-end by:
+Validates the Androperator recording API surface end-to-end by:
 1. Starting a recording session
 2. Running the Play Store search skill (searching for "Action Launcher")
 3. Stopping the recording
@@ -22,14 +22,14 @@ This skill provides a repeatable smoke test for the recording feature that exerc
 
 ## Prerequisites
 
-- Clawperator Operator app installed and permissioned on the target device
+- Androperator Operator app installed and permissioned on the target device
 - Play Store app available on the device
-- Branch-local Clawperator CLI build present at `apps/node/dist/cli/index.js`
+- Branch-local Androperator CLI build present at `apps/node/dist/cli/index.js`
 - The local embedded Play Store helper in this skill directory
 
 This skill intentionally uses the branch-local Node CLI build and the local
 embedded Play Store helper, so it does not depend on the globally installed
-`clawperator` binary or an external skills repo checkout.
+`androperator` binary or an external skills repo checkout.
 
 ## Usage
 
@@ -55,7 +55,7 @@ The skill verifies:
 
 ## Output Artifacts
 
-All artifacts are written to `$HOME/src/clawperator-dumps/runs/<timestamp>/`
+All artifacts are written to `$HOME/src/androperator-dumps/runs/<timestamp>/`
 (or the directory named by `RECORDING_VALIDATION_RUNS_DIR`):
 - `<session_id>.ndjson` - Raw recording from device
 - `<session_id>.steps.json` - Parsed step log

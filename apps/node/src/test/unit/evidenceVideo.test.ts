@@ -22,7 +22,7 @@ export async function videoFixture(options: { failure?: string; stopped?: boolea
   const state: VideoState = { sessionId: randomUUID(), nonce: randomUUID(), outputDir, lockPath: join(outputDir, "lock.json"), managed: false,
     deviceId: "test-device", operatorPackage: "com.example.operator", adbPath: "adb", durationSeconds: 1, size: "720x1280", hostPid: null,
     hostStartedAt: null, remotePid: null, remoteStart: null, remotePath: "", deadline: Date.now() + 1000, updatedAt: Date.now(), recoveryRequired: false };
-  state.remotePath = `/data/local/tmp/clawperator-video-${state.sessionId}.mp4`;
+  state.remotePath = `/data/local/tmp/androperator-video-${state.sessionId}.mp4`;
   const manifest: EvidenceManifest = { schemaVersion: 1, evidenceId: state.sessionId, label: null, context: { originalVerdict: "failed" },
     device: { serial: state.deviceId, operatorPackage: state.operatorPackage, cliVersion: "0.10.0", operatorVersion: "0.10.0-d", apiLevel: 36, androidVersion: "16", manufacturer: "test", model: "test", deviceType: "emulator", deviceTypeProperties: { "ro.kernel.qemu": "1", "ro.boot.qemu": null }, display: { width: 720, height: 1280, density: 320, rotation: 0 } },
     startedAt: new Date().toISOString(), finishedAt: null, status: "starting", artifacts: [], errors: [],

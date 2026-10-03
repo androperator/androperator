@@ -258,7 +258,7 @@ describe("probeInteractiveState", () => {
           },
         ],
       },
-      terminalSource: "clawperator_result" as const,
+      terminalSource: "androperator_result" as const,
     });
 
     const result = await probeInteractiveState(config, mockWait as any);
@@ -297,7 +297,7 @@ describe("probeInteractiveState", () => {
           },
         ],
       },
-      terminalSource: "clawperator_result" as const,
+      terminalSource: "androperator_result" as const,
     });
 
     const result = await probeInteractiveState(config, mockWait as any);
@@ -332,7 +332,7 @@ describe("probeInteractiveState", () => {
           },
         ],
       },
-      terminalSource: "clawperator_result" as const,
+      terminalSource: "androperator_result" as const,
     });
 
     const result = await probeInteractiveState(config, mockWait as any);

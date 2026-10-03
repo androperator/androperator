@@ -6,27 +6,27 @@ import {
 } from "../../domain/config/resolveOperatorPackage.js";
 
 describe("resolveOperatorPackageForRequest", () => {
-  const originalOperatorPackage = process.env.CLAWPERATOR_OPERATOR_PACKAGE;
+  const originalOperatorPackage = process.env.ANDROPERATOR_OPERATOR_PACKAGE;
 
   afterEach(() => {
     if (originalOperatorPackage === undefined) {
-      delete process.env.CLAWPERATOR_OPERATOR_PACKAGE;
+      delete process.env.ANDROPERATOR_OPERATOR_PACKAGE;
       return;
     }
 
-    process.env.CLAWPERATOR_OPERATOR_PACKAGE = originalOperatorPackage;
+    process.env.ANDROPERATOR_OPERATOR_PACKAGE = originalOperatorPackage;
   });
 
   it("uses the explicit caller value when provided", () => {
-    process.env.CLAWPERATOR_OPERATOR_PACKAGE = "com.example.env";
+    process.env.ANDROPERATOR_OPERATOR_PACKAGE = "com.example.env";
 
     const resolved = resolveOperatorPackageForRequest("com.example.explicit");
 
     assert.strictEqual(resolved, "com.example.explicit");
   });
 
-  it("falls back to CLAWPERATOR_OPERATOR_PACKAGE when omitted", () => {
-    process.env.CLAWPERATOR_OPERATOR_PACKAGE = "com.example.env";
+  it("falls back to ANDROPERATOR_OPERATOR_PACKAGE when omitted", () => {
+    process.env.ANDROPERATOR_OPERATOR_PACKAGE = "com.example.env";
 
     const resolved = resolveOperatorPackageForRequest(undefined);
 
@@ -34,10 +34,10 @@ describe("resolveOperatorPackageForRequest", () => {
   });
 
   it("falls back to the default package when env is absent or blank", () => {
-    delete process.env.CLAWPERATOR_OPERATOR_PACKAGE;
+    delete process.env.ANDROPERATOR_OPERATOR_PACKAGE;
     assert.strictEqual(resolveOperatorPackageForRequest(undefined), DEFAULT_OPERATOR_PACKAGE);
 
-    process.env.CLAWPERATOR_OPERATOR_PACKAGE = "   ";
+    process.env.ANDROPERATOR_OPERATOR_PACKAGE = "   ";
     assert.strictEqual(resolveOperatorPackageForRequest(undefined), DEFAULT_OPERATOR_PACKAGE);
   });
 });

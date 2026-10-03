@@ -8,13 +8,13 @@ describe("cmdRecordStart", () => {
       {
         format: "json",
         deviceId: "emulator-5554",
-        operatorPackage: "com.clawperator.operator.dev",
+        operatorPackage: "com.androperator.operator.dev",
       },
       {
         runExecutionImpl: async () => ({
           ok: true,
           deviceId: "emulator-5554",
-          terminalSource: "clawperator_result",
+          terminalSource: "androperator_result",
           envelope: {
             commandId: "start_recording_123",
             taskId: "cli-record-start",
@@ -29,7 +29,7 @@ describe("cmdRecordStart", () => {
                   error: "RECORDING_ALREADY_IN_PROGRESS",
                   message: "Recording is already in progress",
                   sessionId: "record-123",
-                  filePath: "/storage/emulated/0/Android/data/com.clawperator.operator.dev/files/recordings/record-123.ndjson",
+                  filePath: "/storage/emulated/0/Android/data/com.androperator.operator.dev/files/recordings/record-123.ndjson",
                 },
               },
             ],
@@ -53,14 +53,14 @@ describe("cmdRecordStart", () => {
       };
     };
 
-    assert.match(parsed.envelope?.hint ?? "", /recording stop --session-id record-123 --device emulator-5554 --operator-package com\.clawperator\.operator\.dev/);
+    assert.match(parsed.envelope?.hint ?? "", /recording stop --session-id record-123 --device emulator-5554 --operator-package com\.androperator\.operator\.dev/);
     assert.doesNotMatch(parsed.envelope?.hint ?? "", /--json/);
-    assert.match(parsed.envelope?.stepResults?.[0]?.data?.hint ?? "", /recording stop --session-id record-123 --device emulator-5554 --operator-package com\.clawperator\.operator\.dev/);
+    assert.match(parsed.envelope?.stepResults?.[0]?.data?.hint ?? "", /recording stop --session-id record-123 --device emulator-5554 --operator-package com\.androperator\.operator\.dev/);
     assert.doesNotMatch(parsed.envelope?.stepResults?.[0]?.data?.hint ?? "", /--json/);
     assert.strictEqual(parsed.envelope?.stepResults?.[0]?.data?.sessionId, "record-123");
     assert.strictEqual(
       parsed.envelope?.stepResults?.[0]?.data?.filePath,
-      "/storage/emulated/0/Android/data/com.clawperator.operator.dev/files/recordings/record-123.ndjson"
+      "/storage/emulated/0/Android/data/com.androperator.operator.dev/files/recordings/record-123.ndjson"
     );
   });
 
@@ -69,13 +69,13 @@ describe("cmdRecordStart", () => {
       {
         format: "pretty",
         deviceId: "emulator-5554",
-        operatorPackage: "com.clawperator.operator.dev",
+        operatorPackage: "com.androperator.operator.dev",
       },
       {
         runExecutionImpl: async () => ({
           ok: true,
           deviceId: "emulator-5554",
-          terminalSource: "clawperator_result",
+          terminalSource: "androperator_result",
           envelope: {
             commandId: "start_recording_123",
             taskId: "cli-record-start",
@@ -90,7 +90,7 @@ describe("cmdRecordStart", () => {
                   error: "RECORDING_ALREADY_IN_PROGRESS",
                   message: "Recording is already in progress",
                   sessionId: "record-123",
-                  filePath: "/storage/emulated/0/Android/data/com.clawperator.operator.dev/files/recordings/record-123.ndjson",
+                  filePath: "/storage/emulated/0/Android/data/com.androperator.operator.dev/files/recordings/record-123.ndjson",
                 },
               },
             ],
@@ -110,9 +110,9 @@ describe("cmdRecordStart", () => {
       };
     };
 
-    assert.match(parsed.envelope?.hint ?? "", /recording stop --session-id record-123 --device emulator-5554 --operator-package com\.clawperator\.operator\.dev/);
+    assert.match(parsed.envelope?.hint ?? "", /recording stop --session-id record-123 --device emulator-5554 --operator-package com\.androperator\.operator\.dev/);
     assert.doesNotMatch(parsed.envelope?.hint ?? "", /--json/);
-    assert.match(parsed.envelope?.stepResults?.[0]?.data?.hint ?? "", /recording stop --session-id record-123 --device emulator-5554 --operator-package com\.clawperator\.operator\.dev/);
+    assert.match(parsed.envelope?.stepResults?.[0]?.data?.hint ?? "", /recording stop --session-id record-123 --device emulator-5554 --operator-package com\.androperator\.operator\.dev/);
     assert.doesNotMatch(parsed.envelope?.stepResults?.[0]?.data?.hint ?? "", /--json/);
   });
 });

@@ -14,7 +14,7 @@ describe("logs command", () => {
   let stdoutOutput: string[];
 
   beforeEach(async () => {
-    tempRoot = await mkdtemp(join(tmpdir(), "clawperator-logs-test-"));
+    tempRoot = await mkdtemp(join(tmpdir(), "androperator-logs-test-"));
     stderrOutput = [];
     stdoutOutput = [];
     originalStderrWrite = process.stderr.write.bind(process.stderr);
@@ -59,7 +59,7 @@ describe("logs command", () => {
     const month = String(today.getMonth() + 1).padStart(2, "0");
     const day = String(today.getDate()).padStart(2, "0");
     const dateStr = `${year}-${month}-${day}`;
-    const logPath = join(logDir, `clawperator-${dateStr}.log`);
+    const logPath = join(logDir, `androperator-${dateStr}.log`);
 
     await mkdir(logDir, { recursive: true });
     const logLines = [
@@ -99,7 +99,7 @@ describe("logs command", () => {
     const month = String(today.getMonth() + 1).padStart(2, "0");
     const day = String(today.getDate()).padStart(2, "0");
     const dateStr = `${year}-${month}-${day}`;
-    const logPath = join(logDir, `clawperator-${dateStr}.log`);
+    const logPath = join(logDir, `androperator-${dateStr}.log`);
 
     await mkdir(logDir, { recursive: true });
     const initialLine = '{"ts":"2026-03-28T00:00:00Z","level":"info","event":"initial","message":"Initial"}\n';
@@ -141,7 +141,7 @@ describe("logs command", () => {
     const month = String(today.getMonth() + 1).padStart(2, "0");
     const day = String(today.getDate()).padStart(2, "0");
     const dateStr = `${year}-${month}-${day}`;
-    const logPath = join(logDir, `clawperator-${dateStr}.log`);
+    const logPath = join(logDir, `androperator-${dateStr}.log`);
 
     await mkdir(logDir, { recursive: true });
     await writeFile(logPath, '{"ts":"2026-03-28T00:00:00Z","level":"info","event":"test","message":"Test"}\n');
@@ -164,15 +164,15 @@ describe("logs command", () => {
     assert.strictEqual(process.exitCode, 0, "exitCode should be 0 after SIGINT");
   });
 
-  it("uses CLAWPERATOR_LOG_DIR environment variable", async () => {
+  it("uses ANDROPERATOR_LOG_DIR environment variable", async () => {
     process.stderr.write = (chunk: string | Buffer) => {
       stderrOutput.push(chunk.toString());
       return true;
     };
 
     const envLogDir = join(tempRoot, "env-logs");
-    const originalEnv = process.env.CLAWPERATOR_LOG_DIR;
-    process.env.CLAWPERATOR_LOG_DIR = envLogDir;
+    const originalEnv = process.env.ANDROPERATOR_LOG_DIR;
+    process.env.ANDROPERATOR_LOG_DIR = envLogDir;
 
     try {
       const { cmdLogs } = await import("../../cli/commands/logs.js");
@@ -182,9 +182,9 @@ describe("logs command", () => {
       assert.ok(stderr.includes(envLogDir), `Expected envLogDir in stderr, got: ${stderr}`);
     } finally {
       if (originalEnv) {
-        process.env.CLAWPERATOR_LOG_DIR = originalEnv;
+        process.env.ANDROPERATOR_LOG_DIR = originalEnv;
       } else {
-        delete process.env.CLAWPERATOR_LOG_DIR;
+        delete process.env.ANDROPERATOR_LOG_DIR;
       }
     }
   });
@@ -197,8 +197,8 @@ describe("logs command log path format", () => {
     const month = String(today.getMonth() + 1).padStart(2, "0");
     const day = String(today.getDate()).padStart(2, "0");
     const expectedDate = `${year}-${month}-${day}`;
-    const expectedFilename = `clawperator-${expectedDate}.log`;
+    const expectedFilename = `androperator-${expectedDate}.log`;
 
-    assert.ok(/clawperator-\d{4}-\d{2}-\d{2}\.log/.test(expectedFilename));
+    assert.ok(/androperator-\d{4}-\d{2}-\d{2}\.log/.test(expectedFilename));
   });
 });

@@ -26,14 +26,14 @@ Recommended current loop:
 The code-backed defaults that shape this loop are:
 
 - skill runtime timeout default: `120000`
-- default Operator package for skill runs: `com.clawperator.operator`
+- default Operator package for skill runs: `com.androperator.operator`
 - install/update sync target: `main`
-- default installed skills repo: `~/.clawperator/skills`
-- default installed registry path: `~/.clawperator/skills/skills/skills-registry.json`
+- default installed skills repo: `~/.androperator/skills`
+- default installed registry path: `~/.androperator/skills/skills/skills-registry.json`
 
 Performance rule for authored skills:
 
-- `clawperator exec` uses the daemon proxy by default when the daemon is
+- `androperator exec` uses the daemon proxy by default when the daemon is
   available; pass `--no-daemon` only for targeted direct-execution comparison
   or diagnosis
 - daemon-backed skill loops are fastest when the skill makes small, truthful
@@ -52,7 +52,7 @@ Performance rule for authored skills:
 ## Step 1: Scaffold
 
 ```bash
-clawperator skills new com.example.app.do-thing --summary "Do one deterministic workflow"
+androperator skills new com.example.app.do-thing --summary "Do one deterministic workflow"
 ```
 
 This gives you:
@@ -77,15 +77,15 @@ Success response:
     "/abs/path/to/skills/com.example.app.do-thing/scripts/run.js",
     "/abs/path/to/skills/com.example.app.do-thing/scripts/run.sh"
   ],
-  "next": "Edit SKILL.md and scripts/run.js, then verify with: clawperator skills validate <skill_id>"
+  "next": "Edit SKILL.md and scripts/run.js, then verify with: androperator skills validate <skill_id>"
 }
 ```
 
 Verification pattern:
 
 ```bash
-clawperator skills new com.example.app.do-thing --summary "Do one deterministic workflow"
-clawperator skills get com.example.app.do-thing
+androperator skills new com.example.app.do-thing --summary "Do one deterministic workflow"
+androperator skills get com.example.app.do-thing
 ```
 
 Confirm:
@@ -122,13 +122,13 @@ Common scaffold failures:
 Single skill:
 
 ```bash
-clawperator skills validate com.example.app.do-thing --dry-run
+androperator skills validate com.example.app.do-thing --dry-run
 ```
 
 All skills:
 
 ```bash
-clawperator skills validate --all --dry-run
+androperator skills validate --all --dry-run
 ```
 
 Why `--dry-run` matters:
@@ -210,8 +210,8 @@ All-skills success response:
 Verification pattern:
 
 ```bash
-clawperator skills validate com.example.app.do-thing --dry-run
-clawperator skills validate --all --dry-run
+androperator skills validate com.example.app.do-thing --dry-run
+androperator skills validate --all --dry-run
 ```
 
 Check:
@@ -267,7 +267,7 @@ Common validation failures:
 Use explicit device targeting when more than one device is connected:
 
 ```bash
-clawperator skills run com.example.app.do-thing --device <device_serial> --operator-package com.clawperator.operator.dev --timeout 90000
+androperator skills run com.example.app.do-thing --device <device_serial> --operator-package com.androperator.operator.dev --timeout 90000
 ```
 
 Argument rules:
@@ -278,13 +278,13 @@ Argument rules:
 Example with forwarded args:
 
 ```bash
-clawperator skills run com.example.app.do-thing --device <device_serial> -- --mode smoke --limit 3
+androperator skills run com.example.app.do-thing --device <device_serial> -- --mode smoke --limit 3
 ```
 
 Exact wrapper rules to keep in mind:
 
 - `--device <serial>` is prepended to the script arguments only when provided
-- the skill wrapper injects `CLAWPERATOR_BIN` and `CLAWPERATOR_OPERATOR_PACKAGE` into the child environment
+- the skill wrapper injects `ANDROPERATOR_BIN` and `ANDROPERATOR_OPERATOR_PACKAGE` into the child environment
 - `.js` scripts run with `process.execPath`
 - the wrapper chooses `.js` first, then `.sh`, then the first listed script
 - JSON mode suppresses the pretty banner so stdout stays machine-readable
@@ -293,7 +293,7 @@ Exact wrapper rules to keep in mind:
 Verification pattern:
 
 ```bash
-clawperator skills run com.example.app.do-thing --device <device_serial> --operator-package com.clawperator.operator.dev --timeout 90000
+androperator skills run com.example.app.do-thing --device <device_serial> --operator-package com.androperator.operator.dev --timeout 90000
 ```
 
 First-time agent pitfall:
@@ -365,7 +365,7 @@ Additional execution failures to expect:
 For lightweight output assertions:
 
 ```bash
-clawperator skills run com.example.app.do-thing --device <device_serial> --expect-contains RESULT
+androperator skills run com.example.app.do-thing --device <device_serial> --expect-contains RESULT
 ```
 
 Behavior:
@@ -391,7 +391,7 @@ Assertion failure shape:
 Verification pattern:
 
 ```bash
-clawperator skills run com.example.app.do-thing --device <device_serial> --expect-contains RESULT
+androperator skills run com.example.app.do-thing --device <device_serial> --expect-contains RESULT
 ```
 
 Check that:
@@ -401,7 +401,7 @@ Check that:
 
 ## HTTP Testing Pattern
 
-When using `clawperator serve`, the matching route is:
+When using `androperator serve`, the matching route is:
 
 ```http
 POST /skills/:skillId/run
@@ -490,9 +490,9 @@ Verification pattern:
 Current sync commands:
 
 ```bash
-clawperator skills install
-clawperator skills update [--ref <git-ref>]
-clawperator skills sync --ref <git-ref>
+androperator skills install
+androperator skills update [--ref <git-ref>]
+androperator skills sync --ref <git-ref>
 ```
 
 Behavior:
@@ -508,8 +508,8 @@ Exact success shapes:
 ```json
 {
   "synced": true,
-  "message": "Skills synced to /Users/<local_user>/.clawperator/skills (ref: main)",
-  "registryPath": "/Users/<local_user>/.clawperator/skills/skills/skills-registry.json"
+  "message": "Skills synced to /Users/<local_user>/.androperator/skills (ref: main)",
+  "registryPath": "/Users/<local_user>/.androperator/skills/skills/skills-registry.json"
 }
 ```
 
@@ -518,24 +518,24 @@ Exact success shapes:
 ```json
 {
   "synced": true,
-  "message": "Skills synced to /Users/<local_user>/.clawperator/skills (ref: main)"
+  "message": "Skills synced to /Users/<local_user>/.androperator/skills (ref: main)"
 }
 ```
 
 Verification pattern:
 
 ```bash
-clawperator skills install
-clawperator skills update
-clawperator skills sync --ref main
+androperator skills install
+androperator skills update
+androperator skills sync --ref main
 ```
 
 Check:
 
 - `synced` is `true`
-- `registryPath` from `skills install` ends with `~/.clawperator/skills/skills/skills-registry.json`
-- after install, `clawperator skills list` succeeds in a fresh shell without exporting `CLAWPERATOR_SKILLS_REGISTRY`
-- set `CLAWPERATOR_SKILLS_REGISTRY` only when pointing at a non-standard registry path
+- `registryPath` from `skills install` ends with `~/.androperator/skills/skills/skills-registry.json`
+- after install, `androperator skills list` succeeds in a fresh shell without exporting `ANDROPERATOR_SKILLS_REGISTRY`
+- set `ANDROPERATOR_SKILLS_REGISTRY` only when pointing at a non-standard registry path
 
 Common sync failures:
 
@@ -556,7 +556,7 @@ Common sync failures:
 ```json
 {
   "code": "SKILLS_SYNC_FAILED",
-  "message": "Registry file not found or unreadable after sync: ENOENT: no such file or directory, open '/Users/<local_user>/.clawperator/skills/skills/skills-registry.json'. Expected at /Users/<local_user>/.clawperator/skills/skills/skills-registry.json"
+  "message": "Registry file not found or unreadable after sync: ENOENT: no such file or directory, open '/Users/<local_user>/.androperator/skills/skills/skills-registry.json'. Expected at /Users/<local_user>/.androperator/skills/skills/skills-registry.json"
 }
 ```
 
@@ -566,13 +566,13 @@ Common sync failures:
 
 Cause:
 
-- `CLAWPERATOR_SKILLS_REGISTRY` missing or wrong
+- `ANDROPERATOR_SKILLS_REGISTRY` missing or wrong
 - registry file does not exist
 
 Fix:
 
 - set the env var to the correct registry
-- or run `clawperator skills install`
+- or run `androperator skills install`
 
 ### `SKILL_SCRIPT_NOT_FOUND`
 
@@ -642,10 +642,10 @@ Fix:
 ## Recommended Local Loop
 
 ```bash
-clawperator skills new com.example.app.do-thing --summary "Describe it"
-clawperator skills validate com.example.app.do-thing --dry-run
-clawperator skills run com.example.app.do-thing --device <device_serial> --operator-package com.clawperator.operator.dev
-clawperator skills run com.example.app.do-thing --device <device_serial> --expect-contains RESULT
+androperator skills new com.example.app.do-thing --summary "Describe it"
+androperator skills validate com.example.app.do-thing --dry-run
+androperator skills run com.example.app.do-thing --device <device_serial> --operator-package com.androperator.operator.dev
+androperator skills run com.example.app.do-thing --device <device_serial> --expect-contains RESULT
 ```
 
 Repeat until:

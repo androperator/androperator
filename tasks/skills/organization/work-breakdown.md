@@ -67,7 +67,7 @@ Read these files IN THIS ORDER before writing anything.
 | `apps/node/src/test/unit/cliHelp.test.ts` | Help-text and command-surface regression patterns |
 | `apps/node/src/test/unit/doctor/hostChecks.test.ts` | Doctor regression patterns |
 | `validation/install/README.md` | Canonical installer validation entrypoint and maintenance rule |
-| `sites/landing-clawperator/public/install.sh` | Current installer text and agent-guide generation |
+| `sites/androperator-public/install.sh` | Current installer text and agent-guide generation |
 | `docs/api/doctor.md` | Public doctor-check reference page carrying the id that must flip in Phase 3 |
 | `docs/host-agents.md` | Main public docs page for the host-agent front doors |
 | `.agents/skills/docs-author/SKILL.md` | Required workflow for authored public docs touched in Phases 2 and 3 |
@@ -92,8 +92,8 @@ first-party bundled skills, and remove the symlink-swapping pack mechanism.
 
 ### Files or Surfaces To Change
 
-- `.agents/skills/clawperator-agent-orientation/`
-- `.agents/skills/clawperator-upgrade/`
+- `.agents/skills/androperator-agent-orientation/`
+- `.agents/skills/androperator-upgrade/`
 - `.agents/skills/skill-author-by-agent-discovery/`
 - `.agents/skills/skill-author-by-recording/`
 - `apps/node/bundled-skills/`
@@ -178,13 +178,13 @@ skill ids while keeping the public noun `agent-skills` unchanged until PR-2.
 
 ### Files or Surfaces To Change
 
-- `apps/node/bundled-skills/clawperator-agent-orientation/`
-- `apps/node/bundled-skills/clawperator-upgrade/`
+- `apps/node/bundled-skills/androperator-agent-orientation/`
+- `apps/node/bundled-skills/androperator-upgrade/`
 - `apps/node/bundled-skills/skill-author-by-agent-discovery/`
 - `apps/node/bundled-skills/skill-author-by-recording/`
-- `.agents/skills/clawperator-agent-orientation/SKILL.md`
-- `.agents/skills/clawperator-upgrade/SKILL.md`
-- `sites/landing-clawperator/public/install.sh`
+- `.agents/skills/androperator-agent-orientation/SKILL.md`
+- `.agents/skills/androperator-upgrade/SKILL.md`
+- `sites/androperator-public/install.sh`
 - `validation/install/test_agent_skills.sh`
 - `validation/install/test_main.sh`
 - `docs/host-agents.md`
@@ -201,13 +201,13 @@ skill ids while keeping the public noun `agent-skills` unchanged until PR-2.
 
 1. Use `git mv` to rename the two bundled-skill directories:
    - `apps/node/bundled-skills/skill-author-by-agent-discovery` ->
-     `apps/node/bundled-skills/clawperator-skill-author-by-agent-discovery`
+     `apps/node/bundled-skills/androperator-skill-author-by-agent-discovery`
    - `apps/node/bundled-skills/skill-author-by-recording` ->
-     `apps/node/bundled-skills/clawperator-skill-author-by-recording`
+     `apps/node/bundled-skills/androperator-skill-author-by-recording`
 2. Update the four shipped `SKILL.md` files:
    - final `name:` values must match the four final ids from `plan.md`
-   - each description must begin with `Clawperator first-party bundled skill.`
-   - the first paragraph of the discovery skill body must name Clawperator
+   - each description must begin with `Androperator first-party bundled skill.`
+   - the first paragraph of the discovery skill body must name Androperator
      explicitly
 3. Update every repo reference to the final four skill ids. Search broadly with
    `rg` before editing so installer guidance, docs, tests, eval fixtures, and
@@ -228,7 +228,7 @@ skill ids while keeping the public noun `agent-skills` unchanged until PR-2.
 ### Acceptance Criteria
 
 - the four bundled-skill directories have the final names from `plan.md`
-- all four shipped `SKILL.md` files advertise themselves as Clawperator
+- all four shipped `SKILL.md` files advertise themselves as Androperator
   first-party bundled skills
 - repo references to the old bare `skill-author-by-*` ids are gone outside the
   historical findings file and this task pack
@@ -284,7 +284,7 @@ eval expectations, with no backwards-compatibility layer for the old surface.
 - `apps/node/src/test/unit/agentSkills.test.ts`
 - `apps/node/src/test/unit/cliHelp.test.ts`
 - `apps/node/src/test/unit/doctor/hostChecks.test.ts`
-- `sites/landing-clawperator/public/install.sh`
+- `sites/androperator-public/install.sh`
 - `validation/install/test_agent_skills.sh`
 - `validation/install/test_main.sh`
 - `validation/install/README.md`
@@ -301,12 +301,12 @@ eval expectations, with no backwards-compatibility layer for the old surface.
 
 ### Steps
 
-1. Rename the primary command surface to `clawperator bundled-skills`. Register
+1. Rename the primary command surface to `androperator bundled-skills`. Register
    no alias for `agent-skills`. Keep the existing JSON envelope keys
    (`skills`, `count`, `installedDir`, `agentDiscoveryDirs`) unchanged.
-2. Rename the primary install dir to `~/.clawperator/bundled-skills/` and the
-   primary packaged-source env var to `CLAWPERATOR_BUNDLED_SKILLS`. Do not keep
-   `CLAWPERATOR_AGENT_SKILLS` fallback logic or old install-dir fallback logic.
+2. Rename the primary install dir to `~/.androperator/bundled-skills/` and the
+   primary packaged-source env var to `ANDROPERATOR_BUNDLED_SKILLS`. Do not keep
+   `ANDROPERATOR_AGENT_SKILLS` fallback logic or old install-dir fallback logic.
 3. Rename the primary doctor check id to `host.bundled-skills.staleness` and
    update fix text to use the new command noun. Keep the stable registered
    error code `ERROR_CODES.AGENT_SKILLS_STALE` unchanged in this task.
@@ -341,12 +341,12 @@ eval expectations, with no backwards-compatibility layer for the old surface.
    for authored docs updates. Public docs should teach `bundled-skills` as the
    primary term and remove `agent-skills` from live product guidance.
 9. Update tests in the same phase. Required cases:
-   - `clawperator bundled-skills --help` works
-   - `clawperator agent-skills --help` fails with the standard unknown-command
+   - `androperator bundled-skills --help` works
+   - `androperator agent-skills --help` fails with the standard unknown-command
      exit code (no alias registered)
    - the new install dir is the primary resolved dir
-   - `CLAWPERATOR_BUNDLED_SKILLS` overrides the source dir
-   - `CLAWPERATOR_AGENT_SKILLS` is not honored
+   - `ANDROPERATOR_BUNDLED_SKILLS` overrides the source dir
+   - `ANDROPERATOR_AGENT_SKILLS` is not honored
    - install and list commands emit the renamed `BUNDLED_SKILLS_*` error
      codes on the failure paths
    - doctor results use `host.bundled-skills.staleness` with the
@@ -358,10 +358,10 @@ eval expectations, with no backwards-compatibility layer for the old surface.
 
 ### Acceptance Criteria
 
-- `clawperator bundled-skills` is the documented and tested primary command
-- `clawperator agent-skills` returns the standard unknown-command error
-- the primary install dir is `~/.clawperator/bundled-skills/`
-- the primary env var is `CLAWPERATOR_BUNDLED_SKILLS` with no fallback
+- `androperator bundled-skills` is the documented and tested primary command
+- `androperator agent-skills` returns the standard unknown-command error
+- the primary install dir is `~/.androperator/bundled-skills/`
+- the primary env var is `ANDROPERATOR_BUNDLED_SKILLS` with no fallback
 - doctor results use `host.bundled-skills.staleness` while keeping
   `ERROR_CODES.AGENT_SKILLS_STALE`
 - the ad-hoc install and list error-code strings use `BUNDLED_SKILLS_*`
@@ -387,7 +387,7 @@ npm --prefix apps/node run test
 uv --project evals run pytest evals/harness/test_run_eval.py evals/harness/test_rescore.py
 node apps/node/dist/cli/index.js bundled-skills --help
 node apps/node/dist/cli/index.js agent-skills --help ; [ $? -ne 0 ]
-rg -n "host\\.agent-skills\\.staleness|CLAWPERATOR_AGENT_SKILLS|~/.clawperator/agent-skills|clawperator agent-skills|Agent-skills |Setting up agent-skills|AGENT_SKILLS_SOURCE_NOT_FOUND|AGENT_SKILLS_SOURCE_EMPTY|AGENT_SKILLS_INSTALL_FAILED|AGENT_SKILLS_LIST_FAILED" apps/node docs sites/landing-clawperator/public validation evals .agents/skills
+rg -n "host\\.agent-skills\\.staleness|ANDROPERATOR_AGENT_SKILLS|~/.androperator/agent-skills|androperator agent-skills|Agent-skills |Setting up agent-skills|AGENT_SKILLS_SOURCE_NOT_FOUND|AGENT_SKILLS_SOURCE_EMPTY|AGENT_SKILLS_INSTALL_FAILED|AGENT_SKILLS_LIST_FAILED" apps/node docs sites/landing-clawperator/public validation evals .agents/skills
 ```
 
 Review the final `rg` output manually. Any remaining matches must be deliberate

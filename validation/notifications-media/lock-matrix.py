@@ -11,8 +11,8 @@ import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PACKAGE = 'com.clawperator.fixture.media'
-OPERATOR = 'com.clawperator.operator.dev'
+PACKAGE = 'com.androperator.fixture.media'
+OPERATOR = 'com.androperator.operator.dev'
 
 
 def main():
@@ -86,11 +86,11 @@ def main():
                 before = sample()
                 command_id = 'locked-mixed-' + str(uuid.uuid4())
                 command = {'commandId': command_id, 'taskId': 'locked-mixed', 'source': 'validation', 'expectedFormat': 'android-ui-automator', 'timeoutMs': 3000, 'actions': actions}
-                adb('am', 'broadcast', '-a', 'app.clawperator.operator.ACTION_AGENT_COMMAND', '-p', OPERATOR, '--es', 'payload', json.dumps(command), '--receiver-foreground')
+                adb('am', 'broadcast', '-a', 'app.androperator.operator.ACTION_AGENT_COMMAND', '-p', OPERATOR, '--es', 'payload', json.dumps(command), '--receiver-foreground')
                 deadline = time.monotonic() + 10
                 while True:
                     logs = adb('logcat', '-d', '-v', 'raw')
-                    matches = [line.split('[Clawperator-Result] ', 1)[1] for line in logs.splitlines() if '[Clawperator-Result] ' in line and command_id in line]
+                    matches = [line.split('[Androperator-Result] ', 1)[1] for line in logs.splitlines() if '[Androperator-Result] ' in line and command_id in line]
                     if matches:
                         break
                     assert time.monotonic() < deadline, 'Missing mixed-execution rejection'
@@ -148,7 +148,7 @@ def main():
         grant = adb('locksettings', 'set-pin', pin)
         assert 'Pin set to' in grant, 'Could not create a temporary PIN; use an emulator without an existing credential'
         created = True
-        adb('am', 'broadcast', '--receiver-foreground', '-n', PACKAGE + '/clawperator.operator.debug.MediaProofActivity$Control', '--es', 'operation', 'resume')
+        adb('am', 'broadcast', '--receiver-foreground', '-n', PACKAGE + '/androperator.operator.debug.MediaProofActivity$Control', '--es', 'operation', 'resume')
         set_screen(True)
         set_screen(False)
         observations('secure-off')
@@ -167,7 +167,7 @@ def main():
         set_screen(False)
         observations('secure-relocked-off')
         for operation, expected_error in [('ignore', 'MEDIA_POSTCONDITION_TIMEOUT'), ('replace-on-seek', 'MEDIA_SESSION_EXPIRED')]:
-            adb('am', 'broadcast', '--receiver-foreground', '-n', PACKAGE + '/clawperator.operator.debug.MediaProofActivity$Control', '--es', 'operation', operation)
+            adb('am', 'broadcast', '--receiver-foreground', '-n', PACKAGE + '/androperator.operator.debug.MediaProofActivity$Control', '--es', 'operation', operation)
             before = sample()
             result = run(['node', 'apps/node/dist/cli/index.js', 'media', 'seek', '--session', args.session, '--position-ms', '40000', '--wait-timeout-ms', '500', '--position-tolerance-ms', '0', '--device', args.device, '--operator-package', OPERATOR, '--no-daemon'])
             assert result.stdout.strip(), f'CLI returned no JSON: {result.stderr}'
@@ -180,7 +180,7 @@ def main():
             for key in ['screenOnEvents', 'screenOffEvents', 'deviceLocked', 'screenOn']:
                 assert after[key] == before[key], (before, after)
             records.append({'lockedFailure': operation, 'result': value, 'before': before, 'after': after})
-            adb('am', 'broadcast', '--receiver-foreground', '-n', PACKAGE + '/clawperator.operator.debug.MediaProofActivity$Control', '--es', 'operation', 'normal')
+            adb('am', 'broadcast', '--receiver-foreground', '-n', PACKAGE + '/androperator.operator.debug.MediaProofActivity$Control', '--es', 'operation', 'normal')
     finally:
         (args.output / 'lock-matrix.json').write_text(json.dumps(records, indent=2))
         try:

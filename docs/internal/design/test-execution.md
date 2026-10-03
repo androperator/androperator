@@ -62,8 +62,8 @@ Device tests never run by default. Select a suite and pass an explicit serial:
 `instrumentation` runs Gradle's debug connected Android tests using
 `ANDROID_SERIAL`. `mcp-device` builds Node and runs the MCP stdio smoke harness
 against the selected connected device. Install and enable the matching Operator
-first; the MCP harness defaults to `com.clawperator.operator.dev`. Set
-`CLAWPERATOR_OPERATOR_PACKAGE` for explicit release validation. Device suites
+first; the MCP harness defaults to `com.androperator.operator.dev`. Set
+`ANDROPERATOR_OPERATOR_PACKAGE` for explicit release validation. Device suites
 can interact with the screen and require adb and a ready device.
 
 The sensitive-hierarchy API 35 emulator proof remains in the manually dispatched

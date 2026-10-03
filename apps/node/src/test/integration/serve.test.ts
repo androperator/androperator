@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { createClawperatorLogger } from "../../adapters/logger.js";
+import { createAndroperatorLogger } from "../../adapters/logger.js";
 import { ERROR_CODES } from "../../contracts/errors.js";
 
 async function createTempRegistryWithSkill(options: {
@@ -15,7 +15,7 @@ async function createTempRegistryWithSkill(options: {
   skillJsonContents: string;
   registrySkillEntry: Record<string, unknown>;
 }): Promise<{ registryPath: string; cleanup: () => Promise<void> }> {
-  const root = await mkdtemp(join(tmpdir(), "clawperator-serve-skill-registry-"));
+  const root = await mkdtemp(join(tmpdir(), "androperator-serve-skill-registry-"));
   const skillDir = join(root, "skills", options.skillId);
   const scriptsDir = join(skillDir, "scripts");
   await mkdir(scriptsDir, { recursive: true });
@@ -45,12 +45,12 @@ async function createTempRegistryWithSkill(options: {
 describe("serve API integration", () => {
   let server: Server;
   let port: number;
-  const previousRegistryPath = process.env.CLAWPERATOR_SKILLS_REGISTRY;
+  const previousRegistryPath = process.env.ANDROPERATOR_SKILLS_REGISTRY;
   const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
   const testRegistryPath = join(packageRoot, "src", "test", "fixtures", "skills", "skills-registry.json");
 
   before(async () => {
-    process.env.CLAWPERATOR_SKILLS_REGISTRY = testRegistryPath;
+    process.env.ANDROPERATOR_SKILLS_REGISTRY = testRegistryPath;
     server = await startServer({
       port: 0,
       host: "localhost",
@@ -80,9 +80,9 @@ describe("serve API integration", () => {
       });
     }
     if (previousRegistryPath === undefined) {
-      delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+      delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
     } else {
-      process.env.CLAWPERATOR_SKILLS_REGISTRY = previousRegistryPath;
+      process.env.ANDROPERATOR_SKILLS_REGISTRY = previousRegistryPath;
     }
   });
 
@@ -414,7 +414,7 @@ describe("serve API integration", () => {
   });
 
   test("POST /skills/:skillId/run fails before spawn when the device is not interactive", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-serve-skill-no-spawn-"));
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-serve-skill-no-spawn-"));
     const markerPath = join(tempRoot, "spawned.txt");
     const scriptPath = join(tempRoot, "run.js");
     await writeFile(
@@ -441,12 +441,12 @@ describe("serve API integration", () => {
     });
     await writeFile(
       join(dirname(registry.registryPath), skillId, "SKILL.md"),
-      `---\nname: ${skillId}\nclawperator-skill-type: replay\ndescription: |-\n  No spawn proof\n---\n\n# ${skillId}\n`,
+      `---\nname: ${skillId}\nandroperator-skill-type: replay\ndescription: |-\n  No spawn proof\n---\n\n# ${skillId}\n`,
       "utf8"
     );
 
-    const originalRegistryPath = process.env.CLAWPERATOR_SKILLS_REGISTRY;
-    process.env.CLAWPERATOR_SKILLS_REGISTRY = registry.registryPath;
+    const originalRegistryPath = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+    process.env.ANDROPERATOR_SKILLS_REGISTRY = registry.registryPath;
 
     const blockingServer = await startServer({
       port: 0,
@@ -488,9 +488,9 @@ describe("serve API integration", () => {
         blockingServer.close((err) => (err ? reject(err) : resolve()));
       });
       if (originalRegistryPath === undefined) {
-        delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
       } else {
-        process.env.CLAWPERATOR_SKILLS_REGISTRY = originalRegistryPath;
+        process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistryPath;
       }
       await registry.cleanup();
       await rm(tempRoot, { recursive: true, force: true });
@@ -528,12 +528,12 @@ describe("serve API integration", () => {
     });
     await writeFile(
       join(dirname(registry.registryPath), skillId, "SKILL.md"),
-      `---\nname: ${skillId}\nclawperator-skill-type: replay\ndescription: |-\n  No spawn proof\n---\n\n# ${skillId}\n`,
+      `---\nname: ${skillId}\nandroperator-skill-type: replay\ndescription: |-\n  No spawn proof\n---\n\n# ${skillId}\n`,
       "utf8"
     );
 
-    const originalRegistryPath = process.env.CLAWPERATOR_SKILLS_REGISTRY;
-    process.env.CLAWPERATOR_SKILLS_REGISTRY = registry.registryPath;
+    const originalRegistryPath = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+    process.env.ANDROPERATOR_SKILLS_REGISTRY = registry.registryPath;
 
     const blockingServer = await startServer({
       port: 0,
@@ -582,9 +582,9 @@ describe("serve API integration", () => {
         blockingServer.close((err) => (err ? reject(err) : resolve()));
       });
       if (originalRegistryPath === undefined) {
-        delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
       } else {
-        process.env.CLAWPERATOR_SKILLS_REGISTRY = originalRegistryPath;
+        process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistryPath;
       }
       await registry.cleanup();
       await rm(tempRoot, { recursive: true, force: true });
@@ -713,8 +713,8 @@ describe("serve API integration", () => {
       },
     });
 
-    const previousRegistryPathForTest = process.env.CLAWPERATOR_SKILLS_REGISTRY;
-    process.env.CLAWPERATOR_SKILLS_REGISTRY = temp.registryPath;
+    const previousRegistryPathForTest = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+    process.env.ANDROPERATOR_SKILLS_REGISTRY = temp.registryPath;
     try {
       const res = await fetch(`http://localhost:${port}/skills/com.test.serve-stale-registry-contract/run`, {
         method: "POST",
@@ -734,9 +734,9 @@ describe("serve API integration", () => {
       assert.match(body.error?.message ?? "", /metadata does not match the registry entry/i);
     } finally {
       if (previousRegistryPathForTest === undefined) {
-        delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+        delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
       } else {
-        process.env.CLAWPERATOR_SKILLS_REGISTRY = previousRegistryPathForTest;
+        process.env.ANDROPERATOR_SKILLS_REGISTRY = previousRegistryPathForTest;
       }
       await temp.cleanup();
     }
@@ -871,7 +871,7 @@ describe("serve API integration", () => {
     assert.strictEqual(body.ok, false);
     assert.strictEqual(body.error.code, "SKILL_RESULT_PARSE_FAILED");
     assert.strictEqual(body.error.skillResult, null);
-    assert.ok(body.error.stdout?.includes("[Clawperator-Skill-Result]"));
+    assert.ok(body.error.stdout?.includes("[Androperator-Skill-Result]"));
   });
 
   test("POST /skills/:skillId/run reports timeout instead of parse failure for a partial framed result", async () => {
@@ -997,27 +997,27 @@ describe("serve API integration", () => {
         body: JSON.stringify({ execution: executionInput, deviceId: "non-existent" }),
       }).catch(() => {});
 
-      // 3. Look for 'clawperator:execution' in the stream
+      // 3. Look for 'androperator:execution' in the stream
       let foundEvent = false;
       const startTime = Date.now();
       while (Date.now() - startTime < 3000) {
         const { value, done } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value);
-        if (chunk.includes("event: clawperator:execution")) {
+        if (chunk.includes("event: androperator:execution")) {
           foundEvent = true;
           break;
         }
       }
-      assert.ok(foundEvent, "Did not receive clawperator:execution event in SSE stream");
+      assert.ok(foundEvent, "Did not receive androperator:execution event in SSE stream");
     } finally {
       await reader.cancel();
     }
   });
 
   test("serve.server.started appears in log file when logger is provided", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-serve-log-"));
-    const logger = createClawperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-serve-log-"));
+    const logger = createAndroperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
 
     const testServer = await startServer({ port: 0, host: "localhost", verbose: false, logger });
     const addr = testServer.address();
@@ -1046,8 +1046,8 @@ describe("serve API integration", () => {
   });
 
   test("POST /execute applies skillRunId to request logs without daemon process inheritance", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-serve-skillrun-log-"));
-    const logger = createClawperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-serve-skillrun-log-"));
+    const logger = createAndroperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
     const skillRunId = "skillrun_request_scope_test";
 
     const testServer = await startServer({ port: 0, host: "localhost", verbose: false, logger });
@@ -1087,8 +1087,8 @@ describe("serve API integration", () => {
   });
 
   test("POST /skills/:skillId/run correlates preflight failure logs", async () => {
-    const tempRoot = await mkdtemp(join(tmpdir(), "clawperator-serve-skill-preflight-log-"));
-    const logger = createClawperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
+    const tempRoot = await mkdtemp(join(tmpdir(), "androperator-serve-skill-preflight-log-"));
+    const logger = createAndroperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
 
     const testServer = await startServer({
       port: 0,

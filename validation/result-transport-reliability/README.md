@@ -9,7 +9,7 @@ Failed read-only queries are retained while the fixed series continues.
 
 ```sh
 python3 validation/result-transport-reliability/run.py \
-  --device <device_serial> --operator-package com.clawperator.operator.dev \
+  --device <device_serial> --operator-package com.androperator.operator.dev \
   --trace-adb-shell \
   --apk apps/android/app/build/outputs/apk/debug/app-debug.apk \
   --out /tmp/result-transport-debug

@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "clawperator.task"
+    namespace = "androperator.task"
     compileSdk = 35
 
     defaultConfig {

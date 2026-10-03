@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "clawperator.data.content"
+    namespace = "androperator.data.content"
     compileSdk = 35
 
     defaultConfig {

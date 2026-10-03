@@ -1,6 +1,6 @@
 ---
 name: release-verify
-description: Verify a published Clawperator release across tags, workflows, packages, APKs, and checksums.
+description: Verify a published Androperator release across tags, workflows, packages, APKs, and checksums.
 ---
 
 Use this skill after a release tag has already been pushed and the release workflows have had time to finish.
@@ -9,10 +9,10 @@ This skill verifies:
 1. The requested `v<version>` tag exists and resolves to a commit.
 2. The `Publish npm Package` and `Release APK` workflows completed successfully for that tag.
 3. A GitHub Release exists for the tag with the expected APK and checksum assets.
-4. npm contains `clawperator@<version>`.
-5. `https://downloads.clawperator.com/operator/latest.json` points at the requested version.
+4. npm contains `androperator@<version>`.
+5. `https://downloads.androperator.com/operator/latest.json` points at the requested version.
 6. The immutable APK and checksum URLs exist and agree with `latest.json`.
-7. `https://clawperator.com/operator.apk` redirects to the immutable APK URL for the same version.
+7. `https://androperator.com/operator.apk` redirects to the immutable APK URL for the same version.
 
 Run:
 

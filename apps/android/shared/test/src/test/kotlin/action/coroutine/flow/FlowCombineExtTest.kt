@@ -1,8 +1,8 @@
 package action.coroutine.flow
 
 import app.cash.turbine.test
-import clawperator.test.ActionTest
-import clawperator.test.actionTest
+import androperator.test.ActionTest
+import androperator.test.actionTest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.test.Test
 import kotlin.test.assertEquals

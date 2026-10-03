@@ -2,9 +2,9 @@
 
 ## Purpose
 
-The eval harness measures whether an unfamiliar agent can use Clawperator to
+The eval harness measures whether an unfamiliar agent can use Androperator to
 operate a connected Android device and complete a task on a real target. It
-also measures whether the same run can emit a reusable Clawperator skill and
+also measures whether the same run can emit a reusable Androperator skill and
 replay that skill deterministically.
 
 The harness is a measurement tool, not a planner. Agent reasoning stays
@@ -25,8 +25,8 @@ internal source and docs. The harness does not sandbox filesystem access.
 
 `local-dev` uses the branch-local Node CLI build at
 `apps/node/dist/cli/index.js` and the debug Operator APK
-`com.clawperator.operator.dev`. `published` uses the globally installed
-`clawperator` binary and the release Operator APK `com.clawperator.operator`.
+`com.androperator.operator.dev`. `published` uses the globally installed
+`androperator` binary and the release Operator APK `com.androperator.operator`.
 
 Doctor preflight runs before the agent is spawned. The harness also keeps
 `ANDROID_SERIAL` in the agent environment and passes the selected device as an
@@ -44,7 +44,7 @@ If preflight fails before the agent starts, the harness still writes
 `config.json` and `result.json`. Those artifacts keep the generic
 `outcome.failure_reason` such as `doctor_preflight_failed`, and they also add a
 `preflight` block with structured doctor diagnostics when the failing step was
-`clawperator doctor`. Public-surface runs keep only the minimal
+`androperator doctor`. Public-surface runs keep only the minimal
 `doctor_failure.code` and `doctor_failure.summary` in that block. Full-repo
 runs also keep the raw `doctor_report` so engineers can inspect the full doctor
 payload when the repo surface is already exposed.
@@ -94,9 +94,9 @@ The skill prompt variant instructs the agent to emit a skill block between the
 exact markers:
 
 ```text
-CLAWPERATOR_SKILL_START
+ANDROPERATOR_SKILL_START
 <skill JSON here>
-CLAWPERATOR_SKILL_END
+ANDROPERATOR_SKILL_END
 ```
 
 The extractor keeps the last complete block in the transcript.
@@ -142,7 +142,7 @@ Replay semantics:
 3. Require that replay uses the same device serial recorded in the run config.
 4. Validate the extracted skill structurally.
 5. Materialize the skill into a temp directory.
-6. Run `clawperator skills run <skill_id> --device <serial> --operator-package
+6. Run `androperator skills run <skill_id> --device <serial> --operator-package
    <package> --skip-validate`.
 7. Score the replay against the original ground truth.
 8. Delete the temp materialization after replay.
@@ -152,14 +152,14 @@ Replay has its own wall-clock timeout. The default is 60 seconds, and
 
 Current answer surfacing contract:
 
-- Replay only reports `pass`, `fail`, or `no_answer` when `clawperator skills
+- Replay only reports `pass`, `fail`, or `no_answer` when `androperator skills
   run` exited with code `0`. Non-zero exit codes are always `replay_status =
   "error"`.
 - If a skill artifact contains a plain-text answer, replay uses that artifact
   content only when the replayed skill created or modified that artifact
   during execution.
 - Otherwise replay falls back to the run output and looks for
-  `CLAWPERATOR_EVAL_ANSWER: <version>` in the raw output, stdout, stderr, or
+  `ANDROPERATOR_EVAL_ANSWER: <version>` in the raw output, stdout, stderr, or
   JSON envelope text.
 
 That order matters because some generated skills update their artifact file
@@ -203,7 +203,7 @@ artifacts are skipped and do not block stdout or stderr answer extraction.
 - For Pack A, the existing `android-version` benchmark is the required red and
   then green proving surface for discovery-authored Settings/About-device
   skills. The benchmark stays on the existing eval id, uses
-  `prompt-skill.md`, and treats `clawperator-skill-author-by-agent-discovery` as the
+  `prompt-skill.md`, and treats `androperator-skill-author-by-agent-discovery` as the
   required discovery front door before any skill can be emitted.
 - Pack A confidence requires explicit-device runs on one AOSP emulator and one
   Samsung physical device. Keep the emulator path in `evals-run` and the
@@ -235,7 +235,7 @@ Current command surface:
 ```bash
 uv run --project evals --extra dev python evals/run_eval.py solax-orchestrated-cold-start \
   --device <serial> \
-  --operator-package com.clawperator.operator.dev \
+  --operator-package com.androperator.operator.dev \
   --runs 4
 ```
 
@@ -254,7 +254,7 @@ Artifact boundary:
 - agent benchmark evals write single-run artifacts under `evals/runs/<run_id>/`
 - live orchestrated-skill proving writes batch artifacts under
   `evals/artifacts/<batch_id>/`
-- retained live batches are copied into the private `clawperator-artifacts`
+- retained live batches are copied into the private `androperator-artifacts`
   repo rather than committed in the main product repo
 
 Run-start normalization:

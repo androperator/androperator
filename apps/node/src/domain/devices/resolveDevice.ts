@@ -35,7 +35,7 @@ export async function resolveDevice(config: RuntimeConfig): Promise<ResolveDevic
   }
   if (connected.length > 1) {
     const devicesList = connected.map((d) => `  - ${d.serial}`).join("\n");
-    const cmdStr = ["clawperator", ...process.argv.slice(2)].join(" ");
+    const cmdStr = ["androperator", ...process.argv.slice(2)].join(" ");
     throw {
       code: ERROR_CODES.MULTIPLE_DEVICES_DEVICE_ID_REQUIRED,
       message: `Multiple devices connected. Please specify which device to use with the --device flag.\n\nConnected devices:\n${devicesList}\n\nCommand: ${cmdStr}\nRetry with: ${cmdStr} --device <serial>`,

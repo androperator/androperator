@@ -1,7 +1,7 @@
 package action.unit
 
-import clawperator.test.ActionTest
-import clawperator.test.actionTest
+import androperator.test.ActionTest
+import androperator.test.actionTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

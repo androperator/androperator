@@ -17,7 +17,7 @@ describe("CLI exec logging integration", () => {
   let logcatStagePath: string;
 
   before(async () => {
-    tempRoot = await mkdtemp(join(tmpdir(), "clawperator-exec-log-"));
+    tempRoot = await mkdtemp(join(tmpdir(), "androperator-exec-log-"));
     adbPath = join(tempRoot, "adb");
     executionPath = join(tempRoot, "execution.json");
     logcatCommandPath = join(tempRoot, "logcat-command-id");
@@ -57,11 +57,11 @@ describe("CLI exec logging integration", () => {
         "    mode=$(cat \"$LOGCAT_MODE_FILE\" 2>/dev/null)",
         "    stage=$(cat \"$LOGCAT_STAGE_FILE\" 2>/dev/null)",
         "    if [ \"$mode\" = \"doctor_ping\" ] && [ -n \"$command_id\" ]; then",
-        "      printf '%s\\n' \"[Clawperator-Result] {\\\"commandId\\\":\\\"$command_id\\\",\\\"taskId\\\":\\\"doctor-handshake\\\",\\\"status\\\":\\\"success\\\",\\\"stepResults\\\":[{\\\"id\\\":\\\"h1\\\",\\\"actionType\\\":\\\"doctor_ping\\\",\\\"success\\\":true,\\\"data\\\":{\\\"developer_options_enabled\\\":\\\"true\\\",\\\"usb_debugging_enabled\\\":\\\"true\\\",\\\"screen_on\\\":\\\"true\\\",\\\"device_locked\\\":\\\"false\\\",\\\"user_unlocked\\\":\\\"true\\\"}}],\\\"error\\\":null}\"",
+        "      printf '%s\\n' \"[Androperator-Result] {\\\"commandId\\\":\\\"$command_id\\\",\\\"taskId\\\":\\\"doctor-handshake\\\",\\\"status\\\":\\\"success\\\",\\\"stepResults\\\":[{\\\"id\\\":\\\"h1\\\",\\\"actionType\\\":\\\"doctor_ping\\\",\\\"success\\\":true,\\\"data\\\":{\\\"developer_options_enabled\\\":\\\"true\\\",\\\"usb_debugging_enabled\\\":\\\"true\\\",\\\"screen_on\\\":\\\"true\\\",\\\"device_locked\\\":\\\"false\\\",\\\"user_unlocked\\\":\\\"true\\\"}}],\\\"error\\\":null}\"",
         "      printf 'doctor_done\\n' > \"$LOGCAT_STAGE_FILE\"",
         "    fi",
         "    if [ \"$mode\" = \"execution\" ] && [ \"$command_id\" = \"cmd-cli-log\" ]; then",
-        `      printf '%s\\n' '[Clawperator-Result] {"commandId":"cmd-cli-log","taskId":"${taskId}","status":"success","stepResults":[{"id":"a1","actionType":"enter_text","success":true,"data":{}}],"error":null}'`,
+        `      printf '%s\\n' '[Androperator-Result] {"commandId":"cmd-cli-log","taskId":"${taskId}","status":"success","stepResults":[{"id":"a1","actionType":"enter_text","success":true,"data":{}}],"error":null}'`,
         "      exit 0",
         "    fi",
         "    sleep 0.05",
@@ -100,7 +100,7 @@ describe("CLI exec logging integration", () => {
             type: "enter_text",
             params: {
               matcher: { textEquals: "input" },
-              text: "CLAWPERATOR_TEST_SENTINEL_X9Z",
+              text: "ANDROPERATOR_TEST_SENTINEL_X9Z",
             },
           },
         ],
@@ -132,9 +132,9 @@ describe("CLI exec logging integration", () => {
       env: {
         ...process.env,
         ADB_PATH: adbPath,
-        CLAWPERATOR_NO_DAEMON: "1",
-        CLAWPERATOR_LOG_DIR: logDir,
-        CLAWPERATOR_LOG_LEVEL: "info",
+        ANDROPERATOR_NO_DAEMON: "1",
+        ANDROPERATOR_LOG_DIR: logDir,
+        ANDROPERATOR_LOG_LEVEL: "info",
       },
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -156,7 +156,7 @@ describe("CLI exec logging integration", () => {
     const now = new Date();
     const logPath = join(
       logDir,
-      `clawperator-${String(now.getFullYear())}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}.log`
+      `androperator-${String(now.getFullYear())}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}.log`
     );
     const contents = await readFile(logPath, "utf8");
     const lines = contents.trimEnd().split("\n").map(line => JSON.parse(line) as { event: string; commandId?: string; message?: string });
@@ -167,6 +167,6 @@ describe("CLI exec logging integration", () => {
     assert.strictEqual(envelopeLine?.commandId, "cmd-cli-log");
     assert.ok(contents.includes("broadcast.dispatched"));
     assert.ok(contents.includes("envelope.received"));
-    assert.ok(!contents.includes("CLAWPERATOR_TEST_SENTINEL_X9Z"));
+    assert.ok(!contents.includes("ANDROPERATOR_TEST_SENTINEL_X9Z"));
   });
 });

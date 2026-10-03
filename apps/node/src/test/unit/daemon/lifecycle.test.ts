@@ -20,7 +20,7 @@ import {
   withDaemonLock,
   writeDaemonPidMetadata,
 } from "../../../domain/daemon/lifecycle.js";
-import { CLAWPERATOR_SKILL_RUN_ID_ENV_VAR } from "../../../contracts/logging.js";
+import { ANDROPERATOR_SKILL_RUN_ID_ENV_VAR } from "../../../contracts/logging.js";
 import {
   cmdDaemonStart,
   cmdDaemonRun,
@@ -36,13 +36,13 @@ const httpServers: HttpServer[] = [];
 const sockets: Socket[] = [];
 
 async function makeTempBaseDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "clawperator-daemon-test-"));
+  const dir = await mkdtemp(join(tmpdir(), "androperator-daemon-test-"));
   tempDirs.push(dir);
   return dir;
 }
 
 async function writePidMetadata(baseDir: string, pid: number, startedAt = Date.now()): Promise<void> {
-  writeDaemonPidMetadata(undefined, { pid, startedAt, cliEntryPath: "/tmp/clawperator", daemonKey: "default" }, { baseDir });
+  writeDaemonPidMetadata(undefined, { pid, startedAt, cliEntryPath: "/tmp/androperator", daemonKey: "default" }, { baseDir });
 }
 
 afterEach(async () => {
@@ -79,7 +79,7 @@ describe("daemon lifecycle paths", () => {
   it("keeps default daemon files under the daemon subdirectory", () => {
     const socketPath = getDaemonSocketPath("emulator-5554");
 
-    assert.ok(socketPath.endsWith(join(".clawperator", "daemon", "daemon-id-ZW11bGF0b3ItNTU1NA.sock")));
+    assert.ok(socketPath.endsWith(join(".androperator", "daemon", "daemon-id-ZW11bGF0b3ItNTU1NA.sock")));
   });
 
   it("hardens an existing daemon directory to owner-only permissions", async () => {
@@ -151,7 +151,7 @@ describe("daemon process state", () => {
     writeDaemonPidMetadata("device-1", {
       pid: 12345,
       startedAt: 100,
-      cliEntryPath: "/tmp/clawperator",
+      cliEntryPath: "/tmp/androperator",
       daemonKey: sanitizeDaemonKey("device-1"),
       rawDeviceId: "device-1",
     }, { baseDir });
@@ -165,7 +165,7 @@ describe("daemon process state", () => {
           observedMetadata = metadata;
           return metadata.rawDeviceId === "device-1" &&
             metadata.daemonKey === sanitizeDaemonKey("device-1") &&
-            metadata.cliEntryPath === "/tmp/clawperator";
+            metadata.cliEntryPath === "/tmp/androperator";
         },
         kill: () => undefined,
       },
@@ -176,7 +176,7 @@ describe("daemon process state", () => {
       pid: 12345,
       startedAt: 100,
       daemonKey: sanitizeDaemonKey("device-1"),
-      cliEntryPath: "/tmp/clawperator",
+      cliEntryPath: "/tmp/androperator",
       rawDeviceId: "device-1",
     });
   });
@@ -239,7 +239,7 @@ describe("daemon process state", () => {
         isAlive: () => alive,
         kill: () => {
           alive = false;
-          writeDaemonPidMetadata(undefined, { pid: 1234, startedAt: 200, cliEntryPath: "/tmp/clawperator", daemonKey: "default" }, { baseDir });
+          writeDaemonPidMetadata(undefined, { pid: 1234, startedAt: 200, cliEntryPath: "/tmp/androperator", daemonKey: "default" }, { baseDir });
         },
       },
     };
@@ -490,7 +490,7 @@ describe("daemon command output", () => {
       writeDaemonPidMetadata(undefined, {
         pid: 9876,
         startedAt: 100,
-        cliEntryPath: "/tmp/clawperator",
+        cliEntryPath: "/tmp/androperator",
         daemonKey: "default",
       }, { baseDir });
     }, 5);
@@ -532,7 +532,7 @@ describe("daemon command output", () => {
       },
       spawnDaemonRunImpl: () => {
         spawnCount += 1;
-        writeDaemonPidMetadata(undefined, { pid: 9876, startedAt: 100, cliEntryPath: "/tmp/clawperator", daemonKey: "default" }, { baseDir });
+        writeDaemonPidMetadata(undefined, { pid: 9876, startedAt: 100, cliEntryPath: "/tmp/androperator", daemonKey: "default" }, { baseDir });
         const server = createHttpServer((req, res) => {
           if (req.url === "/ping") {
             res.writeHead(200, { "content-type": "application/json" });
@@ -649,15 +649,15 @@ describe("daemon command output", () => {
     assert.equal(shouldCliStdoutForceExitCode1(raw, false), true);
   });
 
-  it("spawnDaemonRun does not pass CLAWPERATOR_SKILL_RUN_ID to the spawned daemon", async () => {
+  it("spawnDaemonRun does not pass ANDROPERATOR_SKILL_RUN_ID to the spawned daemon", async () => {
     const baseDir = await makeTempBaseDir();
     const envOutputPath = join(baseDir, "daemon-env.json");
     const scriptPath = join(baseDir, "fake-daemon.cjs");
     await writeFile(scriptPath, `const { writeFileSync } = require("node:fs");\nwriteFileSync(${JSON.stringify(envOutputPath)}, JSON.stringify(process.env));\n`);
 
     const skillRunId = "skillrun_daemon_env_leak_regression";
-    const originalValue = process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR];
-    process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR] = skillRunId;
+    const originalValue = process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
+    process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = skillRunId;
     try {
       spawnDaemonRun(undefined, undefined, { baseDir, cliEntryPath: scriptPath });
 
@@ -668,12 +668,12 @@ describe("daemon command output", () => {
 
       assert.ok(existsSync(envOutputPath), "fake daemon script did not write env output within timeout");
       const spawnedEnv = JSON.parse(readFileSync(envOutputPath, "utf8")) as Record<string, string>;
-      assert.equal(spawnedEnv[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR], undefined);
+      assert.equal(spawnedEnv[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR], undefined);
     } finally {
       if (originalValue === undefined) {
-        delete process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR];
+        delete process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR];
       } else {
-        process.env[CLAWPERATOR_SKILL_RUN_ID_ENV_VAR] = originalValue;
+        process.env[ANDROPERATOR_SKILL_RUN_ID_ENV_VAR] = originalValue;
       }
     }
   });

@@ -32,7 +32,7 @@ export async function cmdObserveSnapshot(options: SnapshotPresentationOptions & 
     });
     const result = proxyResult ?? await runExecutionFn(execution, {
       deviceId: options.deviceId,
-      operatorPackage: options.operatorPackage ?? process.env.CLAWPERATOR_OPERATOR_PACKAGE,
+      operatorPackage: options.operatorPackage ?? process.env.ANDROPERATOR_OPERATOR_PACKAGE,
       timeoutMs: options.timeoutMs,
       warn: message => process.stderr.write(message),
       logger: options.logger,
@@ -41,7 +41,7 @@ export async function cmdObserveSnapshot(options: SnapshotPresentationOptions & 
       try {
         const presentation = await presentSnapshot(result.envelope, options);
         return formatSuccess({ ...presentation, deviceId: result.deviceId, terminalSource: result.terminalSource,
-          isCanonicalTerminal: result.terminalSource === "clawperator_result" }, options);
+          isCanonicalTerminal: result.terminalSource === "androperator_result" }, options);
       } catch (error) {
         return formatError({ ...(error as object), deviceId: result.deviceId, terminalSource: result.terminalSource }, options);
       }
@@ -80,7 +80,7 @@ export async function cmdObserveScreenshot(options: {
     });
     const result = proxyResult ?? await runExecutionFn(execution, {
       deviceId: options.deviceId,
-      operatorPackage: options.operatorPackage ?? process.env.CLAWPERATOR_OPERATOR_PACKAGE,
+      operatorPackage: options.operatorPackage ?? process.env.ANDROPERATOR_OPERATOR_PACKAGE,
       timeoutMs: options.timeoutMs,
       warn: message => process.stderr.write(message),
       logger: options.logger,

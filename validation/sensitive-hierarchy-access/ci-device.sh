@@ -11,8 +11,8 @@ PY
 serial="$(adb devices | awk '$2 == "device" {print $1}')"
 [[ -n "$serial" && "$serial" != *$'\n'* ]]
 for variant in debug release; do
-  package=com.clawperator.operator
-  if [[ "$variant" == debug ]]; then package=com.clawperator.operator.dev; fi
+  package=com.androperator.operator
+  if [[ "$variant" == debug ]]; then package=com.androperator.operator.dev; fi
   python3 validation/sensitive-hierarchy-access/prepare_operator.py --device "$serial" --operator-package "$package" \
     --apk "apps/android/app/build/outputs/apk/$variant/app-$variant.apk" --out "artifacts/sensitive-hierarchy/$variant-setup"
   python3 validation/sensitive-hierarchy-access/run.py --device "$serial" --operator-package "$package" --out "artifacts/sensitive-hierarchy/$variant"

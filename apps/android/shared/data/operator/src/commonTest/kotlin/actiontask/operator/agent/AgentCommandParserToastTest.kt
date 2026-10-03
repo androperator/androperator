@@ -1,6 +1,6 @@
-package clawperator.operator.agent
+package androperator.operator.agent
 
-import clawperator.task.runner.UiAction
+import androperator.task.runner.UiAction
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs

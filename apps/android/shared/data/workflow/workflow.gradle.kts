@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "clawperator.workflow"
+    namespace = "androperator.workflow"
     compileSdk = 35
 
     defaultConfig {

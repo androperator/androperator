@@ -31,7 +31,7 @@ command_details:
     href: ../setup.md#setup-step-install-cli
     label: Setup
   devices:
-    href: devices.md#clawperator-devices
+    href: devices.md#androperator-devices
     label: Devices
     see_also:
       - href: serve.md#endpoint-get-devices
@@ -163,7 +163,7 @@ command_details:
     href: on-screen-logs.md#cli-commands
     label: On-screen logs
   logs:
-    href: logging.md#the-clawperator-logs-command
+    href: logging.md#the-androperator-logs-command
     label: Logging
   doctor:
     href: doctor.md#doctor-report-contract

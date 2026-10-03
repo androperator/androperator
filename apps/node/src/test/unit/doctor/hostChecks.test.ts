@@ -197,15 +197,15 @@ describe("Doctor: hostChecks", () => {
             }
         });
 
-        it("respects CLAWPERATOR_SKILL_AGENT_CLI when set", async () => {
+        it("respects ANDROPERATOR_SKILL_AGENT_CLI when set", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const original = process.env.CLAWPERATOR_SKILL_AGENT_CLI;
+            const original = process.env.ANDROPERATOR_SKILL_AGENT_CLI;
             const originalPath = process.env.PATH;
-            const fakeDir = await mkdtemp(join(tmpdir(), "clawperator-agent-cli-"));
+            const fakeDir = await mkdtemp(join(tmpdir(), "androperator-agent-cli-"));
             const fakeAgentPath = join(fakeDir, "my-agent");
             await writeFile(fakeAgentPath, "#!/bin/sh\nexit 0\n", "utf8");
             await chmod(fakeAgentPath, 0o755);
-            process.env.CLAWPERATOR_SKILL_AGENT_CLI = "my-agent";
+            process.env.ANDROPERATOR_SKILL_AGENT_CLI = "my-agent";
 
             try {
                 process.env.PATH = `${fakeDir}${delimiter}${originalPath ?? ""}`;
@@ -220,9 +220,9 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(fakeDir, { recursive: true, force: true });
                 if (original === undefined) {
-                    delete process.env.CLAWPERATOR_SKILL_AGENT_CLI;
+                    delete process.env.ANDROPERATOR_SKILL_AGENT_CLI;
                 } else {
-                    process.env.CLAWPERATOR_SKILL_AGENT_CLI = original;
+                    process.env.ANDROPERATOR_SKILL_AGENT_CLI = original;
                 }
                 if (originalPath === undefined) {
                     delete process.env.PATH;
@@ -234,12 +234,12 @@ describe("Doctor: hostChecks", () => {
 
         it("accepts .js agent launchers on PATH using the same resolution rules as runtime", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const original = process.env.CLAWPERATOR_SKILL_AGENT_CLI;
+            const original = process.env.ANDROPERATOR_SKILL_AGENT_CLI;
             const originalPath = process.env.PATH;
-            const fakeDir = await mkdtemp(join(tmpdir(), "clawperator-agent-cli-js-"));
+            const fakeDir = await mkdtemp(join(tmpdir(), "androperator-agent-cli-js-"));
             const fakeAgentPath = join(fakeDir, "my-agent.js");
             await writeFile(fakeAgentPath, "console.log('ok');\n", "utf8");
-            process.env.CLAWPERATOR_SKILL_AGENT_CLI = "my-agent.js";
+            process.env.ANDROPERATOR_SKILL_AGENT_CLI = "my-agent.js";
 
             try {
                 process.env.PATH = `${fakeDir}${delimiter}${originalPath ?? ""}`;
@@ -254,9 +254,9 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(fakeDir, { recursive: true, force: true });
                 if (original === undefined) {
-                    delete process.env.CLAWPERATOR_SKILL_AGENT_CLI;
+                    delete process.env.ANDROPERATOR_SKILL_AGENT_CLI;
                 } else {
-                    process.env.CLAWPERATOR_SKILL_AGENT_CLI = original;
+                    process.env.ANDROPERATOR_SKILL_AGENT_CLI = original;
                 }
                 if (originalPath === undefined) {
                     delete process.env.PATH;
@@ -266,10 +266,10 @@ describe("Doctor: hostChecks", () => {
             }
         });
 
-        it("warns when CLAWPERATOR_SKILL_AGENT_CLI contains shell syntax instead of a plain executable name", async () => {
+        it("warns when ANDROPERATOR_SKILL_AGENT_CLI contains shell syntax instead of a plain executable name", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const original = process.env.CLAWPERATOR_SKILL_AGENT_CLI;
-            process.env.CLAWPERATOR_SKILL_AGENT_CLI = "codex; echo pwned";
+            const original = process.env.ANDROPERATOR_SKILL_AGENT_CLI;
+            process.env.ANDROPERATOR_SKILL_AGENT_CLI = "codex; echo pwned";
 
             try {
                 const result = await checkDefaultOrchestratedSkillAgentCli(config);
@@ -282,28 +282,28 @@ describe("Doctor: hostChecks", () => {
                 });
             } finally {
                 if (original === undefined) {
-                    delete process.env.CLAWPERATOR_SKILL_AGENT_CLI;
+                    delete process.env.ANDROPERATOR_SKILL_AGENT_CLI;
                 } else {
-                    process.env.CLAWPERATOR_SKILL_AGENT_CLI = original;
+                    process.env.ANDROPERATOR_SKILL_AGENT_CLI = original;
                 }
             }
         });
     });
 
     describe("checkInstalledOrchestratedSkillAgentCliAvailability", () => {
-        it("passes when no local skills registry is installed and CLAWPERATOR_SKILLS_REGISTRY is unset", async () => {
+        it("passes when no local skills registry is installed and ANDROPERATOR_SKILLS_REGISTRY is unset", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.CLAWPERATOR_SKILLS_REGISTRY;
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
             const originalHome = process.env.HOME;
             const originalCwd = process.cwd();
-            const root = await mkdtemp(join(tmpdir(), "clawperator-doctor-skills-unset-"));
+            const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-unset-"));
             const tempHome = join(root, "home");
             const appNodeDir = join(root, "apps", "node");
 
             try {
                 await mkdir(tempHome, { recursive: true });
                 await mkdir(appNodeDir, { recursive: true });
-                delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+                delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
                 process.env.HOME = tempHome;
                 process.chdir(appNodeDir);
 
@@ -314,9 +314,9 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 process.chdir(originalCwd);
                 if (originalRegistry === undefined) {
-                    delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
                 } else {
-                    process.env.CLAWPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
                 }
                 if (originalHome === undefined) {
                     delete process.env.HOME;
@@ -327,32 +327,32 @@ describe("Doctor: hostChecks", () => {
             }
         });
 
-        it("warns when no local skills registry is installed and CLAWPERATOR_SKILLS_REGISTRY is blank", async () => {
+        it("warns when no local skills registry is installed and ANDROPERATOR_SKILLS_REGISTRY is blank", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.CLAWPERATOR_SKILLS_REGISTRY;
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
             const originalHome = process.env.HOME;
             const originalCwd = process.cwd();
-            const root = await mkdtemp(join(tmpdir(), "clawperator-doctor-skills-blank-"));
+            const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-blank-"));
             const tempHome = join(root, "home");
             const appNodeDir = join(root, "apps", "node");
 
             try {
                 await mkdir(tempHome, { recursive: true });
                 await mkdir(appNodeDir, { recursive: true });
-                process.env.CLAWPERATOR_SKILLS_REGISTRY = "   ";
+                process.env.ANDROPERATOR_SKILLS_REGISTRY = "   ";
                 process.env.HOME = tempHome;
                 process.chdir(appNodeDir);
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "warn");
                 assert.match(result.summary, /could not inspect the local skills registry/i);
-                assert.match(result.detail ?? "", /CLAWPERATOR_SKILLS_REGISTRY is set but blank/);
+                assert.match(result.detail ?? "", /ANDROPERATOR_SKILLS_REGISTRY is set but blank/);
             } finally {
                 process.chdir(originalCwd);
                 if (originalRegistry === undefined) {
-                    delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
                 } else {
-                    process.env.CLAWPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
                 }
                 if (originalHome === undefined) {
                     delete process.env.HOME;
@@ -365,10 +365,10 @@ describe("Doctor: hostChecks", () => {
 
         it("warns when the default registry path exists but is unreadable as a file", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.CLAWPERATOR_SKILLS_REGISTRY;
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
             const originalHome = process.env.HOME;
             const originalCwd = process.cwd();
-            const root = await mkdtemp(join(tmpdir(), "clawperator-doctor-skills-broken-default-"));
+            const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-broken-default-"));
             const tempHome = join(root, "home");
             const appNodeDir = join(root, "apps", "node");
             const defaultRegistryPath = join(appNodeDir, "skills", "skills-registry.json");
@@ -376,7 +376,7 @@ describe("Doctor: hostChecks", () => {
             try {
                 await mkdir(tempHome, { recursive: true });
                 await mkdir(defaultRegistryPath, { recursive: true });
-                delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+                delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
                 process.env.HOME = tempHome;
                 process.chdir(appNodeDir);
 
@@ -387,9 +387,9 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 process.chdir(originalCwd);
                 if (originalRegistry === undefined) {
-                    delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
                 } else {
-                    process.env.CLAWPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
                 }
                 if (originalHome === undefined) {
                     delete process.env.HOME;
@@ -402,8 +402,8 @@ describe("Doctor: hostChecks", () => {
 
         it("passes when the local registry has no orchestrated skills", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.CLAWPERATOR_SKILLS_REGISTRY;
-            const root = await mkdtemp(join(tmpdir(), "clawperator-doctor-skills-none-"));
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-none-"));
             const registryPath = join(root, "skills", "skills-registry.json");
 
             try {
@@ -417,7 +417,7 @@ describe("Doctor: hostChecks", () => {
                     }),
                     "utf8"
                 );
-                process.env.CLAWPERATOR_SKILLS_REGISTRY = registryPath;
+                process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "pass");
@@ -425,17 +425,17 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(root, { recursive: true, force: true });
                 if (originalRegistry === undefined) {
-                    delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
                 } else {
-                    process.env.CLAWPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
                 }
             }
         });
 
         it("passes when installed orchestrated skills resolve via cliPath", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.CLAWPERATOR_SKILLS_REGISTRY;
-            const root = await mkdtemp(join(tmpdir(), "clawperator-doctor-skills-ok-"));
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-ok-"));
             const skillId = "com.test.doctor-agent-cli-path";
             const skillDir = join(root, "skills", skillId);
             const scriptsDir = join(skillDir, "scripts");
@@ -484,7 +484,7 @@ describe("Doctor: hostChecks", () => {
                     }),
                     "utf8"
                 );
-                process.env.CLAWPERATOR_SKILLS_REGISTRY = registryPath;
+                process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "pass");
@@ -493,17 +493,17 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(root, { recursive: true, force: true });
                 if (originalRegistry === undefined) {
-                    delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
                 } else {
-                    process.env.CLAWPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
                 }
             }
         });
 
         it("passes when installed orchestrated skills use backslash-separated skill paths with cliPath", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.CLAWPERATOR_SKILLS_REGISTRY;
-            const root = await mkdtemp(join(tmpdir(), "clawperator-doctor-skills-win-path-"));
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-win-path-"));
             const skillId = "com.test.doctor-agent-win-path";
             const skillDir = join(root, "skills", skillId);
             const scriptsDir = join(skillDir, "scripts");
@@ -552,7 +552,7 @@ describe("Doctor: hostChecks", () => {
                     }),
                     "utf8"
                 );
-                process.env.CLAWPERATOR_SKILLS_REGISTRY = registryPath;
+                process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "pass");
@@ -561,17 +561,17 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(root, { recursive: true, force: true });
                 if (originalRegistry === undefined) {
-                    delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
                 } else {
-                    process.env.CLAWPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
                 }
             }
         });
 
         it("warns when an installed orchestrated skill has an unresolved cliPath", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.CLAWPERATOR_SKILLS_REGISTRY;
-            const root = await mkdtemp(join(tmpdir(), "clawperator-doctor-skills-missing-cli-"));
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-missing-cli-"));
             const skillId = "com.test.doctor-missing-cli-path";
             const skillDir = join(root, "skills", skillId);
             const scriptsDir = join(skillDir, "scripts");
@@ -617,7 +617,7 @@ describe("Doctor: hostChecks", () => {
                     }),
                     "utf8"
                 );
-                process.env.CLAWPERATOR_SKILLS_REGISTRY = registryPath;
+                process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "warn");
@@ -632,17 +632,17 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(root, { recursive: true, force: true });
                 if (originalRegistry === undefined) {
-                    delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
                 } else {
-                    process.env.CLAWPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
                 }
             }
         });
 
         it("warns when installed skill metadata is unreadable", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.CLAWPERATOR_SKILLS_REGISTRY;
-            const root = await mkdtemp(join(tmpdir(), "clawperator-doctor-skills-bad-manifest-"));
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-bad-manifest-"));
             const skillId = "com.test.doctor-bad-manifest";
             const skillDir = join(root, "skills", skillId);
             const scriptsDir = join(skillDir, "scripts");
@@ -671,7 +671,7 @@ describe("Doctor: hostChecks", () => {
                     }),
                     "utf8"
                 );
-                process.env.CLAWPERATOR_SKILLS_REGISTRY = registryPath;
+                process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "warn");
@@ -686,17 +686,17 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(root, { recursive: true, force: true });
                 if (originalRegistry === undefined) {
-                    delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
                 } else {
-                    process.env.CLAWPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
                 }
             }
         });
 
         it("ignores unreadable non-orchestrated skill metadata for the orchestrated agent readiness check", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.CLAWPERATOR_SKILLS_REGISTRY;
-            const root = await mkdtemp(join(tmpdir(), "clawperator-doctor-skills-bad-non-agent-"));
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const root = await mkdtemp(join(tmpdir(), "androperator-doctor-skills-bad-non-agent-"));
             const skillId = "com.test.doctor-bad-non-agent";
             const skillDir = join(root, "skills", skillId);
             const scriptsDir = join(skillDir, "scripts");
@@ -725,7 +725,7 @@ describe("Doctor: hostChecks", () => {
                     }),
                     "utf8"
                 );
-                process.env.CLAWPERATOR_SKILLS_REGISTRY = registryPath;
+                process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "pass");
@@ -736,22 +736,22 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(root, { recursive: true, force: true });
                 if (originalRegistry === undefined) {
-                    delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
                 } else {
-                    process.env.CLAWPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
                 }
             }
         });
 
         it("warns when the configured skills registry is unreadable", async () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            const originalRegistry = process.env.CLAWPERATOR_SKILLS_REGISTRY;
-            const root = await mkdtemp(join(tmpdir(), "clawperator-doctor-bad-registry-"));
+            const originalRegistry = process.env.ANDROPERATOR_SKILLS_REGISTRY;
+            const root = await mkdtemp(join(tmpdir(), "androperator-doctor-bad-registry-"));
             const registryPath = join(root, "skills-registry.json");
 
             try {
                 await writeFile(registryPath, "{not-json", "utf8");
-                process.env.CLAWPERATOR_SKILLS_REGISTRY = registryPath;
+                process.env.ANDROPERATOR_SKILLS_REGISTRY = registryPath;
 
                 const result = await checkInstalledOrchestratedSkillAgentCliAvailability(config);
                 assert.strictEqual(result.status, "warn");
@@ -761,9 +761,9 @@ describe("Doctor: hostChecks", () => {
             } finally {
                 await rm(root, { recursive: true, force: true });
                 if (originalRegistry === undefined) {
-                    delete process.env.CLAWPERATOR_SKILLS_REGISTRY;
+                    delete process.env.ANDROPERATOR_SKILLS_REGISTRY;
                 } else {
-                    process.env.CLAWPERATOR_SKILLS_REGISTRY = originalRegistry;
+                    process.env.ANDROPERATOR_SKILLS_REGISTRY = originalRegistry;
                 }
             }
         });
@@ -771,7 +771,7 @@ describe("Doctor: hostChecks", () => {
 
     describe("checkBundledSkillsStaleness", () => {
         it("passes when the bundled-skills install dir does not exist", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-missing-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-missing-");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
 
             const result = await checkBundledSkillsStaleness(config, {
@@ -783,9 +783,9 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("derives the default installed dir from homeDir when installedDir is unset", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-alt-home-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-alt-home-");
             const homeDir = join(root, "alt-home");
-            const installedDir = join(homeDir, ".clawperator", "bundled-skills");
+            const installedDir = join(homeDir, ".androperator", "bundled-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
 
             const result = await checkBundledSkillsStaleness(config, { homeDir });
@@ -798,7 +798,7 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when the bundled-skills install path is a regular file", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-file-conflict-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-file-conflict-");
             const installedDir = join(root, "bundled-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             await writeFile(installedDir, "not a directory\n", "utf8");
@@ -811,12 +811,12 @@ describe("Doctor: hostChecks", () => {
             assert.strictEqual(result.summary, `Bundled-skills install path exists but is not a directory: ${installedDir}.`);
             assert.deepStrictEqual(result.fix?.steps, [
                 { kind: "manual", value: `Remove or rename the conflicting path at ${installedDir}.` },
-                { kind: "shell", value: "clawperator bundled-skills install" },
+                { kind: "shell", value: "androperator bundled-skills install" },
             ]);
         });
 
         it("warns when the bundled-skills install path is a dangling symlink", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-dangling-link-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-dangling-link-");
             const installedDir = join(root, "bundled-skills");
             const missingTarget = join(root, "missing-target");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
@@ -830,7 +830,7 @@ describe("Doctor: hostChecks", () => {
             assert.strictEqual(result.summary, `Bundled-skills install path is a dangling symlink: ${installedDir}.`);
             assert.deepStrictEqual(result.fix?.steps, [
                 { kind: "manual", value: `Remove or rename the conflicting path at ${installedDir}.` },
-                { kind: "shell", value: "clawperator bundled-skills install" },
+                { kind: "shell", value: "androperator bundled-skills install" },
             ]);
             assert.deepStrictEqual(result.evidence, {
                 installedDir,
@@ -840,7 +840,7 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when the CLI version metadata cannot be read", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-cli-version-fail-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-cli-version-fail-");
             const installedDir = join(root, "bundled-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
 
@@ -857,7 +857,7 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when the bundled-skills install dir exists but version.txt is missing", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-no-version-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-no-version-");
             const installedDir = join(root, "bundled-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             await mkdir(installedDir, { recursive: true });
@@ -868,11 +868,11 @@ describe("Doctor: hostChecks", () => {
             assert.strictEqual(result.code, ERROR_CODES.AGENT_SKILLS_STALE);
             assert.strictEqual(result.id, "host.bundled-skills.staleness");
             assert.strictEqual(result.summary, "Bundled-skills version file is missing.");
-            assert.deepStrictEqual(result.fix?.steps, [{ kind: "shell", value: "clawperator bundled-skills update" }]);
+            assert.deepStrictEqual(result.fix?.steps, [{ kind: "shell", value: "androperator bundled-skills update" }]);
         });
 
         it("passes when version.txt matches the current CLI version", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-current-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-current-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
             const codexSkillsDir = join(root, "codex-skills");
@@ -898,7 +898,7 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when the Claude discovery link is missing", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-missing-claude-link-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-missing-claude-link-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
             const codexSkillsDir = join(root, "codex-skills");
@@ -917,7 +917,7 @@ describe("Doctor: hostChecks", () => {
             assert.strictEqual(result.status, "warn");
             assert.strictEqual(result.id, "host.bundled-skills.staleness");
             assert.strictEqual(result.summary, "Bundled-skills discovery links are incomplete or invalid.");
-            assert.deepStrictEqual(result.fix?.steps, [{ kind: "shell", value: "clawperator bundled-skills update" }]);
+            assert.deepStrictEqual(result.fix?.steps, [{ kind: "shell", value: "androperator bundled-skills update" }]);
             assert.deepStrictEqual(result.evidence, {
                 installedDir,
                 installedVersion: getCliVersion(),
@@ -936,7 +936,7 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when the Codex discovery link is missing", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-missing-codex-link-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-missing-codex-link-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
             const codexSkillsDir = join(root, "codex-skills");
@@ -972,7 +972,7 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when the generic agents managed copy is missing", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-missing-agents-copy-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-missing-agents-copy-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
             const codexSkillsDir = join(root, "codex-skills");
@@ -1008,7 +1008,7 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when the generic agents managed copy is unmarked", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-unmarked-agents-copy-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-unmarked-agents-copy-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
             const codexSkillsDir = join(root, "codex-skills");
@@ -1044,7 +1044,7 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when the generic agents managed copy is stale", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-stale-agents-copy-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-stale-agents-copy-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
             const codexSkillsDir = join(root, "codex-skills");
@@ -1080,7 +1080,7 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when the generic agents entry is a legacy managed symlink", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-legacy-agents-link-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-legacy-agents-link-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
             const codexSkillsDir = join(root, "codex-skills");
@@ -1117,7 +1117,7 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when a managed discovery link points to the wrong target", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-wrong-link-target-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-wrong-link-target-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
             const codexSkillsDir = join(root, "codex-skills");
@@ -1156,7 +1156,7 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when a discovery entry is a conflicting non-symlink", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-conflicting-entry-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-conflicting-entry-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
             const codexSkillsDir = join(root, "codex-skills");
@@ -1193,7 +1193,7 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when the generic agents entry is a conflicting file", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-conflicting-agents-entry-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-conflicting-agents-entry-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
             const codexSkillsDir = join(root, "codex-skills");
@@ -1230,7 +1230,7 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when a managed discovery link is dangling", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-broken-link-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-broken-link-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
             const codexSkillsDir = join(root, "codex-skills");
@@ -1268,7 +1268,7 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when version.txt differs from the current CLI version", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-stale-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-stale-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
             const codexSkillsDir = join(root, "codex-skills");
@@ -1295,7 +1295,7 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when version.txt matches but no installed skill directory contains SKILL.md", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-empty-tree-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-empty-tree-");
             const installedDir = join(root, "bundled-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             const expectedSkills = await getExpectedBundledSkills();
@@ -1317,8 +1317,8 @@ describe("Doctor: hostChecks", () => {
             });
         });
 
-        it("warns when the packaged install is missing clawperator-upgrade", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-missing-upgrade-");
+        it("warns when the packaged install is missing androperator-upgrade", async () => {
+            const root = await makeTempRoot("androperator-doctor-agent-skills-missing-upgrade-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
             const codexSkillsDir = join(root, "codex-skills");
@@ -1326,7 +1326,7 @@ describe("Doctor: hostChecks", () => {
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
             const expectedSkills = await seedHealthyAgentSkillsInstall(installedDir, [claudeSkillsDir, codexSkillsDir, agentsSkillsDir]);
 
-            await rm(join(installedDir, "clawperator-upgrade"), { recursive: true, force: true });
+            await rm(join(installedDir, "androperator-upgrade"), { recursive: true, force: true });
 
             const result = await checkBundledSkillsStaleness(config, {
                 installedDir,
@@ -1344,12 +1344,12 @@ describe("Doctor: hostChecks", () => {
                 installedVersion: getCliVersion(),
                 cliVersion: getCliVersion(),
                 expectedSkills,
-                missingSkills: ["clawperator-upgrade"],
+                missingSkills: ["androperator-upgrade"],
             });
         });
 
         it("warns when an expected skill path cannot be inspected for a non-ENOENT reason", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-uninspectable-skill-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-uninspectable-skill-");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
             const codexSkillsDir = join(root, "codex-skills");
@@ -1386,8 +1386,8 @@ describe("Doctor: hostChecks", () => {
             });
         });
 
-        it("respects CLAWPERATOR_BUNDLED_SKILLS when deriving the expected packaged skill set", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-override-source-");
+        it("respects ANDROPERATOR_BUNDLED_SKILLS when deriving the expected packaged skill set", async () => {
+            const root = await makeTempRoot("androperator-doctor-agent-skills-override-source-");
             const sourceDir = join(root, "custom-bundled-skills");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
@@ -1407,7 +1407,7 @@ describe("Doctor: hostChecks", () => {
                 agentsSkillsDir,
                 env: {
                     ...process.env,
-                    CLAWPERATOR_BUNDLED_SKILLS: sourceDir,
+                    ANDROPERATOR_BUNDLED_SKILLS: sourceDir,
                 },
             });
 
@@ -1423,8 +1423,8 @@ describe("Doctor: hostChecks", () => {
             });
         });
 
-        it("does not honor CLAWPERATOR_AGENT_SKILLS when deriving the expected packaged skill set", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-legacy-source-");
+        it("does not honor ANDROPERATOR_AGENT_SKILLS when deriving the expected packaged skill set", async () => {
+            const root = await makeTempRoot("androperator-doctor-agent-skills-legacy-source-");
             const sourceDir = join(root, "legacy-agent-skills");
             const installedDir = join(root, "bundled-skills");
             const claudeSkillsDir = join(root, "claude-skills");
@@ -1443,7 +1443,7 @@ describe("Doctor: hostChecks", () => {
                 agentsSkillsDir,
                 env: {
                     ...process.env,
-                    CLAWPERATOR_AGENT_SKILLS: sourceDir,
+                    ANDROPERATOR_AGENT_SKILLS: sourceDir,
                 },
             });
 
@@ -1458,11 +1458,11 @@ describe("Doctor: hostChecks", () => {
         });
 
         it("warns when version.txt cannot be read for a non-ENOENT reason", async () => {
-            const root = await makeTempRoot("clawperator-doctor-agent-skills-unreadable-version-");
+            const root = await makeTempRoot("androperator-doctor-agent-skills-unreadable-version-");
             const installedDir = join(root, "bundled-skills");
             const config = getDefaultRuntimeConfig({ runner: new FakeProcessRunner() });
-            await mkdir(join(installedDir, "clawperator-skill-author-by-recording"), { recursive: true });
-            await writeFile(join(installedDir, "clawperator-skill-author-by-recording", "SKILL.md"), "# clawperator-skill-author-by-recording\n", "utf8");
+            await mkdir(join(installedDir, "androperator-skill-author-by-recording"), { recursive: true });
+            await writeFile(join(installedDir, "androperator-skill-author-by-recording", "SKILL.md"), "# androperator-skill-author-by-recording\n", "utf8");
             await mkdir(join(installedDir, "version.txt"), { recursive: true });
 
             const result = await checkBundledSkillsStaleness(config, { installedDir });

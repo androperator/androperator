@@ -60,7 +60,7 @@ if [ "$command" = "shell" ]; then
       exit 0
     fi
     if [ "$SCENARIO" = "VARIANT_MISMATCH" ]; then
-      echo "package:com.clawperator.operator.dev"
+      echo "package:com.androperator.operator.dev"
       exit 0
     fi
     # Default is return the requested package

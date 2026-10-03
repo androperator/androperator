@@ -4,8 +4,8 @@ Created: 2026-03-12
 
 ## Summary
 
-This task did not uncover evidence that `clawperator.com` or
-`docs.clawperator.com` are broadly hostile to bots or agent crawlers.
+This task did not uncover evidence that `androperator.com` or
+`docs.androperator.com` are broadly hostile to bots or agent crawlers.
 
 The main discoveries were about:
 
@@ -89,8 +89,8 @@ Observed behavior:
   `404 Crawl job not found`
 - the same job can become readable several seconds later
 
-This was reproduced both on Clawperator URLs and on Cloudflare's own docs URLs,
-so it is a Cloudflare service behavior, not a Clawperator site defect.
+This was reproduced both on Androperator URLs and on Cloudflare's own docs URLs,
+so it is a Cloudflare service behavior, not an Androperator site defect.
 
 Impact:
 
@@ -107,12 +107,12 @@ Required practice:
 
 Observed behavior:
 
-- `https://clawperator.com/sitemap.xml` is a sitemap index that advertises both
+- `https://androperator.com/sitemap.xml` is a sitemap index that advertises both
   the landing sitemap and the docs sitemap
 - using the root host with `source: "sitemaps"` caused Cloudflare crawl results
   to contain noisy `skipped` and `cancelled` statuses for otherwise healthy
   landing routes
-- using `https://clawperator.com/landing-sitemap.xml` directly produced clean
+- using `https://androperator.com/landing-sitemap.xml` directly produced clean
   landing-host crawl results
 
 Impact:
@@ -122,9 +122,9 @@ Impact:
 
 Required practice:
 
-- use `https://clawperator.com/landing-sitemap.xml` for landing-surface
+- use `https://androperator.com/landing-sitemap.xml` for landing-surface
   sitemap-led audits
-- keep `https://clawperator.com/sitemap.xml` as the public discovery surface
+- keep `https://androperator.com/sitemap.xml` as the public discovery surface
 
 ### 3. Crawl coverage and machine-artifact fetchability are different checks
 

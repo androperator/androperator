@@ -3,7 +3,7 @@ import { access, realpath } from "node:fs/promises";
 import { delimiter, extname, join, resolve, relative, isAbsolute } from "node:path";
 import type { SkillAgentConfig } from "../../contracts/skills.js";
 
-export const SKILL_AGENT_CLI_ENV_VAR = "CLAWPERATOR_SKILL_AGENT_CLI";
+export const SKILL_AGENT_CLI_ENV_VAR = "ANDROPERATOR_SKILL_AGENT_CLI";
 export const EXECUTABLE_NAME_PATTERN = /^[A-Za-z0-9._+-]+$/;
 
 export interface AgentCliResolutionSuccess {

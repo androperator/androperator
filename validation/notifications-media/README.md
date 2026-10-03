@@ -1,7 +1,7 @@
 # Notification/media fixture
 
 The shell-permission-protected fixture is a separate test APK
-(`com.clawperator.fixture.media`). It plays generated local MP4 content using
+(`com.androperator.fixture.media`). It plays generated local MP4 content using
 MediaPlayer and publishes a MediaSession. Its private JSON sample records actual
 player position independently from reports, power transitions and control counts.
 Killing the Operator therefore does not kill the evidence source. The fixture is

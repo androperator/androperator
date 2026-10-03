@@ -18,10 +18,10 @@ attempts to attach a window.
 
 - Node validation: `apps/node/src/domain/executions/validateExecution.ts`
 - Node screenshot finalization: `apps/node/src/domain/executions/runExecution.ts`
-- Android action parsing: `apps/android/shared/data/operator/src/main/kotlin/clawperator/operator/agent/AgentCommandParser.kt`
-- Panel controller: `apps/android/shared/data/operator/src/main/kotlin/clawperator/operator/onscreenlog/OnScreenLogPanelController.kt`
-- Result mapping: `apps/android/shared/data/task/src/main/kotlin/clawperator/task/runner/UiActionEngine.kt`
-- Snapshot metadata: `apps/android/shared/data/uitree/src/main/kotlin/clawperator/uitree/UiTreeInspectorAndroid.kt`
+- Android action parsing: `apps/android/shared/data/operator/src/main/kotlin/androperator/operator/agent/AgentCommandParser.kt`
+- Panel controller: `apps/android/shared/data/operator/src/main/kotlin/androperator/operator/onscreenlog/OnScreenLogPanelController.kt`
+- Result mapping: `apps/android/shared/data/task/src/main/kotlin/androperator/task/runner/UiActionEngine.kt`
+- Snapshot metadata: `apps/android/shared/data/uitree/src/main/kotlin/androperator/uitree/UiTreeInspectorAndroid.kt`
 
 ## Raw Actions
 
@@ -102,9 +102,9 @@ Serve and MCP do not poll or resolve metadata.
 For example:
 
 ```bash
-clawperator on-screen-log set --template '{{foreground_app.icon}} {{foreground_app.package_name}}
+androperator on-screen-log set --template '{{foreground_app.icon}} {{foreground_app.package_name}}
 {{foreground_app.version_code}} | {{foreground_app.version_name}}
-{{system.language_tag}} | {{system.language_name}}' --device <device_serial> --operator-package com.clawperator.operator.dev
+{{system.language_tag}} | {{system.language_name}}' --device <device_serial> --operator-package com.androperator.operator.dev
 ```
 
 Only the nine exact names above are supported. Unknown or malformed placeholders
@@ -149,8 +149,8 @@ removes it, including when it is already hidden. Both use the canonical action
 validator and the normal mutation execution path.
 
 ```bash
-clawperator on-screen-log set --text "FLOW-001: Observe settings" --anchor right --text-align left --top-offset-dp 24 --edge-offset-dp 12 --width-dp 280 --font-size-sp 12 --text-color '#FFFFFFFF' --background-color '#B3000000' --ttl-ms 300000 --device <device_serial>
-clawperator on-screen-log clear --device <device_serial>
+androperator on-screen-log set --text "FLOW-001: Observe settings" --anchor right --text-align left --top-offset-dp 24 --edge-offset-dp 12 --width-dp 280 --font-size-sp 12 --text-color '#FFFFFFFF' --background-color '#B3000000' --ttl-ms 300000 --device <device_serial>
+androperator on-screen-log clear --device <device_serial>
 ```
 
 | Set flag | Raw field |
@@ -181,7 +181,7 @@ canonical parameter violations return `EXECUTION_VALIDATION_FAILED`.
 
 Common options include `--device`, `--operator-package`, `--timeout`,
 `--output json|pretty`, and `--no-daemon`, before or after the command.
-For local debug builds, pass `--operator-package com.clawperator.operator.dev`.
+For local debug builds, pass `--operator-package com.androperator.operator.dev`.
 JSON is the default and wraps the normal execution result under `envelope`;
 step data uses exactly the string-valued keys below. The host `logs` command
 is unchanged.
@@ -193,11 +193,11 @@ An uncertain post-dispatch result is never automatically replayed; explicit
 For visible capture, await each command separately:
 
 ```bash
-clawperator on-screen-log set --text "FLOW-001: Before" --device <device_serial>
-clawperator screenshot --path <absolute_before_png> --device <device_serial>
-clawperator on-screen-log set --text "FLOW-001: After" --anchor right --device <device_serial>
-clawperator screenshot --path <absolute_after_png> --device <device_serial>
-clawperator on-screen-log clear --device <device_serial>
+androperator on-screen-log set --text "FLOW-001: Before" --device <device_serial>
+androperator screenshot --path <absolute_before_png> --device <device_serial>
+androperator on-screen-log set --text "FLOW-001: After" --anchor right --device <device_serial>
+androperator screenshot --path <absolute_after_png> --device <device_serial>
+androperator on-screen-log clear --device <device_serial>
 ```
 
 Inspect the images independently. Successful draw acknowledgement does not
@@ -327,7 +327,7 @@ Save the JSON action list from the example above to an absolute path and first
 validate it without a device:
 
 ```bash
-clawperator exec --payload <absolute_path_to_execution.json> --validate-only
+androperator exec --payload <absolute_path_to_execution.json> --validate-only
 ```
 
 Success has exit code `0`, `ok: true`, and `validated: true`. Validation rejects
@@ -337,7 +337,7 @@ For a live check, run a raw execution that orders `set_on_screen_log`,
 `snapshot`, and `clear_on_screen_log` with an explicit target:
 
 ```bash
-clawperator exec --payload <absolute_path_to_execution.json> --device <device_serial> --operator-package <package_name> --no-daemon
+androperator exec --payload <absolute_path_to_execution.json> --device <device_serial> --operator-package <package_name> --no-daemon
 ```
 
 On a successful run, check all of these exact result paths:
@@ -385,7 +385,7 @@ runtime metadata and are not changed or filtered by this feature. See
 
 Use the same JSON action objects with these existing execution surfaces:
 
-- `clawperator exec` using a raw execution payload
+- `androperator exec` using a raw execution payload
 - `POST /execute` in the [Serve API](serve.md#endpoint-post-execute)
 - the MCP [`execute`](mcp.md#mcp-tool-execute) tool
 

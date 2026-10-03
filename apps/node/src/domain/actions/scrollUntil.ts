@@ -14,7 +14,7 @@ export function buildScrollUntilExecution(
   return {
     commandId,
     taskId: commandId,
-    source: "clawperator-cli",
+    source: "androperator-cli",
     timeoutMs,
     expectedFormat: "android-ui-automator",
     actions: [

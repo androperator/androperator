@@ -139,7 +139,7 @@ export async function presentSnapshot(envelope: ResultEnvelope, options: Snapsho
     if (options.rawPath !== undefined || options.saveRaw) {
       try {
         const destination = options.rawPath !== undefined ? resolve(options.rawPath)
-          : join(await mkdtemp(join(tmpdir(), "clawperator-snapshot-")), "hierarchy.xml");
+          : join(await mkdtemp(join(tmpdir(), "androperator-snapshot-")), "hierarchy.xml");
         await writeFile(destination, step.data.text, { encoding: "utf8", flag: "wx", mode: 0o600 });
         rawArtifactPath = destination;
       } catch {

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Provide deterministic, structured logging for all Clawperator operations. An agent can inspect the log after a timeout or failure to reconstruct exactly what happened step by step.
+Provide deterministic, structured logging for all Androperator operations. An agent can inspect the log after a timeout or failure to reconstruct exactly what happened step by step.
 
 ## Design Principles
 
@@ -17,7 +17,7 @@ Provide deterministic, structured logging for all Clawperator operations. An age
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
 │   CLI Commands  │────▶│                  │────▶│  NDJSON File    │
-│   Skill Runner  │────▶│  Unified Logger  │     │  (~/.clawperator│
+│   Skill Runner  │────▶│  Unified Logger  │     │  (~/.androperator│
 │   HTTP Server   │────▶│                  │     │   /logs/...)     │
 └─────────────────┘     └──────────────────┘     └─────────────────┘
                                  │
@@ -32,10 +32,10 @@ Provide deterministic, structured logging for all Clawperator operations. An age
 
 | Component | Location | Responsibility |
 |-----------|----------|----------------|
-| `ClawperatorLogger` interface | `contracts/logging.ts` | Contract for all logging operations |
+| `AndroperatorLogger` interface | `contracts/logging.ts` | Contract for all logging operations |
 | Logger implementation | `adapters/logger.ts` | File sink, terminal routing, level filtering |
 | Log path utilities | `contracts/logging.ts` | Shared path resolution between logger and logs command |
-| `clawperator logs` command | `cli/commands/logs.ts` | Dump-then-stream behavior for log inspection |
+| `androperator logs` command | `cli/commands/logs.ts` | Dump-then-stream behavior for log inspection |
 
 ## LogEvent Schema
 
@@ -121,7 +121,7 @@ The log level threshold applies **only to the file sink**. Terminal output respe
 
 Invalid level values fall back silently to `info`.
 
-## The `clawperator logs` Command
+## The `androperator logs` Command
 
 ### Design Goals
 
@@ -149,9 +149,9 @@ The watch-before-read ordering guarantees no events are lost between the initial
 
 ### Why File-Based Tailing?
 
-The `clawperator logs` command reads from the file system rather than subscribing to an in-process stream for architectural reasons:
+The `androperator logs` command reads from the file system rather than subscribing to an in-process stream for architectural reasons:
 
-1. **Process Independence**: The CLI process that generated logs may have exited. A separate `clawperator logs` invocation can still retrieve the complete history.
+1. **Process Independence**: The CLI process that generated logs may have exited. A separate `androperator logs` invocation can still retrieve the complete history.
 
 2. **Post-Mortem Debugging**: After a skill timeout or crash, agents can inspect what happened without requiring a persistent in-memory event stream.
 
@@ -167,7 +167,7 @@ If the log directory cannot be written to:
 
 1. **One warning** to stderr with the format:
    ```
-   [clawperator] WARN: logging disabled after write failure for <path>
+   [androperator] WARN: logging disabled after write failure for <path>
    ```
 2. **Disable file logging** for the remainder of the process
 3. **Continue normal operation** - commands and skills execute normally
@@ -186,13 +186,13 @@ Both the logger factory and the logs command use these utilities, ensuring they 
 
 ## Child Logger Pattern
 
-The `ClawperatorLogger` interface provides a `child()` method for creating scoped loggers with inherited context. This is the preferred pattern for correlating events across a call chain.
+The `AndroperatorLogger` interface provides a `child()` method for creating scoped loggers with inherited context. This is the preferred pattern for correlating events across a call chain.
 
 ### Usage Pattern
 
 ```typescript
 // Root logger created at CLI entry
-const logger = createClawperatorLogger({ logDir, logLevel });
+const logger = createAndroperatorLogger({ logDir, logLevel });
 
 // Child logger for a specific command execution
 const cmdLogger = logger.child({ commandId: "cmd-123", deviceId: "abc" });
@@ -227,12 +227,12 @@ Child loggers ensure all events in a scope carry consistent correlation IDs with
 
 ## Separation of Concerns: Logger vs EventEmitter
 
-Clawperator has two distinct event systems:
+Androperator has two distinct event systems:
 
 | System | Purpose | Transport | Data |
 |--------|---------|-----------|------|
-| `ClawperatorLogger` | Structured logging | NDJSON file, stderr | LogEvent objects |
-| `clawperatorEvents` (EventEmitter) | SSE transport | HTTP SSE stream | Rich result objects |
+| `AndroperatorLogger` | Structured logging | NDJSON file, stderr | LogEvent objects |
+| `androperatorEvents` (EventEmitter) | SSE transport | HTTP SSE stream | Rich result objects |
 
 **Why Two Systems?**
 
@@ -244,17 +244,17 @@ Clawperator has two distinct event systems:
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `CLAWPERATOR_LOG_DIR` | Base directory for log files | `~/.clawperator/logs` |
-| `CLAWPERATOR_LOG_LEVEL` | File logging threshold | `info` |
+| `ANDROPERATOR_LOG_DIR` | Base directory for log files | `~/.androperator/logs` |
+| `ANDROPERATOR_LOG_LEVEL` | File logging threshold | `info` |
 
-Only `CLAWPERATOR_LOG_LEVEL` has a CLI flag equivalent (`--log-level`), which takes precedence. There is no `--log-dir` CLI flag - set the env var to change the log directory.
+Only `ANDROPERATOR_LOG_LEVEL` has a CLI flag equivalent (`--log-level`), which takes precedence. There is no `--log-dir` CLI flag - set the env var to change the log directory.
 
 ## Future Considerations
 
 Potential extensions (not implemented):
 
 - **Log rotation by size**: Currently rotation is daily only
-- **Structured query interface**: `clawperator logs --since 1h --level error`
+- **Structured query interface**: `androperator logs --since 1h --level error`
 - **Remote log aggregation**: Ship to external collector
 - **Log compression**: Gzip old daily files automatically
 
@@ -262,7 +262,7 @@ These are intentionally deferred until concrete use cases emerge. The current de
 
 ### Deferred: EventEmitter–Logger Unification (Optional Future)
 
-Currently, the EventEmitter (`clawperatorEvents`) and the logger are separate systems. A future refactor could unify them:
+Currently, the EventEmitter (`androperatorEvents`) and the logger are separate systems. A future refactor could unify them:
 
 - Emit rich objects through a single pipeline
 - Serialize to NDJSON for file sink

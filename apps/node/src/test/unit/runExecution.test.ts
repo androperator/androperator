@@ -24,8 +24,8 @@ import { LIMITS } from "../../contracts/limits.js";
 import { getDefaultRuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 import { waitForResultEnvelope } from "../../adapters/android-bridge/logcatResultReader.js";
 import { extractSnapshotsForCommand, extractSnapshotsFromLogs } from "../../domain/executions/snapshotHelper.js";
-import { createClawperatorLogger } from "../../adapters/logger.js";
-import { clawperatorEvents, CLAWPERATOR_EVENT_TYPES } from "../../domain/observe/events.js";
+import { createAndroperatorLogger } from "../../adapters/logger.js";
+import { androperatorEvents, ANDROPERATOR_EVENT_TYPES } from "../../domain/observe/events.js";
 import { isAbsolute, join } from "node:path";
 import { tmpdir } from "node:os";
 import { FakeProcessRunner } from "./fakes/FakeProcessRunner.js";
@@ -677,7 +677,7 @@ describe("runExecution", () => {
       assert.strictEqual(result.error.code, ERROR_CODES.OPERATOR_NOT_INSTALLED);
       assert.strictEqual(result.deviceId, "test-device-1");
       assert.match(result.error.message, /Operator APK \(com\.test\.operator\.dev\) is not installed on test-device-1/);
-      assert.match(result.error.message, /clawperator operator setup --apk/);
+      assert.match(result.error.message, /androperator operator setup --apk/);
       assert.match(result.error.message, /operator-debug\.apk/);
     }
     assert.strictEqual(warnings.length, 0);
@@ -943,7 +943,7 @@ describe("runExecution", () => {
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
       setTimeout(() => {
-        proc.stdout?.emit("data", Buffer.from(`[Clawperator-Result] ${JSON.stringify({
+        proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
           commandId: "cmd-central-wake",
           taskId: "task-central-wake",
           status: "success",
@@ -1010,7 +1010,7 @@ describe("runExecution", () => {
           `${prefix} V/Configuration(29817): Updating configuration, locales updated from [] to [en_US]`,
           `${prefix} D/TaskScopeDefault(29817):   <node index="0" text="Settings" />`,
           `${prefix} D/TaskScopeDefault(29817): </hierarchy>`,
-          `[Clawperator-Result] ${JSON.stringify({
+          `[Androperator-Result] ${JSON.stringify({
           commandId: "cmd-noisy-snapshot",
           taskId: "task-noisy-snapshot",
           status: "success",
@@ -1033,7 +1033,7 @@ describe("runExecution", () => {
       return proc;
     }) as FakeProcessRunner["spawn"];
 
-    const resultEvent = once(clawperatorEvents, CLAWPERATOR_EVENT_TYPES.RESULT);
+    const resultEvent = once(androperatorEvents, ANDROPERATOR_EVENT_TYPES.RESULT);
     const result = await runExecution(execution, {
       deviceId: "test-device-1",
       operatorPackage: "com.test.operator.dev",
@@ -1153,7 +1153,7 @@ describe("runExecution", () => {
           "04-25 20:14:52.454 D/kw2(29817): <hierarchy rotation=\"0\">",
           "04-25 20:14:52.455 D/kw2(29817):   <node text=\"legacy\" />",
           "04-25 20:14:52.456 D/kw2(29817): </hierarchy>",
-          `[Clawperator-Result] ${JSON.stringify({
+          `[Androperator-Result] ${JSON.stringify({
             commandId: "cmd-legacy-marker-snapshot",
             taskId: "task-legacy-marker-snapshot",
             status: "success",
@@ -1272,7 +1272,7 @@ describe("runExecution", () => {
     runner.queueResult({ code: 0, stdout: "package:com.test.operator.dev\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
 
-    const resultEvent = once(clawperatorEvents, CLAWPERATOR_EVENT_TYPES.RESULT);
+    const resultEvent = once(androperatorEvents, ANDROPERATOR_EVENT_TYPES.RESULT);
     const result = await runExecution(execution, {
       deviceId: "test-device-1",
       operatorPackage: "com.test.operator.dev",
@@ -1331,7 +1331,7 @@ describe("runExecution", () => {
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
       setTimeout(() => {
-        proc.stdout?.emit("data", Buffer.from(`[Clawperator-Result] ${JSON.stringify({
+        proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
           commandId: "cmd-explicit-fast-path",
           taskId: "task-explicit-fast-path",
           status: "success",
@@ -1394,7 +1394,7 @@ describe("runExecution", () => {
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
       setTimeout(() => {
-        proc.stdout?.emit("data", Buffer.from(`[Clawperator-Result] ${JSON.stringify({
+        proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
           commandId: "cmd-auto-sequential",
           taskId: "task-auto-sequential",
           status: "success",
@@ -1467,7 +1467,7 @@ describe("waitForResultEnvelope", () => {
         broadcastStartedAt = Date.now();
         beginDispatchCapture();
         setTimeout(() => {
-          proc.stdout?.emit("data", Buffer.from(`[Clawperator-Result] ${JSON.stringify({
+          proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
             commandId: "cmd-signal-dispatch",
             taskId: "task-signal-dispatch",
             status: "success",
@@ -1513,7 +1513,7 @@ describe("waitForResultEnvelope", () => {
       async (beginDispatchCapture) => {
         beginDispatchCapture();
         setTimeout(() => {
-          proc.stdout?.emit("data", Buffer.from(`[Clawperator-Result] ${JSON.stringify({
+          proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
             commandId: "cmd-timeout-after-dispatch",
             taskId: "task-timeout-after-dispatch",
             status: "success",
@@ -1572,7 +1572,7 @@ describe("waitForResultEnvelope", () => {
             `${freshPrefix} D/TaskScopeDefault(29817): <hierarchy rotation="0">`,
             `${freshPrefix} D/TaskScopeDefault(29817):   <node text="fresh" />`,
             `${freshPrefix} D/TaskScopeDefault(29817): </hierarchy>`,
-            `[Clawperator-Result] ${JSON.stringify({
+            `[Androperator-Result] ${JSON.stringify({
               commandId: "cmd-capture-boundary",
               taskId: "task-capture-boundary",
               status: "success",
@@ -1605,7 +1605,7 @@ describe("waitForResultEnvelope", () => {
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
       process.nextTick(() => {
-        proc.stdout?.emit("data", Buffer.from(`[Clawperator-Result] ${JSON.stringify({
+        proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
           commandId: "cmd-replayed-envelope",
           taskId: "old-task",
           status: "success",
@@ -1631,7 +1631,7 @@ describe("waitForResultEnvelope", () => {
       async (beginDispatchCapture) => {
         beginDispatchCapture();
         setTimeout(() => {
-          proc.stdout?.emit("data", Buffer.from(`[Clawperator-Result] ${JSON.stringify({
+          proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
             commandId: "cmd-replayed-envelope",
             taskId: "new-task",
             status: "success",
@@ -1662,7 +1662,7 @@ describe("waitForResultEnvelope", () => {
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
       process.nextTick(() => {
-        proc.stdout?.emit("data", Buffer.from(`[Clawperator-Result] ${JSON.stringify({
+        proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
           commandId: "cmd-sync-envelope",
           taskId: "old-task",
           status: "success",
@@ -1687,7 +1687,7 @@ describe("waitForResultEnvelope", () => {
       },
       async (beginDispatchCapture) => {
         beginDispatchCapture();
-        proc.stdout?.emit("data", Buffer.from(`[Clawperator-Result] ${JSON.stringify({
+        proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
           commandId: "cmd-sync-envelope",
           taskId: "new-task",
           status: "failed",
@@ -1750,7 +1750,7 @@ describe("waitForResultEnvelope", () => {
           `${freshPrefix} D/TaskScopeDefault(29817): <hierarchy rotation="0">`,
           `${freshPrefix} D/TaskScopeDefault(29817):   <node text="fresh" />`,
           `${freshPrefix} D/TaskScopeDefault(29817): </hierarchy>`,
-          `[Clawperator-Result] ${JSON.stringify({
+          `[Androperator-Result] ${JSON.stringify({
             commandId: "cmd-sync-snapshot",
             taskId: "task-sync-snapshot",
             status: "success",
@@ -1806,7 +1806,7 @@ describe("waitForResultEnvelope", () => {
       },
       async (beginDispatchCapture) => {
         beginDispatchCapture();
-        proc.stdout?.emit("data", Buffer.from(`[Clawperator-Result] ${JSON.stringify({
+        proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
           commandId: "cmd-pre-dispatch",
           taskId: "task-pre-dispatch",
           status: "success",
@@ -1861,7 +1861,7 @@ describe("waitForResultEnvelope", () => {
         proc.stdout?.emit("data", Buffer.from([
           "04-25 20:14:52.453 D/TaskScopeDefault(29817): [TaskScope] UI Hierarchy [commandId=cmd-open-snapshot]:",
           "04-25 20:14:52.454 D/TaskScopeDefault(29817): <hierarchy rotation=\"0\">",
-          `[Clawperator-Result] ${JSON.stringify({
+          `[Androperator-Result] ${JSON.stringify({
             commandId: "cmd-open-snapshot",
             taskId: "task-open-snapshot",
             status: "success",
@@ -1913,7 +1913,7 @@ describe("waitForResultEnvelope", () => {
           "04-25 20:14:52.454 D/kw2(29817): <hierarchy rotation=\"0\">",
           "04-25 20:14:52.455 D/kw2(29817):   <node text=\"legacy\" />",
           "04-25 20:14:52.456 D/kw2(29817): </hierarchy>",
-          `[Clawperator-Result] ${JSON.stringify({
+          `[Androperator-Result] ${JSON.stringify({
             commandId: "cmd-legacy-snapshot",
             taskId: "task-legacy-snapshot",
             status: "success",
@@ -1953,7 +1953,7 @@ describe("waitForResultEnvelope", () => {
           "04-25 20:14:52.455 D/TaskScopeDefault(29817): <hierarchy rotation=\"0\">",
           "04-25 20:14:52.456 D/TaskScopeDefault(29817):   <node text=\"stale\" />",
           "04-25 20:14:52.457 D/TaskScopeDefault(29817): </hierarchy>",
-          `[Clawperator-Result] ${JSON.stringify({
+          `[Androperator-Result] ${JSON.stringify({
             commandId: "cmd-late-replay",
             taskId: "old-task",
             status: "success",
@@ -1986,7 +1986,7 @@ describe("waitForResultEnvelope", () => {
             `${freshPrefix} D/TaskScopeDefault(29817): <hierarchy rotation="0">`,
             `${freshPrefix} D/TaskScopeDefault(29817):   <node text="fresh" />`,
             `${freshPrefix} D/TaskScopeDefault(29817): </hierarchy>`,
-            `[Clawperator-Result] ${JSON.stringify({
+            `[Androperator-Result] ${JSON.stringify({
               commandId: "cmd-late-replay",
               taskId: "task-late-replay",
               status: "success",
@@ -2057,7 +2057,7 @@ describe("waitForResultEnvelope", () => {
             `${freshPrefix} D/TaskScopeDefault(29817): <hierarchy rotation="0">`,
             `${freshPrefix} D/TaskScopeDefault(29817):   <node text="fresh" />`,
             `${freshPrefix} D/TaskScopeDefault(29817): </hierarchy>`,
-            `[Clawperator-Result] ${JSON.stringify({
+            `[Androperator-Result] ${JSON.stringify({
               commandId: "cmd-fallback-replay-drain",
               taskId: "task-fallback-replay-drain",
               status: "success",
@@ -2120,7 +2120,7 @@ describe("waitForResultEnvelope", () => {
         broadcastStartedAt = Date.now();
         beginDispatchCapture();
         setTimeout(() => {
-          proc.stdout?.emit("data", Buffer.from(`[Clawperator-Result] ${JSON.stringify({
+          proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
             commandId: "cmd-noisy-drain",
             taskId: "task-noisy-drain",
             status: "success",
@@ -2189,7 +2189,7 @@ describe("waitForResultEnvelope", () => {
             `${freshPrefix} D/TaskScopeDefault(29817): <hierarchy rotation="0">`,
             `${freshPrefix} D/TaskScopeDefault(29817):   <node text="fresh-forced" />`,
             `${freshPrefix} D/TaskScopeDefault(29817): </hierarchy>`,
-            `[Clawperator-Result] ${JSON.stringify({
+            `[Androperator-Result] ${JSON.stringify({
               commandId: "cmd-forced-replay-snapshot",
               taskId: "task-forced-replay-snapshot",
               status: "success",
@@ -2242,9 +2242,9 @@ describe("waitForResultEnvelope", () => {
       },
       async (beginDispatchCapture) => {
         beginDispatchCapture();
-        proc.stdout?.emit("data", Buffer.from("[Clawperator-Result] {\"commandId\":\"old-command\",\n"));
+        proc.stdout?.emit("data", Buffer.from("[Androperator-Result] {\"commandId\":\"old-command\",\n"));
         setTimeout(() => {
-          proc.stdout?.emit("data", Buffer.from(`[Clawperator-Result] ${JSON.stringify({
+          proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
             commandId: "cmd-current-malformed-filter",
             taskId: "task-current-malformed-filter",
             status: "success",
@@ -2308,7 +2308,7 @@ describe("waitForResultEnvelope", () => {
             `${freshPrefix} D/TaskScopeDefault(29817): <hierarchy rotation="0">`,
             `${freshPrefix} D/TaskScopeDefault(29817):   <node text="fresh" />`,
             `${freshPrefix} D/TaskScopeDefault(29817): </hierarchy>`,
-            `[Clawperator-Result] ${JSON.stringify({
+            `[Androperator-Result] ${JSON.stringify({
               commandId: "cmd-split-replay",
               taskId: "task-split-replay",
               status: "success",
@@ -2341,7 +2341,7 @@ describe("waitForResultEnvelope", () => {
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
       process.nextTick(() => {
-        proc.stdout?.emit("data", Buffer.from(`[Clawperator-Result] ${JSON.stringify({
+        proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
           commandId: "cmd-partial-replay",
           taskId: "old-task",
           status: "success",
@@ -2385,7 +2385,7 @@ describe("waitForResultEnvelope", () => {
             `${freshPrefix} D/TaskScopeDefault(29817): <hierarchy rotation="0">`,
             `${freshPrefix} D/TaskScopeDefault(29817):   <node text="fresh" />`,
             `${freshPrefix} D/TaskScopeDefault(29817): </hierarchy>`,
-            `[Clawperator-Result] ${JSON.stringify({
+            `[Androperator-Result] ${JSON.stringify({
               commandId: "cmd-partial-replay",
               taskId: "task-partial-replay",
               status: "success",
@@ -2471,7 +2471,7 @@ describe("buildTimeoutError", () => {
         lastCorrelatedEvents: ["TaskScopeDefault: example"],
         broadcastDispatchStatus: "sent",
         deviceId: "emulator-5554",
-        operatorPackage: "com.clawperator.operator.dev",
+        operatorPackage: "com.androperator.operator.dev",
       },
       55
     );
@@ -2479,7 +2479,7 @@ describe("buildTimeoutError", () => {
     assert.deepStrictEqual(error.lastCorrelatedEvents, ["TaskScopeDefault: example"]);
     assert.strictEqual(error.broadcastDispatchStatus, "sent");
     assert.strictEqual(error.deviceId, "emulator-5554");
-    assert.strictEqual(error.operatorPackage, "com.clawperator.operator.dev");
+    assert.strictEqual(error.operatorPackage, "com.androperator.operator.dev");
     assert.strictEqual(error.hint, undefined);
   });
 
@@ -2497,14 +2497,14 @@ describe("buildTimeoutError", () => {
         lastCorrelatedEvents: [],
         broadcastDispatchStatus: "sent",
         deviceId: "emulator-5554",
-        operatorPackage: "com.clawperator.operator.dev",
+        operatorPackage: "com.androperator.operator.dev",
       },
       55
     );
 
     assert.match(error.hint ?? "", /No correlated Android log lines were captured/);
     assert.match(error.hint ?? "", /APK\/CLI version mismatch/);
-    assert.match(error.hint ?? "", /clawperator doctor --device emulator-5554 --operator-package com\.clawperator\.operator\.dev/);
+    assert.match(error.hint ?? "", /androperator doctor --device emulator-5554 --operator-package com\.androperator\.operator\.dev/);
   });
 
   it("does not add a version hint when broadcast dispatch failed", () => {
@@ -2521,7 +2521,7 @@ describe("buildTimeoutError", () => {
         lastCorrelatedEvents: [],
         broadcastDispatchStatus: "failed: Target package not found",
         deviceId: "emulator-5554",
-        operatorPackage: "com.clawperator.operator.dev",
+        operatorPackage: "com.androperator.operator.dev",
       },
       55
     );
@@ -2540,7 +2540,7 @@ describe("buildTimeoutError", () => {
 
     assert.strictEqual(
       hint,
-      "No correlated Android log lines were captured. This often indicates an APK/CLI version mismatch or an accessibility service issue. Run 'clawperator doctor' to diagnose."
+      "No correlated Android log lines were captured. This often indicates an APK/CLI version mismatch or an accessibility service issue. Run 'androperator doctor' to diagnose."
     );
   });
 
@@ -2562,7 +2562,7 @@ describe("buildTimeoutError", () => {
     runner.queueResult({ code: 0, stdout: "package:com.test.operator.dev\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
 
-    const resultEvent = once(clawperatorEvents, CLAWPERATOR_EVENT_TYPES.EXECUTION);
+    const resultEvent = once(androperatorEvents, ANDROPERATOR_EVENT_TYPES.EXECUTION);
     const result = await runExecution(
       {
         commandId: "cmd-timeout-5",
@@ -2598,7 +2598,7 @@ describe("buildTimeoutError", () => {
     }
     assert.strictEqual(event.deviceId, "device-123");
     assert.match(event.result.error.hint ?? "", /No correlated Android log lines were captured/);
-    assert.match(event.result.error.hint ?? "", /clawperator doctor --device device-123 --operator-package com\.test\.operator\.dev/);
+    assert.match(event.result.error.hint ?? "", /androperator doctor --device device-123 --operator-package com\.test\.operator\.dev/);
   });
 
   it("does not emit the timeout hint when correlated log lines were captured", async () => {
@@ -2624,7 +2624,7 @@ describe("buildTimeoutError", () => {
     runner.queueResult({ code: 0, stdout: "package:com.test.operator.dev\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "", stderr: "" }); // broadcast
 
-    const resultEvent = once(clawperatorEvents, CLAWPERATOR_EVENT_TYPES.EXECUTION);
+    const resultEvent = once(androperatorEvents, ANDROPERATOR_EVENT_TYPES.EXECUTION);
     const result = await runExecution(
       {
         commandId: "cmd-timeout-6",
@@ -2774,7 +2774,7 @@ describe("runExecution logging", () => {
   let tempRoot: string;
 
   beforeEach(async () => {
-    tempRoot = await mkdtemp(join(tmpdir(), "clawperator-run-log-"));
+    tempRoot = await mkdtemp(join(tmpdir(), "androperator-run-log-"));
   });
 
   afterEach(async () => {
@@ -2813,10 +2813,10 @@ describe("runExecution logging", () => {
   }
 
   it("writes broadcast and envelope events with the execution commandId", async () => {
-    const logger = createClawperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
+    const logger = createAndroperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
     const adbPath = await writeFakeAdbScript("adb");
     const runner = createLogcatRunner(
-      `[Clawperator-Result] ${JSON.stringify({
+      `[Androperator-Result] ${JSON.stringify({
         commandId: "cmd-log-1",
         taskId: "task-log-1",
         status: "success",
@@ -2878,11 +2878,11 @@ describe("runExecution logging", () => {
   });
 
   it("keeps sentinel payload text out of every log line", async () => {
-    const logger = createClawperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "debug" });
+    const logger = createAndroperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "debug" });
     const adbPath = await writeFakeAdbScript("adb");
-    const sentinel = "CLAWPERATOR_TEST_SENTINEL_X9Z";
+    const sentinel = "ANDROPERATOR_TEST_SENTINEL_X9Z";
     const runner = createLogcatRunner(
-      `[Clawperator-Result] ${JSON.stringify({
+      `[Androperator-Result] ${JSON.stringify({
         commandId: "cmd-log-2",
         taskId: "task-log-2",
         status: "success",
@@ -2942,7 +2942,7 @@ describe("runExecution logging", () => {
   });
 
   it("adds the logger path to timeout errors as an absolute file path", async () => {
-    const logger = createClawperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
+    const logger = createAndroperatorLogger({ logDir: join(tempRoot, "logs"), logLevel: "info" });
     logger.emit({
       ts: "2026-03-22T00:00:00.000Z",
       level: "info",
@@ -2999,8 +2999,8 @@ describe("transport failure execution evidence", () => {
       };
       const terminalEvents: unknown[] = [];
       const onTerminal = (event: unknown) => terminalEvents.push(event);
-      clawperatorEvents.on(CLAWPERATOR_EVENT_TYPES.RESULT, onTerminal);
-      const outcome = once(clawperatorEvents, CLAWPERATOR_EVENT_TYPES.EXECUTION);
+      androperatorEvents.on(ANDROPERATOR_EVENT_TYPES.RESULT, onTerminal);
+      const outcome = once(androperatorEvents, ANDROPERATOR_EVENT_TYPES.EXECUTION);
       try {
         const result = await runExecution({ commandId: "transport-command", taskId: "transport-task", source: "test",
           expectedFormat: "android-ui-automator", timeoutMs: 1000,
@@ -3036,7 +3036,7 @@ describe("transport failure execution evidence", () => {
         assert.equal(terminalEvents.length, 0);
         assert.deepStrictEqual((await outcome)[0].result, result);
       } finally {
-        clawperatorEvents.off(CLAWPERATOR_EVENT_TYPES.RESULT, onTerminal);
+        androperatorEvents.off(ANDROPERATOR_EVENT_TYPES.RESULT, onTerminal);
       }
     });
   }

@@ -30,11 +30,11 @@ function buildMissingApkFixSteps(config: RuntimeConfig): Array<{ kind: "shell" |
     return [
       {
         kind: "shell",
-        value: "clawperator operator download",
+        value: "androperator operator download",
       },
       {
         kind: "shell",
-        value: `clawperator operator setup --apk ${getOperatorPackageApkPath(config.operatorPackage)} --device ${config.deviceId}`,
+        value: `androperator operator setup --apk ${getOperatorPackageApkPath(config.operatorPackage)} --device ${config.deviceId}`,
       },
     ];
   }
@@ -51,7 +51,7 @@ function buildMissingApkFixSteps(config: RuntimeConfig): Array<{ kind: "shell" |
     },
     {
       kind: "shell",
-      value: `clawperator operator setup --apk ${getOperatorPackageApkPath(config.operatorPackage)} --device ${config.deviceId} --operator-package ${config.operatorPackage}`,
+      value: `androperator operator setup --apk ${getOperatorPackageApkPath(config.operatorPackage)} --device ${config.deviceId} --operator-package ${config.operatorPackage}`,
     },
   ];
 }
@@ -103,7 +103,7 @@ export async function checkApkPresence(config: RuntimeConfig): Promise<DoctorChe
           platform: "any",
           steps: [
             { kind: "manual", value: `Use --operator-package ${otherVariant} or reinstall the correct APK` },
-            { kind: "manual", value: `Public installs typically use com.clawperator.operator; local debug builds use com.clawperator.operator.dev` },
+            { kind: "manual", value: `Public installs typically use com.androperator.operator; local debug builds use com.androperator.operator.dev` },
           ],
           docsUrl: DOCTOR_DOCS_URLS.operator,
         },
@@ -254,13 +254,13 @@ export async function runHandshake(
           title: "Grant accessibility permissions via adb",
           platform: "any",
           steps: [
-            { kind: "shell", value: `clawperator grant-device-permissions${deviceFlag}${pkgFlag}` },
+            { kind: "shell", value: `androperator grant-device-permissions${deviceFlag}${pkgFlag}` },
           ],
           docsUrl: DOCTOR_DOCS_URLS.operator,
         },
         deviceGuidance: {
           screen: "Accessibility Settings",
-          steps: ["Ensure Clawperator Accessibility Service is ON in Android Settings"],
+          steps: ["Ensure Androperator Accessibility Service is ON in Android Settings"],
         },
       };
     }
@@ -274,7 +274,7 @@ export async function runHandshake(
       operatorPackage: config.operatorPackage,
     });
     const timeoutMessage = [
-      `No [Clawperator-Result] envelope received within 7000ms.`,
+      `No [Androperator-Result] envelope received within 7000ms.`,
       `Broadcast dispatch: ${result.diagnostics.broadcastDispatchStatus}.`,
       `Operator package: ${config.operatorPackage}.`,
       config.deviceId ? `Device: ${config.deviceId}.` : undefined,
@@ -293,14 +293,14 @@ export async function runHandshake(
         title: "Grant accessibility permissions via adb",
         platform: "any",
         steps: [
-          { kind: "shell", value: `clawperator grant-device-permissions${deviceFlag}${pkgFlag}` },
-          { kind: "shell", value: `clawperator snapshot${deviceFlag}${pkgFlag} --timeout 5000 --verbose` },
+          { kind: "shell", value: `androperator grant-device-permissions${deviceFlag}${pkgFlag}` },
+          { kind: "shell", value: `androperator snapshot${deviceFlag}${pkgFlag} --timeout 5000 --verbose` },
         ],
         docsUrl: DOCTOR_DOCS_URLS.operator,
       },
       deviceGuidance: {
         screen: "Accessibility Settings",
-        steps: ["Ensure Clawperator Accessibility Service is ON in Android Settings"],
+        steps: ["Ensure Androperator Accessibility Service is ON in Android Settings"],
       },
     };
   }
@@ -416,7 +416,7 @@ export async function runSmokeTest(
   const execution = {
     commandId,
     taskId: "doctor-smoke",
-    source: "clawperator-doctor",
+    source: "androperator-doctor",
     expectedFormat: "android-ui-automator" as const,
     actions: [
       { id: "s1", type: "close_app", params: { applicationId: "com.android.settings" } },

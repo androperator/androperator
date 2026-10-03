@@ -9,27 +9,27 @@ import { releaseLock } from "../../domain/evidence/videoSupport.js";
 import type { VideoState } from "../../domain/evidence/videoSupport.js";
 
 it("resolves configured roots absolutely, rejects blanks, and preserves the default", () => {
-  const previous = process.env.CLAWPERATOR_EVIDENCE_DIR;
+  const previous = process.env.ANDROPERATOR_EVIDENCE_DIR;
   try {
-    delete process.env.CLAWPERATOR_EVIDENCE_DIR;
-    assert.equal(evidenceRoot(), join(homedir(), ".clawperator", "evidence"));
-    process.env.CLAWPERATOR_EVIDENCE_DIR = "relative evidence";
+    delete process.env.ANDROPERATOR_EVIDENCE_DIR;
+    assert.equal(evidenceRoot(), join(homedir(), ".androperator", "evidence"));
+    process.env.ANDROPERATOR_EVIDENCE_DIR = "relative evidence";
     assert.equal(evidenceRoot(), resolve("relative evidence"));
     assert.equal(evidenceRoot({ baseDir: "injected" }), resolve("injected"));
     assert.throws(() => evidenceRoot({ baseDir: "bad\0path" }));
     for (const blank of ["", "  ", "\t"]) {
-      process.env.CLAWPERATOR_EVIDENCE_DIR = blank;
+      process.env.ANDROPERATOR_EVIDENCE_DIR = blank;
       assert.throws(() => evidenceRoot(), (e: any) => e.code === "EXECUTION_VALIDATION_FAILED");
     }
   } finally {
-    if (previous === undefined) delete process.env.CLAWPERATOR_EVIDENCE_DIR;
-    else process.env.CLAWPERATOR_EVIDENCE_DIR = previous;
+    if (previous === undefined) delete process.env.ANDROPERATOR_EVIDENCE_DIR;
+    else process.env.ANDROPERATOR_EVIDENCE_DIR = previous;
   }
 });
 
 it("ownership location is unchanged across process home, temp, and evidence environments", () => {
   const child = spawnSync(process.execPath, ["--input-type=module", "-e", "import {videoLockRoot} from './dist/domain/evidence/storage.js'; console.log(videoLockRoot())"], {
-    encoding: "utf8", env: { ...process.env, HOME: "/unavailable-home", TMPDIR: "/different-temp", TEMP: "/another-temp", CLAWPERATOR_EVIDENCE_DIR: "/different-evidence" },
+    encoding: "utf8", env: { ...process.env, HOME: "/unavailable-home", TMPDIR: "/different-temp", TEMP: "/another-temp", ANDROPERATOR_EVIDENCE_DIR: "/different-evidence" },
   });
   assert.equal(child.status, 0, child.stderr);
   assert.equal(child.stdout.trim(), videoLockRoot());
@@ -78,7 +78,7 @@ it("POSIX ownership works without an OS account database entry", { skip: process
     os.userInfo = () => { throw Object.assign(new Error("uv_os_get_passwd ENOENT"), { code: "ERR_SYSTEM_ERROR" }); };
     syncBuiltinESMExports();
     const { videoLockRoot, preflightDirectory } = await import("./dist/domain/evidence/storage.js");
-    assert.equal(videoLockRoot(), "/tmp/clawperator-evidence-locks-" + process.geteuid());
+    assert.equal(videoLockRoot(), "/tmp/androperator-evidence-locks-" + process.geteuid());
     const root = await fs.mkdtemp(join(os.tmpdir(), "evidence-numeric-user-test-"));
     try {
       await preflightDirectory(root, true);

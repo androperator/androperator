@@ -1,5 +1,5 @@
 /**
- * Unified logging contract for Clawperator.
+ * Unified logging contract for Androperator.
  *
  * All event routing, level thresholds, and schema definitions live here.
  * The routing table and naming table are authoritative - do not re-derive.
@@ -41,7 +41,7 @@ export interface LogEvent {
 }
 
 // ---------------------------------------------------------------------------
-// ClawperatorLogger interface
+// AndroperatorLogger interface
 // ---------------------------------------------------------------------------
 
 export interface LoggingStatus {
@@ -50,15 +50,15 @@ export interface LoggingStatus {
   logPath?: string;
 }
 
-export interface ClawperatorLogger {
+export interface AndroperatorLogger {
   status(): LoggingStatus;
   emit(event: LogEvent): void;
-  child(defaultContext: Partial<LogEvent>): ClawperatorLogger;
+  child(defaultContext: Partial<LogEvent>): AndroperatorLogger;
   /** Last successfully persisted file while the sink is enabled, not a configured destination. */
   logPath(): string | undefined;
 }
 
-export const CLAWPERATOR_SKILL_RUN_ID_ENV_VAR = "CLAWPERATOR_SKILL_RUN_ID";
+export const ANDROPERATOR_SKILL_RUN_ID_ENV_VAR = "ANDROPERATOR_SKILL_RUN_ID";
 export const SKILL_RUN_ID_PATTERN = /^skillrun_[A-Za-z0-9._:-]+$/;
 export const SKILL_RUN_ID_MAX_LENGTH = 240;
 
@@ -161,5 +161,5 @@ export function formatDate(date: Date): string {
  * Format the daily log file path.
  */
 export function formatLogPath(logDir: string, date = new Date()): string {
-  return join(logDir, `clawperator-${formatDate(date)}.log`);
+  return join(logDir, `androperator-${formatDate(date)}.log`);
 }

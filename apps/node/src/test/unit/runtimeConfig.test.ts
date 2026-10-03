@@ -17,7 +17,7 @@ describe("getDefaultRuntimeConfig", () => {
     assert.ok(config.sdkmanagerPath.length > 0);
     assert.ok(config.avdmanagerPath.length > 0);
     assert.ok(config.operatorPackage.length > 0);
-    assert.strictEqual(config.operatorPackage, "com.clawperator.operator");
+    assert.strictEqual(config.operatorPackage, "com.androperator.operator");
   });
 
   it("merges overrides", () => {
@@ -32,20 +32,20 @@ describe("getDefaultRuntimeConfig", () => {
   });
 
   it("treats blank or whitespace operator package inputs as unset", () => {
-    const originalOperatorPackage = process.env.CLAWPERATOR_OPERATOR_PACKAGE;
+    const originalOperatorPackage = process.env.ANDROPERATOR_OPERATOR_PACKAGE;
     try {
-      process.env.CLAWPERATOR_OPERATOR_PACKAGE = "   ";
+      process.env.ANDROPERATOR_OPERATOR_PACKAGE = "   ";
 
       const envConfig = getDefaultRuntimeConfig();
-      assert.strictEqual(envConfig.operatorPackage, "com.clawperator.operator");
+      assert.strictEqual(envConfig.operatorPackage, "com.androperator.operator");
 
       const overrideConfig = getDefaultRuntimeConfig({ operatorPackage: "  " });
-      assert.strictEqual(overrideConfig.operatorPackage, "com.clawperator.operator");
+      assert.strictEqual(overrideConfig.operatorPackage, "com.androperator.operator");
     } finally {
       if (originalOperatorPackage !== undefined) {
-        process.env.CLAWPERATOR_OPERATOR_PACKAGE = originalOperatorPackage;
+        process.env.ANDROPERATOR_OPERATOR_PACKAGE = originalOperatorPackage;
       } else {
-        delete process.env.CLAWPERATOR_OPERATOR_PACKAGE;
+        delete process.env.ANDROPERATOR_OPERATOR_PACKAGE;
       }
     }
   });

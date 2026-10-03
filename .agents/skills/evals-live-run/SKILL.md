@@ -1,6 +1,6 @@
 ---
 name: evals-live-run
-description: Run or debug Clawperator live-device skill evals, including orchestrated cold-start proving.
+description: Run or debug Androperator live-device skill evals, including orchestrated cold-start proving.
 ---
 
 # Evals Live Run

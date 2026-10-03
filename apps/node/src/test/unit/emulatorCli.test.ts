@@ -25,7 +25,7 @@ describe("emulator CLI help and usage", () => {
   it("shows emulator help topic", async () => {
     const { stdout, code } = await runCli(["emulator", "--help"]);
     assert.strictEqual(code, 0);
-    assert.match(stdout, /clawperator emulator/);
+    assert.match(stdout, /androperator emulator/);
     assert.match(stdout, /emulator inspect <name>/);
     assert.match(stdout, /--storage-size <sizeG>/);
     assert.match(stdout, /provision emulator/);

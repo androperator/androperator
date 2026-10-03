@@ -27,11 +27,11 @@ async function isMissingDir(path: string): Promise<boolean> {
 }
 
 function getBundledSkillsEnvHint(env: NodeJS.ProcessEnv | undefined): string | undefined {
-  const sourceDir = env?.CLAWPERATOR_BUNDLED_SKILLS;
+  const sourceDir = env?.ANDROPERATOR_BUNDLED_SKILLS;
   if (sourceDir === undefined || sourceDir === "") {
     return undefined;
   }
-  return `Using CLAWPERATOR_BUNDLED_SKILLS=${sourceDir}`;
+  return `Using ANDROPERATOR_BUNDLED_SKILLS=${sourceDir}`;
 }
 
 async function runBundledSkillsInstall(
@@ -75,7 +75,7 @@ export async function cmdBundledSkillsList(
         skills: [],
         count: 0,
         installedDir: installDir,
-        message: "No installed bundled-skills found. Run clawperator bundled-skills install to get clawperator-agent-orientation, clawperator-agent-control-loop, clawperator-upgrade, clawperator-skill-author-by-agent-discovery, and clawperator-skill-author-by-recording.",
+        message: "No installed bundled-skills found. Run androperator bundled-skills install to get androperator-agent-orientation, androperator-agent-control-loop, androperator-upgrade, androperator-skill-author-by-agent-discovery, and androperator-skill-author-by-recording.",
       }, options);
     }
 

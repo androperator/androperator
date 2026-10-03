@@ -24,7 +24,7 @@ export function buildResultEnvelopeTimeoutHint(
     return undefined;
   }
 
-  const doctorArgs = ["clawperator", "doctor"];
+  const doctorArgs = ["androperator", "doctor"];
   if (context.deviceId !== undefined) {
     doctorArgs.push("--device", context.deviceId);
   }

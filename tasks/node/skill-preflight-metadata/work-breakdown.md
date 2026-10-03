@@ -6,7 +6,7 @@ Parent plan: `tasks/node/skill-preflight-metadata/plan.md`
 
 2 PRs, 4 phases. PR-1 introduces the requirements metadata contract, trusted
 manifest parsing, `skills get` rendering, and the paired schema or exemplar
-updates in `../clawperator-skills`. PR-2 introduces runtime preflight
+updates in `<workspace>`. PR-2 introduces runtime preflight
 evaluation plus structured failures for hard requirements that can be checked
 before spawn. This is a standalone skills-surface task pack.
 
@@ -35,7 +35,7 @@ before spawn. This is a standalone skills-surface task pack.
 - Do not turn `skills list` or `skills search` into verbose requirement dumps.
   `skills get` is the detailed discovery surface.
 - Land the Node-side contract change and the paired
-  `../clawperator-skills/skills/skills-registry.schema.json` change in the same
+  `<workspace>/skills/skills-registry.schema.json` change in the same
   review window. Do not prove the feature only with repo-local fixtures.
 - Keep Google Home HVAC as the required exemplar set for seeded metadata and
   regression coverage.
@@ -59,16 +59,16 @@ Read these files IN THIS ORDER before writing anything.
 | `apps/node/src/test/unit/skills.test.ts` | Existing regression patterns for skills discovery and runtime behavior |
 | `docs/skills/overview.md` | Public skill discovery contract and current error guidance |
 | `docs/api/errors.md` | Public stable error-code documentation rules |
-| `../clawperator-skills/skills/skills-registry.schema.json` | Paired registry schema source of truth |
-| `../clawperator-skills/skills/skills-registry.json` | Real shipped registry data |
-| `../clawperator-skills/skills/com.google.android.apps.chromecast.app.get-climate-replay/skill.json` | Google Home read-only exemplar |
-| `../clawperator-skills/skills/com.google.android.apps.chromecast.app.control-hvac-orchestrated/skill.json` | Google Home orchestrated exemplar and safer-first-run pointer target |
+| `<workspace>/skills/skills-registry.schema.json` | Paired registry schema source of truth |
+| `<workspace>/skills/skills-registry.json` | Real shipped registry data |
+| `<workspace>/skills/com.google.android.apps.chromecast.app.get-climate-replay/skill.json` | Google Home read-only exemplar |
+| `<workspace>/skills/com.google.android.apps.chromecast.app.control-hvac-orchestrated/skill.json` | Google Home orchestrated exemplar and safer-first-run pointer target |
 
 ## PR / Phase Plan
 
 | PR | Branch | Purpose | Included phases | Agent tier | Merge gate | Cross-repo dependency |
 | --- | --- | --- | --- | --- | --- | --- |
-| PR-1 | `node/skill-preflight-metadata-p1` | Requirements contract and discovery | 1, 2 | thinking, default | none | paired `../clawperator-skills` schema and exemplar update required before PR is complete |
+| PR-1 | `node/skill-preflight-metadata-p1` | Requirements contract and discovery | 1, 2 | thinking, default | none | paired `<workspace>` schema and exemplar update required before PR is complete |
 | PR-2 | `node/skill-preflight-metadata-p2` | Runtime preflight enforcement | 3, 4 | thinking, default | PR-1 merged | none |
 
 ## Phase 1: Requirements Metadata Contract
@@ -135,17 +135,17 @@ default
 ### Goal
 
 Make `skills get` surface requirements metadata clearly and seed the real Google
-Home HVAC skills with that metadata in `../clawperator-skills`.
+Home HVAC skills with that metadata in `<workspace>`.
 
 ### Files or Surfaces To Change
 
 - `apps/node/src/cli/commands/skills.ts`
 - `apps/node/src/test/unit/skills.test.ts`
 - `docs/skills/overview.md`
-- `../clawperator-skills/skills/skills-registry.schema.json`
-- `../clawperator-skills/skills/skills-registry.json`
-- `../clawperator-skills/skills/generated/`
-- `../clawperator-skills/skills/com.google.android.apps.chromecast.app.*/skill.json`
+- `<workspace>/skills/skills-registry.schema.json`
+- `<workspace>/skills/skills-registry.json`
+- `<workspace>/skills/generated/`
+- `<workspace>/skills/com.google.android.apps.chromecast.app.*/skill.json`
 
 ### Steps
 
@@ -155,7 +155,7 @@ Home HVAC skills with that metadata in `../clawperator-skills`.
    safer-first-run guidance. Keep the JSON shape close to the underlying
    contract.
 3. Update the sibling skills repo schema in
-   `../clawperator-skills/skills/skills-registry.schema.json` so the published
+   `<workspace>/skills/skills-registry.schema.json` so the published
    registry accepts the new metadata.
 4. Seed the four Google Home HVAC skills (`get-climate-replay`,
    `set-power-replay`, `set-temperature-replay`, and
@@ -172,7 +172,7 @@ Home HVAC skills with that metadata in `../clawperator-skills`.
 5. Regenerate the sibling repo registry and committed indexes after the schema
    and exemplar-manifest edits:
    ```bash
-   (cd ../clawperator-skills && ./scripts/generate_skill_indexes.sh)
+   (cd <workspace> && ./scripts/generate_skill_indexes.sh)
    ```
    Treat `skills/skills-registry.json` and the changed files under
    `skills/generated/` as required Phase 2 outputs, not optional rebuild noise.
@@ -211,10 +211,10 @@ Home HVAC skills with that metadata in `../clawperator-skills`.
 ```bash
 npm --prefix apps/node run build
 npm --prefix apps/node run test
-(cd ../clawperator-skills && ./scripts/generate_skill_indexes.sh)
+(cd <workspace> && ./scripts/generate_skill_indexes.sh)
 rg -n "\"requirements\"|\"saferFirstRun\"|\"codex\"" \
-  ../clawperator-skills/skills/skills-registry.json \
-  ../clawperator-skills/skills/generated/by-app/com.google.android.apps.chromecast.app.json
+  <workspace>/skills/skills-registry.json \
+  <workspace>/skills/generated/by-app/com.google.android.apps.chromecast.app.json
 ./scripts/docs_build.sh
 ```
 

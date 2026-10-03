@@ -118,7 +118,7 @@ setup_local_dev_device() {
   node "$LOCAL_CLI" operator setup \
     --apk "$DEBUG_APK" \
     --device "$serial" \
-    --operator-package com.clawperator.operator.dev \
+    --operator-package com.androperator.operator.dev \
     --output json >/dev/null
 }
 
@@ -139,7 +139,7 @@ run_pack_a_leg() {
 
   if [[ "$DRY_RUN" -eq 1 ]]; then
     echo "[$leg_name] operator setup:"
-    print_command node "$LOCAL_CLI" operator setup --apk "$DEBUG_APK" --device "$serial" --operator-package com.clawperator.operator.dev --output json
+    print_command node "$LOCAL_CLI" operator setup --apk "$DEBUG_APK" --device "$serial" --operator-package com.androperator.operator.dev --output json
     echo "[$leg_name] eval:"
     print_command "${eval_cmd[@]}"
     return 0

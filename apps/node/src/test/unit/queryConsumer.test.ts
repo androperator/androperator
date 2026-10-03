@@ -13,7 +13,7 @@ function payload(nodes: unknown[] = []) {
     totalMatches: nodes.length, returnedCount: nodes.length, truncated: false, nodes };
 }
 function response(query: unknown = payload()) {
-  return { terminalSource: "clawperator_result", isCanonicalTerminal: true,
+  return { terminalSource: "androperator_result", isCanonicalTerminal: true,
     envelope: { commandId: " command ", taskId: " task ", status: "success", error: null,
       stepResults: [{ id: "query", actionType: "query_ui", success: true, data: { query: JSON.stringify(query) } }] } };
 }

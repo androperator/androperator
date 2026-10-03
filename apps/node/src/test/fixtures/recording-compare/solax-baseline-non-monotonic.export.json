@@ -4,7 +4,7 @@
     "sessionId": "solax-non-monotonic-20260413",
     "schemaVersion": 1,
     "startedAt": 1776001010000,
-    "operatorPackage": "com.clawperator.operator.dev"
+    "operatorPackage": "com.androperator.operator.dev"
   },
   "snapshotMode": "omit",
   "events": [

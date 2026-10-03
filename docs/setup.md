@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Get from an empty host to a first successful `clawperator snapshot` with one deterministic path and machine-checkable success conditions.
+Get from an empty host to a first successful `androperator snapshot` with one deterministic path and machine-checkable success conditions.
 
 ## Prerequisites
 
@@ -11,46 +11,46 @@ Get from an empty host to a first successful `clawperator snapshot` with one det
 | Node.js | v24+ | `node -v` |
 | Java | 17 or 21 | `java -version` |
 | adb | On `PATH` | `adb version` |
-| Android target | One device or emulator visible to adb | `clawperator devices` |
+| Android target | One device or emulator visible to adb | `androperator devices` |
 
 **Java note:** The installer provisions Java 17 automatically on supported platforms (macOS with Homebrew, Ubuntu/Debian, Arch). Java 17 or 21 is required as the host JDK for Android builds (AGP 8.x requirement). The Android Gradle build compiles Java and Kotlin with Java 17 settings; device compatibility is handled by Android's DEX pipeline, not by targeting an older bytecode level.
 
 ## Agent-directed setup
 
 When a user wants an outside agent to install, repair, verify, and orient
-Clawperator, give the agent this prompt:
+Androperator, give the agent this prompt:
 
 ```text
-Read https://clawperator.com/skill.md and get me set up with Clawperator.
+Read https://androperator.com/skill.md and get me set up with Androperator.
 ```
 
-`https://clawperator.com/skill.md` is the public setup skill for agents. It is
+`https://androperator.com/skill.md` is the public setup skill for agents. It is
 the pre-install entrypoint that tells an agent when to use the shell installer,
-when to use direct npm install, when to run `clawperator install`, which
+when to use direct npm install, when to run `androperator install`, which
 readiness checks prove setup, and which human approval boundaries must stop the
 agent.
 
-The public skill does not replace `clawperator install`. It points the agent to
-`clawperator install` as the canonical post-bootstrap route after the CLI
+The public skill does not replace `androperator install`. It points the agent to
+`androperator install` as the canonical post-bootstrap route after the CLI
 exists. After install, local host-specific orientation moves to:
 
 | Path | Use |
 | --- | --- |
-| `~/.clawperator/AGENTS.md` | Local guide written by host setup for the current machine. |
-| `~/.clawperator/install-state.json` | Install metadata, registry path, APK version, and last device serial when known. |
-| `~/.clawperator/mcp-config-snippet.json` | Generated stdio MCP configuration for hosts that choose `clawperator mcp serve`. |
+| `~/.androperator/AGENTS.md` | Local guide written by host setup for the current machine. |
+| `~/.androperator/install-state.json` | Install metadata, registry path, APK version, and last device serial when known. |
+| `~/.androperator/mcp-config-snippet.json` | Generated stdio MCP configuration for hosts that choose `androperator mcp serve`. |
 
 Machine-checkable verification after an agent-directed setup:
 
 ```bash
-clawperator doctor
-clawperator devices
-clawperator snapshot --device <device_serial>
-test -f ~/.clawperator/AGENTS.md
-test -f ~/.clawperator/mcp-config-snippet.json
+androperator doctor
+androperator devices
+androperator snapshot --device <device_serial>
+test -f ~/.androperator/AGENTS.md
+test -f ~/.androperator/mcp-config-snippet.json
 ```
 
-Continue only when `clawperator doctor` exits `0`, `criticalOk` is `true`, and
+Continue only when `androperator doctor` exits `0`, `criticalOk` is `true`, and
 the snapshot command returns a successful result envelope. Human action can
 still be required for OS prompts, Developer Options, USB debugging
 authorization, Android accessibility permission, notification permission, app
@@ -60,10 +60,10 @@ targets are connected.
 <a id="setup-step-install-cli"></a>
 ## 1. Install the CLI
 
-Recommended - the installer handles Node, Java 17, adb, CLI bootstrap, and the delegated `clawperator install` flow in one step:
+Recommended - the installer handles Node, Java 17, adb, CLI bootstrap, and the delegated `androperator install` flow in one step:
 
 ```bash
-curl -fsSL https://clawperator.com/install.sh | bash
+curl -fsSL https://androperator.com/install.sh | bash
 ```
 
 If the installer succeeds, skip to [5. Verify readiness with doctor](#5-verify-readiness-with-doctor).
@@ -76,54 +76,54 @@ then finishes with explicit `--device <serial>` guidance for later commands.
 Alternatively, install the CLI only via npm (Node.js 24+ required):
 
 ```bash
-npm install -g clawperator
+npm install -g androperator
 ```
 
 Then run the canonical post-bootstrap install flow:
 
 ```bash
-clawperator install
+androperator install
 ```
 
 Success conditions:
 
-- `clawperator version` exits `0` and prints a version string.
-- If you used `install.sh`, the delegated install flow downloads the current release APK when remediation needs setup and no reusable local copy is already in place. For later manual setup or recovery, redownload from `https://clawperator.com/operator.apk` or use `clawperator operator download`.
+- `androperator version` exits `0` and prints a version string.
+- If you used `install.sh`, the delegated install flow downloads the current release APK when remediation needs setup and no reusable local copy is already in place. For later manual setup or recovery, redownload from `https://androperator.com/operator.apk` or use `androperator operator download`.
 
-### Durable host-agent artifacts from `clawperator install`
+### Durable host-agent artifacts from `androperator install`
 
-After shell bootstrap succeeds, `install.sh` delegates to `clawperator install`.
+After shell bootstrap succeeds, `install.sh` delegates to `androperator install`.
 That CLI-owned post-bootstrap flow runs operator remediation, runtime-skills
-install, bundled-skills install, and `clawperator host setup`, then writes
-these durable onboarding files under `~/.clawperator/`:
+install, bundled-skills install, and `androperator host setup`, then writes
+these durable onboarding files under `~/.androperator/`:
 
 | Path | Meaning | When to read it |
 | --- | --- | --- |
-| `~/.clawperator/AGENTS.md` | Local Clawperator guide with runtime-skill discovery commands and current bundled-skills status | First stop for a host agent that needs to discover what Clawperator can do on this machine |
-| `~/.clawperator/install-state.json` | Durable install metadata written by `clawperator host setup` during install | Use when you need the last known install facts without rerunning `doctor` |
-| `~/.clawperator/mcp-config-snippet.json` | Paste-ready MCP config for Claude Desktop, Codex, and a generic stdio MCP consumer | Use when the host should connect through `clawperator mcp serve` instead of shelling out to the CLI |
+| `~/.androperator/AGENTS.md` | Local Androperator guide with runtime-skill discovery commands and current bundled-skills status | First stop for a host agent that needs to discover what Androperator can do on this machine |
+| `~/.androperator/install-state.json` | Durable install metadata written by `androperator host setup` during install | Use when you need the last known install facts without rerunning `doctor` |
+| `~/.androperator/mcp-config-snippet.json` | Paste-ready MCP config for Claude Desktop, Codex, and a generic stdio MCP consumer | Use when the host should connect through `androperator mcp serve` instead of shelling out to the CLI |
 
 Shell prerequisite failures exit before these files are written. After
-`install.sh` delegates to `clawperator install`, later remediation or device
+`install.sh` delegates to `androperator install`, later remediation or device
 readiness failures can still leave these files behind because host setup runs
 before the CLI returns its final install status.
 
 The runtime-skills registry is discovered automatically from
-`~/.clawperator/skills/skills/skills-registry.json` after `clawperator skills install`, so
-`install.sh` no longer writes `CLAWPERATOR_SKILLS_REGISTRY` into shell RC files.
+`~/.androperator/skills/skills/skills-registry.json` after `androperator skills install`, so
+`install.sh` no longer writes `ANDROPERATOR_SKILLS_REGISTRY` into shell RC files.
 
 Bundled host-agent skills are installed separately from runtime skills:
 
-- `~/.clawperator/bundled-skills/` is the canonical first-party bundled-skill store
-- `~/.claude/skills/` and the Codex skills dir receive Clawperator-managed symlinks into that store
-- `~/.agents/skills/` receives Clawperator-managed real directory copies with a `.clawperator-managed` marker so generic agents can scan them without following symlinks outside their configured root
+- `~/.androperator/bundled-skills/` is the canonical first-party bundled-skill store
+- `~/.claude/skills/` and the Codex skills dir receive Androperator-managed symlinks into that store
+- `~/.agents/skills/` receives Androperator-managed real directory copies with a `.androperator-managed` marker so generic agents can scan them without following symlinks outside their configured root
 - discovery directories that alias `~/.agents/skills/` share its managed copies, including Claude Code or Codex; see [bundled-skill installation](skills/authoring.md) for legacy migration and backup behavior
-- runtime skills from `~/.clawperator/skills/` are not mirrored into shared agent discovery directories
+- runtime skills from `~/.androperator/skills/` are not mirrored into shared agent discovery directories
 
 Canonical public next step after install:
 
 - read [Host Agent Orientation](host-agents.md) when you need to decide between
-  `clawperator skills`, `clawperator mcp serve`, and direct CLI automation
+  `androperator skills`, `androperator mcp serve`, and direct CLI automation
 
 `install-state.json` currently has this shape:
 
@@ -132,7 +132,7 @@ Canonical public next step after install:
   "schemaVersion": 1,
   "installedAt": "2026-04-17T08:12:34Z",
   "cliVersion": "1.2.3",
-  "registryPath": "/Users/<local_user>/.clawperator/skills/skills/skills-registry.json",
+  "registryPath": "/Users/<local_user>/.androperator/skills/skills/skills-registry.json",
   "apkVersion": "1.2.3",
   "lastDeviceSerial": null
 }
@@ -141,29 +141,29 @@ Canonical public next step after install:
 Field rules:
 
 - `schemaVersion` and `installedAt` are always present
-- `cliVersion` is `null` when the installer could not run `clawperator --version`
-- `registryPath` is `null` when the installer cannot resolve any readable runtime-skills registry path from the current install run, `CLAWPERATOR_SKILLS_REGISTRY`, prior install state, or the default installed home path
+- `cliVersion` is `null` when the installer could not run `androperator --version`
+- `registryPath` is `null` when the installer cannot resolve any readable runtime-skills registry path from the current install run, `ANDROPERATOR_SKILLS_REGISTRY`, prior install state, or the default installed home path
 - `apkVersion` is `null` when the installer does not have a known operator version
 - `lastDeviceSerial` is `null` when install did not pick one unambiguous device
 
 Shared-agent bridge behavior is intentionally bounded:
 
-- if `~/.agents/AGENTS.md` already exists, `clawperator host setup` appends one Clawperator-owned bridge block there
-- that bridge points back to `~/.clawperator/AGENTS.md` plus the `clawperator skills` discovery commands
+- if `~/.agents/AGENTS.md` already exists, `androperator host setup` appends one Androperator-owned bridge block there
+- that bridge points back to `~/.androperator/AGENTS.md` plus the `androperator skills` discovery commands
 - if `~/.agents/AGENTS.md` does not exist, the installer does not create it
 - the installer does not copy runtime skills into shared agent skill directories
 
 Verification:
 
 ```bash
-ls ~/.clawperator/AGENTS.md ~/.clawperator/install-state.json ~/.clawperator/mcp-config-snippet.json
-clawperator skills list
-test ! -f ~/.agents/AGENTS.md || grep -F "CLAWPERATOR_SHARED_AGENT_BRIDGE:START" ~/.agents/AGENTS.md
+ls ~/.androperator/AGENTS.md ~/.androperator/install-state.json ~/.androperator/mcp-config-snippet.json
+androperator skills list
+test ! -f ~/.agents/AGENTS.md || grep -F "ANDROPERATOR_SHARED_AGENT_BRIDGE:START" ~/.agents/AGENTS.md
 ```
 
 When choosing the host-facing surface:
 
-- use `clawperator skills` when you want to discover or run installed runtime skills by app, keyword, or id
+- use `androperator skills` when you want to discover or run installed runtime skills by app, keyword, or id
 - no shell profile export is required for the default runtime-skills registry path
 - use MCP when your host already supports stdio MCP and wants registered tools such as `devices`, `snapshot`, and `execute`
 
@@ -177,7 +177,7 @@ Required device state:
 
 1. Enable Developer options (Settings > About phone > tap Build Number 7 times).
 2. Enable USB debugging (Settings > Developer options > USB debugging).
-3. Connect the device via USB, or boot an emulator via Android Studio or `clawperator emulator create`.
+3. Connect the device via USB, or boot an emulator via Android Studio or `androperator emulator create`.
 4. Accept the adb authorization prompt if Android shows one.
 
 Emulators have USB debugging enabled by default. Physical devices require steps 1-2 and the RSA key acceptance in step 4.
@@ -185,7 +185,7 @@ Emulators have USB debugging enabled by default. Physical devices require steps 
 Success condition:
 
 ```bash
-clawperator devices
+androperator devices
 ```
 
 Expected output shape:
@@ -209,38 +209,38 @@ To avoid stale cached copies, always refresh the stable release APK before
 running setup or reinstall:
 
 ```bash
-mkdir -p ~/.clawperator/downloads
-curl -fsSL https://clawperator.com/operator.apk -o ~/.clawperator/downloads/operator.apk
+mkdir -p ~/.androperator/downloads
+curl -fsSL https://androperator.com/operator.apk -o ~/.androperator/downloads/operator.apk
 ```
 
-Canonical public APK URL: `https://clawperator.com/operator.apk`
+Canonical public APK URL: `https://androperator.com/operator.apk`
 
-Keep the CLI and Operator APK on matching releases. Run `clawperator doctor`
+Keep the CLI and Operator APK on matching releases. Run `androperator doctor`
 to check version compatibility and device readiness before issuing UI commands.
 
 ```bash
-clawperator operator setup --apk ~/.clawperator/downloads/operator.apk
+androperator operator setup --apk ~/.androperator/downloads/operator.apk
 ```
 
 With explicit device targeting:
 
 ```bash
-clawperator operator setup --apk ~/.clawperator/downloads/operator.apk --device <device_serial>
+androperator operator setup --apk ~/.androperator/downloads/operator.apk --device <device_serial>
 ```
 
 For a local debug APK instead of the release APK:
 
 ```bash
-clawperator operator setup \
+androperator operator setup \
   --apk <local_debug_apk_path> \
   --device <device_serial> \
-  --operator-package com.clawperator.operator.dev
+  --operator-package com.androperator.operator.dev
 ```
 
 | Variant | Package name | When to use |
 | --- | --- | --- |
-| Release | `com.clawperator.operator` | Default. Installed by the installer. |
-| Debug | `com.clawperator.operator.dev` | Local development, built from source. |
+| Release | `com.androperator.operator` | Default. Installed by the installer. |
+| Debug | `com.androperator.operator.dev` | Local development, built from source. |
 
 The CLI auto-detects which variant is installed when exactly one is present. If both are installed, pass `--operator-package` explicitly.
 
@@ -253,7 +253,7 @@ Behavior:
 Success condition:
 
 - Command exits without a structured error object.
-- A follow-up `clawperator doctor` no longer reports `OPERATOR_NOT_INSTALLED` for `readiness.apk.presence`.
+- A follow-up `androperator doctor` no longer reports `OPERATOR_NOT_INSTALLED` for `readiness.apk.presence`.
 
 Do not use raw `adb install` for setup. The CLI setup command is the only path that performs install, permission grant, and verification as one operation.
 
@@ -261,19 +261,19 @@ Do not use raw `adb install` for setup. The CLI setup command is the only path t
 ## 4. Re-grant permissions (recovery only)
 
 ```bash
-clawperator grant-device-permissions --device <device_serial>
+androperator grant-device-permissions --device <device_serial>
 ```
 
-Use this only after the Operator APK crashes or Android revokes accessibility / notification permissions. For the first install, use `clawperator operator setup`.
+Use this only after the Operator APK crashes or Android revokes accessibility / notification permissions. For the first install, use `androperator operator setup`.
 
 If you force-stop the Operator package during debugging and the next handshake
 or snapshot stops working, use this same recovery step before trusting the
-runtime again, then re-run `clawperator doctor`.
+runtime again, then re-run `androperator doctor`.
 
 ## Optional video recording tools
 
 Video recording additionally requires separately installed scrcpy 3.0 or newer,
-ffprobe, and ffmpeg 6.1 or newer with the libx264 encoder on the host PATH. Clawperator does
+ffprobe, and ffmpeg 6.1 or newer with the libx264 encoder on the host PATH. Androperator does
 not bundle or install them. On macOS: `brew install scrcpy ffmpeg`.
 `doctor` warns under `host.video.dependencies` when they are unavailable; this
 advisory does not block ordinary device readiness. Screenshots still require
@@ -284,13 +284,13 @@ for CLI, Node, and MCP error details.
 ## 5. Verify readiness with doctor
 
 ```bash
-clawperator doctor
+androperator doctor
 ```
 
 With explicit targeting:
 
 ```bash
-clawperator doctor --device <device_serial>
+androperator doctor --device <device_serial>
 ```
 
 ### Doctor checks
@@ -317,13 +317,13 @@ See [Doctor](api/doctor.md) for the full report contract and [Errors](api/errors
 ## 6. Run the first command
 
 ```bash
-clawperator snapshot
+androperator snapshot
 ```
 
 With explicit targeting:
 
 ```bash
-clawperator snapshot --device <device_serial>
+androperator snapshot --device <device_serial>
 ```
 
 Success conditions:
@@ -340,16 +340,16 @@ If the snapshot step succeeds but `data.text` is missing, Node converts that ste
 
 ### Brain / hand model
 
-Clawperator is the hand. The agent is the brain. The agent decides what to do, then calls the Node CLI or the local serve API with explicit commands and waits for a structured result envelope.
+Androperator is the hand. The agent is the brain. The agent decides what to do, then calls the Node CLI or the local serve API with explicit commands and waits for a structured result envelope.
 
 ### Programmatic first-run sequence
 
-1. Run `clawperator doctor [--device <serial>] [--operator-package <pkg>]`.
-2. If `readiness.apk.presence` fails, run `clawperator operator setup --apk <path> ...`.
-3. If `readiness.handshake` fails after a known-good install, run `clawperator grant-device-permissions ...`.
-4. For multiple failures, `clawperator doctor --fix ...` auto-executes shell remediation steps.
-5. Re-run `clawperator doctor ...` and require `criticalOk: true`.
-6. Run `clawperator snapshot ...`.
+1. Run `androperator doctor [--device <serial>] [--operator-package <pkg>]`.
+2. If `readiness.apk.presence` fails, run `androperator operator setup --apk <path> ...`.
+3. If `readiness.handshake` fails after a known-good install, run `androperator grant-device-permissions ...`.
+4. For multiple failures, `androperator doctor --fix ...` auto-executes shell remediation steps.
+5. Re-run `androperator doctor ...` and require `criticalOk: true`.
+6. Run `androperator snapshot ...`.
 7. Branch only on structured fields: `criticalOk`, `checks[].code`, `envelope.status`, `envelope.errorCode`, `stepResults[].success`.
 
 ### How to confirm success without a human
@@ -362,15 +362,15 @@ Clawperator is the hand. The agent is the brain. The agent decides what to do, t
 
 | Code | Meaning | Recovery |
 | --- | --- | --- |
-| `NO_DEVICES` | No adb target in state `device` | Connect or boot a target, rerun `clawperator devices` then `doctor`. |
+| `NO_DEVICES` | No adb target in state `device` | Connect or boot a target, rerun `androperator devices` then `doctor`. |
 | `DEVICE_UNAUTHORIZED` | adb key prompt not accepted | Accept the prompt on the device screen, rerun `doctor`. |
 | `DEVICE_OFFLINE` | Device unreachable | `adb kill-server && adb start-server`, rerun `doctor`. |
-| `MULTIPLE_DEVICES_DEVICE_ID_REQUIRED` | More than one target connected | Pick a serial from `clawperator devices`, pass `--device <serial>` to all commands. |
-| `OPERATOR_NOT_INSTALLED` | Expected package missing | `clawperator operator setup --apk <path> [--device <serial>]`. |
+| `MULTIPLE_DEVICES_DEVICE_ID_REQUIRED` | More than one target connected | Pick a serial from `androperator devices`, pass `--device <serial>` to all commands. |
+| `OPERATOR_NOT_INSTALLED` | Expected package missing | `androperator operator setup --apk <path> [--device <serial>]`. |
 | `OPERATOR_VARIANT_MISMATCH` | Release/debug package mismatch | Pass `--operator-package <installed-package>` or reinstall the intended APK. |
-| `DEVICE_ACCESSIBILITY_NOT_RUNNING` | Handshake returned a runtime failure | `clawperator grant-device-permissions [--device <serial>]`, rerun `doctor` and `snapshot`. |
+| `DEVICE_ACCESSIBILITY_NOT_RUNNING` | Handshake returned a runtime failure | `androperator grant-device-permissions [--device <serial>]`, rerun `doctor` and `snapshot`. |
 | `RESULT_ENVELOPE_TIMEOUT` | Broadcast sent, no result envelope arrived | If no correlated log lines were captured, run `doctor` to check version compatibility and accessibility; otherwise re-grant permissions, rerun `snapshot --timeout 5000 --verbose`, and verify `--operator-package`. |
-| `VERSION_INCOMPATIBLE` | CLI and APK version mismatch | Reinstall CLI (`npm install -g clawperator@latest`) or APK to align versions. |
+| `VERSION_INCOMPATIBLE` | CLI and APK version mismatch | Reinstall CLI (`npm install -g androperator@latest`) or APK to align versions. |
 
 ### When to pass `--device` and `--operator-package`
 
@@ -381,17 +381,17 @@ For deterministic automation, always pass both flags explicitly.
 
 ## Debugging setup issues
 
-If setup fails, use `clawperator logs` to inspect what happened:
+If setup fails, use `androperator logs` to inspect what happened:
 
 ```bash
 # Stream logs in one terminal
-clawperator logs
+androperator logs
 
 # Run the failing command in another terminal
-clawperator doctor --device <device_serial> --operator-package <package>
+androperator doctor --device <device_serial> --operator-package <package>
 ```
 
-Log file location: `~/.clawperator/logs/clawperator-YYYY-MM-DD.log`
+Log file location: `~/.androperator/logs/androperator-YYYY-MM-DD.log`
 
 Key events to look for:
 
@@ -449,13 +449,13 @@ Role assignment and physical-device behavior are not part of the readiness proof
 The Operator can read views Android marks as accessibility-data sensitive.
 Both development and release APKs declare `android:isAccessibilityTool="true"`.
 Android [defines this declaration](https://developer.android.com/reference/android/accessibilityservice/AccessibilityServiceInfo#attr_android:isAccessibilityTool)
-as identifying services used to assist users with disabilities. Clawperator is
+as identifying services used to assist users with disabilities. Androperator is
 distributed outside Google Play.
 
-Install the matching APK using `clawperator operator setup --apk <apk_path>`
+Install the matching APK using `androperator operator setup --apk <apk_path>`
 with the explicit device and Operator package. Wait for setup to succeed before
 issuing UI commands. If the accessibility service is unavailable, enable the
-selected Operator in Android accessibility settings and run `clawperator doctor`.
+selected Operator in Android accessibility settings and run `androperator doctor`.
 If it is already enabled but remains unavailable, turn it off and back on, then
 rerun doctor.
 
@@ -469,6 +469,6 @@ Applications can still have no accessible hierarchy. Sensitivity metadata does
 not change screenshot capture, redaction, or logging behavior.
 
 For screen-off notification/media observation, use
-`clawperator doctor --capability background-observation` after setup. The default
+`androperator doctor --capability background-observation` after setup. The default
 interactive doctor can fail on a locked screen while these reads remain available.
 See [background readiness](api/doctor.md#background-observation-readiness).

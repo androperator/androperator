@@ -62,14 +62,14 @@ in doctor, not a failure of normal device readiness. See
 `EVIDENCE_STORAGE_UNWRITABLE` means an evidence destination or the fixed host
 video lock directory failed a required filesystem operation. CLI/Node and MCP
 errors include the absolute `path`, underlying `causeCode` (or null), `message`,
-and a `recovery` action. Choose a writable `CLAWPERATOR_EVIDENCE_DIR` and new
+and a `recovery` action. Choose a writable `ANDROPERATOR_EVIDENCE_DIR` and new
 output directory, and ensure the host lock directory is accessible. Video
 preflight fails before any recorder is spawned; no permission changes or
 stale-owner takeover occurs. See [evidence storage configuration](evidence.md#evidence-storage-configuration).
 
 ## Two Failure Shapes
 
-Clawperator surfaces failures in two main shapes.
+Androperator surfaces failures in two main shapes.
 
 ### 1. Top-level CLI error object
 
@@ -120,7 +120,7 @@ Per-step example:
     ]
   },
   "deviceId": "emulator-5554",
-  "terminalSource": "clawperator_result",
+  "terminalSource": "androperator_result",
   "isCanonicalTerminal": true
 }
 ```
@@ -136,10 +136,10 @@ Envelope-level example with `errorCode`:
     "stepResults": [],
     "error": "Accessibility service is not available",
     "errorCode": "SERVICE_UNAVAILABLE",
-    "hint": "Accessibility service not running. Run 'clawperator doctor --fix --device emulator-5554' to diagnose and repair, or 'clawperator operator setup --apk <path-to-apk> --device emulator-5554' to reinstall."
+    "hint": "Accessibility service not running. Run 'androperator doctor --fix --device emulator-5554' to diagnose and repair, or 'androperator operator setup --apk <path-to-apk> --device emulator-5554' to reinstall."
   },
   "deviceId": "emulator-5554",
-  "terminalSource": "clawperator_result",
+  "terminalSource": "androperator_result",
   "isCanonicalTerminal": true
 }
 ```
@@ -184,13 +184,13 @@ Notes:
 
 | Family | Typical codes | What to do next |
 | --- | --- | --- |
-| Device targeting | `NO_DEVICES`, `DEVICE_NOT_FOUND`, `MULTIPLE_DEVICES_DEVICE_ID_REQUIRED` | Run `clawperator devices`, pick one device, and retry with `--device <serial>` |
-| Interactive readiness | `DEVICE_NOT_INTERACTIVE` | Wake or unlock the target, rerun `clawperator doctor`, and confirm the interactive-state check passes |
+| Device targeting | `NO_DEVICES`, `DEVICE_NOT_FOUND`, `MULTIPLE_DEVICES_DEVICE_ID_REQUIRED` | Run `androperator devices`, pick one device, and retry with `--device <serial>` |
+| Interactive readiness | `DEVICE_NOT_INTERACTIVE` | Wake or unlock the target, rerun `androperator doctor`, and confirm the interactive-state check passes |
 | Operator setup | `OPERATOR_NOT_INSTALLED`, `OPERATOR_VARIANT_MISMATCH`, `OPERATOR_INSTALL_FAILED`, `OPERATOR_GRANT_FAILED`, `OPERATOR_VERIFY_FAILED` | Install or repair the expected Operator APK, then rerun the command |
 | Host tooling | `ADB_NOT_FOUND`, `ADB_SERVER_FAILED`, `HOST_DEPENDENCY_MISSING`, `ANDROID_SDK_TOOL_MISSING`, `SCRCPY_NOT_FOUND` | Repair the host environment before retrying |
-| Daemon lifecycle and proxy | `DAEMON_START_FAILED`, `DAEMON_STOP_FAILED`, `DAEMON_PROXY_ERROR` | Inspect the daemon log and metadata files under `~/.clawperator/`. For `DAEMON_PROXY_ERROR`, inspect device state before retrying because the action may already have executed |
+| Daemon lifecycle and proxy | `DAEMON_START_FAILED`, `DAEMON_STOP_FAILED`, `DAEMON_PROXY_ERROR` | Inspect the daemon log and metadata files under `~/.androperator/`. For `DAEMON_PROXY_ERROR`, inspect device state before retrying because the action may already have executed |
 | Payload or flag validation | `MISSING_ARGUMENT`, `EXECUTION_VALIDATION_FAILED`, `EXECUTION_ACTION_UNSUPPORTED`, `PAYLOAD_TOO_LARGE` | Change the command or payload. Do not retry unchanged |
-| Dispatch or service availability | `RESULT_ENVELOPE_TIMEOUT`, `RESULT_ENVELOPE_MALFORMED`, `BROADCAST_FAILED`, `DEVICE_ACCESSIBILITY_NOT_RUNNING`, `DEVICE_SHELL_UNAVAILABLE` | Run `clawperator doctor`, repair the reported issue, then retry |
+| Dispatch or service availability | `RESULT_ENVELOPE_TIMEOUT`, `RESULT_ENVELOPE_MALFORMED`, `BROADCAST_FAILED`, `DEVICE_ACCESSIBILITY_NOT_RUNNING`, `DEVICE_SHELL_UNAVAILABLE` | Run `androperator doctor`, repair the reported issue, then retry |
 | UI lookup or gesture | `NODE_NOT_FOUND`, `NODE_AMBIGUOUS`, `NODE_NOT_CLICKABLE`, `CONTAINER_NOT_FOUND`, `CONTAINER_AMBIGUOUS`, `CONTAINER_NOT_SCROLLABLE`, `GESTURE_FAILED`, `SECURITY_BLOCK_DETECTED` | Refresh state with `snapshot`, wait for UI readiness, or adjust selectors and scroll strategy |
 | Unsupported gesture platform | `GESTURE_UNSUPPORTED` | `drag` requires Android API 26 or newer. Use a supported device; retrying or increasing the timeout cannot enable continued-pointer gestures on an older platform. |
 | On-screen log panel | `ON_SCREEN_LOG_SERVICE_UNAVAILABLE`, `ON_SCREEN_LOG_LAYOUT_INVALID`, `ON_SCREEN_LOG_RENDER_FAILED`, `ON_SCREEN_LOG_RENDER_TIMEOUT` | Repair the Operator service or supplied layout, then issue a replacement `set_on_screen_log` or `clear_on_screen_log` action as appropriate. |
@@ -207,7 +207,7 @@ Common triggers:
 - missing required action fields such as `open_uri.params.uri`
 - invalid ranges such as `scroll_until.maxScrolls > 200`
 - selector parser violations such as mixing `--selector` with shorthand flags
-- invalid JSON payloads for `clawperator exec`
+- invalid JSON payloads for `androperator exec`
 
 Typical output:
 
@@ -308,21 +308,21 @@ existing raw-stderr redaction.
 
 CLI execution failures exit nonzero. Serve returns a non-success HTTP status
 and the same structured execution failure; daemon routing does not retry an
-uncertain dispatch. SSE subscribers must consume `clawperator:execution` for
-host failures. Such failures no longer synthesize a `clawperator:result`
+uncertain dispatch. SSE subscribers must consume `androperator:execution` for
+host failures. Such failures no longer synthesize a `androperator:result`
 terminal Android envelope. Inspect observed application state before deciding
 whether another mutation is appropriate.
 
 ### `RESULT_ENVELOPE_TIMEOUT`
 
-Use this when Node dispatched the command but did not receive a valid `[Clawperator-Result]` envelope before the execution timeout expired.
+Use this when Node dispatched the command but did not receive a valid `[Androperator-Result]` envelope before the execution timeout expired.
 
 Typical fields:
 
 ```json
 {
   "code": "RESULT_ENVELOPE_TIMEOUT",
-  "message": "Timed out waiting for [Clawperator-Result]",
+  "message": "Timed out waiting for [Androperator-Result]",
   "details": {
     "commandId": "snapshot-1",
     "taskId": "snapshot-1",
@@ -332,13 +332,13 @@ Typical fields:
     "elapsedMs": 30000,
     "timeoutMs": 30000
   },
-  "hint": "No correlated Android log lines were captured. This often indicates an APK/CLI version mismatch or an accessibility service issue. Run 'clawperator doctor --device emulator-5554 --operator-package com.clawperator.operator.dev' to diagnose."
+  "hint": "No correlated Android log lines were captured. This often indicates an APK/CLI version mismatch or an accessibility service issue. Run 'androperator doctor --device emulator-5554 --operator-package com.androperator.operator.dev' to diagnose."
 }
 ```
 
 Recovery:
 
-- run `clawperator doctor`
+- run `androperator doctor`
 - if `hint` mentions no correlated Android log lines, treat it as a compatibility or accessibility diagnostic path rather than a generic retry
 - confirm the accessibility service and operator package are healthy
 - increase timeout only if the action legitimately needs more wall-clock time
@@ -379,19 +379,19 @@ an installation command. A failed query does not establish absence.
 Typical recovery:
 
 ```bash
-clawperator operator setup --apk <path-to-apk> --device <device_serial> --operator-package <package_name>
+androperator operator setup --apk <path-to-apk> --device <device_serial> --operator-package <package_name>
 ```
 
 If you are doing local branch validation, prefer the debug package:
 
-- `com.clawperator.operator.dev`
+- `com.androperator.operator.dev`
 
 ### `DEVICE_SHELL_UNAVAILABLE`
 
 When an installed-package query fails, execution preserves this code and the
 readiness check's summary, detail and evidence (queried package and exit code,
 when available). It does not recommend installation. Inspect the device shell
-failure and run `clawperator doctor` before retrying.
+failure and run `androperator doctor` before retrying.
 
 Package-presence failures in direct execution and daemon responses retain
 `phase=readiness`, `dispatchState=not_dispatched`, command/task correlation and
@@ -415,7 +415,7 @@ Recovery options:
 
 Doctor could not create or open the resolved daily log destination. Inspect
 `host.logs.writable.evidence` for `logDir`, `logPath`, and `writable=false`.
-Set `CLAWPERATOR_LOG_DIR` to a writable directory. This is advisory and does not
+Set `ANDROPERATOR_LOG_DIR` to a writable directory. This is advisory and does not
 fail otherwise healthy device readiness. See [Logging](logging.md).
 
 ### `BROADCAST_FAILED`
@@ -432,7 +432,7 @@ Common triggers:
 
 Recovery:
 
-- run `clawperator doctor --device <serial> --operator-package <package>`
+- run `androperator doctor --device <serial> --operator-package <package>`
 - verify package presence and variant compatibility
 - rerun the failing command only after doctor reports the target ready
 
@@ -458,7 +458,7 @@ Current shipped surface:
 - the doctor check `readiness.device.interactive`
 - direct execution preflight before dispatch
 - high-level skill-wrapper pre-spawn checks in:
-  - `clawperator skills run`
+  - `androperator skills run`
   - `POST /skills/:skillId/run`
 
 Meaning:
@@ -480,7 +480,7 @@ Typical recovery:
 - wake the device if `screenOn == false`
 - unlock the device if `deviceLocked == true`
 - complete the post-boot unlock if `userUnlocked == false`
-- rerun `clawperator doctor` and require
+- rerun `androperator doctor` and require
   `readiness.device.interactive.status == "pass"`
 
 ### `NODE_AMBIGUOUS` and `CONTAINER_AMBIGUOUS`
@@ -520,7 +520,7 @@ This is a doctor- and readiness-related failure indicating the Operator accessib
 
 Recovery:
 
-- run `clawperator doctor --fix --device <serial>`
+- run `androperator doctor --fix --device <serial>`
 - if needed, reinstall the Operator package and re-enable accessibility access
 
 ## Legacy CLI Usage Objects
@@ -561,7 +561,7 @@ persistently unavailable screen.
 ## Execution failure evidence
 
 Host execution errors add evidence in `details` without fabricating an Operator
-result envelope. Command/task correlation and the `[Clawperator-Result]` wire
+result envelope. Command/task correlation and the `[Androperator-Result]` wire
 format remain compatible. When a received envelope fails host snapshot extraction
 or screenshot capture, Node adds the same evidence as `envelope.failureEvidence`;
 the affected step also retains its string-valued `failurePhase` and `dispatchState`.

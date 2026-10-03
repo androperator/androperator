@@ -1,4 +1,4 @@
-import { isClawperatorError } from "../contracts/errors.js";
+import { isAndroperatorError } from "../contracts/errors.js";
 
 export interface McpErrorPayload {
   code?: string;
@@ -31,7 +31,7 @@ export function buildMcpErrorResult(error: unknown): McpToolResult {
 }
 
 export function normalizeMcpError(error: unknown): McpErrorPayload {
-  if (isClawperatorError(error)) {
+  if (isAndroperatorError(error)) {
     return sanitizeMcpErrorPayload(error as unknown as Record<string, unknown>);
   }
 

@@ -62,7 +62,7 @@ class EvidenceChecks(unittest.TestCase):
         self.assertFalse(transport['canonicalEnvelopeReceived'])
         self.assertEqual(transport['failureCategory'], 'host_or_transport')
         self.assertEqual(transport['commandId'], 'query-c')
-        value = {'isCanonicalTerminal': True, 'terminalSource': 'clawperator_result',
+        value = {'isCanonicalTerminal': True, 'terminalSource': 'androperator_result',
                  'envelope': {**identity, 'status': 'failed', 'stepResults': [
                      {'success': False, 'data': {'errorCode': 'UI_TREE_UNAVAILABLE'}}]}}
         action = module.classify_result(json.dumps(value), 1)

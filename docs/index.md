@@ -1,12 +1,12 @@
 # Docs Home
 
-Clawperator is a deterministic actuator tool for Android device automation.
+Androperator is a deterministic actuator tool for Android device automation.
 
 Use this page as the routing index into the authored docs. The concrete machine entry points are `llms.txt` and `llms-full.txt`.
 
 ---
 
-**Current release: [0.12.5](https://github.com/clawperator/clawperator/releases/tag/v0.12.5)**
+**Androperator 1.0.0 is being prepared for release.**
 
 ---
 
@@ -15,27 +15,27 @@ Use this page as the routing index into the authored docs. The concrete machine 
 Check your CLI version:
 
 ```bash
-clawperator version
+androperator version
 ```
 
 Check CLI and APK compatibility:
 
 ```bash
-clawperator version --check-compat --device <device_serial> --operator-package <package>
+androperator version --check-compat --device <device_serial> --operator-package <package>
 ```
 
 See [Version Compatibility](troubleshooting/compatibility.md) for detailed compatibility rules and recovery.
 
 ## Agent Entry Points
 
-- [llms.txt](https://docs.clawperator.com/llms.txt) - compact machine entrypoint
-- [llms-full.txt](https://docs.clawperator.com/llms-full.txt) - full machine-readable docs corpus
+- [llms.txt](https://docs.androperator.com/llms.txt) - compact machine entrypoint
+- [llms-full.txt](https://docs.androperator.com/llms-full.txt) - full machine-readable docs corpus
 
 Verification pattern:
 
 ```bash
-curl -fsSL https://docs.clawperator.com/llms.txt
-curl -fsSL https://docs.clawperator.com/llms-full.txt
+curl -fsSL https://docs.androperator.com/llms.txt
+curl -fsSL https://docs.androperator.com/llms-full.txt
 ```
 
 Use:
@@ -46,7 +46,7 @@ Use:
 ## Setup
 
 - [Setup](setup.md) - install the CLI, prepare a device, install the Operator APK, verify readiness, and run the first snapshot
-- [Host Agent Orientation](host-agents.md) - canonical post-install route for choosing between `clawperator skills`, `clawperator mcp serve`, and direct CLI automation
+- [Host Agent Orientation](host-agents.md) - canonical post-install route for choosing between `androperator skills`, `androperator mcp serve`, and direct CLI automation
 - [Quickstart](quickstart.md) - the observe/decide/act loop: taking snapshots, reading the hierarchy, and sending actions
 
 ## API
@@ -60,7 +60,7 @@ Use:
 - [Devices](api/devices.md) - device discovery and deterministic targeting
 - [Doctor](api/doctor.md) - doctor report contract and readiness checks
 - [Timeouts](api/timeouts.md) - execution and action timeout budgeting
-- [Environment Variables](api/environment.md) - current `CLAWPERATOR_*` and runtime environment controls
+- [Environment Variables](api/environment.md) - current `ANDROPERATOR_*` and runtime environment controls
 - [Serve API](api/serve.md) - local HTTP and SSE contract
 - [MCP Server](api/mcp.md) - stdio MCP server for MCP clients such as Claude Desktop
 - [Navigation Patterns](api/navigation.md) - composed navigation workflows for agents
@@ -80,4 +80,4 @@ Use:
 - [Known Issues](troubleshooting/known-issues.md) - currently verified known issues page
 - [Version Compatibility](troubleshooting/compatibility.md) - CLI and Operator APK version alignment
 
-Clawperator is open source. If these docs help, see the [project on GitHub](https://github.com/clawperator/clawperator).
+Androperator is open source. If these docs help, see the [project on GitHub](https://github.com/androperator/androperator).

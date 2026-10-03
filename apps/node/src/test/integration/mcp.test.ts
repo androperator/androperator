@@ -38,7 +38,7 @@ class McpIntegrationClient {
       cwd: packageRoot,
       env: {
         ...process.env,
-        CLAWPERATOR_NO_DAEMON: "1",
+        ANDROPERATOR_NO_DAEMON: "1",
       },
       stdio: ["pipe", "pipe", "pipe"],
     });
@@ -77,7 +77,7 @@ class McpIntegrationClient {
       protocolVersion: LATEST_PROTOCOL_VERSION,
       capabilities: {},
       clientInfo: {
-        name: "clawperator-test",
+        name: "androperator-test",
         version: "1.0.0",
       },
     });
@@ -198,7 +198,7 @@ describe("mcp stdio integration", () => {
     };
 
     assert.ok(response.result);
-    assert.strictEqual(result.serverInfo?.name, "clawperator");
+    assert.strictEqual(result.serverInfo?.name, "androperator");
     assert.strictEqual(typeof result.protocolVersion, "string");
   });
 
@@ -245,7 +245,7 @@ describe("mcp stdio integration", () => {
     const preferred = devices.find(device => !device.serial.startsWith("emulator-")) ?? devices[0];
     return {
       deviceId: preferred?.serial,
-      operatorPackage: process.env.CLAWPERATOR_OPERATOR_PACKAGE ?? "com.clawperator.operator.dev",
+      operatorPackage: process.env.ANDROPERATOR_OPERATOR_PACKAGE ?? "com.androperator.operator.dev",
     };
   }
 
@@ -816,7 +816,7 @@ describe("mcp stdio integration", () => {
   it("returns a JSON-RPC error for an invalid request", async () => {
     await client.initialize();
 
-    const response = await client.request("clawperator/not-a-real-method", {});
+    const response = await client.request("androperator/not-a-real-method", {});
 
     assert.ok(response.error);
     assert.strictEqual(typeof response.error?.message, "string");

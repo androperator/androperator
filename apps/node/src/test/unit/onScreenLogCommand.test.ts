@@ -10,13 +10,13 @@ import type { Execution } from "../../contracts/execution.js";
 import type { RunExecutionResult } from "../../domain/executions/runExecution.js";
 
 const success: RunExecutionResult = {
-  ok: true, deviceId: "test-device", terminalSource: "clawperator_result",
+  ok: true, deviceId: "test-device", terminalSource: "androperator_result",
   envelope: { commandId: "test", taskId: "test", status: "success", stepResults: [], error: null },
 };
 const cliPath = fileURLToPath(new URL("../../cli/index.js", import.meta.url));
 
 function cli(args: string[]) {
-  return spawnSync(process.execPath, [cliPath, ...args], { encoding: "utf8", env: { ...process.env, CLAWPERATOR_DISABLE_STAR_SUGGESTIONS: "1" } });
+  return spawnSync(process.execPath, [cliPath, ...args], { encoding: "utf8", env: { ...process.env, ANDROPERATOR_DISABLE_STAR_SUGGESTIONS: "1" } });
 }
 
 describe("on-screen-log command", () => {
@@ -77,14 +77,14 @@ describe("on-screen-log command", () => {
         let directs = 0;
         let proxyPayload: Execution | undefined;
         const raw = await cmdOnScreenLog({ operation, params: operation === "set" ? { text: "label", textColor: "#aabbcc" } : undefined,
-          format: "json", deviceId: "test-device", operatorPackage: "com.clawperator.operator.dev", timeoutMs: 4321,
+          format: "json", deviceId: "test-device", operatorPackage: "com.androperator.operator.dev", timeoutMs: 4321,
           noDaemon: route === "no-daemon",
           tryDaemonExecutionFn: async (execution, options) => {
             proxies++;
             proxyPayload = validateExecution(execution);
             assert.equal(options.allowPostDispatchFallback, false);
             assert.equal(options.rawDeviceId, "test-device");
-            assert.equal(options.operatorPackage, "com.clawperator.operator.dev");
+            assert.equal(options.operatorPackage, "com.androperator.operator.dev");
             if (route === "uncertain") throw { code: "DAEMON_REQUEST_FAILED", message: "Acknowledgement lost after dispatch" };
             return route === "daemon" ? success : null;
           },
@@ -93,7 +93,7 @@ describe("on-screen-log command", () => {
             if (proxyPayload) assert.deepEqual(execution, proxyPayload);
             assert.equal(validateExecution(execution).timeoutMs, 4321);
             assert.equal(options?.deviceId, "test-device");
-            assert.equal(options?.operatorPackage, "com.clawperator.operator.dev");
+            assert.equal(options?.operatorPackage, "com.androperator.operator.dev");
             assert.equal(options?.timeoutMs, 4321);
             if (operation === "set") assert.equal(validateExecution(execution).actions[0].params?.textColor, "#FFAABBCC");
             return success;
@@ -129,7 +129,7 @@ describe("on-screen-log command", () => {
       assert.equal(result.status, 1, JSON.stringify(args));
       assert.ok(JSON.parse(result.stdout).code, result.stdout);
     }
-    for (const common of [["--device", "test-device", "--operator-package", "com.clawperator.operator.dev", "--timeout", "4321", "--no-daemon", "--output", "json"]]) {
+    for (const common of [["--device", "test-device", "--operator-package", "com.androperator.operator.dev", "--timeout", "4321", "--no-daemon", "--output", "json"]]) {
       for (const args of [[...common, "on-screen-log", "set", "--text", " "], ["on-screen-log", "set", ...common, "--text", " "]]) {
         const result = cli(args);
         assert.equal(result.status, 1);
@@ -153,7 +153,7 @@ describe("on-screen-log template command", () => {
   it("rejects both forms, missing values, repeated flags and invalid placeholders with structured CLI errors", () => {
     for (const args of [["--template"], ["--template", "x", "--template", "y"], ["--text", "x", "--template", "y"], ["--template", "{{unknown}}"]]) {
       for (const before of [true, false]) {
-        const common = ["--device", "test-device", "--operator-package", "com.clawperator.operator.dev", "--output", "json"];
+        const common = ["--device", "test-device", "--operator-package", "com.androperator.operator.dev", "--output", "json"];
         const result = cli(before ? [...common, "on-screen-log", "set", ...args] : ["on-screen-log", "set", ...args, ...common]);
         assert.notEqual(result.status, 0);
         assert.ok(JSON.parse(result.stdout).code);

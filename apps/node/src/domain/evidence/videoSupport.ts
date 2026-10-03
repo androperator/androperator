@@ -31,7 +31,7 @@ export async function atomicJson(path: string, value: unknown): Promise<void> {
 }
 export async function readState(outputDir: string): Promise<VideoState> {
   const state = videoStateSchema.parse(JSON.parse(await fs.readFile(join(outputDir, "session.json"), "utf8")));
-  if (state.outputDir !== outputDir || state.remotePath !== `/data/local/tmp/clawperator-video-${state.sessionId}.mp4`) fail("Invalid session ownership state");
+  if (state.outputDir !== outputDir || state.remotePath !== `/data/local/tmp/androperator-video-${state.sessionId}.mp4`) fail("Invalid session ownership state");
   return state;
 }
 export const lockName = (device: string) => createHash("sha256").update(device).digest("hex") + ".json";

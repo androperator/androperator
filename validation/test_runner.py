@@ -36,10 +36,10 @@ def main(argv=None):
     if args.device is not None and not device_suites:
         parser.error('--device requires an explicitly selected device suite.')
     env = os.environ.copy()
-    env['CLAWPERATOR_INSTALL_SKIP_NODE_TESTS'] = '1'
+    env['ANDROPERATOR_INSTALL_SKIP_NODE_TESTS'] = '1'
     if args.device:
         env['ANDROID_SERIAL'] = args.device
-        env['CLAWPERATOR_SMOKE_DEVICE'] = args.device
+        env['ANDROPERATOR_SMOKE_DEVICE'] = args.device
     suites = {
         'android': [['./gradlew', 'unitTest']],
         'node': [['npm', '--prefix', 'apps/node', 'test']],

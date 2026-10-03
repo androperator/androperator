@@ -1,11 +1,11 @@
 ---
 name: site-landing-export-to-md
-description: Export the locally built Clawperator landing page to Markdown for pre-deployment inspection.
+description: Export the locally built Androperator landing page to Markdown for pre-deployment inspection.
 ---
 
 # Site Landing Export to MD
 
-Generate a markdown representation of the `clawperator.com` landing page from the local codebase. This skill builds the static export of the landing site and then converts the resulting HTML to markdown using Python.
+Generate a markdown representation of the `androperator.com` landing page from the local codebase. This skill builds the static export of the landing site and then converts the resulting HTML to markdown using Python.
 
 ## Prerequisites
 

@@ -8,15 +8,15 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const cliEntrypoint = path.join(repoRoot, "apps/node/dist/cli/index.js");
 function resolveSmokeOperatorPackage(value) {
   if (value === undefined) {
-    return "com.clawperator.operator.dev";
+    return "com.androperator.operator.dev";
   }
 
   const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : "com.clawperator.operator.dev";
+  return trimmed.length > 0 ? trimmed : "com.androperator.operator.dev";
 }
 
-const operatorPackage = resolveSmokeOperatorPackage(process.env.CLAWPERATOR_OPERATOR_PACKAGE);
-const preferredDevice = process.env.CLAWPERATOR_SMOKE_DEVICE;
+const operatorPackage = resolveSmokeOperatorPackage(process.env.ANDROPERATOR_OPERATOR_PACKAGE);
+const preferredDevice = process.env.ANDROPERATOR_SMOKE_DEVICE;
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -177,7 +177,7 @@ class McpSession {
       protocolVersion: "2024-11-05",
       capabilities: {},
       clientInfo: {
-        name: "clawperator-smoke",
+        name: "androperator-smoke",
         version: "1.0.0",
       },
     });
@@ -200,7 +200,7 @@ function chooseDevice(devices) {
   if (preferredDevice) {
     const exact = devices.find((device) => device.serial === preferredDevice && device.state === "device");
     if (!exact) {
-      throw new Error(`Requested CLAWPERATOR_SMOKE_DEVICE ${preferredDevice} is not connected in device state`);
+      throw new Error(`Requested ANDROPERATOR_SMOKE_DEVICE ${preferredDevice} is not connected in device state`);
     }
     return exact.serial;
   }
@@ -221,7 +221,7 @@ async function main() {
 
   try {
     const init = await session.initialize();
-    if (init?.serverInfo?.name !== "clawperator") {
+    if (init?.serverInfo?.name !== "androperator") {
       throw new Error("Unexpected MCP server info");
     }
 

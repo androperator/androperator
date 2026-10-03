@@ -186,7 +186,7 @@ Repeat a fixed scenario after installing the debug APK and enabling its service:
 
 ```bash
 adb -s <device_serial> shell am start \
-  -n com.clawperator.operator.dev/clawperator.operator.debug.OnScreenLogProofActivity \
+  -n com.androperator.operator.dev/androperator.operator.debug.OnScreenLogProofActivity \
   --es scenario template-clear-pending
 ```
 

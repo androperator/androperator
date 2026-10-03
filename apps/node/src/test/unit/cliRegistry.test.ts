@@ -191,7 +191,7 @@ describe("operator download registry", () => {
       "operator",
       "download",
       "--operator-package",
-      "com.clawperator.operator.dev",
+      "com.androperator.operator.dev",
     ]);
     assert.notStrictEqual(code, 0);
     const obj = JSON.parse(stdout);
@@ -229,13 +229,13 @@ describe("flag aliases - --timeout works like --timeout-ms", () => {
 describe("flag aliases - --operator-package works as alias for --operator-package", () => {
   it("--operator-package is accepted by getGlobalOpts (passed through to operator setup failure)", async () => {
     const { stdout } = await runCli([
-      "--operator-package", "com.clawperator.operator.dev",
+      "--operator-package", "com.androperator.operator.dev",
       "operator", "setup",
       "--apk", "/nonexistent/test.apk",
     ]);
     const obj = JSON.parse(stdout);
     // Should fail with OPERATOR_APK_NOT_FOUND and echo back the operatorPackage
-    assert.strictEqual(obj.operatorPackage, "com.clawperator.operator.dev");
+    assert.strictEqual(obj.operatorPackage, "com.androperator.operator.dev");
   });
 
   it("--operator-package missing value produces USAGE error with exit code 1", async () => {
@@ -272,12 +272,12 @@ describe("flag aliases - --operator-package works as alias for --operator-packag
 
   it("--receiver-package is accepted and passed through to operator setup failure", async () => {
     const { stdout } = await runCli([
-      "--receiver-package", "com.clawperator.operator.dev",
+      "--receiver-package", "com.androperator.operator.dev",
       "operator", "setup",
       "--apk", "/nonexistent/test.apk",
     ]);
     const obj = JSON.parse(stdout);
-    assert.strictEqual(obj.operatorPackage, "com.clawperator.operator.dev");
+    assert.strictEqual(obj.operatorPackage, "com.androperator.operator.dev");
   });
 });
 

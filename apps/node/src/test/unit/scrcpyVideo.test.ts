@@ -74,7 +74,7 @@ for (const failure of [undefined, "late-decode", "second-encode", "missing-encod
     const sessionId = randomUUID();
     const state: VideoState = { sessionId, nonce: randomUUID(), deviceId: "test-device", operatorPackage: "com.test.operator", adbPath: "/custom/adb",
       outputDir: root, lockPath: join(root, "lock.json"), managed: false, durationSeconds: 10, size: "720x1280", hostPid: null, hostStartedAt: null,
-      remotePid: null, remoteStart: null, remotePath: `/data/local/tmp/clawperator-video-${sessionId}.mp4`, deadline: 0, updatedAt: 0,
+      remotePid: null, remoteStart: null, remotePath: `/data/local/tmp/androperator-video-${sessionId}.mp4`, deadline: 0, updatedAt: 0,
       recoveryRequired: false, backend: "scrcpy", maxEdge: 1280 };
     const device = { serial: "test-device", operatorPackage: state.operatorPackage, cliVersion: "test", operatorVersion: "test", apiLevel: 36,
       androidVersion: "16", manufacturer: "test", model: "test", deviceType: "emulator", deviceTypeProperties: { "ro.kernel.qemu": "1", "ro.boot.qemu": null },

@@ -15,7 +15,7 @@ export async function verifyWorkerFailure(root, media, mediaRunner) {
   const state = { sessionId, nonce: randomUUID(), outputDir, lockPath: join(outputDir, 'lock.json'), managed: false,
     deviceId: 'test-device', operatorPackage: 'com.example.operator', adbPath: 'fixture-adb', durationSeconds: 1,
     size: '320x240', hostPid: null, hostStartedAt: null, remotePid: null, remoteStart: null,
-    remotePath: `/data/local/tmp/clawperator-video-${sessionId}.mp4`, deadline: Date.now() + 1000,
+    remotePath: `/data/local/tmp/androperator-video-${sessionId}.mp4`, deadline: Date.now() + 1000,
     updatedAt: Date.now(), recoveryRequired: false };
   const manifestPath = join(outputDir, 'manifest.json');
   await atomicJson(join(outputDir, 'session.json'), state);

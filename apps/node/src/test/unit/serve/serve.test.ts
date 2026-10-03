@@ -59,7 +59,7 @@ async function listenOnEphemeralPort(app: express.Application): Promise<Server> 
 }
 
 async function makeSocketPath(): Promise<string> {
-  const tempDir = await mkdtemp(join(tmpdir(), "clawperator-serve-test-"));
+  const tempDir = await mkdtemp(join(tmpdir(), "androperator-serve-test-"));
   tempDirs.push(tempDir);
   return join(tempDir, "serve.sock");
 }
@@ -135,7 +135,7 @@ describe("serve command registry", () => {
       verbose: false,
       noDaemon: false,
       logger: noopLogger,
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
     });
 
     assert.deepEqual(built, {
@@ -143,7 +143,7 @@ describe("serve command registry", () => {
       options: {
       port: 4321,
       host: "127.0.0.1",
-      operatorPackage: "com.clawperator.operator.dev",
+      operatorPackage: "com.androperator.operator.dev",
       verbose: false,
       logger: noopLogger,
       },

@@ -1,8 +1,8 @@
-# Clawperator Skill Design
+# Androperator Skill Design
 
 Product naming:
 
-- Product: `Clawperator`
+- Product: `Androperator`
 - Legacy Android module/package naming in current codebase: `ActionTask` (temporary during migration)
 - Repository rename planned: TBD
 
@@ -42,7 +42,7 @@ lessons for future authors.
 
 `ResultEnvelope` and `SkillResult` solve different contract problems.
 
-- `ResultEnvelope` is the per-`clawperator exec` terminal envelope. It reports
+- `ResultEnvelope` is the per-`androperator exec` terminal envelope. It reports
   one execution's transport status, step results, and top-level error fields.
 - `SkillResult` is the per-skill terminal frame. It reports the skill-level
   goal, checkpoints, terminal verification, diagnostics, and any embedded exec
@@ -79,7 +79,7 @@ debugging and makes later maintenance unsafe.
 
 ### Require Serialized Device Actions
 
-Orchestrated skills should require one live Clawperator device command at a
+Orchestrated skills should require one live Androperator device command at a
 time.
 
 If the runtime agent pipelines multiple live commands in the same turn, the UI
@@ -143,7 +143,7 @@ repository content. Durable docs should preserve the method, the thresholds,
 and the synthesized conclusions. Raw per-run transcripts are scratch evidence
 unless a specific sanitized excerpt is needed to support a durable claim.
 
-When building local reliability runners around `clawperator skills run`,
+When building local reliability runners around `androperator skills run`,
 parse the actual result from `skillResult`. The top-level JSON wrapper can
 carry controller metadata, so checking only a top-level `.status` field can
 misclassify a successful run as empty or failed.
@@ -169,7 +169,7 @@ the app always restarts from the same surface.
 Important scope boundary:
 
 - Skill artifacts are accelerators, not a hard dependency.
-- Clawperator must remain useful when a skill artifact is missing, stale, or incorrect.
+- Androperator must remain useful when a skill artifact is missing, stale, or incorrect.
 - Runtime execution APIs must support direct execution without prebuilt artifacts.
 
 ## Concept Model
@@ -200,7 +200,7 @@ Recommended split and source of truth:
 1. Core repo:
    - Android runtime + Node CLI/API
    - skill/recipe schema and compiler
-2. Skills repo (`clawperator-skills`):
+2. Skills repo (`local skill workspace`):
    - versioned skill folders
    - optional deterministic `.recipe.json` artifacts per skill
 
@@ -506,7 +506,7 @@ Guidance:
 
 ## CI Requirements
 
-`clawperator-skills` CI should run:
+`local skill workspace` CI should run:
 
 1. per-skill metadata validation (`skills/*/skill.json`)
 2. run `skills/tools/generate_skill_indexes.sh`

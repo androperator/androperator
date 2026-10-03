@@ -47,7 +47,7 @@ process.on('SIGINT',()=>process.exit(0));setTimeout(()=>process.exit(0),Number(v
   await binary("ffmpeg", "if(process.argv.includes('-version')) console.log('ffmpeg version 6.1'); else {if(process.argv.at(-1).endsWith('.mp4'))require('node:fs').writeFileSync(process.argv.at(-1),'simulated video'); console.log('frame=2\\nprogress=end\\n');}");
   const parent = join(root, "start.mjs");
   await fs.writeFile(parent, `import {startVideo} from ${JSON.stringify(pathToFileURL(resolve("dist/domain/evidence/video.js")).href)};console.log(JSON.stringify(await startVideo({deviceId:process.argv[2]||${JSON.stringify(deviceId)},operatorPackage:'com.example.operator',durationSeconds:20}).catch(error=>error)));`);
-  const env = { ...process.env, ADB_PATH: adb, PATH: root + ":" + process.env.PATH, CLAWPERATOR_EVIDENCE_DIR: relative(process.cwd(), join(root, "state with spaces")) };
+  const env = { ...process.env, ADB_PATH: adb, PATH: root + ":" + process.env.PATH, ANDROPERATOR_EVIDENCE_DIR: relative(process.cwd(), join(root, "state with spaces")) };
   let manifestPath: string | undefined;
   try {
     // execFile resolves only when the initiating process has exited.
@@ -59,11 +59,11 @@ process.on('SIGINT',()=>process.exit(0));setTimeout(()=>process.exit(0),Number(v
       return { stdout: error.stdout as string, exitCode: error.code as number };
     });
     assert.equal(JSON.parse((await cli("status")).stdout).status, "recording");
-    for (const evidenceDir of [env.CLAWPERATOR_EVIDENCE_DIR, join(root, "other-state")]) {
-      const competing = JSON.parse((await execute(process.execPath, [parent], { env: { ...env, CLAWPERATOR_EVIDENCE_DIR: evidenceDir, TMPDIR: root }, timeout: 8000 })).stdout);
+    for (const evidenceDir of [env.ANDROPERATOR_EVIDENCE_DIR, join(root, "other-state")]) {
+      const competing = JSON.parse((await execute(process.execPath, [parent], { env: { ...env, ANDROPERATOR_EVIDENCE_DIR: evidenceDir, TMPDIR: root }, timeout: 8000 })).stdout);
       assert.equal(competing.code, "EVIDENCE_RECORDING_ACTIVE");
     }
-    const changedEnv = { ...env, CLAWPERATOR_EVIDENCE_DIR: "" };
+    const changedEnv = { ...env, ANDROPERATOR_EVIDENCE_DIR: "" };
     const changedStatus = await execute(process.execPath, ["dist/cli/index.js", "evidence", "video", "status", "--session", manifestPath!], { env: changedEnv });
     assert.equal(JSON.parse(changedStatus.stdout).status, "recording");
     const stopped = await Promise.all([cli("stop"), cli("stop")]);
@@ -92,20 +92,20 @@ process.on('SIGINT',()=>process.exit(0));setTimeout(()=>process.exit(0),Number(v
     const blockedRoot = join(root, "blocked");
     await fs.writeFile(blockedRoot, "preserve");
     for (const invalidRoot of ["", "  ", blockedRoot]) {
-      const failed = JSON.parse((await execute(process.execPath, [parent], { env: { ...env, CLAWPERATOR_EVIDENCE_DIR: invalidRoot }, timeout: 8000 })).stdout);
+      const failed = JSON.parse((await execute(process.execPath, [parent], { env: { ...env, ANDROPERATOR_EVIDENCE_DIR: invalidRoot }, timeout: 8000 })).stdout);
       assert.equal(failed.code, invalidRoot === blockedRoot ? "EVIDENCE_STORAGE_UNWRITABLE" : "EXECUTION_VALIDATION_FAILED");
       if (invalidRoot === blockedRoot) { assert.equal(failed.path, blockedRoot); assert.ok(failed.recovery); }
     }
     const defaultEnv: NodeJS.ProcessEnv = { ...env, HOME: join(root, "default-home") };
-    delete defaultEnv.CLAWPERATOR_EVIDENCE_DIR;
+    delete defaultEnv.ANDROPERATOR_EVIDENCE_DIR;
     const defaultStarted = JSON.parse((await execute(process.execPath, [parent], { env: defaultEnv, timeout: 8000 })).stdout);
     assert.equal(defaultStarted.status, "recording");
-    assert.ok(defaultStarted.manifestPath.startsWith(join(root, "default-home", ".clawperator", "evidence", "bundles")));
+    assert.ok(defaultStarted.manifestPath.startsWith(join(root, "default-home", ".androperator", "evidence", "bundles")));
     manifestPath = defaultStarted.manifestPath;
     assert.equal(JSON.parse((await cli("stop")).stdout).status, deviceType === "unknown" ? "partial" : "complete");
     for (const differentRoots of [false, true]) {
       const raced = await Promise.all([0, 1].map(index => execute(process.execPath, [parent], {
-        env: { ...env, CLAWPERATOR_EVIDENCE_DIR: join(root, `race-${differentRoots}-${differentRoots ? index : 0}`) }, timeout: 8000,
+        env: { ...env, ANDROPERATOR_EVIDENCE_DIR: join(root, `race-${differentRoots}-${differentRoots ? index : 0}`) }, timeout: 8000,
       }).then(value => JSON.parse(value.stdout))));
       assert.equal(raced.filter(value => value.status === "recording").length, 1);
       assert.equal(raced.filter(value => value.code === "EVIDENCE_RECORDING_ACTIVE").length, 1);
@@ -126,7 +126,7 @@ process.on('SIGINT',()=>process.exit(0));setTimeout(()=>process.exit(0),Number(v
       const unavailable = await cli("status").catch(error => error);
       assert.equal(JSON.parse(unavailable.stdout).code, "EVIDENCE_RECOVERY_REQUIRED");
       const blocked = JSON.parse((await execute(process.execPath, [parent], {
-        env: { ...env, CLAWPERATOR_EVIDENCE_DIR: join(root, "after-worker-death") }, timeout: 8000,
+        env: { ...env, ANDROPERATOR_EVIDENCE_DIR: join(root, "after-worker-death") }, timeout: 8000,
       })).stdout);
       assert.equal(blocked.code, "EVIDENCE_RECORDING_ACTIVE");
       assert.equal(await fs.readFile(manifestPath!, "utf8"), retained);

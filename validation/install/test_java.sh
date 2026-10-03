@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 
 REPO_ROOT="$(pwd)"
-INSTALL_SCRIPT="$REPO_ROOT/sites/landing-clawperator/public/install.sh"
+INSTALL_SCRIPT="$REPO_ROOT/sites/androperator-public/install.sh"
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
@@ -57,7 +57,7 @@ EOF
     export PATH="$stub_bin:$PATH"
     export OS=Darwin
     export JAVA_HOME="$java_home"
-    export CLAWPERATOR_TEMURIN_17_HOME="$case_dir/java-home/temurin-17"
+    export ANDROPERATOR_TEMURIN_17_HOME="$case_dir/java-home/temurin-17"
     hash -r
 
     # shellcheck disable=SC1090
@@ -117,7 +117,7 @@ EOF
     export PATH="$stub_bin:$PATH"
     export OS=Darwin
     export JAVA_HOME="$java_home"
-    export CLAWPERATOR_TEMURIN_17_HOME="$temurin_home"
+    export ANDROPERATOR_TEMURIN_17_HOME="$temurin_home"
     hash -r
 
     # shellcheck disable=SC1090
@@ -173,7 +173,7 @@ EOF
     export PATH="$stub_bin:$PATH"
     export OS=Darwin
     unset JAVA_HOME || true
-    export CLAWPERATOR_TEMURIN_17_HOME="$temurin_home"
+    export ANDROPERATOR_TEMURIN_17_HOME="$temurin_home"
     hash -r
 
     # shellcheck disable=SC1090

@@ -9,8 +9,8 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PACKAGE = 'com.clawperator.fixture.media'
-OPERATOR = 'com.clawperator.operator.dev'
+PACKAGE = 'com.androperator.fixture.media'
+OPERATOR = 'com.androperator.operator.dev'
 
 
 def main():
@@ -27,7 +27,7 @@ def main():
         return subprocess.check_output(['adb', '-s', args.device, *command], cwd=ROOT, text=True, timeout=30)
 
     def control(operation):
-        adb('shell', 'am', 'broadcast', '--receiver-foreground', '-n', PACKAGE + '/clawperator.operator.debug.MediaProofActivity$Control', '--es', 'operation', operation)
+        adb('shell', 'am', 'broadcast', '--receiver-foreground', '-n', PACKAGE + '/androperator.operator.debug.MediaProofActivity$Control', '--es', 'operation', operation)
         time.sleep(.3)
 
     def sample():
@@ -75,7 +75,7 @@ def main():
         adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP')
         adb('shell', 'wm', 'dismiss-keyguard')
         adb('shell', 'am', 'force-stop', PACKAGE)
-        adb('shell', 'am', 'start', '-n', PACKAGE + '/clawperator.operator.debug.MediaProofActivity')
+        adb('shell', 'am', 'start', '-n', PACKAGE + '/androperator.operator.debug.MediaProofActivity')
         time.sleep(2)
         session_id = wait_for_session()
         control('post')

@@ -13,7 +13,7 @@ export function buildReadValueExecution(
   return {
     commandId,
     taskId: commandId,
-    source: "clawperator-action",
+    source: "androperator-action",
     expectedFormat: "android-ui-automator",
     timeoutMs: 30_000,
     actions: [

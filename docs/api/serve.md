@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define the local HTTP and SSE contract exposed by `clawperator serve`, including request bodies, success responses, status-code mapping, and how the serve layer wraps `runExecution`, skill, and emulator operations.
+Define the local HTTP and SSE contract exposed by `androperator serve`, including request bodies, success responses, status-code mapping, and how the serve layer wraps `runExecution`, skill, and emulator operations.
 
 ## Sources
 
@@ -17,7 +17,7 @@ Define the local HTTP and SSE contract exposed by `clawperator serve`, including
 ## Start The Server
 
 ```bash
-clawperator serve [--host <string>] [--port <number>]
+androperator serve [--host <string>] [--port <number>]
 ```
 
 Defaults:
@@ -59,7 +59,7 @@ Successful shape:
 {
   "ok": true,
   "deviceId": "emulator-5554",
-  "terminalSource": "clawperator_result",
+  "terminalSource": "androperator_result",
   "envelope": {
     "commandId": "serve-snap-1710000000000",
     "taskId": "serve-snap-1710000000000",
@@ -153,7 +153,7 @@ Response:
 {
   "version": "0.9.4",
   "buildIdentity": {
-    "entryPath": "/path/to/clawperator/dist/cli/index.js",
+    "entryPath": "/path/to/androperator/dist/cli/index.js",
     "mtimeMs": 1710000000000,
     "size": 123456
   }
@@ -228,7 +228,7 @@ Failure behavior:
     ]
   },
   "deviceId": "emulator-5554",
-  "operatorPackage": "com.clawperator.operator.dev"
+  "operatorPackage": "com.androperator.operator.dev"
 }
 ```
 
@@ -242,8 +242,8 @@ Valid body rules enforced by the route:
 Operator package resolution:
 
 - if `operatorPackage` is present in the request, the server uses it verbatim
-- otherwise it falls back to `process.env.CLAWPERATOR_OPERATOR_PACKAGE` when that env var is non-blank
-- otherwise it uses `com.clawperator.operator`
+- otherwise it falls back to `process.env.ANDROPERATOR_OPERATOR_PACKAGE` when that env var is non-blank
+- otherwise it uses `com.androperator.operator`
 
 Then `runExecution()` applies full execution validation. See [Actions](actions.md), [Selectors](selectors.md), and [API Overview](overview.md).
 
@@ -280,7 +280,7 @@ Representative serve-layer `400` wrappers for this route:
 {
   "ok": true,
   "deviceId": "emulator-5554",
-  "terminalSource": "clawperator_result",
+  "terminalSource": "androperator_result",
   "envelope": {
     "commandId": "open-settings",
     "taskId": "open-settings",
@@ -355,7 +355,7 @@ This route builds a synthetic execution with:
 ```json
 {
   "deviceId": "emulator-5554",
-  "operatorPackage": "com.clawperator.operator.dev"
+  "operatorPackage": "com.androperator.operator.dev"
 }
 ```
 
@@ -370,7 +370,7 @@ Notes:
 {
   "ok": true,
   "deviceId": "emulator-5554",
-  "terminalSource": "clawperator_result",
+  "terminalSource": "androperator_result",
   "envelope": {
     "commandId": "serve-snap-1710000000000",
     "taskId": "serve-snap-1710000000000",
@@ -406,7 +406,7 @@ This route builds a synthetic execution with:
 ```json
 {
   "deviceId": "emulator-5554",
-  "operatorPackage": "com.clawperator.operator.dev",
+  "operatorPackage": "com.androperator.operator.dev",
   "path": "/tmp/settings.png"
 }
 ```
@@ -423,7 +423,7 @@ Route validation:
 {
   "ok": true,
   "deviceId": "emulator-5554",
-  "terminalSource": "clawperator_result",
+  "terminalSource": "androperator_result",
   "envelope": {
     "commandId": "serve-shot-1710000000000",
     "taskId": "serve-shot-1710000000000",
@@ -623,7 +623,7 @@ Malformed framed result:
     "code": "SKILL_RESULT_PARSE_FAILED",
     "message": "SkillResult frame contained invalid JSON: ...",
     "skillId": "com.test.echo",
-    "stdout": "[Clawperator-Skill-Result]\n{not-json\n",
+    "stdout": "[Androperator-Skill-Result]\n{not-json\n",
     "skillResult": null
   }
 }
@@ -672,7 +672,7 @@ Lists configured AVDs, merged with running-state information:
   "ok": true,
   "avds": [
     {
-      "name": "clawperator-pixel",
+      "name": "androperator-pixel",
       "exists": true,
       "running": false,
       "apiLevel": 35,
@@ -696,7 +696,7 @@ Lists configured AVDs, merged with running-state information:
   "devices": [
     {
       "type": "emulator",
-      "avdName": "clawperator-pixel",
+      "avdName": "androperator-pixel",
       "serial": "emulator-5554",
       "booted": true,
       "supported": true,
@@ -714,7 +714,7 @@ Returns one `ConfiguredAvd` object merged into the success wrapper:
 ```json
 {
   "ok": true,
-  "name": "clawperator-pixel",
+  "name": "androperator-pixel",
   "exists": true,
   "running": false,
   "apiLevel": 35,
@@ -746,7 +746,7 @@ Defaults when omitted:
 
 | Field | Default |
 | --- | --- |
-| `name` | derived from storage size, for example `clawperator-pixel-12gb` |
+| `name` | derived from storage size, for example `androperator-pixel-12gb` |
 | `apiLevel` | `SUPPORTED_EMULATOR_API_LEVEL` (`35`) |
 | `abi` | `arm64-v8a` |
 | `deviceProfile` | `DEFAULT_EMULATOR_DEVICE_PROFILE` (`pixel_7`) |
@@ -759,14 +759,14 @@ accepted. Only one storage size field may be provided.
 
 When `name` is omitted, the server derives the AVD name from the normalized
 storage size. For example, `12G` and `12GB` both default to
-`clawperator-pixel-12gb`.
+`androperator-pixel-12gb`.
 
 Success response:
 
 ```json
 {
   "ok": true,
-  "name": "clawperator-pixel-12gb",
+  "name": "androperator-pixel-12gb",
   "exists": true,
   "running": false,
   "apiLevel": 35,
@@ -788,7 +788,7 @@ Success response:
 {
   "ok": true,
   "type": "emulator",
-  "avdName": "clawperator-pixel",
+  "avdName": "androperator-pixel",
   "serial": "emulator-5554",
   "booted": true
 }
@@ -806,7 +806,7 @@ Behavior:
 ```json
 {
   "ok": true,
-  "avdName": "clawperator-pixel",
+  "avdName": "androperator-pixel",
   "stopped": true
 }
 ```
@@ -817,7 +817,7 @@ Behavior:
 ```json
 {
   "ok": true,
-  "avdName": "clawperator-pixel",
+  "avdName": "androperator-pixel",
   "deleted": true
 }
 ```
@@ -840,7 +840,7 @@ partition. It accepts the same gigabyte-only values and aliases as
 `POST /android/emulators/create`. Omit it to use `12G`.
 
 When a new AVD is created and no name is provided by the caller, provisioning
-uses the same storage-derived default name, such as `clawperator-pixel-12gb`
+uses the same storage-derived default name, such as `androperator-pixel-12gb`
 for the default `12G` size.
 
 Success response:
@@ -849,7 +849,7 @@ Success response:
 {
   "ok": true,
   "type": "emulator",
-  "avdName": "clawperator-pixel",
+  "avdName": "androperator-pixel",
   "serial": "emulator-5554",
   "booted": true,
   "created": false,
@@ -877,19 +877,19 @@ Initial heartbeat event:
 
 ```text
 event: heartbeat
-data: {"code":"CONNECTED","message":"Clawperator SSE stream active"}
+data: {"code":"CONNECTED","message":"Androperator SSE stream active"}
 ```
 
 Execution-related events:
 
 | Event name | Data shape |
 | --- | --- |
-| `clawperator:result` | `{ "deviceId": "<serial>", "envelope": <ResultEnvelope> }` |
-| `clawperator:execution` | `{ "deviceId": "<serial>", "input": <unknown>, "result": <RunExecutionResult> }` |
+| `androperator:result` | `{ "deviceId": "<serial>", "envelope": <ResultEnvelope> }` |
+| `androperator:execution` | `{ "deviceId": "<serial>", "input": <unknown>, "result": <RunExecutionResult> }` |
 
-Host transport failures appear in `clawperator:execution` with `result.ok: false`
+Host transport failures appear in `androperator:execution` with `result.ok: false`
 and structured error diagnostics. They do not emit a synthetic
-`clawperator:result` envelope. Subscribe to execution events to observe every
+`androperator:result` envelope. Subscribe to execution events to observe every
 host outcome, including failures before a terminal Android result is available.
 
 Use `/events` when:

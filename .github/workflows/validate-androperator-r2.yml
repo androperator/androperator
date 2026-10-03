@@ -1,0 +1,44 @@
+name: Validate Androperator R2 credentials
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/validate-androperator-r2.yml
+      - validation/cloudflare/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s validation/cloudflare
+
+  validate-upload:
+    needs: local-tests
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install awscli
+      - name: Upload, compare, and remove a temporary object
+        run: python validation/cloudflare/validate_r2.py
+        env:
+          ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID: ${{ secrets.ANDROPERATOR_CLOUDFLARE_ACCOUNT_ID }}
+          ANDROPERATOR_CLOUDFLARE_R2_BUCKET: ${{ secrets.ANDROPERATOR_CLOUDFLARE_R2_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.ANDROPERATOR_CLOUDFLARE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.ANDROPERATOR_CLOUDFLARE_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: 'true'
+          AWS_PAGER: ''

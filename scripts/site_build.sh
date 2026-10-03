@@ -9,3 +9,4 @@ fi
 ./scripts/docs_build.sh
 node sites/landing/build.mjs
 npm --prefix sites/landing test
+python3 validation/security/check_distribution.py --directory sites/landing/out

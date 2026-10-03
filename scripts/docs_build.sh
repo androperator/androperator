@@ -72,6 +72,7 @@ echo "Running warning-only docs organization checks..."
 
 # Verify build output
 if [ -d "site" ] && [ -f "site/index.html" ]; then
+    "$VENV_DIR/bin/python" "$REPO_ROOT/validation/security/check_distribution.py" --directory "$DOCS_DIR/site"
     echo "--- Successfully built documentation site to $DOCS_DIR/site ---"
     echo "Artifacts ready for deployment."
 else

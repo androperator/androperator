@@ -37,6 +37,13 @@ For every tagged release, GitHub Actions should:
 6. Publish the Node package to npm via Trusted Publishing (OIDC):
    - all published releases use npm dist-tag `latest`
 
+## Development-only tooling
+
+Semgrep, reviewdog, and their rules must never ship in product distributions.
+Keep the distribution checks enabled in npm/APK publication and website builds.
+Our own suppression comments are permitted. See
+[the security tooling policy](design/security-checks.md) for scope and checks.
+
 ## Required Secrets
 
 ### Android signing

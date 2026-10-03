@@ -62,12 +62,36 @@ suppressions when changing rules. Semgrep strict mode is disabled because it
 reports mismatched-suppression warnings for other rules on the same line. The
 wrapper still rejects every reported scanner error, including parse failures.
 
-The scanner, downloaded rules, and reviewdog are repository development tools.
-They must not be bundled in the npm package or downloaded by its install hooks
-or runtime. `node validation/security/check-package.mjs` checks the actual npm
-pack file list and packaged text for scanner artifacts and integration references.
-It runs in validation CI and before npm publication. It is a regression guard,
-not a license audit of every dependency or arbitrary renamed rule content.
+Semgrep, reviewdog, and downloaded scanner rules are development-only tooling.
+Never distribute their tools, scanner-only dependencies, rule payloads, caches,
+configuration, or install/runtime download hooks in product outputs. This policy
+covers npm packages, APKs, installers, bundled skills, and deployed websites.
+Our own rule-specific suppression comments and development source references are
+permitted. A dependency independently required by the product is not prohibited
+merely because the scanner also uses it.
+
+`validation/security/check_distribution.py` enforces the product boundary without
+installing the scanner or any third-party Python packages:
+
+```bash
+python3 validation/security/check_distribution.py --npm
+python3 validation/security/check_distribution.py --apk <operator_apk>
+python3 validation/security/check_distribution.py --directory <built_site_directory>
+```
+
+The npm mode inspects the built package's dry-run file list and file contents,
+including bundled skills; it does not execute packaging lifecycle hooks. APK mode
+reads archive entries without extracting them. Directory mode checks all built
+website files, including installers. Nested ZIP and gzip content is inspected;
+unreadable, malformed, missing, or empty expected output fails the check. Scanner
+names, integration references, environment paths, and recognizable rule payloads
+are rejected; our own `nosemgrep` comments are allowed.
+
+The npm check runs in validation CI and before npm publication. The APK check runs
+on the copied release artifact before either GitHub or R2 upload. All three site
+build scripts check their final output directories before reporting success.
+New publication paths must add this check. This is an accidental-inclusion guard,
+not a license audit or proof against arbitrarily renamed or obfuscated code.
 
 The scan respects Semgrep CE's Git exclusions and excludes nested `.worktrees`.
 Two exact paths are also excluded because their valid source syntax is not

@@ -167,6 +167,13 @@ and committer identities and messages in the outgoing history.
 Verify changes to this policy with `./validation/test_blocked_terms_policy.sh`.
 Before release or force-push events, scan for blocked terms and verify history.
 
+Semgrep, reviewdog, and their downloaded rules are development-only tooling. Never
+ship their tools, scanner-only dependencies, rules, caches, configuration, or
+download hooks in npm packages, APKs, installers, bundled skills, or deployed
+websites. Our own rule-specific suppression comments are permitted. Keep the
+distribution checks in release workflows and site builds; new product distribution
+paths must run them too. See `docs/internal/design/security-checks.md`.
+
 Before opening a PR, run `python3 validation/security/check.py` against the
 intended base branch. Resolve new findings and scanner failures. See
 `docs/internal/design/security-checks.md` for setup, scope, and full scans.

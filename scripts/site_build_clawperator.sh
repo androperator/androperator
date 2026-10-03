@@ -42,6 +42,7 @@ npm run build
 
 # Verify build output
 if [ -d "out" ] && [ -f "out/install.sh" ]; then
+    python3 "$REPO_ROOT/validation/security/check_distribution.py" --directory "$LANDING_DIR/out"
     echo "--- Successfully built landing page to $LANDING_DIR/out ---"
     echo "Artifacts ready for deployment."
 else

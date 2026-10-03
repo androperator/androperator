@@ -46,8 +46,7 @@ def main(argv=None):
         'evals': [['uv', 'run', '--project', 'evals', '--extra', 'dev', 'pytest', 'evals/harness', '-v']],
         'validation': [
             ['python3', '-m', 'unittest', 'discover', '-s', 'validation/security'],
-            ['node', 'validation/security/test-package.mjs'],
-            ['node', 'validation/security/check-package.mjs'],
+            ['python3', 'validation/security/check_distribution.py', '--npm'],
             ['python3', '-m', 'unittest', 'discover', '-s', 'validation/cloudflare'],
             ['node', 'validation/video-stream-verification/test-video-stream.mjs'],
             ['node', 'validation/skill-temp-files/test-play-store.mjs'],

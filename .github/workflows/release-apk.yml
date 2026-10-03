@@ -125,6 +125,7 @@ jobs:
           published_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
           export PUBLISHED_AT="$published_at"
           cp "$release_apk" "$ARTIFACT_NAME"
+          python3 validation/security/check_distribution.py --apk "$ARTIFACT_NAME"
 
           # Compute checksum and ensure it's just the hash
           sha256="$(sha256sum "$ARTIFACT_NAME" | awk '{ print $1 }')"

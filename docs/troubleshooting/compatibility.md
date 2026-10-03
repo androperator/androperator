@@ -1,6 +1,6 @@
 # Version Compatibility
 
-**Androperator 1.0.0 is being prepared for release.**
+**Current release: [1.0.0](https://github.com/androperator/androperator/releases/tag/v1.0.0)**
 
 *This is the latest published release. Download URLs below reference this version. See [Docs Home](../index.md) for the unreleased code version.*
 

@@ -12,7 +12,8 @@ This skill is for repo maintenance. It is not a live GEO audit.
 
 ## What this skill covers
 
-- landing sitemap generation from a deterministic manifest
+- preserved landing sitemap generation from a deterministic manifest
+- new landing sitemap generation during `./scripts/site_build.sh`
 - sitemap index `<lastmod>` values based on child sitemap source changes
 - docs sitemap `<lastmod>` and `<priority>` patching after MkDocs build
 - git-based timestamps using each source file's own last commit time
@@ -20,9 +21,15 @@ This skill is for repo maintenance. It is not a live GEO audit.
 
 ## Workflow
 
-1. Regenerate landing sitemap source files:
+For Androperator, run `./scripts/site_build.sh`. Its generated
+`out/landing-sitemap.xml` uses route-specific source commit timestamps;
+`out/sitemap.xml` indexes it and the docs sitemap. Do not commit these outputs.
+
+For the preserved site and docs:
+
+1. Regenerate preserved landing sitemap source files:
    - `python3 .agents/skills/sitemaps-generate/scripts/generate_sitemap_metadata.py landing --repo-root .`
-2. Build the landing site if needed:
+2. Build the preserved landing site if needed:
    - `./scripts/site_build_clawperator.sh`
 3. Build the docs site:
    - `./scripts/docs_build.sh`

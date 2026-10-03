@@ -58,6 +58,7 @@ Use `.agents/skills/docs-author/SKILL.md` for authored docs and
 
 | Surface | Authored inputs | Build |
 | --- | --- | --- |
+| `androperator.com` README-based landing site | root `README.md`, `sites/landing/`, installer in `sites/androperator-public/`; full docs generated during build | `./scripts/site_build.sh` |
 | `clawperator.com` preserved landing site | `sites/landing-clawperator/`; legacy machine-facing files and installer in `sites/landing-clawperator/public/` | `./scripts/site_build_clawperator.sh` |
 | `docs.androperator.com` technical docs | `docs/`, code-derived inputs in `apps/node/src/`; root static files in `sites/docs/static/` | `./scripts/docs_build.sh` |
 
@@ -69,8 +70,11 @@ source or generator, then rebuild; do not hand-edit output. Use
 output together. When removing a page, remove its navigation, source-map entries,
 and incoming links, then regenerate.
 
-Both sites deploy to Cloudflare after merge to `main`; website-only changes
-normally need source/build validation, not manual deployment.
+The preserved landing and docs sites deploy to Cloudflare after merge to `main`.
+The new landing project remains staged until release cutover. Website-only
+changes normally need source/build validation, not manual deployment.
+`sites/landing/out/` is generated and ignored; never commit it. APK aliases reuse
+the canonical redirect Worker and require published downloads metadata.
 
 Remove stale guidance after migrating any still-useful content. Keep historical
 material only where release/version management requires it.
@@ -104,7 +108,8 @@ do not require Android installation or unrelated runtime suites.
 | Android | `./gradlew :app:assembleDebug` and `./gradlew :app:testDebugUnitTest` |
 | Device/runtime behavior | Install the matching APK and verify a real scenario on an explicit device |
 | Docs | `./scripts/docs_build.sh` |
-| Landing site | `./scripts/site_build_clawperator.sh` |
+| Androperator landing site | `./scripts/site_build.sh` (includes docs and landing validation) |
+| Preserved landing site | `./scripts/site_build_clawperator.sh` |
 | Installer | Matching coverage in `validation/install/` and `./validation/install/test_install.sh` |
 
 Build Node before tests that consume `dist/`; do not run build and test in

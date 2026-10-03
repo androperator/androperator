@@ -7,9 +7,11 @@ from pathlib import Path
 
 def main():
     parser = argparse.ArgumentParser(description='Export local landing page build to markdown.')
-    parser.add_argument('--input', help='Path to index.html (default: sites/landing-clawperator/out/index.html)')
+    parser.add_argument('--input', help='Path to index.html (default: sites/landing/out/index.html)')
     parser.add_argument('--output', help='Output MD file')
+    parser.add_argument('--site', choices=['androperator', 'clawperator'], default='androperator', help='Site to inspect (default: androperator)')
     args = parser.parse_args()
+    site_dir = 'sites/landing' if args.site == 'androperator' else 'sites/landing-clawperator'
 
     # Determine paths
     script_dir = Path(__file__).parent.resolve()
@@ -17,7 +19,7 @@ def main():
     
     output_path = args.output
     if not output_path:
-        output_path = repo_root / "sites/landing-clawperator" / "export" / "landing-export-local.md"
+        output_path = repo_root / site_dir / "export" / "landing-export-local.md"
     else:
         output_path = Path(output_path)
 
@@ -26,13 +28,13 @@ def main():
 
     html_path = args.input
     if not html_path:
-        html_path = repo_root / "sites/landing-clawperator" / "out" / "index.html"
+        html_path = repo_root / site_dir / "out" / "index.html"
     else:
         html_path = Path(html_path)
 
     if not html_path.exists():
         print(f"Error: Landing page build not found at {html_path}")
-        print("Please run ./scripts/site_build_clawperator.sh first.")
+        print("Please run ./scripts/site_build.sh first." if args.site == "androperator" else "Please run ./scripts/site_build_clawperator.sh first.")
         sys.exit(1)
 
     try:

@@ -8,10 +8,14 @@ import argparse
 from pathlib import Path
 
 def main():
-    parser = argparse.ArgumentParser(description='Extract clawperator.com landing page as markdown.')
+    parser = argparse.ArgumentParser(description='Extract a landing page as markdown.')
     parser.add_argument('--output', help='Output file path')
-    parser.add_argument('--url', default='https://clawperator.com', help='URL to extract (default: https://clawperator.com)')
+    parser.add_argument('--site', choices=['androperator', 'clawperator'], default='androperator', help='Site ownership for URL and export defaults')
+    parser.add_argument('--url', help='Explicit URL to extract')
     args = parser.parse_args()
+
+    site_dir = "sites/landing" if args.site == "androperator" else "sites/landing-clawperator"
+    args.url = args.url or ("https://androperator.com" if args.site == "androperator" else "https://clawperator.com")
 
     # Determine paths
     script_dir = Path(__file__).parent.resolve()
@@ -19,7 +23,7 @@ def main():
     
     output_path = args.output
     if not output_path:
-        output_path = repo_root / "sites/landing-clawperator" / "export" / "landing-export-cloudflare.md"
+        output_path = repo_root / site_dir / "export" / "landing-export-cloudflare.md"
     else:
         output_path = Path(output_path)
 

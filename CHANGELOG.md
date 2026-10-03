@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims to follow Semantic Versioning.
 
-## Clawperator is now Androperator
+## [1.0.0] - Unreleased
+
+### Renamed from Clawperator
 
 Clawperator has been renamed to **Androperator**, starting with version **1.0.0**.
 It remains the deterministic hand for an agent's brain: a tool for agents to
@@ -17,8 +19,6 @@ and needs its permissions granted. See the [migration guide](docs/migration-to-a
 
 Entries below version 1.0.0 describe releases published as Clawperator. Their
 original names and links are retained as historical records.
-
-## [1.0.0] - Unreleased
 
 ### Breaking changes
 

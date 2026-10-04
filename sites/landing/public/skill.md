@@ -54,7 +54,17 @@ If the CLI is missing and host prerequisites need bootstrapping, inspect the
 curl -fsSL https://androperator.com/install.sh | bash
 ```
 
-If Node.js and npm are already ready, install the published CLI directly:
+For an existing Homebrew-managed CLI, use
+`brew upgrade androperator/tap/cli`. Do not overwrite it with npm. The bootstrap
+installer also preserves Homebrew ownership when the active command is linked
+to that formula.
+
+For a new CLI-only Homebrew installation, run `brew install androperator/tap/cli`.
+Homebrew provides Node; Android SDK tools, Java, and device permissions still
+need setup.
+
+If Node.js and npm are already ready and the CLI is not managed by Homebrew,
+install the published CLI directly:
 
 ```bash
 npm install -g @androperator/cli@latest

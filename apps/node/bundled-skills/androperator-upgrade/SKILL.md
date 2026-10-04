@@ -17,11 +17,29 @@ The CLI-first route requires Node 24 or newer, reachable npm, and Java 17 or 21.
 If a command is missing, use [PATH recovery](references/path-recovery.md) before
 concluding it is absent or installing replacements.
 
-When the CLI and prerequisites are viable, run in order:
+When the CLI and prerequisites are viable, keep the existing package manager.
+If `brew --prefix androperator/tap/cli` succeeds and the active
+`command -v androperator` path refers to the same file as
+`<brew_prefix>/bin/androperator` (shell `test <active_path> -ef <formula_path>`),
+update with:
+
+```bash
+brew upgrade androperator/tap/cli
+```
+
+Otherwise use npm:
 
 ```bash
 npm uninstall -g androperator
 npm install -g @androperator/cli@latest
+```
+
+An installed but unlinked Homebrew formula does not own an active npm command.
+If a Homebrew update fails, report the failure; do not switch to npm or overwrite
+its executable. Use `brew update` to refresh formula definitions if needed.
+Then run the canonical post-bootstrap steps:
+
+```bash
 androperator install
 androperator doctor
 ```

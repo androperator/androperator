@@ -30,6 +30,11 @@ Require a stable `major.minor.patch` release version, such as `1.1.0`, without a
 4. Verify the release.
    - After the release workflows complete, run `$release-verify` for the same version.
    - Stop if any verification surface fails.
+   - Report the Homebrew update separately using the tap run and committed
+     `Formula/cli.rb` version. `release-create` dispatches it automatically;
+     a dispatch alone does not prove availability. Homebrew may defer a new
+     dependency for 24 hours; hourly tap checks retry it. Do not recreate the
+     npm release or hold public npm/APK docs updates for a deferred tap check.
 5. Update published surfaces.
    - Once npm and GitHub Releases are live, run `$release-update-published-version` for the released version.
    - Keep the published-version commit separate from the code-version bump commit.

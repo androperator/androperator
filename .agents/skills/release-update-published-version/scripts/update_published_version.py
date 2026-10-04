@@ -171,11 +171,11 @@ def main() -> None:
     if published_tag != f"v{version}":
         die(f"GitHub Release v{version} was not found")
 
-    npm_version = run(["npm", "view", f"androperator@{version}", "version"], cwd=repo_root).strip()
+    npm_version = run(["npm", "view", f"@androperator/cli@{version}", "version"], cwd=repo_root).strip()
     if npm_version != version:
-        die(f"npm does not report androperator@{version}")
+        die(f"npm does not report @androperator/cli@{version}")
 
-    latest_npm_version = run(["npm", "view", "androperator", "version"], cwd=repo_root).strip()
+    latest_npm_version = run(["npm", "view", "@androperator/cli", "version"], cwd=repo_root).strip()
     if latest_npm_version != version:
         die(f"{version} is not the current npm release (latest is {latest_npm_version})")
 

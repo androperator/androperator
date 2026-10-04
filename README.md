@@ -151,7 +151,7 @@ curl -fsSL https://androperator.com/install.sh | bash
 Or, with Node.js 24+ and Android platform-tools already installed:
 
 ```bash
-npm install -g androperator
+npm install -g @androperator/cli
 androperator install
 ```
 

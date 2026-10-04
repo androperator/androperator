@@ -60,8 +60,8 @@ jobs:
           set -euo pipefail
 
           package_name="$(node -p "require('./apps/node/package.json').name")"
-          if [[ "$package_name" != "androperator" ]]; then
-            echo "Release publication requires the androperator package name." >&2
+          if [[ "$package_name" != "@androperator/cli" ]]; then
+            echo "Release publication requires the @androperator/cli package name." >&2
             exit 1
           fi
 
@@ -117,6 +117,11 @@ jobs:
       - name: Pack and validate the release archive
         run: python3 validation/npm-release/pack.py --version "${RELEASE_TAG#v}" --output "$RUNNER_TEMP/androperator-release.tgz"
 
+      - name: Verify manually published bootstrap release
+        if: env.RELEASE_TAG == 'v1.1.0'
+        run: python3 validation/npm-release/verify_bootstrap.py --archive "$RUNNER_TEMP/androperator-release.tgz" --commit "$(git rev-parse HEAD)"
+
       - name: Publish package
+        if: env.RELEASE_TAG != 'v1.1.0'
         working-directory: apps/node
         run: npm publish "$RUNNER_TEMP/androperator-release.tgz" --ignore-scripts=true --access public --tag latest

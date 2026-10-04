@@ -80,3 +80,5 @@ git commit -m "chore(build): set code version to 0.4.1"
 ```
 
 Do not fold unrelated changes into this commit. Start from a clean working tree.
+
+The npm package is `@androperator/cli`, while the executable remains `androperator`.

@@ -37,7 +37,7 @@ git commit -m "docs(release): update published version to <version>"
 ## Safety Rules
 
 - Run this only after the version is verifiably live.
-- The target version must already exist as both `androperator@<version>` on npm and `v<version>` on GitHub Releases.
+- The target version must already exist as both `@androperator/cli@<version>` on npm and `v<version>` on GitHub Releases.
 - This skill updates public-facing content. Do not use it for unreleased code versions.
 - Do not fold unrelated changes into the published-version commit.
 

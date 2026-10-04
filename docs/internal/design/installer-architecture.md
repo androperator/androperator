@@ -50,7 +50,7 @@ The shell may own:
 - Java detection and provisioning
 - Node.js detection and provisioning
 - `curl`, `adb`, and `git` presence or provisioning
-- `npm install -g androperator@latest`
+- `npm install -g @androperator/cli@latest`
 - freshly installed CLI binary discovery
 - top-level shell error trapping around bootstrap failures
 - shell activation hints such as `source ~/.zshrc`

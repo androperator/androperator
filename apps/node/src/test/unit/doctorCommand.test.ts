@@ -262,7 +262,7 @@ describe("cmdDoctor", () => {
             title: "Align CLI and APK versions",
             platform: "any",
             steps: [
-              { kind: "manual", value: "Reinstall the CLI: npm install -g androperator@latest" },
+              { kind: "manual", value: "Reinstall the CLI: npm install -g @androperator/cli@latest" },
               { kind: "manual", value: "Use --operator-package com.androperator.operator.dev" },
             ],
           },
@@ -270,7 +270,7 @@ describe("cmdDoctor", () => {
       }) },
     });
 
-    assert.match(output, /Reinstall the CLI: `npm install -g androperator@latest`/);
+    assert.match(output, /Reinstall the CLI: `npm install -g @androperator\/cli@latest`/);
     assert.match(output, /Use `--operator-package com\.androperator\.operator\.dev`/);
   });
 

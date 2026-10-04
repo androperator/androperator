@@ -27,7 +27,7 @@ class ReleaseArchiveTests(unittest.TestCase):
                         entry.size = len(content)
                         target.addfile(entry, io.BytesIO(content))
             valid = [
-                ('package/package.json', b'{"name":"androperator","version":"1.0.0"}', tarfile.REGTYPE),
+                ('package/package.json', b'{"name":"@androperator/cli","version":"1.0.0","bin":{"androperator":"dist/cli/index.js"}}', tarfile.REGTYPE),
                 ('package/dist/cli/index.js', b'console.log("fixture");', tarfile.REGTYPE),
             ]
             write(valid)
@@ -43,6 +43,11 @@ class ReleaseArchiveTests(unittest.TestCase):
                     write(entries)
                     with self.assertRaises(ValueError):
                         pack.validate_archive(archive, '1.0.0')
+            wrong_bin = valid.copy()
+            wrong_bin[0] = (valid[0][0], json.dumps({'name': '@androperator/cli', 'version': '1.0.0', 'bin': {'cli': 'dist/cli/index.js'}}).encode(), tarfile.REGTYPE)
+            write(wrong_bin)
+            with self.assertRaisesRegex(ValueError, 'executable'):
+                pack.validate_archive(archive, '1.0.0')
             archive.write_bytes(b'broken')
             with self.assertRaises(tarfile.TarError):
                 pack.validate_archive(archive, '1.0.0')
@@ -52,7 +57,7 @@ class ReleaseArchiveTests(unittest.TestCase):
             root = Path(directory)
             (root / 'dist/cli').mkdir(parents=True)
             (root / 'dist/cli/index.js').write_text('export {};')
-            manifest = {'name': 'androperator', 'version': '1.0.0', 'files': ['dist/'],
+            manifest = {'name': '@androperator/cli', 'version': '1.0.0', 'bin': {'androperator': 'dist/cli/index.js'}, 'files': ['dist/'],
                         'scripts': {'prepack': 'node hook.cjs before', 'postpack': 'node hook.cjs after'}}
             (root / 'package.json').write_text(json.dumps(manifest))
             (root / 'hook.cjs').write_text(
@@ -79,7 +84,7 @@ class ReleaseArchiveTests(unittest.TestCase):
                 "else if (process.argv[2] === 'after') fs.unlinkSync('dist/packed.txt');\n"
                 "else fs.writeFileSync('publish-hook-ran', 'unexpected');\n")
             (root / 'package.json').write_text(json.dumps({
-                'name': 'androperator', 'version': '1.0.0', 'files': ['dist/'],
+                'name': '@androperator/cli', 'version': '1.0.0', 'bin': {'androperator': 'dist/cli/index.js'}, 'files': ['dist/'],
                 'scripts': {'prepack': 'node hook.cjs before', 'postpack': 'node hook.cjs after',
                             'prepublishOnly': 'node hook.cjs publish', 'publish': 'node hook.cjs publish'},
             }))

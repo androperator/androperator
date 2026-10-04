@@ -93,8 +93,8 @@ main() {
   printf 'github_release=%s assets=%s\n' "$release_url" "$release_assets"
 
   local npm_json
-  npm_json="$(npm view "androperator@${version}" version time --json)" || die "npm package androperator@${version} not found"
-  [[ "$(json_field "$npm_json" "version")" == "$version" ]] || die "npm returned unexpected version for androperator@${version}"
+  npm_json="$(npm view "@androperator/cli@${version}" version time --json)" || die "npm package @androperator/cli@${version} not found"
+  [[ "$(json_field "$npm_json" "version")" == "$version" ]] || die "npm returned unexpected version for @androperator/cli@${version}"
   printf 'npm_version=%s published_at=%s\n' \
     "$(json_field "$npm_json" "version")" \
     "$(json_time_for_version "$npm_json" "$version")"

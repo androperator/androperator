@@ -28,8 +28,10 @@ def validate_archive(path, version):
             raise ValueError('Archive must contain package.json and the built CLI entry point')
         with archive.extractfile(files['package/package.json']) as source:
             manifest = json.load(source)
-        if manifest.get('name') != 'androperator' or manifest.get('version') != version:
+        if manifest.get('name') != '@androperator/cli' or manifest.get('version') != version:
             raise ValueError('Packed package name/version does not match the intended release')
+        if manifest.get('bin') != {'androperator': 'dist/cli/index.js'}:
+            raise ValueError('Packed package must expose the androperator executable')
         if not files['package/dist/cli/index.js'].size:
             raise ValueError('Packed CLI entry point is empty')
     return len(files)

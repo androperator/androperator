@@ -18,7 +18,7 @@ MOCK
 chmod +x "$test_dir/bin/"*
 printf 'touch "$NVM_EXECUTED"\nexit "${INSTALL_FAIL:-0}"\n' > "$test_dir/fixture.sh"
 export PATH="$test_dir/bin:$PATH" TMPDIR="$test_dir/downloads" NVM_FIXTURE="$test_dir/fixture.sh"
-for installer in sites/androperator-public/install.sh sites/landing-clawperator/public/install.sh; do
+for installer in sites/androperator-public/install.sh; do
     for scenario in valid mismatch download-failure execution-failure; do
         export NVM_EXECUTED="$test_dir/executed" DOWNLOAD_FAIL=0 INSTALL_FAIL=0
         export NVM_TEST_DIGEST=abdb525ee9f5b48b34d8ed9fc67c6013fb0f659712e401ecd88ab989b3af8f53
@@ -44,4 +44,4 @@ for installer in sites/androperator-public/install.sh sites/landing-clawperator/
         [[ -z "$(ls -A "$test_dir/downloads")" ]]
     done
 done
-printf 'nvm verification: valid, mismatch, download failure, execution failure, and cleanup passed for both installers.\n'
+printf 'nvm verification: valid, mismatch, download failure, execution failure, and cleanup passed for the Androperator installer.\n'

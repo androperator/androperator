@@ -38,7 +38,6 @@ else
 fi
 
 echo "=== Running install-related validation harnesses (including shared agent bridge coverage) ==="
-bash validation/install/test_skill_md.sh
 bash validation/install/test_operator_package_env.sh
 # test_doctor.sh has a PATH-poisoned missing-adb scenario. Clear ADB_PATH so
 # caller-local adb configuration cannot bypass that scenario.

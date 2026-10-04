@@ -28,18 +28,6 @@ jobs:
             apps/node/package-lock.json
       - run: ./scripts/site_build.sh
 
-  preserved-landing-build:
-    name: Build preserved Clawperator landing site
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: sites/landing-clawperator/package-lock.json
-      - run: ./scripts/site_build_clawperator.sh
-
   commit-message-guard:
     name: Validate Commit Messages
     runs-on: ubuntu-latest

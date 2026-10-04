@@ -28,12 +28,6 @@ dependencies for you.
   - suite runner for the install-specific tests
   - builds the Node package, runs the install-related Node tests, then runs the
     shell harnesses in this directory plus `validation/test_doctor.sh`
-- `test_skill_md.sh`
-  - validates the public `sites/landing-clawperator/public/skill.md` and
-    `sites/landing-clawperator/public/agents.md` setup contract
-  - guards package name, Node requirement, setup commands, local host artifacts,
-    landing redirects, discovery links, sitemap entries, and out-of-scope
-    strings
 - `test_java.sh`
   - covers `check_java()` detection and provisioning branches
 - `test_cli_bootstrap.sh`

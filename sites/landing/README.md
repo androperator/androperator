@@ -39,5 +39,5 @@ A plain local HTTP server previews static files only; it does not emulate
 Cloudflare `_headers`, `_redirects`, or the APK Worker. Validate those on Pages
 before public cutover. Release downloads cannot succeed before publication.
 
-The preserved site remains at `sites/landing-clawperator` and is built with
-`./scripts/site_build_clawperator.sh`.
+The preserved site is maintained and deployed from
+[clawperator/clawperator.com](https://github.com/clawperator/clawperator.com).

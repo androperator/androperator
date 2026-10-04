@@ -1,6 +1,6 @@
 ---
 name: site-extract-landing
-description: Extract a live landing page through Cloudflare Browser Rendering, with explicit new-site versus preserved-site ownership.
+description: Extract a live landing page through Cloudflare Browser Rendering, with Androperator export defaults.
 ---
 
 # Site Extract Landing
@@ -17,9 +17,8 @@ Defaults: `https://androperator.com` and
 `sites/landing/export/landing-export-cloudflare.md`. Inspect content, resolved
 links, footer attribution, and visible agent guidance.
 
-Pass `--site clawperator` for `https://clawperator.com` and the preserved site's
-export directory. `--url` and `--output` override those defaults; use them for
-an authorized preview URL. Keep credentials out of output and committed files.
+`--url` and `--output` override the defaults; use them for an authorized
+preview URL. Keep credentials out of output and committed files.
 
 This uses `/browser-rendering/markdown`, which renders the page before
 extracting Markdown. It does not prove APK downloads or runtime readiness.

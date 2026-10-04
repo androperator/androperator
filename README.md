@@ -116,8 +116,8 @@ ordinary helpers. [Settings examples](examples/skills/README.md) are included;
 Androperator supplies execution and evidence without a runtime package framework.
 
 Technical documentation is built from `docs/` and code-derived inputs in
-`apps/node/src/`, through `sites/docs/`. The former landing site is preserved
-separately in `sites/landing-clawperator/`.
+`apps/node/src/`, through `sites/docs/`. The former landing site is maintained separately in
+[clawperator/clawperator.com](https://github.com/clawperator/clawperator.com).
 
 [Repository setup](.agents/skills/repo-setup/SKILL.md) enables the tracked Git
 hooks. [Release notes](CHANGELOG.md) describe changes in each version.

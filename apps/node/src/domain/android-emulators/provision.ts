@@ -69,7 +69,7 @@ export async function provisionEmulator(
   const configured = await listConfiguredAvds(config);
   const supportedConfigured = findBestSupportedAvd(configured, desiredName);
   if (supportedConfigured) {
-    startAvd(config, supportedConfigured.name);
+    await startAvd(config, supportedConfigured.name);
     const serial = await waitForEmulatorRegistration(config, supportedConfigured.name);
     await waitForBootCompletion(config, serial);
     await enableEmulatorDeveloperSettings(config, serial);
@@ -102,7 +102,7 @@ export async function provisionEmulator(
     });
   }
 
-  startAvd(config, desiredName);
+  await startAvd(config, desiredName);
   const serial = await waitForEmulatorRegistration(config, desiredName);
   await waitForBootCompletion(config, serial);
   await enableEmulatorDeveloperSettings(config, serial);

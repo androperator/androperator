@@ -67,8 +67,8 @@ The Node CLI owns Androperator install behavior after the CLI is available.
 `androperator install` should own:
 
 - operator remediation orchestration
-- bundled-skills install, including canonical bundled-skill copies, Claude and
-  Codex discovery symlinks, and managed real directory copies under
+- bundled-skills install, including canonical bundled-skill copies, Claude
+  discovery symlinks, and managed real directory copies for Codex and other hosts under
   `~/.agents/skills/`
 - host setup
 - state threading between those steps

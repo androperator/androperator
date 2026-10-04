@@ -342,7 +342,7 @@ async function buildAgentGuideContent(options: HostSetupOptions): Promise<string
     "Start with `androperator-agent-orientation` on an unfamiliar host.",
     "Use `androperator-upgrade` for a whole-product refresh.",
     "Use `androperator-skill-author-by-agent-discovery` for bounded exploration and optional authoring.",
-    "Use `androperator-skill-author-by-recording` when a demonstration contributes missing evidence.",
+    "Use `androperator-learn-from-recording` when a demonstration contributes missing evidence.",
     "", `Installed guidance: ${bundledSkillsDir}`, ...installed.map(name => `- ${name}`),
   ];
   if (installed.length === 0 || !hasVersionFile) lines.push("", "Install or refresh guidance with `androperator bundled-skills install`.");

@@ -1,6 +1,6 @@
 import type { Logger } from "../../adapters/logger.js";
 import { setupHost, type HostSetupResult } from "../../domain/host/hostSetup.js";
-import { copyBundledSkills, resolveClaudeSkillsDir, resolveCodexSkillsDir, type CopyBundledSkillsError, type CopyBundledSkillsSuccess } from "../../domain/bundledSkills/copyBundledSkills.js";
+import { copyBundledSkills, resolveClaudeSkillsDir, resolveAgentsSkillsDir, type CopyBundledSkillsError, type CopyBundledSkillsSuccess } from "../../domain/bundledSkills/copyBundledSkills.js";
 import { DEFAULT_OPERATOR_PACKAGE } from "../../domain/config/resolveOperatorPackage.js";
 import { runOperatorRemediate, type OperatorRemediateCommandError, type OperatorRemediateResult } from "./operatorRemediate.js";
 import type { OutputOptions } from "../output.js";
@@ -16,7 +16,7 @@ interface InstallBestEffortStep {
 export interface InstallBundledSkillsStepResult extends InstallBestEffortStep {
   installedDir?: string;
   claudeSkillsDir?: string;
-  codexSkillsDir?: string;
+  agentsSkillsDir?: string;
   agentDiscoveryDirs?: CopyBundledSkillsSuccess["agentDiscoveryDirs"];
   skills?: string[];
   count?: number;
@@ -99,7 +99,7 @@ function toBundledSkillsInstallStep(
     status: "ok",
     installedDir: result.installedDir,
     claudeSkillsDir: resolveClaudeSkillsDir({ env }),
-    codexSkillsDir: resolveCodexSkillsDir({ env }),
+    agentsSkillsDir: resolveAgentsSkillsDir({ env }),
     agentDiscoveryDirs: result.agentDiscoveryDirs,
     skills: result.skills,
     count: result.skills.length,

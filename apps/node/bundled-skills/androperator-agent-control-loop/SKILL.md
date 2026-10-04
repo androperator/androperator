@@ -1,6 +1,6 @@
 ---
 name: androperator-agent-control-loop
-description: Execute Android goals that need adaptive navigation or verified extraction with Androperator. Use also for authoring reusable agent instructions when requested.
+description: Execute Android goals that need adaptive navigation or verified extraction with Androperator.
 ---
 
 # Androperator Agent Control Loop

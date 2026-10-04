@@ -1,0 +1,4 @@
+interface:
+  display_name: "Androperator Learn from Recording"
+  short_description: "Learn from recordings; author instructions when requested"
+  default_prompt: "Use $androperator-learn-from-recording to inspect demonstration evidence and report supported findings. When authoring is requested, save adaptive instructions and verify the authorized workflow without treating the recording as a replay program."

@@ -34,8 +34,8 @@ describe("bundled skill packaging", () => {
     assert.deepEqual(entries, [
       "androperator-agent-control-loop",
       "androperator-agent-orientation",
+      "androperator-learn-from-recording",
       "androperator-skill-author-by-agent-discovery",
-      "androperator-skill-author-by-recording",
       "androperator-upgrade",
     ]);
 

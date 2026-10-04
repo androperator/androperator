@@ -23,9 +23,7 @@ export interface CheckBundledSkillsStalenessOptions {
   cliVersion?: string;
   getCliVersionFn?: () => string;
   claudeSkillsDir?: string;
-  codexSkillsDir?: string;
   agentsSkillsDir?: string;
-  codexHome?: string;
   homeDir?: string;
   env?: NodeJS.ProcessEnv;
 }

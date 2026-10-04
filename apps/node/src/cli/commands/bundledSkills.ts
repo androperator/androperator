@@ -4,7 +4,7 @@ import {
   copyBundledSkills,
   listInstalledBundledSkills,
   resolveClaudeSkillsDir,
-  resolveCodexSkillsDir,
+  resolveAgentsSkillsDir,
   type CopyBundledSkillsOptions,
 } from "../../domain/bundledSkills/copyBundledSkills.js";
 import type { OutputOptions } from "../output.js";
@@ -48,7 +48,7 @@ async function runBundledSkillsInstall(
     count: result.skills.length,
     installedDir: result.installedDir,
     claudeSkillsDir: resolveClaudeSkillsDir(options),
-    codexSkillsDir: resolveCodexSkillsDir(options),
+    agentsSkillsDir: resolveAgentsSkillsDir(options),
     agentDiscoveryDirs: result.agentDiscoveryDirs,
     discoveryGroups: result.discoveryGroups,
     migrations: result.migrations,
@@ -75,7 +75,7 @@ export async function cmdBundledSkillsList(
         skills: [],
         count: 0,
         installedDir: installDir,
-        message: "No installed bundled-skills found. Run androperator bundled-skills install to get androperator-agent-orientation, androperator-agent-control-loop, androperator-upgrade, androperator-skill-author-by-agent-discovery, and androperator-skill-author-by-recording.",
+        message: "No installed bundled-skills found. Run androperator bundled-skills install to get androperator-agent-orientation, androperator-agent-control-loop, androperator-upgrade, androperator-skill-author-by-agent-discovery, and androperator-learn-from-recording.",
       }, options);
     }
 

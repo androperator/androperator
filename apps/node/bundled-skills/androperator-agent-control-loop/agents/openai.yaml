@@ -1,4 +1,4 @@
 interface:
   display_name: "Androperator Agent Control Loop"
   short_description: "Observe, act and independently verify Android outcomes"
-  default_prompt: "Use $androperator-agent-control-loop to complete the requested Android goal within declared budgets, with independently verified results or an evidence-backed partial or failed outcome. For explicitly requested orchestrated authoring, continue through implementation, validation and live proof."
+  default_prompt: "Use $androperator-agent-control-loop to complete the authorized Android goal with independently verified results or an evidence-backed partial or failed outcome."

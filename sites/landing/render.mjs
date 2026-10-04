@@ -19,6 +19,14 @@ export function publicUrl(value) {
 export function renderMarkdown(source) {
   // Input is the repository-owned README, including its inline logo HTML.
   const markdown = new MarkdownIt({ html: true });
+  const defaultFence = markdown.renderer.rules.fence;
+  let diagramIndex = 0;
+  markdown.renderer.rules.fence = (tokens, index, options, env, renderer) => {
+    if (tokens[index].info.trim() !== 'mermaid') return defaultFence(tokens, index, options, env, renderer);
+    const code = markdown.utils.escapeHtml(tokens[index].content);
+    const title = markdown.utils.escapeHtml(tokens[index].content.match(/^\s*accTitle: (.+)$/m)?.[1] ?? 'Agent workflow');
+    return `<figure class="diagram" data-index="${diagramIndex++}"><pre><code>${code}</code></pre><figcaption>${title}</figcaption></figure>\n`;
+  };
   const tokens = markdown.parse(source, {});
   const headings = new Map();
   for (let i = 0; i < tokens.length; i++) {
@@ -39,7 +47,10 @@ export function renderMarkdown(source) {
     }
   }
   visit(tokens);
-  return markdown.renderer.render(tokens, markdown.options, {});
+  const html = markdown.renderer.render(tokens, markdown.options, {});
+  return html.split(/(?=<h2\b)/).map((section, index) =>
+    `<section class="${index === 0 ? 'intro' : 'content-section'}">${section}</section>`
+  ).join('\n');
 }
 
 function rewriteHtmlUrls(source, escape = value => value) {

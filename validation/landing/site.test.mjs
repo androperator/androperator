@@ -30,13 +30,25 @@ test('HTML and Markdown resolve links and inline logo without altering fenced ex
   assert.match(publicMarkdown(source), /```bash\n\[example\]\(docs\/setup.md\)\n```/);
 });
 
+test('Mermaid diagrams retain accessible titles, escaped fallback, and native Markdown', () => {
+  const source = '```mermaid\nflowchart LR\n    accTitle: Observe and verify\n    A[Agent] --> B[Android]\n```';
+  const html = renderMarkdown(source);
+  assert.match(html, /class="diagram" data-index="0"/);
+  assert.match(html, /<figcaption>Observe and verify<\/figcaption>/);
+  assert.match(html, /--&gt;/);
+  assert.equal(publicMarkdown(source), source);
+  assert.match(renderMarkdown('```mermaid\n<script>alert(1)</script>\n```'), /&lt;script&gt;/);
+});
+
 test('built homepage renders current README, useful footer, and visible agent guidance', async () => {
   const html = await read('sites/landing/out/index.html');
   assert.ok(html.includes(renderMarkdown(await read('README.md'))));
   for (const text of ['ever-nondeterministic agents', 'Action Launcher Pty Ltd', 'mailto:chris@actionlauncher.com', 'Release notes', 'commandId', 'taskId', '/skill.md', '/agents.md', '/llms-full.txt']) assert.ok(html.includes(text), text);
   assert.match(html, /<main[^>]*><article>/);
   assert.match(html, /<aside[^>]*aria-labelledby="agent-heading"/);
-  assert.doesNotMatch(html, /<script(?! type="application\/ld\+json")/);
+  assert.match(html, /<script type="module" src="\/scripts\/diagrams.js"><\/script>/);
+  assert.equal((html.match(/class="diagram"/g) ?? []).length, 3);
+  await access(new URL('sites/landing/out/scripts/diagrams.js', root));
   assert.equal(await read('sites/landing/out/index.md'), publicMarkdown(await read('README.md')));
 });
 

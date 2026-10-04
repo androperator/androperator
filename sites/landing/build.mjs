@@ -2,6 +2,7 @@ import { readFile, mkdir, rm, cp, writeFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve, join } from 'node:path';
+import { build } from 'esbuild';
 import { renderMarkdown, publicMarkdown } from './render.mjs';
 
 const site = dirname(fileURLToPath(import.meta.url));
@@ -14,6 +15,7 @@ const template = await readFile(join(site, 'template.html'), 'utf8');
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
 await cp(join(site, 'public'), out, { recursive: true });
+await build({ entryPoints: [join(site, 'diagrams.mjs')], outdir: join(out, 'scripts'), bundle: true, splitting: true, format: 'esm', minify: true });
 await cp(join(root, 'assets/androperator-logo.png'), join(out, 'logo.png'));
 await cp(join(root, 'sites/androperator-public/install.sh'), join(out, 'install.sh'));
 await writeFile(join(out, 'index.html'), template.replace('<!-- README -->', renderMarkdown(readme)));

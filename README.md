@@ -1,132 +1,168 @@
 # Androperator
 
-<img src="assets/androperator-logo.png" width="200" height="200" alt="Androperator logo" />
+<img src="assets/androperator-logo.png" width="160" height="160" alt="Androperator logo" />
 
-Androperator is a deterministic Android automation tool for AI agents to
-navigate, observe, and control apps. It connects an agent running on your computer to an Android phone or
-emulator, so the agent can inspect the screen, tap controls, enter text, and
-check what happened.
+**Give your agent eyes and hands inside Android apps.**
 
-It is especially useful for **agentic development**: giving a coding agent a
-way to exercise an app, investigate a bug, and verify its changes against a
-running Android UI.
+Androperator connects AI agents to a running Android app on a phone or emulator.
+Agents can inspect the UI, capture screenshots, tap controls, enter text, and
+check the result through a predictable CLI, MCP server, or HTTP API.
 
-Androperator was formerly known as Clawperator. Version **1.0.0** is available
-as `androperator` on npm. See [migration guidance](docs/migration-to-androperator.md)
-if you previously used Clawperator.
+Use it to **develop Android apps with an agent** and **automate QA verification**.
+Your agent is the brain. Androperator is the hand that acts on the device and
+brings back evidence.
 
-## Why Androperator?
+[Quick Start](#quick-start) · [Documentation](https://docs.androperator.com/) · [GitHub](https://github.com/androperator/androperator)
 
-A coding agent can read your source and run tests, but working on an Android
-app also means using it. Androperator gives the agent a way to navigate the
-running app and bring observations back into its development loop.
+## Develop with eyes on the app
 
-An agent can use it to:
+Give your coding agent more than source code. Let it explore the running app,
+reproduce a UI bug, and inspect the screen after a fix. Screenshots show what
+users see; UI snapshots expose the accessible controls the agent can act on.
 
-- Explore an unfamiliar app and find the controls needed for a task.
-- Reproduce a reported UI problem and capture evidence of the result.
-- Check a user flow after changing code, including navigation and text entry.
-- Turn a verified sequence of actions into a reusable local skill.
-- Operate existing Android apps as part of a larger agent workflow.
+```mermaid
+flowchart LR
+    accTitle: Android development feedback loop
+    accDescr: The agent changes code, the development tools build and launch the app, and Androperator returns UI evidence for the agent to check.
+    A[Agent changes code] --> B[Build and launch app]
+    B --> C[Androperator inspects UI]
+    C --> D[Agent checks the result]
+    D --> A
+```
 
-You choose the goal. Your agent decides what to do next. Androperator executes
-the requested actions and returns evidence for the agent to inspect.
+Ask your agent: **“Reproduce the settings bug, fix it, then use Androperator to
+check the updated screen on the emulator.”** Your development tools build and
+install the app; Androperator supplies observation and interaction.
+
+## Automate QA verification
+
+Have an agent exercise a user flow on a real Android UI, then compare the
+observed state with the expected outcome. Use taps, text entry, scrolling,
+snapshots, screenshots, and recordings to investigate failures and keep evidence.
+
+```mermaid
+flowchart LR
+    accTitle: Android QA verification loop
+    accDescr: From a QA goal, the agent chooses actions, Androperator operates the app, and the agent verifies UI evidence before continuing or recovering.
+    A[QA goal] --> B[Agent chooses actions]
+    B --> C[Androperator operates app]
+    C --> D[UI state and screenshots]
+    D --> E[Agent verifies outcome]
+    E -->|Next step or recovery| B
+```
+
+Ask your agent: **“Check that changing the display preference survives closing
+and reopening the app. Capture evidence if it fails.”** A completed action is
+one step; the agent checks the resulting state before declaring the flow passed.
 
 ## How it works
 
-Androperator is the **hand** for the agent's **brain**. The agent or LLM owns
-reasoning, planning, and app-specific strategy; Androperator executes validated
-Android actions and returns structured evidence. This separation lets agents
-adapt their plans while keeping the execution interface predictable.
+The agent plans and interprets results. Androperator executes explicit Android
+actions and returns structured evidence. App-specific decisions and recovery
+stay with the agent.
 
-Androperator has two parts: a Node.js CLI on the host and an Operator app on the
-Android target. The host communicates with the device through `adb`; the
-Operator uses Android accessibility to observe and interact with app UI.
-
-Agents can use the CLI, MCP server, or HTTP API. The same execution contracts
-support individual actions and validated sequences. Results include structured
-status and errors, with `commandId` and `taskId` for correlation. Canonical
-terminal results from the Operator use the `[Androperator-Result]` envelope.
-
-**Design principles:**
-
-- **Deterministic:** explicit actions and strict validation contracts; app-specific decisions stay with the agent.
-- **Observable:** structured UI snapshots, machine-readable errors, and correlated execution results.
-- **Agent-first:** JSON output, CLI/MCP/HTTP interfaces, and single-flight execution per device.
-
-A typical setup keeps a phone connected to the agent's host machine, or uses
-an emulator during development. The agent sends actions, reads the evidence,
-and chooses its next step.
-
-Available tools include:
-
-- **Observation:** UI hierarchy snapshots, node queries, screenshots, and video evidence.
-- **Control:** opening apps, tapping, scrolling, swiping, dragging, and entering text.
-- **Skill authoring:** recordings and local skill tooling for agents to build and validate their own workflows.
-
-UI visibility depends on what the app exposes through Android accessibility.
-Agents should inspect the returned state and verify the outcome before moving
-on. App-specific reasoning and recovery remain with the agent.
-
-## Get started
-
-Install the CLI with Node.js 24+:
-
-```bash
-npm install -g androperator@1.0.0
-androperator install
+```mermaid
+flowchart TB
+    accTitle: Agent and Androperator architecture
+    accDescr: The agent calls the host CLI, MCP server, or HTTP API. Androperator uses adb and the Android Operator to act on the app and return evidence.
+    A[AI agent - the brain] -->|CLI / MCP / HTTP| B[Androperator on your computer]
+    B -->|adb| C[Operator app on Android]
+    C -->|Accessibility actions| D[Your running app]
+    D -->|UI state| C
+    C -->|Structured results| B
+    B -->|Evidence for the next decision| A
 ```
 
-The install command prepares the host and connected Android targets, including
-Operator APK setup and readiness checks. You need a phone with USB debugging
-enabled or an emulator visible to `adb`. Follow the [setup guide](docs/setup.md)
-for prerequisites, device authorization, and permissions.
+The Node.js CLI runs on your computer. The Operator Android app uses
+accessibility to inspect and interact with apps on a connected phone or emulator.
+Screenshots capture the device display. No app-specific SDK integration is
+required; UI hierarchy visibility depends on what the app exposes through
+Android accessibility.
 
-Choose a target and try a simple flow:
+- **Observe:** XML UI snapshots, compact JSON hierarchies, node queries, screenshots, and recordings.
+- **Act:** open apps, tap, type, scroll, swipe, and drag.
+- **Verify:** inspect returned state and explicit errors, then decide whether to continue, recover, or stop.
 
-```bash
-androperator devices
-androperator doctor --device <device_serial>
-androperator open com.android.settings --device <device_serial>
-androperator snapshot --device <device_serial>
+Reusable skills can capture workflows your agent has learned. They are optional;
+an agent can drive the documented API directly.
+
+<a id="install"></a>
+
+## Quick Start
+
+One command installs the CLI, downloads and verifies the latest Androperator
+Operator Android app when needed, and helps prepare an Android device for your agent.
+
+Tell your agent to:
+
+```text
+Read https://androperator.com/skill.md and get me set up with Androperator.
 ```
 
-The snapshot returns the UI hierarchy for the agent to inspect. Choose the next
-action from that evidence, execute it, and inspect the result again. Pass
-`--device` explicitly when several targets are connected.
-
-For the full bootstrap installer, including host prerequisites:
+Install Androperator on macOS/Linux:
 
 ```bash
 curl -fsSL https://androperator.com/install.sh | bash
 ```
 
-## Documentation for agents
+Or, with Node.js 24+ and Android platform-tools already installed:
 
-- [Quickstart](docs/quickstart.md) - first device interaction.
-- [Setup](docs/setup.md) - host requirements, APK installation, and permissions.
-- [API overview](docs/api/overview.md) - CLI, HTTP API, actions, and result contracts.
-- [Operator automation playbook](docs/internal/design/operator-llm-playbook.md) - runtime conventions and the agent/runtime boundary.
-- [Local skills](docs/skills/overview.md) - instructions followed by the current agent.
-- [Recording](docs/api/recording.md) - capture observations for skill authoring.
+```bash
+npm install -g androperator
+androperator install
+```
+
+No Android device handy? Have Androperator create a Google Play equipped
+Android emulator.
+
+```bash
+androperator emulator provision
+```
+
+Emulator provisioning needs a supported host and Android SDK emulator tools.
+For a physical phone, enable USB debugging and authorize the computer.
+Follow the [setup guide](docs/setup.md) for prerequisites and permissions, and
+[emulator guidance](https://docs.androperator.com/api/serve/#endpoint-post-android-provision-emulator) for host requirements.
+
+Androperator has comprehensive documentation, setup guides, and API references
+at [docs.androperator.com](https://docs.androperator.com/).
+
+### Try the observation loop
+
+Choose a device, check readiness, then inspect an app:
+
+```bash
+androperator devices
+androperator doctor --device <device_serial>
+androperator open com.android.settings --device <device_serial>
+androperator snapshot --compact --device <device_serial>
+androperator screenshot --path /tmp/android-screen.png --device <device_serial>
+```
+
+The compact snapshot returns a bounded JSON hierarchy. Use the observed text
+or resource IDs to choose an action, then inspect again. Pass `--device`
+explicitly when multiple targets are connected. These commands use the release
+Operator; for a local debug APK, add
+`--operator-package com.androperator.operator.dev`.
+
+## Go deeper
+
+- [Quickstart](docs/quickstart.md) - your first device interaction.
+- [Setup](docs/setup.md) - host requirements and Android permissions.
+- [API overview](docs/api/overview.md) - CLI, HTTP, actions, and results.
+- [MCP server](docs/api/mcp.md) - connect an agent through MCP.
+- [Recording](docs/api/recording.md) - capture a flow and its evidence.
 - [Troubleshooting](docs/troubleshooting/operator.md) - diagnose setup and runtime failures.
 
-The current agent follows and authors reusable instructions with optional
-ordinary helpers. [Settings examples](examples/skills/README.md) are included;
-Androperator supplies execution and evidence without a runtime package framework.
+For agents, start with [agent guidance](https://androperator.com/agents/) and the
+[technical documentation index](https://androperator.com/llms.txt).
 
-Technical documentation is built from `docs/` and code-derived inputs in
-`apps/node/src/`, through `sites/docs/`. The former landing site is maintained separately in
-[clawperator/clawperator.com](https://github.com/clawperator/clawperator.com).
-
-[Repository setup](.agents/skills/repo-setup/SKILL.md) enables the tracked Git
-hooks. [Release notes](CHANGELOG.md) describe changes in each version.
+Androperator was formerly known as Clawperator. See the
+[migration guide](docs/migration-to-androperator.md) and [release notes](CHANGELOG.md).
 
 ## License
 
-Apache 2.0. See [LICENSE](LICENSE).
-
-Built by [@chrismlacy](https://x.com/chrismlacy), with help from ever-nondeterministic agents.\
-GitHub: [chrislacy](https://github.com/chrislacy) · X: [@chrismlacy](https://x.com/chrismlacy) · Email: [chris@actionlauncher.com](mailto:chris@actionlauncher.com)
+[Apache 2.0](LICENSE). Built by [@chrismlacy](https://x.com/chrismlacy),
+with help from ever-nondeterministic agents.
 
 Copyright (c) 2026 Action Launcher Pty Ltd

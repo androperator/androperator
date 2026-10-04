@@ -13,6 +13,11 @@ Build from the repository root with Node.js 24+ and Python 3:
 python3 -m http.server 8000 --directory sites/landing/out
 ```
 
+Mermaid fences stay native in the GitHub README. The homepage renders them with
+a locally bundled Mermaid module, using vertical flows on narrow screens.
+Readable diagram source remains available if JavaScript is disabled or rendering
+fails. Diagram explanations and examples share the same README sections.
+
 The build installs the renderer, runs the docs build, renders HTML and
 Markdown, generates sitemaps from route-specific source commit timestamps,
 and runs `validation/landing/site.test.mjs`. The docs build also installs its

@@ -257,11 +257,11 @@ describe("emulator lifecycle", () => {
     assert.strictEqual(runner.calls.length, 2);
   });
 
-  it("starts an AVD detached with fully ignored stdio", () => {
+  it("starts an AVD detached with fully ignored stdio", async () => {
     const runner = new FakeProcessRunner();
     const config = getDefaultRuntimeConfig({ runner });
 
-    startAvd(config, "androperator-pixel");
+    await startAvd(config, "androperator-pixel");
 
     assert.strictEqual(runner.calls[0].command, config.emulatorPath);
     assert.deepStrictEqual(runner.calls[0].args, ["@androperator-pixel", "-no-snapshot-load", "-no-boot-anim"]);

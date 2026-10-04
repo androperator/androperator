@@ -479,7 +479,7 @@ export function createServeApp(options: ServeAppOptions): express.Application {
         res.status(mapServeErrorCodeToStatus(ERROR_CODES.EMULATOR_ALREADY_RUNNING)).json({ ok: false, error: { code: ERROR_CODES.EMULATOR_ALREADY_RUNNING, message: `Emulator ${name} is already running` } });
         return;
       }
-      startAvd(config, name);
+      await startAvd(config, name);
       const serial = await waitForEmulatorRegistration(config, name);
       await waitForBootCompletion(config, serial);
       await enableEmulatorDeveloperSettings(config, serial);

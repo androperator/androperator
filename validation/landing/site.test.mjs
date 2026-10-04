@@ -59,6 +59,9 @@ test('built homepage renders current README, useful footer, and visible agent gu
   assert.match(html, /<script type="module" src="\/scripts\/diagrams.js"><\/script>/);
   assert.equal((html.match(/class="diagram"/g) ?? []).length, 3);
   await access(new URL('sites/landing/out/scripts/diagrams.js', root));
+  await access(new URL('sites/landing/out/scripts/navigation.js', root));
+  assert.match(html, /data-section="why" href="\/#why">Why/);
+  assert.match(html, /data-section="quick-start" href="\/#quick-start">Install/);
   assert.equal(await read('sites/landing/out/index.md'), publicMarkdown(await read('README.md')));
 });
 

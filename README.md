@@ -19,6 +19,7 @@ fixes with evidence to back up its conclusions.
 
 [Quick Start](#quick-start) · [Documentation](https://docs.androperator.com/) · [GitHub](https://github.com/androperator/androperator)
 
+<a id="why"></a>
 <a id="develop-with-eyes-on-the-app"></a>
 
 ## Give your coding agent the running app

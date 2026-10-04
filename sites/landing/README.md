@@ -20,6 +20,11 @@ a locally bundled Mermaid module, using vertical flows on narrow screens.
 Readable diagram source remains available if JavaScript is disabled or rendering
 fails. Diagram explanations and examples share the same README sections.
 
+The hero logo gently bobs unless reduced motion is requested. The header stays
+visible and tracks the Why, How it works, and Install sections with
+`aria-current="location"`. Install links to Quick Start; Why covers the app
+development and QA use cases. Navigation loads independently of diagram rendering.
+
 The build installs the renderer, runs the docs build, renders HTML and
 Markdown, generates sitemaps from route-specific source commit timestamps,
 and runs `validation/landing/site.test.mjs`. The docs build also installs its

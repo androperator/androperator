@@ -32,7 +32,8 @@
     "start": "node dist/cli/index.js",
     "test": "node scripts/test.mjs",
     "test:unit": "node scripts/test.mjs --unit",
-    "lint": "eslint src --ext .ts"
+    "lint": "eslint src --ext .ts",
+    "emulator:status": "node dist/adapters/android-emulator/status.js"
   },
   "keywords": [
     "androperator",
@@ -49,6 +50,7 @@
     "typescript": "^5.7.0"
   },
   "dependencies": {
+    "@androperator/emulator": "0.1.1",
     "@modelcontextprotocol/sdk": "1.29.0",
     "express": "^5.2.1",
     "pngjs": "^7.0.0",

@@ -56,7 +56,7 @@ test("consumer adds compatibility to raw configured and running backend facts", 
   }]);
 });
 
-test("legacy launch waits for spawn and translates asynchronous spawn errors", async () => {
+test("backend launch waits for spawn and translates asynchronous spawn errors", async () => {
   const runner = new FakeProcessRunner();
   const child = Object.assign(new EventEmitter(), { unref() {} });
   runner.spawn = () => child;

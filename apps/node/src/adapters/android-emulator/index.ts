@@ -1,19 +1,7 @@
 import type { EmulatorBackend } from "./contracts.js";
-import { getAvdRoot, inspectConfiguredAvd, listConfiguredAvds } from "./legacy/configuredAvds.js";
-import { getRunningEmulatorAvdName, isEmulatorBooted, listRunningEmulators } from "./legacy/runningEmulators.js";
-import { assertRequiredEmulatorTools, checkRequiredEmulatorTools } from "./legacy/hostRequirements.js";
-import { normalizeEmulatorDataPartitionSize, validateAvdName, setAvdDataPartitionSize,
-  isSystemImageInstalled, acceptAndroidSdkLicenses, ensureSystemImageInstalled,
-  createAvd, startAvd, waitForEmulatorRegistration, waitForBootCompletion,
-  stopAvd, deleteAvd } from "./legacy/lifecycle.js";
+import { selectedEmulatorBackend } from "./packageSource.js";
 
-/** The only backend composition point. Keep the in-tree backend until migration. */
-export const emulatorBackend: EmulatorBackend = {
-  getAvdRoot, inspectConfiguredAvd, listConfiguredAvds,
-  getRunningEmulatorAvdName, isEmulatorBooted, listRunningEmulators,
-  assertRequiredEmulatorTools, checkRequiredEmulatorTools,
-  normalizeEmulatorDataPartitionSize, validateAvdName, setAvdDataPartitionSize,
-  isSystemImageInstalled, acceptAndroidSdkLicenses, ensureSystemImageInstalled,
-  createAvd, startAvd, waitForEmulatorRegistration, waitForBootCompletion,
-  stopAvd, deleteAvd,
-};
+/** Load only the selected implementation so rollback does not depend on local package readiness. */
+export const emulatorBackend: EmulatorBackend = selectedEmulatorBackend() === "legacy"
+  ? (await import("./legacy.js")).legacyEmulatorBackend
+  : (await import("./packageBackend.js")).packageEmulatorBackend;

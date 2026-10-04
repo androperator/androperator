@@ -1,79 +1,127 @@
 # Emulator backend boundary
 
-The emulator domain uses the consumer-owned `EmulatorBackend` contract in
-`apps/node/src/adapters/android-emulator/contracts.ts`. The single composition
-point is `adapters/android-emulator/index.ts`; it currently selects the in-tree
-implementation in `legacy/`. No external emulator package, runtime backend
-selector, dependency linking or package-version changes are introduced here.
+The consumer-owned `EmulatorBackend` contract lives in
+`apps/node/src/adapters/android-emulator/contracts.ts`. Its composition point,
+`adapters/android-emulator/index.ts`, defaults to `packageBackend.ts`, backed by
+`@androperator/emulator`. The in-tree implementation remains in `legacy/` for
+comparison and rollback until the separate removal PR.
 
-## Responsibilities
+## Ownership
 
-The backend owns configured AVD inspection, running-emulator discovery, SDK
-availability, image installation, creation, storage configuration, spawn,
-registration and boot polling, stop and deletion. It returns SDK facts without
-Androperator compatibility fields. Its runtime input is the existing consumer
-`RuntimeConfig`, so the supplied process runner, device routing and ADB logging
-remain in effect. The ordinary process runner and SDK client are unchanged.
+The package owns SDK inspection, running-emulator discovery, installation,
+creation, storage configuration, launch, registration and boot waits, stop and
+deletion. The adapter maps the existing consumer runtime to the package runtime.
+It preserves explicit SDK paths, the supplied process runner and ADB logging.
+Discovery clears an ambient device serial; targeted calls use the serial supplied
+by the package exactly once. This change does not replace the general process
+runner used by ordinary Androperator device actions.
 
-The domain retains Pixel 7 / API 35 / Play Store ARM64 defaults, storage defaults,
-compatibility classification, provisioning preferences, developer settings and
-output contracts. Creation passes explicit image, profile, capacity, replacement
-and license-acceptance policy to the backend. Optional domain values still use
-nullish defaults, so blank strings are not silently replaced. CLI and HTTP callers
-continue to use the domain facades; they do not import a concrete backend.
+Androperator retains defaults, compatibility classification, provisioning choice,
+developer settings, structured output and existing domain import paths. It passes
+image, profile, capacity, replacement and license policy explicitly. Launch
+confirms spawn only; every caller awaits registration and boot separately.
 
-`ConfiguredAvd` and `RunningEmulator` extend raw backend facts with consumer
-compatibility. Existing import paths for domain functions and types remain valid.
-The backend interface is an internal migration boundary, not a new public CLI.
+## Published and local package selection
 
-## Launch completion
+Normal installs depend on the exact published `@androperator/emulator` version
+in `apps/node/package.json` and its lockfile integrity. There is no vendored
+package snapshot, install hook or global npm link. The registry dependency stays
+installed in development too, supplying the released TypeScript contract and
+an immediately available published-mode comparison.
 
-`startAvd` now returns `Promise<void>`. All CLI, HTTP and provisioning callers
-await it before registration and boot waits. The in-tree implementation resolves
-a real child process's `spawn` event and converts its asynchronous launch error
-to `EMULATOR_START_FAILED`; callers no longer risk an unhandled spawn error.
-Spawn completion does not mean registration or Android boot completion. Test
-runners without child-process events retain the existing immediate spawn behavior.
+In a source checkout, automatic mode runs the built sibling emulator project.
+Both `apps/node/src/cli/index.ts` and the repository's `.git` marker must exist.
+For Git worktrees, discovery uses the common Git directory to find the primary
+checkout's sibling. A missing sibling selects the published dependency; an
+existing unbuilt or invalid sibling fails with a build instruction. Packed
+installs lack the source markers and select the published dependency, even if
+installed inside another Git repository.
 
-Direct imports of the domain launch helper must now await its result and handle
-rejections. The CLI and HTTP response shapes are unchanged. Consumer tests cover
-a delayed backend failure before any registration wait, both provisioning launch
-paths, and HTTP service availability after the failure.
+From the primary Androperator checkout:
 
-## Preserved behavior and migration follow-up
+```sh
+npm --prefix ../emulator ci
+npm --prefix ../emulator run build
+npm --prefix apps/node ci
+npm --prefix apps/node run build
+npm --prefix apps/node run emulator:status
+node apps/node/dist/cli/index.js emulator list --output json
+```
 
-This preparatory change retains the existing backend's mechanics, including:
+The status command reports backend, source, version, package root and entry URL.
+It is an internal npm script, not an added public Androperator CLI command.
 
-- AVD config lookup under the selected AVD directory, without following locator
-  redirections. The shared package's locator-aware behavior is a later change.
-- Existing installed-image matching and SDK installation behavior. The newer
-  Android CLI shim's slash-separated installed-image output is not handled here.
-  Use an installed legacy SDK manager via `SDKMANAGER_PATH` where needed.
-- Existing stopped/running checks and replacement behavior. The shared library's
-  stricter replacement/deletion safety must be evaluated in the migration.
-- Both `sys.boot_completed` and `dev.bootcomplete` for readiness.
-- Stop acknowledgement without waiting for shutdown, and storage configuration
-  without resizing existing userdata or limiting host disk use.
+`ANDROPERATOR_EMULATOR_SOURCE` selects package code per process:
 
-The next migration should implement this interface using a controlled version
-of the emulator package, then switch the composition point and delete `legacy/`
-in the same runnable change. Adapt the consumer runtime to preserve ADB logging
-and serial selection. Keep generic shared process-runner adoption separate unless
-its effects on all device execution are explicitly validated. The contract suite
-must continue to pass against that implementation.
+- `auto` (default): built local sibling when present in a development checkout;
+  otherwise the installed dependency.
+- `published`: the installed, pinned npm dependency.
+- `local`: require sibling discovery and a built local package.
+- An absolute directory: use that built `@androperator/emulator` project.
 
-Before the switch, include the shared package's Android CLI installed-image
-parser fix, decide an exact release/artifact and development-linking policy, and
-review locator, replacement and failed-install behavior differences. Validate
-CLI and HTTP errors, real disposable lifecycle operations, and packed installation.
-Catalogs, download progress/cancellation, shutdown waiting and storage resizing
-remain separate capabilities. Removing the old implementation before wiring the
-replacement would break the intermediate commit and is not the intended rollout.
+Blank values, relative directories and unknown choices are rejected. Rebuild the
+library after source edits; new Androperator processes immediately load the new
+JavaScript without reinstalling or changing the lockfile. Restart a long-running
+serve process after rebuilding. Androperator compiles against the published
+package declarations, so exported API changes in a local library must preserve
+that contract or be accompanied by an intentional dependency/adapter update.
 
-## Validation
+```sh
+ANDROPERATOR_EMULATOR_SOURCE=published npm --prefix apps/node run emulator:status
+ANDROPERATOR_EMULATOR_SOURCE=published node apps/node/dist/cli/index.js emulator list
+ANDROPERATOR_EMULATOR_SOURCE=/absolute/path/to/emulator node apps/node/dist/cli/index.js emulator list
+```
 
-Existing configured/running AVD, lifecycle, provisioning and CLI tests exercise
-the retained implementation through the new boundary. `emulatorBackend.test.ts`
-checks policy separation and async launch failures at the consumer boundary.
-Live host validation uses the branch-local CLI and an isolated `ANDROID_AVD_HOME`
-with a disposable AVD. It does not install an Operator APK or alter existing AVDs.
+## Legacy comparison and rollback
+
+`ANDROPERATOR_EMULATOR_BACKEND=legacy` selects the retained in-tree backend.
+The default is `package`; blank or unknown values fail. Only the selected backend
+is imported, so legacy rollback works even if the local package is unbuilt.
+The source override is ignored for legacy mode. Restart long-running processes
+when changing either setting.
+
+```sh
+ANDROPERATOR_EMULATOR_BACKEND=legacy npm --prefix apps/node run emulator:status
+ANDROPERATOR_EMULATOR_BACKEND=legacy node apps/node/dist/cli/index.js emulator list
+```
+
+## Deliberate package behavior differences
+
+- Locator-aware inspection follows each AVD's configured path. This can make
+  previously incomplete AVD metadata complete and change compatibility selection.
+- Installed-image checks recognize both legacy SDK output and Android CLI shim
+  output, match complete IDs, and verify installation after the SDK command.
+- Creation validates capacity and inputs before provisioning. Replacement and
+  deletion refuse running targets, failed ADB discovery, and offline or
+  unauthorized emulators whose ownership cannot be established safely.
+- Consumer replacement and automatic SDK license acceptance policy is unchanged;
+  the package enforces the checks above before replacement.
+
+Both backends use `sys.boot_completed` and `dev.bootcomplete`, acknowledge stop
+without awaiting shutdown, and configure capacity without resizing existing
+userdata or limiting host disk usage. Snapshot loading is disabled; saving is
+not disabled. Catalogs, progress/cancellation, cross-process operation locking,
+shutdown waiting and disk resizing remain separate follow-up capabilities.
+
+## Validation and packaging
+
+Build Node before running tests. Run the full consumer suite separately with
+`ANDROPERATOR_EMULATOR_SOURCE=published` and `local`. Keep the shared consumer
+contract tests and focused legacy fallback coverage until removal. Package tests
+cover discovery/logging, stricter refusal, locator resolution and install
+verification. Use isolated disposable AVDs for destructive live checks.
+
+Pack and install into a directory outside the checkout with source overrides
+unset. Confirm status selects the published dependency and exercise the installed
+CLI. `npm pack` contains neither the sibling project nor dependency source;
+normal npm installation resolves the exact registry dependency. No symlink
+restoration or pack-time source switching is needed. Keep all adapter-selection
+and migration guidance internal, outside the docs navigation and public corpus.
+
+## PR2 follow-up
+
+After PR1 has merged and the package backend has been verified, remove `legacy/`,
+its composition module, the legacy selector and fallback-only test branches.
+Keep package/local selection, consumer policy and contract tests. Recheck both
+package sources and packed installation. PR2 should remove the fallback without
+changing the default backend behavior established here.

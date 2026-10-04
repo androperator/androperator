@@ -8,7 +8,10 @@ later zero exit cannot turn a timeout into success.
 
 On macOS and Linux, each `run` starts an owned process group. Timeout sends
 `SIGKILL` to that group, including descendants that retain the inherited output
-pipes. Descendants that deliberately leave the group are not covered. On Windows,
+pipes. Active groups are also terminated when the parent exits or receives
+SIGINT, SIGTERM or SIGHUP. Existing application signal handlers remain responsible
+for parent shutdown; otherwise the runner restores default signal termination.
+Descendants that deliberately leave the group are not covered. On Windows,
 termination targets the direct child; descendant cleanup is not guaranteed.
 In both cases the runner closes its pipes to bound the wait. Killing a process
 is best effort, not a rollback of command side effects.

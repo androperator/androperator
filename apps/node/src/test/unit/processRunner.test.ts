@@ -1,6 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { once } from "node:events";
 import { setTimeout as delay } from "node:timers/promises";
 import { NodeProcessRunner } from "../../adapters/android-bridge/processRunner.js";
 
@@ -56,3 +60,46 @@ test("early child exit tolerates unconsumed stdin", async () => {
   const result = await runner.run(process.execPath, ["-e", "process.exit(0)"], { input: "x".repeat(2_000_000) });
   assert.equal(result.code, 0);
 });
+
+for (const customHandler of [false, true]) {
+  test(`parent interruption terminates its owned command (${customHandler ? "custom" : "default"} handler)`, { skip: process.platform === "win32" }, async () => {
+    const root = await mkdtemp(join(tmpdir(), "runner-interruption-"));
+    const pidFile = join(root, "child-pid");
+    const runnerUrl = new URL("../../adapters/android-bridge/processRunner.js", import.meta.url).href;
+    const childScript = `require('node:fs').writeFileSync(${JSON.stringify(pidFile)}, String(process.pid)); setInterval(() => {}, 1000);`;
+    const parent = spawn(process.execPath, ["--input-type=module", "-e", `
+      import { NodeProcessRunner } from ${JSON.stringify(runnerUrl)};
+      ${customHandler ? "process.once('SIGINT', () => process.exit(42));" : ""}
+      await new NodeProcessRunner().run(process.execPath, ['-e', ${JSON.stringify(childScript)}]);
+    `], { detached: true, stdio: "ignore" });
+    const closed = once(parent, "close");
+    let childPid: number | undefined;
+    try {
+      const deadline = Date.now() + 5000;
+      while (Date.now() < deadline) {
+        try { childPid = Number(await readFile(pidFile, "utf8")); break; }
+        catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+        await delay(20);
+      }
+      assert.ok(childPid && parent.pid, "fixture must start before interruption");
+      process.kill(-parent.pid, "SIGINT");
+      const [code, signal] = await closed;
+      if (customHandler) assert.equal(code, 42);
+      else assert.equal(signal, "SIGINT");
+      await delay(100);
+      const state = spawnSync("ps", ["-p", String(childPid), "-o", "stat="], { encoding: "utf8" });
+      assert.equal(state.error, undefined);
+      assert.ok(state.stdout.trim() === "" || state.stdout.trim().startsWith("Z"), "owned child must not survive interruption");
+    } finally {
+      for (const pid of [parent.pid === undefined ? undefined : -parent.pid, childPid]) {
+        if (pid !== undefined) {
+          try { process.kill(pid, "SIGKILL"); } catch (error) {
+            if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+          }
+        }
+      }
+      await closed;
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+}

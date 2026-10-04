@@ -18,7 +18,7 @@ await cp(join(site, 'public'), out, { recursive: true });
 await build({ entryPoints: [join(site, 'diagrams.mjs')], outdir: join(out, 'scripts'), bundle: true, splitting: true, format: 'esm', minify: true });
 await cp(join(root, 'assets/androperator-logo.png'), join(out, 'logo.png'));
 await cp(join(root, 'sites/androperator-public/install.sh'), join(out, 'install.sh'));
-await writeFile(join(out, 'index.html'), template.replace('<!-- README -->', renderMarkdown(readme)));
+await writeFile(join(out, 'index.html'), template.replace('<!-- README -->', renderMarkdown(readme, { omitSections: ['License'] })));
 await writeFile(join(out, 'index.md'), publicMarkdown(readme));
 await writeFile(join(out, 'llms-full.txt'), fullDocs);
 await cp(join(root, 'sites/docs/static/llms.txt'), join(out, 'llms.txt'));

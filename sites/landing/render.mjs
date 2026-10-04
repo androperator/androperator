@@ -16,7 +16,7 @@ export function publicUrl(value) {
   return `${repository}/blob/main/${path}${url.search}${url.hash}`;
 }
 
-export function renderMarkdown(source) {
+export function renderMarkdown(source, { omitSections = [] } = {}) {
   // Input is the repository-owned README, including its inline logo HTML.
   const markdown = new MarkdownIt({ html: true });
   const defaultFence = markdown.renderer.rules.fence;
@@ -27,7 +27,14 @@ export function renderMarkdown(source) {
     const title = markdown.utils.escapeHtml(tokens[index].content.match(/^\s*accTitle: (.+)$/m)?.[1] ?? 'Agent workflow');
     return `<figure class="diagram" data-index="${diagramIndex++}"><pre><code>${code}</code></pre><figcaption>${title}</figcaption></figure>\n`;
   };
-  const tokens = markdown.parse(source, {});
+  const parsed = markdown.parse(source, {});
+  let omitted = false;
+  const tokens = parsed.filter((token, index) => {
+    if (token.type === 'heading_open' && ['h1', 'h2'].includes(token.tag)) {
+      omitted = omitSections.includes(parsed[index + 1].content);
+    }
+    return !omitted;
+  });
   const headings = new Map();
   for (let i = 0; i < tokens.length; i++) {
     if (tokens[i].type !== 'heading_open') continue;

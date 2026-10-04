@@ -1,6 +1,8 @@
 # Androperator landing site
 
-The homepage renders the root `README.md` during the build. Links to public
+The homepage renders the root `README.md` during the build, omitting its License
+section because the website footer already provides that information. The
+README and Markdown export retain the License section. Links to public
 docs resolve to the docs host; internal design links resolve to GitHub. The
 Markdown homepage uses the same source with resolved links. Authored agent
 guidance lives in `public/`; installer and full docs are copied from their

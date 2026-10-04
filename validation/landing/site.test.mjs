@@ -40,11 +40,21 @@ test('Mermaid diagrams retain accessible titles, escaped fallback, and native Ma
   assert.match(renderMarkdown('```mermaid\n<script>alert(1)</script>\n```'), /&lt;script&gt;/);
 });
 
+test('homepage can omit License without removing later sections or the README license', () => {
+  const source = '# Project\n## License\nApache 2.0\n### Details\nTerms\n## More\nKept';
+  const html = renderMarkdown(source, { omitSections: ['License'] });
+  assert.doesNotMatch(html, /Apache|Terms|id="license"/);
+  assert.match(html, /id="more"/);
+  assert.match(renderMarkdown(source), /Apache 2.0/);
+});
+
 test('built homepage renders current README, useful footer, and visible agent guidance', async () => {
   const html = await read('sites/landing/out/index.html');
-  assert.ok(html.includes(renderMarkdown(await read('README.md'))));
+  assert.ok(html.includes(renderMarkdown(await read('README.md'), { omitSections: ['License'] })));
   for (const text of ['ever-nondeterministic agents', 'Action Launcher Pty Ltd', 'mailto:chris@actionlauncher.com', 'Release notes', 'commandId', 'taskId', '/skill.md', '/agents.md', '/llms-full.txt']) assert.ok(html.includes(text), text);
   assert.match(html, /<main[^>]*><article>/);
+  assert.doesNotMatch(html, /id="license"/);
+  assert.match(await read('sites/landing/out/index.md'), /## License/);
   assert.match(html, /<aside[^>]*aria-labelledby="agent-heading"/);
   assert.match(html, /<script type="module" src="\/scripts\/diagrams.js"><\/script>/);
   assert.equal((html.match(/class="diagram"/g) ?? []).length, 3);

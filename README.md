@@ -54,15 +54,17 @@ into the coding loop: change the code, try it on the device, see what needs work
 
 ## Turn “it sometimes breaks” into steps you can follow
 
-“The display setting keeps resetting.” That's a starting point, but it's hard
+“The appearance setting is broken.” That's a starting point, but it's hard
 to fix a bug you can't reproduce. Ask your agent to investigate in the running
 app, try the likely paths, and narrow down what triggers it. Androperator
 runs the requested actions and observations, giving the agent fresh evidence
 to decide which path to try next.
 
-Ask your agent: **“Investigate this report: ‘The display setting keeps resetting.’
-If you can reproduce it, repeat the flow to confirm it and write numbered steps
-with the starting conditions, expected result, actual result, and screenshots.”**
+Put Androperator on the case:
+
+```text
+Use `androperator` to investigate a user bug report: "The appearance setting is broken."
+```
 
 The useful output is a reproduction another person can follow. If the agent
 can't reproduce the bug, have it record what it tried and what's still unknown.

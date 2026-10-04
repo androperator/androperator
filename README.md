@@ -8,14 +8,18 @@
 
 Your agent needs to see what's happening inside an Android app to decide what
 to do next. Androperator gives it that visibility and the controls to act on it:
-UI snapshots, screenshots, taps, text entry, and more, through a deterministic API.
+[UI snapshots](https://docs.androperator.com/api/snapshot/),
+[screenshots](https://docs.androperator.com/api/actions/#action-take-screenshot),
+taps, text entry, and more, through a deterministic API.
 
 The loop is simple. Your agent chooses a command. Androperator executes it on
-a device or emulator and reports the result. Your agent can inspect the updated
-screen, check what changed, and choose its next move. That's how a plan becomes
+a device or emulator and reports the result. Your agent can [inspect the updated
+screen](https://docs.androperator.com/api/snapshot/), check what changed, and choose its next move. That's how a plan becomes
 work you can see in the running app.
 
-Connect through the CLI, MCP server, or HTTP API. Put your coding agent to work
+Connect through the [CLI](https://docs.androperator.com/api/cli/),
+[MCP server](https://docs.androperator.com/api/mcp/), or
+[HTTP API](https://docs.androperator.com/api/serve/). Put your coding agent to work
 building features, turning vague bug reports into repeatable steps, and checking
 fixes with evidence to back up its conclusions.
 
@@ -28,7 +32,8 @@ fixes with evidence to back up its conclusions.
 
 A fix can look right in code and still be wrong on screen. Let your agent open
 the app, reproduce the bug, and check its work where you'll actually use it.
-Screenshots show the layout; UI snapshots give the agent controls to target.
+Screenshots show the layout; [UI snapshots](https://docs.androperator.com/api/snapshot/)
+give the agent controls to target.
 
 Ask your agent: **“Reproduce the settings bug, fix it, then use Androperator to
 check the updated screen on the emulator.”**
@@ -86,7 +91,8 @@ or give it your broader QA checklist.
 
 Androperator connects your agent's decisions to what's happening on the device.
 It validates and executes explicit commands, reports action results and errors,
-and exposes the UI through snapshots and screenshots. Your agent uses that
+and exposes the UI through [snapshots](https://docs.androperator.com/api/snapshot/)
+and [screenshots](https://docs.androperator.com/api/actions/#action-take-screenshot). Your agent uses that
 feedback to plan the next step, check an outcome, or investigate a failure.
 
 ```mermaid
@@ -109,7 +115,7 @@ Screenshots capture the device display. No app-specific SDK integration is
 required; UI hierarchy visibility depends on what the app exposes through
 Android accessibility.
 
-- **Observe:** XML UI snapshots, compact JSON hierarchies, node queries, screenshots, and recordings.
+- **Observe:** [XML UI snapshots and compact JSON hierarchies](https://docs.androperator.com/api/snapshot/), [node queries](https://docs.androperator.com/api/actions/#action-query-ui), [screenshots](https://docs.androperator.com/api/actions/#action-take-screenshot), and [recordings](https://docs.androperator.com/api/recording/).
 - **Act:** open apps, tap, type, scroll, swipe, and drag.
 - **Report:** structured action results and explicit errors give your agent feedback it can check alongside UI observations.
 
@@ -165,7 +171,7 @@ androperator snapshot --compact --device <device_serial>
 androperator screenshot --path /tmp/android-screen.png --device <device_serial>
 ```
 
-The compact snapshot returns a bounded JSON hierarchy. Use the observed text
+The [compact snapshot](https://docs.androperator.com/api/snapshot/) returns a bounded JSON hierarchy. Use the observed text
 or resource IDs to choose an action, then inspect again. Pass `--device`
 explicitly when multiple targets are connected. These commands use the release
 Androperator Operator App; for a local debug APK, add

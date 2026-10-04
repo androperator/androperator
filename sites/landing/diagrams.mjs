@@ -6,10 +6,10 @@ mermaid.initialize({
   securityLevel: 'strict',
   theme: 'base',
   themeVariables: {
-    primaryColor: dark ? '#203323' : '#edf7df',
+    primaryColor: dark ? '#25351a' : '#eaffce',
     primaryTextColor: dark ? '#e8eef9' : '#172033',
-    primaryBorderColor: '#78ad24',
-    lineColor: dark ? '#a9cb7c' : '#527526',
+    primaryBorderColor: '#a4ed3b',
+    lineColor: dark ? '#a4ed3b' : '#53627a',
     secondaryColor: dark ? '#182536' : '#f3f6fb',
     tertiaryColor: dark ? '#182536' : '#f3f6fb',
     fontFamily: 'system-ui, sans-serif',

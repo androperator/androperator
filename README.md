@@ -64,8 +64,9 @@ Put Androperator on the case:
 Use `androperator` to investigate a user bug report: "The appearance setting is broken."
 ```
 
-The useful output is a reproduction another person can follow. If the agent
-can't reproduce the bug, have it record what it tried and what's still unknown.
+The agent will try and output reliable steps to reproduce the bug for handoff
+for the ticket. If the agent can't reproduce the bug, it can record what it
+tried and what's still unknown.
 
 <a id="develop-with-eyes-on-the-app"></a>
 

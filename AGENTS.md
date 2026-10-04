@@ -147,6 +147,18 @@ emit the events being measured. adb input may differ from human input. If a
 substitute screen is needed, record why, preserve per-event evidence locally,
 and report missing event categories and other measurement limits.
 
+## Third-Party Libraries, Code, and Assets
+
+Never add or import third-party libraries, copy or vendor third-party code, or
+include third-party artwork or other assets that carry license obligations
+without explicit user permission. This includes permissively licensed material
+and copied snippets or icons, even when no package or runtime dependency is added.
+
+Before incorporating such material, identify its source, license, and required
+attribution or redistribution obligations, and obtain permission for that specific
+addition. A general implementation or design request is not permission to add
+licensed third-party material. Do not remove required notices to avoid this rule.
+
 ## Privacy and Git
 
 Use placeholders such as `<device_serial>`, `<person_name>`, and `<local_user>`

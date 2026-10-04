@@ -9,8 +9,8 @@ Androperator executes its commands on a phone or emulator and returns the result
 Tap a button, enter text, read the screen, take a screenshot. Your agent gets
 the feedback it needs to choose the next step.
 
-Use it to put your coding agent to work in the running app: reproduce bugs,
-check fixes, and run QA flows. You set the goal. Your agent makes the decisions.
+Use it to put your coding agent to work in the running app: turn vague bug
+reports into repeatable steps, check fixes, and report what passed or failed. You set the goal. Your agent makes the decisions.
 Androperator provides reliable device control through a CLI, MCP server, or HTTP API.
 
 [Quick Start](#quick-start) · [Documentation](https://docs.androperator.com/) · [GitHub](https://github.com/androperator/androperator)
@@ -40,31 +40,51 @@ Your development tools build and install the app. Androperator runs the device
 commands your agent chooses and returns what happened. The agent uses those
 results to decide whether the fix holds up.
 
+## Turn “it sometimes breaks” into steps you can follow
+
+“The display setting keeps resetting.” That's a starting point, but it's hard
+to fix a bug you can't reproduce. Ask your agent to investigate in the running
+app, try the likely paths, and narrow down what triggers it. Androperator
+executes the commands and supplies the screen state and screenshots.
+
+Ask your agent: **“Investigate this report: ‘The display setting keeps resetting.’
+If you can reproduce it, repeat the flow to confirm it and write numbered steps
+with the starting conditions, expected result, actual result, and screenshots.”**
+
+The useful output is a reproduction another person can follow. If the agent
+can't reproduce the bug, have it record what it tried and what's still unknown.
+
 <a id="automate-qa-verification"></a>
+<a id="put-your-qa-checklist-to-work"></a>
 
-## Put your QA checklist to work
+## Give every fix a first QA pass
 
-“Does this setting survive a restart?” Give your agent that check and let it
-work through the app. It chooses the taps, text entry, and scrolling; Androperator
-executes them. The agent then checks the resulting screen against your expectation.
+A fix is ready for a first check as soon as the updated app is running. Have
+your agent replay the reproduction steps, compare what happens with what
+should happen, and write up the result. Use the same approach for your regular
+QA checklist.
 
-Ask your agent: **“Check that changing the display preference survives closing
-and reopening the app. Capture evidence if it fails.”**
+Ask your agent: **“Check the display-setting fix against these reproduction
+steps. Verify that the preference survives closing and reopening the app.
+Write a report with pass/fail results, screenshots, and anything you couldn't
+verify.”**
 
 ```mermaid
 flowchart LR
-    accTitle: Android QA verification loop
-    accDescr: From a QA goal, the agent chooses actions, Androperator operates the app, and the agent verifies UI evidence before continuing or recovering.
-    A[QA goal] --> B[Agent chooses actions]
-    B --> C[Androperator operates app]
+    accTitle: From a fix to a QA report
+    accDescr: The agent chooses checks from reproduction steps or a QA checklist. Androperator executes its commands and returns evidence. The agent evaluates the results and writes a report.
+    A[Reproduction steps or QA checklist] --> B[Agent chooses checks]
+    B --> C[Androperator executes commands]
     C --> D[UI state and screenshots]
-    D --> E[Agent verifies outcome]
-    E -->|Next step or recovery| B
+    D --> E[Agent evaluates results]
+    E -->|Next check| B
+    E --> F[Agent writes QA report]
 ```
 
-A successful tap doesn't prove a test passed. Your agent makes that call from
-the state it observes, with snapshots, screenshots, and recordings available
-to help you investigate a failure.
+A successful tap doesn't prove a test passed. Your agent judges the observed
+result and produces the report: what it tested, what passed, what failed, and
+what still needs attention. You get a first line of automated verification
+with evidence to review.
 
 ## How it works
 

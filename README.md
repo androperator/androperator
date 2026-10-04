@@ -189,9 +189,6 @@ Androperator Operator App; for a local debug APK, add
 - [Recording](docs/api/recording.md) - capture a flow and its evidence.
 - [Troubleshooting](docs/troubleshooting/operator.md) - diagnose setup and runtime failures.
 
-For agents, start with [agent guidance](https://androperator.com/agents/) and the
-[technical documentation index](https://androperator.com/llms.txt).
-
 Androperator was formerly known as Clawperator. See the
 [migration guide](docs/migration-to-androperator.md) and [release notes](CHANGELOG.md).
 

@@ -113,8 +113,8 @@ readiness failures can still leave these files behind because host setup runs
 before the CLI returns its final install status.
 
 Bundled host guidance has a canonical store at `~/.androperator/bundled-skills/`.
-Claude and Codex discovery directories receive managed links; generic agents
-receive managed directory copies in `~/.agents/skills/`. Aliased discovery
+Claude receives managed links in `~/.claude/skills/`. Codex and other shared
+consumers use managed directory copies in `~/.agents/skills/`. Aliased discovery
 locations share the generic managed copies. Conflicting user-owned content is
 preserved and reported as an install warning, never silently overwritten.
 Use `androperator bundled-skills list` to inspect installed instructions and

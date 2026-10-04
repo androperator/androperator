@@ -43,7 +43,7 @@ Optional shell helpers require suitable host execution support.
 
 Explore the authorized workflow directly. Save reusable instructions when
 requested or worthwhile, using `androperator-skill-author-by-agent-discovery`
-for bounded exploration. Use `androperator-skill-author-by-recording` only when
+for bounded exploration. Use `androperator-learn-from-recording` only when
 a demonstration adds missing evidence. Human recording is optional.
 Read [authoring](skills/authoring.md).
 

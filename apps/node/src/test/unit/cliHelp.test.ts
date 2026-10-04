@@ -147,7 +147,7 @@ describe("CLI help", () => {
     assert.match(stdout, /androperator-upgrade/);
     assert.match(stdout, /bundled-skills list/);
     assert.match(stdout, /androperator-skill-author-by-agent-discovery/);
-    assert.match(stdout, /androperator-skill-author-by-recording/);
+    assert.match(stdout, /androperator-learn-from-recording/);
     assert.match(stdout, /mcp serve/);
   });
 
@@ -208,7 +208,7 @@ describe("CLI help", () => {
     assert.match(stdout, /androperator-agent-orientation/);
     assert.match(stdout, /androperator-upgrade/);
     assert.match(stdout, /androperator-skill-author-by-agent-discovery/);
-    assert.match(stdout, /androperator-skill-author-by-recording/);
+    assert.match(stdout, /androperator-learn-from-recording/);
     assert.match(stdout, /https:\/\/docs\.androperator\.com\/skills\/authoring\//);
   });
 

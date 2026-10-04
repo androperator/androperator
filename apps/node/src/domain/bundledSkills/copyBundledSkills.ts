@@ -36,9 +36,7 @@ export interface CopyBundledSkillsOptions {
   sourceDir?: string;
   installedDir?: string;
   claudeSkillsDir?: string;
-  codexSkillsDir?: string;
   agentsSkillsDir?: string;
-  codexHome?: string;
   homeDir?: string;
   env?: NodeJS.ProcessEnv;
   cliVersion?: string;
@@ -79,18 +77,6 @@ export function resolveClaudeSkillsDir(options: CopyBundledSkillsOptions): strin
   return join(resolveHomeDir(options), ".claude", "skills");
 }
 
-export function resolveCodexSkillsDir(options: CopyBundledSkillsOptions): string {
-  if (options.codexSkillsDir) {
-    return resolve(options.codexSkillsDir);
-  }
-  const env = options.env ?? process.env;
-  const codexHome = options.codexHome ?? env.CODEX_HOME;
-  if (codexHome !== undefined && codexHome !== "") {
-    return join(resolve(codexHome), "skills");
-  }
-  return join(resolveHomeDir(options), ".codex", "skills");
-}
-
 export function resolveAgentsSkillsDir(options: CopyBundledSkillsOptions): string {
   if (options.agentsSkillsDir) {
     return resolve(options.agentsSkillsDir);
@@ -101,7 +87,6 @@ export function resolveAgentsSkillsDir(options: CopyBundledSkillsOptions): strin
 function resolveAgentDiscoveryDirs(options: CopyBundledSkillsOptions): BundledSkillDiscoveryDirEntry[] {
   return [
     { label: "claude", dir: resolveClaudeSkillsDir(options) },
-    { label: "codex", dir: resolveCodexSkillsDir(options) },
     { label: "agents", dir: resolveAgentsSkillsDir(options) },
   ];
 }

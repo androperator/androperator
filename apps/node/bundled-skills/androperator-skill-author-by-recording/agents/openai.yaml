@@ -1,4 +1,0 @@
-interface:
-  display_name: "androperator-skill-author-by-recording"
-  short_description: "Use an optional human demonstration as evidence for adaptive Android instructions."
-  default_prompt: "Follow this guidance in the current agent for the authorized Android goal."

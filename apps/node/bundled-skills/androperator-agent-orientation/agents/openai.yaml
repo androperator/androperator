@@ -1,4 +1,4 @@
 interface:
-  display_name: "androperator-agent-orientation"
-  short_description: "Orient an unfamiliar host for Android execution with Androperator."
-  default_prompt: "Follow this guidance in the current agent for the authorized Android goal."
+  display_name: "Androperator Orientation"
+  short_description: "Learn Android automation capabilities and API usage"
+  default_prompt: "Use $androperator-agent-orientation to learn what Androperator does, identify the API capabilities relevant to my goal, and establish any prerequisites needed to proceed."

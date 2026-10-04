@@ -256,8 +256,8 @@ readiness failures can still leave these files behind because host setup runs
 before the CLI returns its final install status.
 
 Bundled host guidance has a canonical store at `~/.androperator/bundled-skills/`.
-Claude and Codex discovery directories receive managed links; generic agents
-receive managed directory copies in `~/.agents/skills/`. Aliased discovery
+Claude receives managed links in `~/.claude/skills/`. Codex and other shared
+consumers use managed directory copies in `~/.agents/skills/`. Aliased discovery
 locations share the generic managed copies. Conflicting user-owned content is
 preserved and reported as an install warning, never silently overwritten.
 Use `androperator bundled-skills list` to inspect installed instructions and
@@ -601,15 +601,18 @@ there is no Androperator runtime registry or child-agent requirement.
 
 ## Choose the transport
 
-Use MCP when the host supports stdio tools; use CLI or [HTTP](api/serve.md) where
-those interfaces are available. The same execution and evidence contracts apply.
+Use CLI when the caller can launch shell commands on the adb/emulator host.
+Use stdio MCP when the client supports local MCP processes. Use
+[HTTP](api/serve.md#choose-the-transport) to reach a separate device host where
+the caller cannot launch CLI processes. See the Serve page for access control,
+completion, SSE scope and artifact locality. The same execution contracts apply.
 Optional shell helpers require suitable host execution support.
 
 ## Author when useful
 
 Explore the authorized workflow directly. Save reusable instructions when
 requested or worthwhile, using `androperator-skill-author-by-agent-discovery`
-for bounded exploration. Use `androperator-skill-author-by-recording` only when
+for bounded exploration. Use `androperator-learn-from-recording` only when
 a demonstration adds missing evidence. Human recording is optional.
 Read [authoring](skills/authoring.md).
 
@@ -6679,7 +6682,7 @@ ADB and do not require these tools.
 | `host.adb.server` | `pass`, `fail` | `ADB_SERVER_FAILED` | adb server can start |
 | `host.skill-agent-cli.default` | `pass`, `warn` | `HOST_DEPENDENCY_MISSING` | default orchestrated-skill agent CLI is a valid executable name and exists on PATH |
 | `host.skill-agent-cli.skills` | `pass`, `warn` | `HOST_DEPENDENCY_MISSING` | all installed orchestrated skills can resolve their configured agent CLI executable |
-| `host.bundled-skills.staleness` | `pass`, `warn` | `AGENT_SKILLS_STALE` | when bundled skills are present, the canonical install store is readable, packaged skills are present, managed Claude/Codex discovery links point at the canonical store, and generic agents discovery entries are managed real directory copies |
+| `host.bundled-skills.staleness` | `pass`, `warn` | `AGENT_SKILLS_STALE` | when bundled skills are present, the canonical install store is readable, packaged skills are present, managed Claude discovery links point at the canonical store, and shared `~/.agents/skills/` discovery entries are managed real directory copies |
 | `host.java.version` | `pass`, `fail` | `HOST_DEPENDENCY_MISSING` or no explicit code | Java 17 or 21 is available for full Android build checks |
 | `build.android.assemble` | `pass`, `fail` | `ANDROID_BUILD_FAILED` | `./gradlew :app:assembleDebug` succeeds |
 | `device.discovery` | `pass`, `warn`, `fail` | `NO_DEVICES`, `DEVICE_UNAUTHORIZED`, `DEVICE_OFFLINE`, `MULTIPLE_DEVICES_DEVICE_ID_REQUIRED`, `DEVICE_NOT_FOUND` | device discovery succeeded and the environment is targetable, or explains why explicit `--device` selection is still required |
@@ -8114,6 +8117,15 @@ or `taskId`.
 
 Define the local HTTP and SSE contract exposed by `androperator serve`, including request bodies, success responses, status-code mapping, and how the serve layer wraps `runExecution` and emulator operations.
 
+## Choose the transport
+
+Use the CLI when the agent or test harness can launch shell commands on the host
+with adb and the Android SDK. Use [stdio MCP](mcp.md) when the client supports
+local MCP processes. Use HTTP when the caller needs access to a separate
+adb/emulator host and cannot launch CLI processes there. Run `androperator serve`
+on that device host; device identifiers and filesystem paths refer to that host.
+The agent still owns planning, app strategy and verification.
+
 ## Sources
 
 - HTTP server and handlers: `apps/node/src/cli/commands/serve.ts`
@@ -8138,6 +8150,35 @@ Defaults:
 | JSON request body limit | `100kb` |
 
 When the server starts successfully, it listens until the process exits. There is no structured JSON startup response because this is a long-running command.
+
+The CLI binds to loopback by default. The server has no built-in authentication
+or authorization. To accept remote connections, deliberately select a reachable
+interface with `--host` and provide access control outside Androperator, such as
+an authenticated tunnel or gateway. Binding to `0.0.0.0` exposes the API on all
+IPv4 interfaces; it does not add authentication.
+
+## Completion and concurrency
+
+`POST /execute`, `/snapshot` and `/screenshot` await `runExecution()` and return
+its outcome in the HTTP response. SSE is optional observation; the caller does
+not need an SSE subscription to receive completion. An HTTP or SSE disconnect
+does not cancel an execution: these handlers do not pass a disconnect-driven
+abort signal. If the response is lost, inspect device state before repeating an
+action whose effects are uncertain.
+
+Execution exclusion is per device within one Node process. After preflight,
+`runExecution()` acquires an in-memory slot and releases it when execution
+finishes. A different `commandId` for an occupied device returns HTTP `423` with
+`EXECUTION_CONFLICT_IN_FLIGHT`. Use a unique `commandId` for each execution:
+the store permits re-entry with the same ID, so duplicate IDs are not a safe
+retry or deduplication mechanism. The slot is neither a queue nor a lease across
+an agent's multi-request workflow, and it does not coordinate separate processes
+or emulator lifecycle routes.
+
+The [daemon](daemon.md) uses the same app on a Unix socket. CLI calls routed to
+one daemon share that process's execution slot and emitter. A separately started
+TCP `serve` process, another daemon, or a direct CLI execution has separate
+in-memory state. Coordinate competing agents outside this API.
 
 ## Response Shapes
 
@@ -8523,6 +8564,15 @@ Route validation:
 - `path`, when present, must be a non-empty string
 - omitted `operatorPackage` follows the same fallback chain as `/execute`
 
+### Artifact locality
+
+Node captures PNG bytes through adb and writes the file on the server host.
+An omitted `path` creates a file in that process's operating-system temporary
+directory. A relative `path` resolves from the server process's working directory;
+an absolute path addresses its filesystem. The successful step returns `data.path`
+and capture metadata, not image bytes or a download URL. There is no screenshot
+file-download route. Remote callers must arrange file transfer separately.
+
 ### Success response
 
 ```json
@@ -8792,7 +8842,7 @@ The server responds with:
 - `Cache-Control: no-cache`
 - `Connection: keep-alive`
 
-Initial heartbeat event:
+One initial heartbeat event (there is no periodic heartbeat):
 
 ```text
 event: heartbeat
@@ -8808,8 +8858,22 @@ Execution-related events:
 
 Host transport failures appear in `androperator:execution` with `result.ok: false`
 and structured error diagnostics. They do not emit a synthetic
-`androperator:result` envelope. Subscribe to execution events to observe every
-host outcome, including failures before a terminal Android result is available.
+`androperator:result` envelope. Execution events cover outcomes from `runExecution()` in this process when a
+device ID is available, including failures before a terminal Android result.
+Failures without a resolved or supplied device ID, route-local validation errors
+and emulator lifecycle operations do not emit these execution events.
+
+The emitter is process-local, not an adb-wide feed. It does not observe unrelated
+CLI processes or a separate daemon. All subscribers receive the same events;
+there is no device/task subscription filter. Match `deviceId`, execution
+`commandId` and `taskId` in the payload yourself. `runId` is logging correlation,
+not an SSE subscription key.
+
+There are no event IDs, replay storage or `Last-Event-ID` recovery. Reconnecting
+can miss events emitted while disconnected. If you need live observation,
+connect and receive the `CONNECTED` heartbeat before dispatching; use the HTTP
+response as the request's completion result rather than waiting only for an
+`androperator:result` event, which is absent for some failures.
 
 Use `/events` when:
 

@@ -26,9 +26,52 @@ fixes with evidence to back up its conclusions.
 [Quick Start](#quick-start) · [Documentation](https://docs.androperator.com/) · [GitHub](https://github.com/androperator/androperator)
 
 <a id="why"></a>
+<a id="automate-qa-verification"></a>
+<a id="put-your-qa-checklist-to-work"></a>
+
+<a id="give-every-fix-a-first-qa-pass"></a>
+
+## Give every PR an automated QA pass
+
+Pull request ready? Let your agent try the fix in the running app.
+Androperator gives it the controls and visibility to replay the bug and check
+what changed. You get a QA report with screenshots before you review.
+
+Ask your agent: **“Check the display-setting fix against these reproduction
+steps. Verify that the preference survives closing and reopening the app.
+Write a report with pass/fail results, screenshots, and anything you couldn't
+verify.”**
+
+![GitHub PR → your agent (robot, Claude, or OpenAI) + Androperator → verified UI fix](assets/qa-verification.png)
+
+Your agent reports what passed, what failed, and what it couldn't verify,
+with evidence for you to review. Run the same checks again for the next fix,
+or give it your broader QA checklist.
+
+<a id="turn-it-sometimes-breaks-into-steps-you-can-follow"></a>
+
+## Turn “it sometimes breaks” into a proper bug report
+
+“The appearance setting is broken.” That's a starting point, but it's hard
+to fix a bug you can't reproduce. Ask your agent to investigate in the running
+app, try the likely paths, and narrow down what triggers it. Androperator
+runs the requested actions and observations, giving the agent fresh evidence
+to decide which path to try next.
+
+Put Androperator on the case:
+
+```text
+Use `androperator` to investigate a user bug report: "The appearance setting is broken."
+```
+
+The useful output is a reproduction another person can follow. If the agent
+can't reproduce the bug, have it record what it tried and what's still unknown.
+
 <a id="develop-with-eyes-on-the-app"></a>
 
-## Give your coding agent the running app
+<a id="give-your-coding-agent-the-running-app"></a>
+
+## Give your coding agent eyes and hands
 
 A fix can look right in code and still be wrong on screen. Let your agent open
 the app, reproduce the bug, and check its work where you'll actually use it.
@@ -51,43 +94,6 @@ flowchart LR
 Your development tools build and install the app. Androperator lets your agent
 interact with it and inspect the result. That feedback brings the running app
 into the coding loop: change the code, try it on the device, see what needs work.
-
-## Turn “it sometimes breaks” into steps you can follow
-
-“The appearance setting is broken.” That's a starting point, but it's hard
-to fix a bug you can't reproduce. Ask your agent to investigate in the running
-app, try the likely paths, and narrow down what triggers it. Androperator
-runs the requested actions and observations, giving the agent fresh evidence
-to decide which path to try next.
-
-Put Androperator on the case:
-
-```text
-Use `androperator` to investigate a user bug report: "The appearance setting is broken."
-```
-
-The useful output is a reproduction another person can follow. If the agent
-can't reproduce the bug, have it record what it tried and what's still unknown.
-
-<a id="automate-qa-verification"></a>
-<a id="put-your-qa-checklist-to-work"></a>
-
-## Give every fix a first QA pass
-
-Pull request ready? Let your agent try the fix in the running app.
-Androperator gives it the controls and visibility to replay the bug and check
-what changed. You get a QA report with screenshots before you review.
-
-Ask your agent: **“Check the display-setting fix against these reproduction
-steps. Verify that the preference survives closing and reopening the app.
-Write a report with pass/fail results, screenshots, and anything you couldn't
-verify.”**
-
-![GitHub PR → your agent (robot, Claude, or OpenAI) + Androperator → verified UI fix](assets/qa-verification.png)
-
-Your agent reports what passed, what failed, and what it couldn't verify,
-with evidence for you to review. Run the same checks again for the next fix,
-or give it your broader QA checklist.
 
 ## How it works
 

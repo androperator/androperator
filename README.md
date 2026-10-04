@@ -102,12 +102,14 @@ feedback to plan the next step, check an outcome, or investigate a failure.
 flowchart TB
     accTitle: Decide, execute, report, repeat
     accDescr: The agent decides what to do and calls Androperator through the CLI, MCP server, or HTTP API. Androperator uses adb and the Androperator Operator App to execute commands and report results and UI evidence for the next decision.
-    A[Your agent decides] -->|CLI / MCP / HTTP| B[Androperator executes and reports]
+    A[Your agent decides] -->|CLI / MCP / HTTP| B[androperator]
     B -->|adb| C[Androperator Operator App on Android]
-    C -->|Accessibility actions| D[Running Android app]
+    C -->|Accessibility actions| D[Your app]
     D -->|UI state| C
     C -->|Structured results| B
     B -->|Results and UI evidence for the next decision| A
+    classDef cli font-family:monospace;
+    class B cli;
 ```
 
 The Node.js CLI runs on your computer. The Androperator Operator App uses

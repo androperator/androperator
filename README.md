@@ -9,7 +9,7 @@ to do next. Androperator gives it that visibility and the controls to act on it:
 UI snapshots, screenshots, taps, text entry, and more, through a deterministic API.
 
 The loop is simple. Your agent chooses a command. Androperator executes it on
-a phone or emulator and reports the result. Your agent can inspect the updated
+a device or emulator and reports the result. Your agent can inspect the updated
 screen, check what changed, and choose its next move. That's how a plan becomes
 work you can see in the running app.
 

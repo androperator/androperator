@@ -6,8 +6,8 @@
 
 **Free and fully open source. Licensed under [Apache 2.0](https://github.com/androperator/androperator/blob/main/LICENSE).**
 
-Your agent needs to see what's happening inside an Android app to decide what
-to do next. Androperator gives it that visibility and the controls to act on it:
+Androperator (“Android Operator”) gives your agent visibility and control inside
+Android apps.
 [UI snapshots](https://docs.androperator.com/api/snapshot/),
 [screenshots](https://docs.androperator.com/api/actions/#action-take-screenshot),
 taps, text entry, and more, through a deterministic API.

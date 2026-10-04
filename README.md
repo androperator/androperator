@@ -67,10 +67,9 @@ can't reproduce the bug, have it record what it tried and what's still unknown.
 
 ## Give every fix a first QA pass
 
-A fix is ready for a first check as soon as the updated app is running. Have
-your agent replay the reproduction steps, compare what happens with what
-should happen, and write up the result. Use the same approach for your regular
-QA checklist.
+Pull request ready? Let your agent try the fix in the running app.
+Androperator gives it the controls and visibility to replay the bug and check
+what changed. You get a QA report with screenshots before you review.
 
 Ask your agent: **“Check the display-setting fix against these reproduction
 steps. Verify that the preference survives closing and reopening the app.
@@ -79,20 +78,15 @@ verify.”**
 
 ```mermaid
 flowchart LR
-    accTitle: From a fix to a QA report
-    accDescr: The agent chooses checks from reproduction steps or a QA checklist. Androperator executes its commands and returns evidence. The agent evaluates the results and writes a report.
-    A[Reproduction steps or QA checklist] --> B[Agent chooses checks]
-    B --> C[Androperator executes commands]
-    C --> D[Androperator reports results and UI evidence]
-    D --> E[Agent evaluates results]
-    E -->|Next check| B
-    E --> F[Agent writes QA report]
+    accTitle: Check the fix before review
+    accDescr: A pull request is checked by your agent using Androperator. When the observed UI matches the expected result, the agent reports the fix as verified.
+    A[Pull request] --> B[Agent + Androperator]
+    B --> C["✓ UI fix verified"]
 ```
 
-A successful tap doesn't prove a test passed. Your agent judges the observed
-result and produces the report: what it tested, what passed, what failed, and
-what still needs attention. You get a first line of automated verification
-with evidence to review.
+Your agent reports what passed, what failed, and what it couldn't verify,
+with evidence for you to review. Run the same checks again for the next fix,
+or give it your broader QA checklist.
 
 ## How it works
 

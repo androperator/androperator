@@ -2,9 +2,9 @@
 
 The consumer-owned `EmulatorBackend` contract lives in
 `apps/node/src/adapters/android-emulator/contracts.ts`. Its composition point,
-`adapters/android-emulator/index.ts`, defaults to `packageBackend.ts`, backed by
-`@androperator/emulator`. The in-tree implementation remains in `legacy/` for
-comparison and rollback until the separate removal PR.
+`adapters/android-emulator/index.ts`, exports `packageBackend.ts`, backed by
+`@androperator/emulator`. This is the only emulator backend; SDK mechanics live
+in the shared package.
 
 ## Ownership
 
@@ -72,23 +72,10 @@ ANDROPERATOR_EMULATOR_SOURCE=published node apps/node/dist/cli/index.js emulator
 ANDROPERATOR_EMULATOR_SOURCE=/absolute/path/to/emulator node apps/node/dist/cli/index.js emulator list
 ```
 
-## Legacy comparison and rollback
-
-`ANDROPERATOR_EMULATOR_BACKEND=legacy` selects the retained in-tree backend.
-The default is `package`; blank or unknown values fail. Only the selected backend
-is imported, so legacy rollback works even if the local package is unbuilt.
-The source override is ignored for legacy mode. Restart long-running processes
-when changing either setting.
-
-```sh
-ANDROPERATOR_EMULATOR_BACKEND=legacy npm --prefix apps/node run emulator:status
-ANDROPERATOR_EMULATOR_BACKEND=legacy node apps/node/dist/cli/index.js emulator list
-```
-
-## Deliberate package behavior differences
+## Package behavior
 
 - Locator-aware inspection follows each AVD's configured path. This can make
-  previously incomplete AVD metadata complete and change compatibility selection.
+  AVD metadata available to consumer compatibility selection.
 - Installed-image checks recognize both legacy SDK output and Android CLI shim
   output, match complete IDs, and verify installation after the SDK command.
 - Creation validates capacity and inputs before provisioning. Replacement and
@@ -97,8 +84,8 @@ ANDROPERATOR_EMULATOR_BACKEND=legacy node apps/node/dist/cli/index.js emulator l
 - Consumer replacement and automatic SDK license acceptance policy is unchanged;
   the package enforces the checks above before replacement.
 
-Both backends use `sys.boot_completed` and `dev.bootcomplete`, acknowledge stop
-without awaiting shutdown, and configure capacity without resizing existing
+The package uses `sys.boot_completed` and `dev.bootcomplete`, acknowledges stop
+without awaiting shutdown, and configures capacity without resizing existing
 userdata or limiting host disk usage. Snapshot loading is disabled; saving is
 not disabled. Catalogs, progress/cancellation, cross-process operation locking,
 shutdown waiting and disk resizing remain separate follow-up capabilities.
@@ -107,9 +94,8 @@ shutdown waiting and disk resizing remain separate follow-up capabilities.
 
 Build Node before running tests. Run the full consumer suite separately with
 `ANDROPERATOR_EMULATOR_SOURCE=published` and `local`. Keep the shared consumer
-contract tests and focused legacy fallback coverage until removal. Package tests
-cover discovery/logging, stricter refusal, locator resolution and install
-verification. Use isolated disposable AVDs for destructive live checks.
+contract tests. Package tests cover discovery/logging, stricter refusal, locator
+resolution and install verification. Use isolated disposable AVDs for destructive live checks.
 
 Pack and install into a directory outside the checkout with source overrides
 unset. Confirm status selects the published dependency and exercise the installed
@@ -118,10 +104,6 @@ normal npm installation resolves the exact registry dependency. No symlink
 restoration or pack-time source switching is needed. Keep all adapter-selection
 and migration guidance internal, outside the docs navigation and public corpus.
 
-## PR2 follow-up
-
-After PR1 has merged and the package backend has been verified, remove `legacy/`,
-its composition module, the legacy selector and fallback-only test branches.
-Keep package/local selection, consumer policy and contract tests. Recheck both
-package sources and packed installation. PR2 should remove the fallback without
-changing the default backend behavior established here.
+The former `ANDROPERATOR_EMULATOR_BACKEND` setting has been removed and is
+ignored. Remove it from local environments; use `ANDROPERATOR_EMULATOR_SOURCE`
+to select local or published package code.

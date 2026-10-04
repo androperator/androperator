@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
-import { resolveEmulatorPackage, selectedEmulatorBackend } from "../../adapters/android-emulator/packageSource.js";
+import { resolveEmulatorPackage } from "../../adapters/android-emulator/packageSource.js";
 
 function fixture() {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "emulator-source-")));
@@ -81,18 +81,4 @@ test("worktree discovery follows the primary checkout's sibling without git on P
       if (previousPath === undefined) delete process.env.PATH; else process.env.PATH = previousPath;
     }
   } finally { f.cleanup(); }
-});
-
-test("backend selection rejects invalid and blank values", (t) => {
-  const previous = process.env.ANDROPERATOR_EMULATOR_BACKEND;
-  t.after(() => {
-    if (previous === undefined) delete process.env.ANDROPERATOR_EMULATOR_BACKEND;
-    else process.env.ANDROPERATOR_EMULATOR_BACKEND = previous;
-  });
-  process.env.ANDROPERATOR_EMULATOR_BACKEND = "";
-  assert.throws(() => selectedEmulatorBackend(), /must be package or legacy/);
-  process.env.ANDROPERATOR_EMULATOR_BACKEND = "legacy";
-  assert.equal(selectedEmulatorBackend(), "legacy");
-  delete process.env.ANDROPERATOR_EMULATOR_BACKEND;
-  assert.equal(selectedEmulatorBackend(), "package");
 });

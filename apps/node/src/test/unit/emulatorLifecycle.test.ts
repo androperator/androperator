@@ -1,4 +1,3 @@
-import { selectedEmulatorBackend } from "../../adapters/android-emulator/packageSource.js";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import assert from "node:assert";
 import { chmod, mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
@@ -64,9 +63,7 @@ describe("emulator lifecycle", () => {
     runner.queueResult({ code: 0, stdout: "Installed packages:\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "licenses accepted", stderr: "" });
     runner.queueResult({ code: 0, stdout: "installed", stderr: "" });
-    if (selectedEmulatorBackend() === "package") {
-      runner.queueResult({ code: 0, stdout: "system-images;android-35;google_apis_playstore;arm64-v8a\n", stderr: "" });
-    }
+    runner.queueResult({ code: 0, stdout: "system-images;android-35;google_apis_playstore;arm64-v8a\n", stderr: "" });
 
     const config = getDefaultRuntimeConfig({ runner });
     await ensureSystemImageInstalled(config, "system-images;android-35;google_apis_playstore;arm64-v8a");
@@ -230,9 +227,7 @@ describe("emulator lifecycle", () => {
 
   it("does not delete a preexisting AVD when data partition config write fails", async () => {
     const runner = new FakeProcessRunner();
-    if (selectedEmulatorBackend() === "package") {
-      runner.queueResult({ code: 0, stdout: "List of devices attached\n", stderr: "" });
-    }
+    runner.queueResult({ code: 0, stdout: "List of devices attached\n", stderr: "" });
     runner.queueResult({
       code: 0,
       stdout: "system-images;android-35;google_apis_playstore;arm64-v8a\n",
@@ -261,7 +256,7 @@ describe("emulator lifecycle", () => {
         return true;
       }
     );
-    assert.strictEqual(runner.calls.length, selectedEmulatorBackend() === "package" ? 3 : 2);
+    assert.strictEqual(runner.calls.length, 3);
   });
 
   it("starts an AVD detached with fully ignored stdio", async () => {

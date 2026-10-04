@@ -54,11 +54,3 @@ export function resolveEmulatorPackage(
   }
   return { source: localRoot === undefined ? "published" : "local", version: metadata.version, root, entry };
 }
-
-export function selectedEmulatorBackend(): "package" | "legacy" {
-  const value = process.env.ANDROPERATOR_EMULATOR_BACKEND ?? "package";
-  if (value !== "package" && value !== "legacy") {
-    throw new Error("ANDROPERATOR_EMULATOR_BACKEND must be package or legacy; blank values are invalid.");
-  }
-  return value;
-}

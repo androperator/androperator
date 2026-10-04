@@ -2,16 +2,20 @@
 
 <img src="assets/androperator-logo.png" width="160" height="160" alt="Androperator logo" />
 
-**Your agent calls the shots. Androperator handles Android.**
+**Your agent decides. Androperator executes and reports.**
 
-Androperator is a deterministic API for Android. Your agent decides what to do;
-Androperator executes its commands on a phone or emulator and returns the results.
-Tap a button, enter text, read the screen, take a screenshot. Your agent gets
-the feedback it needs to choose the next step.
+Your agent needs to see what's happening inside an Android app to decide what
+to do next. Androperator gives it that visibility and the controls to act on it:
+UI snapshots, screenshots, taps, text entry, and more, through a deterministic API.
 
-Use it to put your coding agent to work in the running app: turn vague bug
-reports into repeatable steps, check fixes, and report what passed or failed. You set the goal. Your agent makes the decisions.
-Androperator provides reliable device control through a CLI, MCP server, or HTTP API.
+The loop is simple. Your agent chooses a command. Androperator executes it on
+a phone or emulator and reports the result. Your agent can inspect the updated
+screen, check what changed, and choose its next move. That's how a plan becomes
+work you can see in the running app.
+
+Connect through the CLI, MCP server, or HTTP API. Put your coding agent to work
+building features, turning vague bug reports into repeatable steps, and checking
+fixes with evidence to back up its conclusions.
 
 [Quick Start](#quick-start) · [Documentation](https://docs.androperator.com/) · [GitHub](https://github.com/androperator/androperator)
 
@@ -31,21 +35,22 @@ flowchart LR
     accTitle: Android development feedback loop
     accDescr: The agent changes code, the development tools build and launch the app, and Androperator returns UI evidence for the agent to check.
     A[Agent changes code] --> B[Build and launch app]
-    B --> C[Androperator inspects UI]
+    B --> C[Androperator reports UI state]
     C --> D[Agent checks the result]
     D --> A
 ```
 
-Your development tools build and install the app. Androperator runs the device
-commands your agent chooses and returns what happened. The agent uses those
-results to decide whether the fix holds up.
+Your development tools build and install the app. Androperator lets your agent
+interact with it and inspect the result. That feedback brings the running app
+into the coding loop: change the code, try it on the device, see what needs work.
 
 ## Turn “it sometimes breaks” into steps you can follow
 
 “The display setting keeps resetting.” That's a starting point, but it's hard
 to fix a bug you can't reproduce. Ask your agent to investigate in the running
 app, try the likely paths, and narrow down what triggers it. Androperator
-executes the commands and supplies the screen state and screenshots.
+runs the requested actions and observations, giving the agent fresh evidence
+to decide which path to try next.
 
 Ask your agent: **“Investigate this report: ‘The display setting keeps resetting.’
 If you can reproduce it, repeat the flow to confirm it and write numbered steps
@@ -75,7 +80,7 @@ flowchart LR
     accDescr: The agent chooses checks from reproduction steps or a QA checklist. Androperator executes its commands and returns evidence. The agent evaluates the results and writes a report.
     A[Reproduction steps or QA checklist] --> B[Agent chooses checks]
     B --> C[Androperator executes commands]
-    C --> D[UI state and screenshots]
+    C --> D[Androperator reports results and UI evidence]
     D --> E[Agent evaluates results]
     E -->|Next check| B
     E --> F[Agent writes QA report]
@@ -88,21 +93,21 @@ with evidence to review.
 
 ## How it works
 
-The division of labor is simple: your agent owns the plan, Androperator runs
-the commands. Androperator validates explicit actions, executes them on Android,
-and returns structured results or errors. Your agent interprets the response
-and decides what to try next, including when something goes wrong.
+Androperator connects your agent's decisions to what's happening on the device.
+It validates and executes explicit commands, reports action results and errors,
+and exposes the UI through snapshots and screenshots. Your agent uses that
+feedback to plan the next step, check an outcome, or investigate a failure.
 
 ```mermaid
 flowchart TB
-    accTitle: Agent and Androperator architecture
-    accDescr: The agent calls the host CLI, MCP server, or HTTP API. Androperator uses adb and the Android Operator to act on the app and return evidence.
-    A[Your agent chooses commands] -->|CLI / MCP / HTTP| B[Androperator executes commands]
+    accTitle: Decide, execute, report, repeat
+    accDescr: The agent decides what to do and calls Androperator through the CLI, MCP server, or HTTP API. Androperator uses adb and the Android Operator to execute commands and report results and UI evidence for the next decision.
+    A[Your agent decides] -->|CLI / MCP / HTTP| B[Androperator executes and reports]
     B -->|adb| C[Operator app on Android]
     C -->|Accessibility actions| D[Running Android app]
     D -->|UI state| C
     C -->|Structured results| B
-    B -->|Results for the next decision| A
+    B -->|Results and UI evidence for the next decision| A
 ```
 
 The Node.js CLI runs on your computer. The Operator Android app uses
@@ -113,7 +118,7 @@ Android accessibility.
 
 - **Observe:** XML UI snapshots, compact JSON hierarchies, node queries, screenshots, and recordings.
 - **Act:** open apps, tap, type, scroll, swipe, and drag.
-- **Check the result:** your agent reads the returned state and errors, then decides whether to continue, recover, or stop.
+- **Report:** structured action results and explicit errors give your agent feedback it can check alongside UI observations.
 
 Your agent can use the API directly or follow a reusable skill for a familiar
 workflow. Either way, the decisions stay with your agent.

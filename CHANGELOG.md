@@ -57,7 +57,7 @@ Pull requests:
 - [fix(process): bound timeouts and clean up owned commands](https://github.com/androperator/androperator/pull/387)
 - [docs(site): refresh README and homepage for Android development and QA](https://github.com/androperator/androperator/pull/386)
 
-## [1.0.0] - Unreleased
+## [1.0.0] - 2026-10-03
 
 ### Renamed from Clawperator
 

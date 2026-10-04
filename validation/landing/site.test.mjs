@@ -137,5 +137,4 @@ test('README and homepage share the exact QA illustration', async () => {
   const source = await readFile(new URL('assets/qa-verification.png', root));
   assert.deepEqual([...source.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
   assert.deepEqual(await readFile(new URL('sites/landing/out/qa-verification.png', root)), source);
-  assert.equal(await read('sites/landing/out/qa-icons-LICENSE.txt'), await read('assets/qa-icons-LICENSE.txt'));
 });

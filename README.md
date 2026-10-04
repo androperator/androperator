@@ -81,7 +81,7 @@ steps. Verify that the preference survives closing and reopening the app.
 Write a report with pass/fail results, screenshots, and anything you couldn't
 verify.”**
 
-![GitHub PR → your agent (robot, Claude, or Codex) + Androperator → verified UI fix](assets/qa-verification.png)
+![GitHub PR → your agent (robot, Claude, or OpenAI) + Androperator → verified UI fix](assets/qa-verification.png)
 
 Your agent reports what passed, what failed, and what it couldn't verify,
 with evidence for you to review. Run the same checks again for the next fix,

@@ -21,9 +21,13 @@ Readable diagram source remains available if JavaScript is disabled or rendering
 fails. The QA section uses the same checked-in image in the README and website.
 Its editable source is `assets/qa-verification.svg`; export the complete SVG at its
 native 1800 × 600 size to `assets/qa-verification.png` after editing. The build
-copies that PNG unchanged. Claude and Codex marks come from
-[Lobe Icons](https://github.com/lobehub/lobe-icons); their MIT license is retained
-in `assets/qa-icons-LICENSE.txt`. Diagram explanations and examples share the same README sections.
+copies that PNG unchanged. The Claude Spark comes directly from
+[Anthropic’s press kit](https://anthropic.com/press-kit), using its
+`Claude Spark - Clay.svg` asset. The OpenAI logo comes from the inline SVG on
+[OpenAI’s Codex documentation page](https://developers.openai.com/codex/).
+These marks belong to Anthropic and OpenAI respectively. Their original paths
+and colors are preserved in the illustration. Diagram explanations and examples
+share the same README sections.
 
 The hero logo gently bobs unless reduced motion is requested. The header stays
 visible and tracks the Why, How it works, and Install sections with

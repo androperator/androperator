@@ -4,7 +4,7 @@ An orchestrating agent can use [Jev](https://typesafe.ai/blog/introducing-system
 to propose a bounded decision from the current Android observation. The agent owns the task and recovery policy; local skill
 code validates the proposal; Androperator executes the chosen action and returns
 evidence. Jev is an optional dependency of that skill, not of the Androperator
-CLI, Node API, or Android Operator.
+CLI, Node API, or Androperator Operator App.
 
 Use this pattern when a workflow benefits from repeated choices among a small
 set of observed actions. The integration belongs in the skill's orchestration

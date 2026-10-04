@@ -76,7 +76,7 @@ Use:
 
 ## Troubleshooting
 
-- [Operator App](troubleshooting/operator.md) - installation, permission, handshake, and crash recovery
+- [Androperator Operator App](troubleshooting/operator.md) - installation, permission, handshake, and crash recovery
 - [Known Issues](troubleshooting/known-issues.md) - currently verified known issues page
 - [Version Compatibility](troubleshooting/compatibility.md) - CLI and Operator APK version alignment
 

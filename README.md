@@ -101,16 +101,16 @@ feedback to plan the next step, check an outcome, or investigate a failure.
 ```mermaid
 flowchart TB
     accTitle: Decide, execute, report, repeat
-    accDescr: The agent decides what to do and calls Androperator through the CLI, MCP server, or HTTP API. Androperator uses adb and the Android Operator to execute commands and report results and UI evidence for the next decision.
+    accDescr: The agent decides what to do and calls Androperator through the CLI, MCP server, or HTTP API. Androperator uses adb and the Androperator Operator App to execute commands and report results and UI evidence for the next decision.
     A[Your agent decides] -->|CLI / MCP / HTTP| B[Androperator executes and reports]
-    B -->|adb| C[Operator app on Android]
+    B -->|adb| C[Androperator Operator App on Android]
     C -->|Accessibility actions| D[Running Android app]
     D -->|UI state| C
     C -->|Structured results| B
     B -->|Results and UI evidence for the next decision| A
 ```
 
-The Node.js CLI runs on your computer. The Operator Android app uses
+The Node.js CLI runs on your computer. The Androperator Operator App uses
 accessibility to inspect and interact with apps on a connected phone or emulator.
 Screenshots capture the device display. No app-specific SDK integration is
 required; UI hierarchy visibility depends on what the app exposes through
@@ -134,7 +134,7 @@ Read https://androperator.com/skill.md and get me set up with Androperator.
 ```
 
 Prefer the terminal? On macOS or Linux, this installs the CLI and helps set up
-the Operator app on your Android device:
+the Androperator Operator App on your Android device:
 
 ```bash
 curl -fsSL https://androperator.com/install.sh | bash
@@ -175,7 +175,7 @@ androperator screenshot --path /tmp/android-screen.png --device <device_serial>
 The compact snapshot returns a bounded JSON hierarchy. Use the observed text
 or resource IDs to choose an action, then inspect again. Pass `--device`
 explicitly when multiple targets are connected. These commands use the release
-Operator; for a local debug APK, add
+Androperator Operator App; for a local debug APK, add
 `--operator-package com.androperator.operator.dev`.
 
 <a id="go-deeper"></a>

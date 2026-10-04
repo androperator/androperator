@@ -86,7 +86,7 @@ nav:
       - Device Prep and Runtime: skills/runtime.md
       - Personalized Skills: skills/personalized-skills.md
   - Troubleshooting:
-      - Operator App: troubleshooting/operator.md
+      - Androperator Operator App: troubleshooting/operator.md
       - Performance: troubleshooting/performance.md
       - Known Issues: troubleshooting/known-issues.md
       - Version Compatibility: troubleshooting/compatibility.md

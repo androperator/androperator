@@ -16,7 +16,7 @@ actions and returns structured evidence.
    observe again to verify the intended outcome.
 
 Keep `commandId` and `taskId` when correlating results. Canonical terminal
-Operator results use `[Androperator-Result]`. A successful process exit alone
+Androperator Operator App results use `[Androperator-Result]`. A successful process exit alone
 does not prove that the intended screen, text, or persisted state was reached.
 Inspect structured errors and evidence; investigate timeouts rather than
 assuming completion.

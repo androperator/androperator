@@ -14,7 +14,7 @@ metadata:
 # Androperator setup
 
 Use this skill for first installation, repair of an existing install, device
-readiness, Operator APK verification, and host-agent orientation. For example:
+readiness, Androperator Operator App APK verification, and host-agent orientation. For example:
 
 ```text
 Read https://androperator.com/skill.md and get me set up with Androperator.
@@ -75,14 +75,14 @@ checks and actions, replace `<device_serial>` with the intended target from
 `devices`. If that target is unclear, ask the user. An empty list or an
 unauthorized/offline device is not ready.
 
-`androperator install` handles Operator remediation, bundled authoring skills,
+`androperator install` handles Androperator Operator App remediation, bundled authoring skills,
 and host-local orientation. Use this route rather than substituting a raw
 `adb install`. The current agent follows reusable instructions and optional helpers. See
 [skills documentation](https://docs.androperator.com/skills/overview/).
 
 Stable release APK aliases `/operator.apk`, `/install.apk`, and `/apk` on
 `androperator.com` resolve the latest published APK through release metadata.
-The release Operator package is `com.androperator.operator`; development builds
+The release Androperator Operator App package is `com.androperator.operator`; development builds
 use `com.androperator.operator.dev` and require an explicit matching package.
 
 ## Verify readiness and actual observation
@@ -104,7 +104,7 @@ Continue only when:
 
 Preserve command/task correlation and returned errors. Never convert a failed
 setup or action into success. If a check fails, retain its exact command, output,
-and evidence; consult [Operator troubleshooting](https://docs.androperator.com/troubleshooting/operator/).
+and evidence; consult [Androperator Operator App troubleshooting](https://docs.androperator.com/troubleshooting/operator/).
 
 ## Read host-local orientation
 

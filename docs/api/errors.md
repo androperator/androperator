@@ -539,7 +539,7 @@ What this means for agents:
 - [Setup](../setup.md)
 - [Devices](devices.md)
 - [Doctor](doctor.md)
-- [Operator App Troubleshooting](../troubleshooting/operator.md)
+- [Androperator Operator App Troubleshooting](../troubleshooting/operator.md)
 
 ### Query hierarchy unavailable
 

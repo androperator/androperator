@@ -187,7 +187,7 @@ git push origin v0.1.0
 After the workflows finish, verify:
 
 - GitHub Release exists at `https://github.com/androperator/androperator/releases`
-- npm package version exists at `https://www.npmjs.com/package/androperator`
+- npm package version exists at `https://www.npmjs.com/package/@androperator/cli`
 - stable metadata file exists at `https://downloads.androperator.com/operator/latest.json`
 - APK URL in metadata resolves
 - checksum file matches the APK

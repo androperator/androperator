@@ -9,7 +9,7 @@ description: Run or resume the complete Androperator release workflow, including
 
 Use this skill to move one Androperator release through the full release phase while keeping the unreleased code version separate from the published release version.
 At the start, confirm both the intended release version and the intended next unreleased version with the user if either is ambiguous.
-For now, only accept prerelease-stage versions in the `0.x.y` series. Do not proceed with `4.0`, `v4.0`, or any release version that does not start with `0.`.
+Require a stable `major.minor.patch` release version, such as `1.1.0`, without a `v` prefix.
 
 ## Workflow
 
@@ -26,7 +26,7 @@ For now, only accept prerelease-stage versions in the `0.x.y` series. Do not pro
 3. Create the release.
    - Run `$release-create` for the intended release version.
    - Pass the exact release commit when needed.
-   - Keep the release-create validations intact.
+   - Keep the release-create validations intact. For the one-time scoped 1.1.0 bootstrap, follow `docs/internal/release-procedure.md` and use `--bootstrap-existing-npm` after manual publication.
 4. Verify the release.
    - After the release workflows complete, run `$release-verify` for the same version.
    - Stop if any verification surface fails.
@@ -45,7 +45,7 @@ For now, only accept prerelease-stage versions in the `0.x.y` series. Do not pro
 ## Guardrails
 
 - Keep code-facing and published-facing versions separate.
-- Reject non-`0.` release versions up front.
+- Require the explicitly selected stable release version to match the committed package metadata.
 - Do not update public docs before the release is live.
 - If `release-create` already produced the published-version follow-up commit, review it instead of recreating it.
 - Do not push `main` directly.

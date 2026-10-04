@@ -57,7 +57,7 @@ curl -fsSL https://androperator.com/install.sh | bash
 If Node.js and npm are already ready, install the published CLI directly:
 
 ```bash
-npm install -g androperator@latest
+npm install -g @androperator/cli@latest
 ```
 
 After the CLI exists, use the canonical setup route for both first setup and

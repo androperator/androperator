@@ -64,3 +64,8 @@ The script prints:
 - or a clear skipped message if publication metadata is still propagating
 
 If a workflow does not appear quickly, the script reports that clearly instead of guessing success.
+
+The npm package is `@androperator/cli`, while the executable remains `androperator`.
+For the one-time 1.1.0 manual publication, follow the bootstrap sequence in
+`docs/internal/release-procedure.md` and use `--bootstrap-existing-npm`. Only this
+version permits an existing npm publication, after archive and commit verification.

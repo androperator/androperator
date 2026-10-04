@@ -209,7 +209,7 @@ export async function probeVersionCompatibility(config: RuntimeConfig): Promise<
         details: { cause: String(error) },
       },
       remediation: [
-        "Reinstall the CLI: npm install -g androperator@latest",
+        "Reinstall the CLI: npm install -g @androperator/cli@latest",
       ],
     };
   }
@@ -231,7 +231,7 @@ export async function probeVersionCompatibility(config: RuntimeConfig): Promise<
         details: { cause: String(error) },
       },
       remediation: [
-        "Reinstall the CLI: npm install -g androperator@latest",
+        "Reinstall the CLI: npm install -g @androperator/cli@latest",
       ],
     };
   }

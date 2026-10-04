@@ -20,7 +20,8 @@ concluding it is absent or installing replacements.
 When the CLI and prerequisites are viable, run in order:
 
 ```bash
-npm install -g androperator@latest
+npm uninstall -g androperator
+npm install -g @androperator/cli@latest
 androperator install
 androperator doctor
 ```

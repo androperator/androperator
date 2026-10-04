@@ -6,7 +6,8 @@ This release is being prepared; do not use the new download URLs until public cu
 
 | Surface | Before | After |
 | --- | --- | --- |
-| npm and CLI | `clawperator` | `androperator` |
+| npm package | `clawperator` | `@androperator/cli` |
+| CLI executable | `clawperator` | `androperator` |
 | Environment variables | `CLAWPERATOR_*` | `ANDROPERATOR_*` |
 | Local state | `~/.clawperator/` | `~/.androperator/` |
 | Android release app | `com.clawperator.operator` | `com.androperator.operator` |
@@ -14,7 +15,7 @@ This release is being prepared; do not use the new download URLs until public cu
 | Kotlin packages | `clawperator.*` | `androperator.*` |
 | Result envelope | `[Clawperator-Result]` | `[Androperator-Result]` |
 
-Install `androperator@1.0.0` and its matching APK after publication. The renamed
+Install `@androperator/cli` and its matching APK. The renamed
 Android app installs separately; grant its accessibility and automation permissions.
 The release retains the existing signing key. Updating the CLI alone does not
 make an old Android app compatible with the new envelope or ingress names.
@@ -48,3 +49,21 @@ Firebase SDKs, plugins, registrations and remote task-status reporting have been
 removed. Crash information remains in the app-private `crash-log.txt` and logcat.
 Task status remains available through structured local logcat reporting with
 command/task correlation. No Firebase registrations are required.
+
+## Scoped npm package (1.1.0)
+
+Androperator 1.1.0 moves the npm package from `androperator` to
+`@androperator/cli`. The executable, Android IDs, result envelope, environment
+variables, and configuration paths remain unchanged.
+
+If the unscoped package is installed, remove it before installing the replacement
+so both packages do not compete for the same executable:
+
+```bash
+npm uninstall -g androperator
+npm install -g @androperator/cli
+androperator --version
+```
+
+The recovery installer handles the former package in the active npm prefix.
+Existing published versions remain available; future releases use the scoped name.

@@ -85,7 +85,7 @@ EOF
         trap - ERR
 
         npm() {
-            if [ "$1" = "install" ] && [ "$2" = "-g" ] && [ "$3" = "androperator@latest" ]; then
+            if [ "$1" = "install" ] && [ "$2" = "-g" ] && [ "$3" = "@androperator/cli@latest" ]; then
                 return 0
             fi
             if [ "$1" = "config" ] && [ "$2" = "get" ] && [ "$3" = "prefix" ]; then
@@ -130,3 +130,35 @@ assert_contains "$CLI_RESOLUTION_VALUES" "exported=yes" "cli-resolution values"
 assert_not_contains "$CLI_RESOLUTION_VALUES" "$TMP_DIR/stale-bin-cli-resolution/androperator" "cli-resolution values"
 
 echo "=== install.sh CLI bootstrap harness passed ==="
+
+printf '\n=== Scoped migration: remove former package before installing, and stop on uninstall failure ===\n'
+for uninstall_status in 0 1; do
+    prefix="$TMP_DIR/migration-$uninstall_status"
+    mkdir -p "$prefix/lib/node_modules/androperator"
+    printf '{"name":"androperator"}\n' > "$prefix/lib/node_modules/androperator/package.json"
+    log="$prefix/npm.log"
+    set +e
+    MOCK_NPM_PREFIX="$prefix" MOCK_LOG="$log" MOCK_UNINSTALL_STATUS="$uninstall_status" bash -c '
+        source "$1" >/dev/null 2>&1
+        trap - ERR
+        npm() {
+            printf "%s\n" "$*" >> "$MOCK_LOG"
+            case "$1" in
+                config) printf "%s\n" "$MOCK_NPM_PREFIX" ;;
+                uninstall) return "$MOCK_UNINSTALL_STATUS" ;;
+                install) return 1 ;;
+                *) return 99 ;;
+            esac
+        }
+        install_cli
+    ' _ "$INSTALL_SCRIPT" > "$prefix/output" 2>&1
+    status=$?
+    set -e
+    assert_equals 1 "$status" "migration failure status"
+    assert_contains "$log" "uninstall -g androperator" "former package removal"
+    if [ "$uninstall_status" = 0 ]; then
+        assert_contains "$log" "install -g @androperator/cli@latest" "scoped install after removal"
+    else
+        assert_not_contains "$log" "install -g @androperator/cli@latest" "blocked scoped install"
+    fi
+done

@@ -4,6 +4,59 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims to follow Semantic Versioning.
 
+## [1.1.0] - Unreleased
+
+The npm package moves to **`@androperator/cli`**. Install it with
+`npm install -g @androperator/cli`; the executable remains `androperator`.
+Remove an existing unscoped installation with `npm uninstall -g androperator`
+before switching. Android package IDs and configuration paths remain unchanged.
+
+### 🤖 Node API & CLI
+
+- **Changed:** Publish the CLI under the Androperator npm organization, preserving the executable name and validating the exact release archive.
+- **Added:** Android TV remote button actions through the CLI and API.
+- **Changed:** Remove the runtime skills framework. Agents now follow reusable instructions and ordinary helpers rather than a catalog-backed execution API.
+- **Changed:** Use the shared `@androperator/emulator` package for emulator mechanics while retaining Androperator's policy and action interface.
+- **Fixed:** Bound owned command timeouts and clean up child processes.
+- **Fixed:** Verify downloaded executable code and isolate temporary artifacts.
+- **Fixed:** Refresh bundled guidance without duplicating Codex entries.
+
+### 📚 Documentation & Website
+
+- **Added:** Examples followed by the current agent, including optional bounded delegation.
+- **Changed:** Restore complete setup guidance and clarify daemon, HTTP completion, and validation boundaries.
+- **Changed:** Focus the README and homepage on Android development and QA; maintain the preserved Clawperator site in its own repository.
+
+### 📱 Android Operator APK
+
+- **Changed:** Refresh launcher icons and remove the unused round launcher asset.
+
+Pull requests:
+- [fix(release): authenticate npm publication and retry existing tags](https://github.com/androperator/androperator/pull/362)
+- [ci(npm): publish releases with OIDC trusted publishing](https://github.com/androperator/androperator/pull/363)
+- [fix(migration): repair public and release verification helpers](https://github.com/androperator/androperator/pull/364)
+- [docs(setup): restore complete agent setup guidance](https://github.com/androperator/androperator/pull/365)
+- [docs(skills): add examples followed by the current agent](https://github.com/androperator/androperator/pull/367)
+- [fix(security): verify downloaded code and isolate temporary artifacts](https://github.com/androperator/androperator/pull/368)
+- [fix(git): exempt verified WebP assets from content scans](https://github.com/androperator/androperator/pull/370)
+- [fix(android): refresh launcher icon assets](https://github.com/androperator/androperator/pull/371)
+- [fix(android): remove unused round launcher image](https://github.com/androperator/androperator/pull/372)
+- [fix(release): publish the validated npm archive without repacking](https://github.com/androperator/androperator/pull/373)
+- [fix(test): synchronize video fixture completion with recording startup](https://github.com/androperator/androperator/pull/375)
+- [docs(runtime): clarify daemon keys and validation boundaries](https://github.com/androperator/androperator/pull/374)
+- [feat(tv): add Android TV remote button APIs](https://github.com/androperator/androperator/pull/376)
+- [refactor(skills): remove the runtime skills framework](https://github.com/androperator/androperator/pull/377)
+- [chore(repo): remove GEMINI.md symlink](https://github.com/androperator/androperator/pull/378)
+- [docs(changelog): explain the Androperator rename in 1.0.0](https://github.com/androperator/androperator/pull/379)
+- [docs(serve): clarify HTTP completion and operational boundaries](https://github.com/androperator/androperator/pull/380)
+- [fix(skills): refresh bundled guidance and avoid duplicate Codex entries](https://github.com/androperator/androperator/pull/382)
+- [refactor(emulator): separate backend mechanics from consumer policy](https://github.com/androperator/androperator/pull/383)
+- [feat(emulator): use the shared package behind the adapter](https://github.com/androperator/androperator/pull/384)
+- [refactor(emulator): remove the legacy backend](https://github.com/androperator/androperator/pull/385)
+- [chore(site): remove extracted Clawperator landing site](https://github.com/androperator/androperator/pull/381)
+- [fix(process): bound timeouts and clean up owned commands](https://github.com/androperator/androperator/pull/387)
+- [docs(site): refresh README and homepage for Android development and QA](https://github.com/androperator/androperator/pull/386)
+
 ## [1.0.0] - Unreleased
 
 ### Renamed from Clawperator

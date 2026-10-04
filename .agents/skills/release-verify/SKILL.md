@@ -9,7 +9,7 @@ This skill verifies:
 1. The requested `v<version>` tag exists and resolves to a commit.
 2. The `Publish npm Package` and `Release APK` workflows completed successfully for that tag.
 3. A GitHub Release exists for the tag with the expected APK and checksum assets.
-4. npm contains `androperator@<version>`.
+4. npm contains `@androperator/cli@<version>`.
 5. `https://downloads.androperator.com/operator/latest.json` points at the requested version.
 6. The immutable APK and checksum URLs exist and agree with `latest.json`.
 7. `https://androperator.com/operator.apk` redirects to the immutable APK URL for the same version.

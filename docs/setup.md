@@ -80,7 +80,7 @@ then finishes with explicit `--device <serial>` guidance for later commands.
 Alternatively, install the CLI only via npm (Node.js 24+ required):
 
 ```bash
-npm install -g androperator
+npm install -g @androperator/cli
 ```
 
 Then run the canonical post-bootstrap install flow:
@@ -319,7 +319,7 @@ Androperator is the hand. The agent is the brain. The agent decides what to do, 
 | `OPERATOR_VARIANT_MISMATCH` | Release/debug package mismatch | Pass `--operator-package <installed-package>` or reinstall the intended APK. |
 | `DEVICE_ACCESSIBILITY_NOT_RUNNING` | Handshake returned a runtime failure | `androperator grant-device-permissions [--device <serial>]`, rerun `doctor` and `snapshot`. |
 | `RESULT_ENVELOPE_TIMEOUT` | Broadcast sent, no result envelope arrived | If no correlated log lines were captured, run `doctor` to check version compatibility and accessibility; otherwise re-grant permissions, rerun `snapshot --timeout 5000 --verbose`, and verify `--operator-package`. |
-| `VERSION_INCOMPATIBLE` | CLI and APK version mismatch | Reinstall CLI (`npm install -g androperator@latest`) or APK to align versions. |
+| `VERSION_INCOMPATIBLE` | CLI and APK version mismatch | Reinstall CLI (`npm install -g @androperator/cli@latest`) or APK to align versions. |
 
 ### When to pass `--device` and `--operator-package`
 

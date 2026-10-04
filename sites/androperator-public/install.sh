@@ -417,8 +417,15 @@ install_cli() {
         return 1
     fi
 
+    local NPM_PREFIX
+    NPM_PREFIX="$(npm config get prefix 2>/dev/null || true)"
+    if [ -n "$NPM_PREFIX" ] && [ -f "$NPM_PREFIX/lib/node_modules/androperator/package.json" ]; then
+        echo "Removing the former unscoped npm package to free the androperator executable..."
+        npm uninstall -g androperator || return 1
+    fi
+
     echo -e "${BLUE}Installing Androperator CLI (@latest)...${NC}"
-    if npm install -g androperator@latest; then
+    if npm install -g @androperator/cli@latest; then
         echo -e "${GREEN}✅ Androperator CLI installed.${NC}"
 
         hash -r
@@ -426,7 +433,6 @@ install_cli() {
         # Discover the freshly installed binary path for immediate use. Prefer
         # the npm prefix over any older androperator that may still appear
         # earlier on PATH in the current shell.
-        local NPM_PREFIX
         local NPM_ANDROPERATOR_BIN=""
         NPM_PREFIX="$(npm config get prefix 2>/dev/null || true)"
         if [ -n "$NPM_PREFIX" ] && [ -x "$NPM_PREFIX/bin/androperator" ]; then
@@ -445,7 +451,7 @@ install_cli() {
             return 1
         fi
     else
-        echo -e "${RED}❌ Failed to install Androperator CLI. Try running 'sudo npm install -g androperator@latest' if permissions failed.${NC}"
+        echo -e "${RED}❌ Failed to install Androperator CLI. Try running 'sudo npm install -g @androperator/cli@latest' if permissions failed.${NC}"
         return 1
     fi
 }

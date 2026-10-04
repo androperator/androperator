@@ -1,6 +1,6 @@
 {
-  "name": "androperator",
-  "version": "1.0.1",
+  "name": "@androperator/cli",
+  "version": "1.1.0",
   "description": "Androperator Node API - reliable Android execution for LLM agents",
   "type": "module",
   "main": "dist/cli/index.js",
@@ -11,7 +11,9 @@
   },
   "homepage": "https://androperator.com",
   "bugs": "https://github.com/androperator/androperator/issues",
-  "bin": "dist/cli/index.js",
+  "bin": {
+    "androperator": "dist/cli/index.js"
+  },
   "publishConfig": {
     "access": "public",
     "tag": "latest"

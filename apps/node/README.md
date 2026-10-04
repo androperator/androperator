@@ -11,7 +11,7 @@ Settings examples are included in the repository; no runtime package is required
 ## Install
 
 ```bash
-npm install -g androperator
+npm install -g @androperator/cli
 ```
 
 For the full host + APK install flow, use:

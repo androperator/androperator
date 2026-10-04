@@ -30,20 +30,19 @@ cleanup_worktree() {
 validate_changelog_entry() {
   local version="$1"
 
-  python3 - "$version" <<'PY'
+  python3 - "$version" "$target_sha" <<'PY'
 import re
 import sys
-from pathlib import Path
+import subprocess
 
 version = sys.argv[1]
 if not re.match(r"^\d+\.\d+\.\d+$", version):
     print(f"Error: version '{version}' is not in 0.0.0 format; cannot match CHANGELOG entry.", file=sys.stderr)
     sys.exit(1)
 
-changelog_path = Path("CHANGELOG.md")
 try:
-    content = changelog_path.read_text(encoding="utf-8")
-except FileNotFoundError:
+    content = subprocess.check_output(["git", "show", f"{sys.argv[2]}:CHANGELOG.md"], text=True)
+except subprocess.CalledProcessError:
     print("Error: CHANGELOG.md not found. Run release-notes-author before tagging.", file=sys.stderr)
     sys.exit(1)
 
@@ -187,10 +186,20 @@ main() {
   require_cmd gh
   require_cmd python3
 
-  [[ $# -ge 1 && $# -le 2 ]] || die "usage: .agents/skills/release-create/scripts/create_release.sh <version> [sha]"
+  local bootstrap=false
+  if [[ "${1:-}" == "--bootstrap-existing-npm" ]]; then
+    bootstrap=true
+    shift
+  fi
+  [[ $# -ge 1 && $# -le 2 ]] || die "usage: .agents/skills/release-create/scripts/create_release.sh [--bootstrap-existing-npm] <version> [sha]"
 
   local version="$1"
   [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]] || die "version must look like semver"
+  if [[ "$version" == "1.1.0" ]]; then
+    [[ "$bootstrap" == true ]] || die "1.1.0 requires the manual npm bootstrap; use --bootstrap-existing-npm after publication"
+  elif [[ "$bootstrap" == true ]]; then
+    die "--bootstrap-existing-npm is only valid for 1.1.0"
+  fi
   local target_ref="${2:-HEAD}"
   local repo_root
   repo_root="$(git rev-parse --show-toplevel)"
@@ -205,6 +214,10 @@ main() {
   git_status="$(git status --porcelain)"
   [[ -z "$git_status" ]] || die "working tree has uncommitted or untracked changes"
 
+  local package_name
+  package_name="$(json_field "$(git show "${target_sha}:apps/node/package.json")" name)"
+  [[ "$package_name" == "@androperator/cli" ]] || die "target package must be @androperator/cli"
+
   local package_version
   package_version="$(json_version_field "$(git show "${target_sha}:apps/node/package.json")")"
   [[ "$package_version" == "$version" ]] || die "apps/node/package.json is $package_version, expected $version"
@@ -216,10 +229,12 @@ main() {
   validate_changelog_entry "$version"
 
   local npm_view_output
-  if npm_view_output="$(npm view "androperator@${version}" version 2>&1)"; then
-    die "npm already has androperator@$version"
+  if npm_view_output="$(npm view "@androperator/cli@${version}" version 2>&1)"; then
+    [[ "$bootstrap" == true ]] || die "npm already has @androperator/cli@$version"
+  elif [[ "$bootstrap" == true ]]; then
+    die "bootstrap package is not available: $npm_view_output"
   elif ! printf '%s\n' "$npm_view_output" | grep -qiE 'E404|404 Not Found'; then
-    die "failed to check npm for androperator@$version: $npm_view_output"
+    die "failed to check npm for @androperator/cli@$version: $npm_view_output"
   fi
 
   if gh release view "$tag_name" --repo "$repo_slug" >/dev/null 2>&1; then
@@ -247,6 +262,11 @@ main() {
   npm --prefix "$validation_root/apps/node" ci
   npm --prefix "$validation_root/apps/node" run build
   npm --prefix "$validation_root/apps/node" run test
+
+  if [[ "$bootstrap" == true ]]; then
+    python3 "$validation_root/validation/npm-release/pack.py" --version "$version" --output "$validation_root/bootstrap.tgz"
+    python3 "$validation_root/validation/npm-release/verify_bootstrap.py" --archive "$validation_root/bootstrap.tgz" --commit "$target_sha"
+  fi
 
   git tag -a "$tag_name" "$target_sha" -m "Release $tag_name"
   git push origin "refs/tags/$tag_name"

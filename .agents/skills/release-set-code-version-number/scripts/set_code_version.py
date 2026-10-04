@@ -111,7 +111,6 @@ def main() -> None:
     updated_files: list[str] = ["apps/node/package.json"]
 
     internal_replacements = {
-        ".agents/skills/release-create/SKILL.md": (re.escape(old_version), new_version),
         "scripts/fake_adb.sh": (re.escape(f"{old_version}-d"), f"{new_version}-d"),
     }
 

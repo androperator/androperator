@@ -162,15 +162,15 @@ stop_androperator_emulators() {
 uninstall_cli() {
     echo -e "${BLUE}Uninstalling Androperator CLI...${NC}"
     if command -v npm &> /dev/null; then
-        if npm list -g --depth=0 androperator 2>/dev/null | grep -q "androperator@"; then
-            if run_cmd npm uninstall -g androperator; then
-                echo -e "${GREEN}✅ Androperator CLI uninstalled.${NC}"
-            else
-                warn "npm uninstall failed."
+        for package in @androperator/cli androperator; do
+            if npm list -g --depth=0 "$package" 2>/dev/null | grep -Fq "$package@"; then
+                if run_cmd npm uninstall -g "$package"; then
+                    echo -e "${GREEN}✅ $package uninstalled.${NC}"
+                else
+                    warn "npm uninstall failed for $package."
+                fi
             fi
-        else
-            echo "   androperator not found in npm globals."
-        fi
+        done
     else
         echo "   npm not found. Skipping CLI uninstall."
     fi

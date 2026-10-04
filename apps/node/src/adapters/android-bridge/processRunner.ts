@@ -20,6 +20,7 @@ export class NodeProcessRunner implements ProcessRunner {
       const stdin = options?.input !== undefined ? "pipe" : "ignore";
       const proc = spawn(command, args, {
         cwd: options?.cwd,
+        detached: process.platform !== "win32",
         stdio: [stdin, "pipe", "pipe"],
         shell: false,
       });
@@ -28,6 +29,8 @@ export class NodeProcessRunner implements ProcessRunner {
       proc.stdout?.on("data", (d) => (stdout += d.toString()));
       proc.stderr?.on("data", (d) => (stderr += d.toString()));
 
+      // A tool may exit or time out before consuming all supplied input.
+      proc.stdin?.on("error", () => {});
       if (options?.input !== undefined) {
         proc.stdin?.write(options.input);
         proc.stdin?.end();
@@ -35,7 +38,21 @@ export class NodeProcessRunner implements ProcessRunner {
 
       const timeoutMs = options?.timeoutMs ?? 30_000;
       const t = setTimeout(() => {
-        proc.kill("SIGTERM");
+        // Kill the owned group: SDK and shell children may keep output pipes open.
+        if (process.platform !== "win32" && proc.pid !== undefined) {
+          try {
+            process.kill(-proc.pid, "SIGKILL");
+          } catch (error) {
+            if ((error as NodeJS.ErrnoException).code !== "ESRCH") proc.kill("SIGKILL");
+          }
+        } else {
+          proc.kill("SIGKILL");
+        }
+        proc.stdin?.destroy();
+        proc.stdout?.destroy();
+        proc.stderr?.destroy();
+        // Settle here rather than waiting for close or accepting a later zero exit.
+        resolve({ stdout, stderr: `${stderr}\nProcess timed out after ${timeoutMs}ms`, code: null });
       }, timeoutMs);
 
       proc.on("error", (err) => {

@@ -18,7 +18,12 @@ python3 -m http.server 8000 --directory sites/landing/out
 Mermaid fences stay native in the GitHub README. The homepage renders them with
 a locally bundled Mermaid module, using vertical flows on narrow screens.
 Readable diagram source remains available if JavaScript is disabled or rendering
-fails. Diagram explanations and examples share the same README sections.
+fails. The QA section uses the same checked-in image in the README and website.
+Its editable source is `assets/qa-verification.svg`; export the complete SVG at its
+native 1800 × 600 size to `assets/qa-verification.png` after editing. The build
+copies that PNG unchanged. Claude and Codex marks come from
+[Lobe Icons](https://github.com/lobehub/lobe-icons); their MIT license is retained
+in `assets/qa-icons-LICENSE.txt`. Diagram explanations and examples share the same README sections.
 
 The hero logo gently bobs unless reduced motion is requested. The header stays
 visible and tracks the Why, How it works, and Install sections with

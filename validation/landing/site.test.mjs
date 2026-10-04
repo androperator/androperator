@@ -13,6 +13,7 @@ test('README URLs retain queries and anchors on their public destinations', () =
   assert.equal(publicUrl('docs/api/index.md'), 'https://docs.androperator.com/api/');
   assert.equal(publicUrl('docs/internal/design/operator-llm-playbook.md'), 'https://github.com/androperator/androperator/blob/main/docs/internal/design/operator-llm-playbook.md');
   assert.equal(publicUrl('assets/androperator-logo.png'), '/logo.png');
+  assert.equal(publicUrl('assets/qa-verification.png'), '/qa-verification.png');
   assert.equal(publicUrl('#get-started'), '#get-started');
   assert.equal(publicUrl('https://example.com/path'), 'https://example.com/path');
   assert.equal(publicUrl('LICENSE'), 'https://github.com/androperator/androperator/blob/main/LICENSE');
@@ -57,7 +58,7 @@ test('built homepage renders current README, useful footer, and visible agent gu
   assert.match(await read('sites/landing/out/index.md'), /## License/);
   assert.match(html, /<aside[^>]*aria-labelledby="agent-heading"/);
   assert.match(html, /<script type="module" src="\/scripts\/diagrams.js"><\/script>/);
-  assert.equal((html.match(/class="diagram"/g) ?? []).length, 3);
+  assert.equal((html.match(/class="diagram"/g) ?? []).length, 2);
   await access(new URL('sites/landing/out/scripts/diagrams.js', root));
   await access(new URL('sites/landing/out/scripts/navigation.js', root));
   assert.match(html, /data-section="why" href="\/#why">Why/);
@@ -126,4 +127,15 @@ test('APK aliases resolve metadata for GET/HEAD and reject invalid metadata and 
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test('README and homepage share the exact QA illustration', async () => {
+  const readme = await read('README.md');
+  assert.match(readme, /!\[GitHub PR[^\]]+\]\(assets\/qa-verification.png\)/);
+  assert.match(await read('sites/landing/out/index.html'), /src="\/qa-verification.png"/);
+  assert.match(await read('sites/landing/out/index.md'), /\(\/qa-verification.png\)/);
+  const source = await readFile(new URL('assets/qa-verification.png', root));
+  assert.deepEqual([...source.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  assert.deepEqual(await readFile(new URL('sites/landing/out/qa-verification.png', root)), source);
+  assert.equal(await read('sites/landing/out/qa-icons-LICENSE.txt'), await read('assets/qa-icons-LICENSE.txt'));
 });

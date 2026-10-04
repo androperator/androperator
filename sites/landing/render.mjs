@@ -7,6 +7,7 @@ export function publicUrl(value) {
   if (/^(?:[a-z][a-z0-9+.-]*:|\/\/|#|\/)/i.test(value)) return value;
   const url = new URL(value, 'https://repository.invalid/');
   const path = decodeURIComponent(url.pathname).slice(1);
+  if (path === 'assets/qa-verification.png') return '/qa-verification.png' + url.search + url.hash;
   if (path === 'assets/androperator-logo.png' || path === 'docs/img/androperator-logo.png') return `/logo.png${url.search}${url.hash}`;
   if (path === 'docs/internal' || path.startsWith('docs/internal/')) return `${repository}/blob/main/${path}${url.search}${url.hash}`;
   if (path.startsWith('docs/') && path.endsWith('.md')) {

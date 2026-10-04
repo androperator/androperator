@@ -17,6 +17,8 @@ await mkdir(out, { recursive: true });
 await cp(join(site, 'public'), out, { recursive: true });
 await build({ entryPoints: [join(site, 'diagrams.mjs'), join(site, 'navigation.mjs')], outdir: join(out, 'scripts'), bundle: true, splitting: true, format: 'esm', minify: true });
 await cp(join(root, 'assets/androperator-logo.png'), join(out, 'logo.png'));
+await cp(join(root, 'assets/qa-verification.png'), join(out, 'qa-verification.png'));
+await cp(join(root, 'assets/qa-icons-LICENSE.txt'), join(out, 'qa-icons-LICENSE.txt'));
 await cp(join(root, 'sites/androperator-public/install.sh'), join(out, 'install.sh'));
 await writeFile(join(out, 'index.html'), template.replace('<!-- README -->', renderMarkdown(readme, { omitSections: ['License'] })));
 await writeFile(join(out, 'index.md'), publicMarkdown(readme));

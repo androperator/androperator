@@ -76,13 +76,7 @@ steps. Verify that the preference survives closing and reopening the app.
 Write a report with pass/fail results, screenshots, and anything you couldn't
 verify.”**
 
-```mermaid
-flowchart LR
-    accTitle: Check the fix before review
-    accDescr: A pull request is checked by your agent using Androperator. When the observed UI matches the expected result, the agent reports the fix as verified.
-    A[Pull request] --> B[Agent + Androperator]
-    B --> C["✓ UI fix verified"]
-```
+![GitHub PR → your agent (robot, Claude, or Codex) + Androperator → verified UI fix](assets/qa-verification.png)
 
 Your agent reports what passed, what failed, and what it couldn't verify,
 with evidence for you to review. Run the same checks again for the next fix,

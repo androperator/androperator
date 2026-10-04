@@ -80,7 +80,7 @@ In this repo, that is exposed as:
 
 ## Current Androperator Android State Model
 
-The current operator app already has the primitives needed to model readiness:
+The current Androperator Operator App already has the primitives needed to model readiness:
 
 - `queryScreenOn()` via `PowerManager.isInteractive()`
 - `queryDeviceLocked` via `KeyguardManager.isDeviceLocked()`
@@ -267,7 +267,7 @@ this proof run.
 
 ## Accessibility Wake Notes
 
-The current operator app has accessibility global-action support, but that is
+The current Androperator Operator App has accessibility global-action support, but that is
 not the same thing as having a clean public "wake screen" action.
 
 Current supported accessibility system actions in this repo:
@@ -282,7 +282,7 @@ Relevant code:
 - [`SystemAccessibilityActionType.kt`](../../../apps/android/shared/core/common/src/main/kotlin/action/system/accessibility/SystemAccessibilityActionType.kt)
 - [`SystemAccessibilityActionTypeExt.kt`](../../../apps/android/shared/app/app-adapter/src/main/kotlin/androperator/system/accessibility/SystemAccessibilityActionTypeExt.kt)
 
-There is no current wake-screen accessibility action in the operator app.
+There is no current wake-screen accessibility action in the Androperator Operator App.
 
 Even though a host-injected `HOME` key woke the Samsung device during probing,
 that should not be conflated with a documented operator-side accessibility wake

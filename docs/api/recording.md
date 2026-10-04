@@ -6,7 +6,7 @@ The commands on this page record accessibility events.
 ## Purpose
 
 Document the current recording workflow, the raw NDJSON schema written by the
-Operator app and the agent-context export produced by `androperator recording export`. Recording start
+Androperator Operator App and the agent-context export produced by `androperator recording export`. Recording start
 and stop commands are execution-backed and return the shared
 [result envelope](overview.md#result-envelope) wrapper.
 
@@ -693,7 +693,7 @@ Branching rule:
 
 Typical recovery:
 
-- `RECORDING_STORAGE_UNAVAILABLE`: verify the Operator app can access its external files directory, then retry `record start`
+- `RECORDING_STORAGE_UNAVAILABLE`: verify the Androperator Operator App can access its external files directory, then retry `record start`
 - `RECORDING_START_FAILED`: check the supplied `sessionId` and retry with a safe id matching `^[a-zA-Z0-9_-]+$`
 - `RECORDING_STOP_FAILED`: retry `record stop`, then inspect device state if finalization keeps timing out
 

@@ -1,6 +1,8 @@
 # Androperator landing site
 
-The homepage renders the root `README.md` during the build. Links to public
+The homepage renders the root `README.md` during the build, omitting its License
+section because the website footer already provides that information. The
+README and Markdown export retain the License section. Links to public
 docs resolve to the docs host; internal design links resolve to GitHub. The
 Markdown homepage uses the same source with resolved links. Authored agent
 guidance lives in `public/`; installer and full docs are copied from their
@@ -12,6 +14,25 @@ Build from the repository root with Node.js 24+ and Python 3:
 ./scripts/site_build.sh
 python3 -m http.server 8000 --directory sites/landing/out
 ```
+
+Mermaid fences stay native in the GitHub README. The homepage renders them with
+a locally bundled Mermaid module, using vertical flows on narrow screens.
+Readable diagram source remains available if JavaScript is disabled or rendering
+fails. The QA section uses the same checked-in image in the README and website.
+Its editable source is `assets/qa-verification.svg`; export the complete SVG at its
+native 1800 × 600 size to `assets/qa-verification.png` after editing. The build
+copies that PNG unchanged. The Claude Spark comes directly from
+[Anthropic’s press kit](https://anthropic.com/press-kit), using its
+`Claude Spark - Clay.svg` asset. The OpenAI logo comes from the inline SVG on
+[OpenAI’s Codex documentation page](https://developers.openai.com/codex/).
+These marks belong to Anthropic and OpenAI respectively. Their original paths
+and colors are preserved in the illustration. Diagram explanations and examples
+share the same README sections.
+
+The hero logo gently bobs unless reduced motion is requested. The header stays
+visible and tracks the Why, How it works, and Install sections with
+`aria-current="location"`. Install links to Quick Start; Why covers the app
+development and QA use cases. Navigation loads independently of diagram rendering.
 
 The build installs the renderer, runs the docs build, renders HTML and
 Markdown, generates sitemaps from route-specific source commit timestamps,

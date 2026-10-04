@@ -297,5 +297,5 @@ Do not infer compatibility from app presence alone.
 - [Setup](../setup.md)
 - [Doctor](../api/doctor.md)
 - [Devices](../api/devices.md)
-- [Operator App](operator.md)
+- [Androperator Operator App](operator.md)
 - [Errors](../api/errors.md)

@@ -7,7 +7,7 @@ capture interleaving are outside the implemented contract.
 
 ## Ownership and invariants
 
-- `OnScreenLogPanelController` in the Android operator module owns the window,
+- `OnScreenLogPanelController` in the Androperator Operator App module owns the window,
   generation, draw acknowledgement, and expiry on the main thread. Invalid
   replacement preserves existing state. A configuration change deferred during
   a set must draw within the original deadline; reflow preserves absolute expiry.

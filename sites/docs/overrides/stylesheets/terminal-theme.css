@@ -1,35 +1,39 @@
 :root {
   color-scheme: light;
 
-  --background-color: #fffdf8;
+  --background-color: #fcfdff;
   --page-width: 1180px;
-  --font-color: #1e2430;
-  --invert-font-color: #fffdf8;
-  --primary-color: #ff6a3d;
-  --secondary-color: #6b7280;
-  --tertiary-color: #6b7280;
+  --font-color: #172033;
+  --invert-font-color: #fcfdff;
+  --primary-color: #a4ed3b;
+  --secondary-color: #53627a;
+  --tertiary-color: #53627a;
   --error-color: #b42318;
-  --progress-bar-background: #d6d3d1;
-  --progress-bar-fill: #ff6a3d;
-  --code-bg-color: #f7f1e8;
-  --block-background-color: #fffaf3;
+  --progress-bar-background: #d6dfec;
+  --progress-bar-fill: #a4ed3b;
+  --code-bg-color: #f3f6fb;
+  --block-background-color: #ffffff;
+  --link-color: #172033;
+  --syntax-accent: #172033;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
 
-    --background-color: #222225;
-    --font-color: #e8e9ed;
-    --invert-font-color: #222225;
-    --primary-color: #ff6a3d;
-    --secondary-color: #a3abba;
-    --tertiary-color: #a3abba;
+    --background-color: #0b0f19;
+    --font-color: #e8eef9;
+    --invert-font-color: #0b0f19;
+    --primary-color: #a4ed3b;
+    --secondary-color: #bdc9d9;
+    --tertiary-color: #bdc9d9;
     --error-color: #ff6b8f;
-    --progress-bar-background: #3f3f44;
-    --progress-bar-fill: #ff6a3d;
-    --code-bg-color: #3f3f44;
-    --block-background-color: #2b2b30;
+    --progress-bar-background: #1a2233;
+    --progress-bar-fill: #a4ed3b;
+    --code-bg-color: #1a2233;
+    --block-background-color: #121826;
+    --link-color: #a4ed3b;
+    --syntax-accent: #a4ed3b;
   }
 }
 
@@ -173,4 +177,39 @@ body {
   #mkdocs-terminal-content table th {
     padding: 0.45rem;
   }
+}
+
+/* Match the landing page: vivid accents with readable text on light surfaces. */
+a {
+  color: var(--link-color);
+  text-decoration: underline;
+  text-decoration-color: var(--primary-color);
+  text-underline-offset: 3px;
+}
+
+a:hover,
+.btn-primary,
+.btn-primary:hover,
+*::selection {
+  color: #172033;
+}
+
+a:focus-visible {
+  outline: 3px solid var(--primary-color);
+  outline-offset: 3px;
+}
+
+.terminal-mkdocs-side-nav-item--active {
+  background: var(--primary-color);
+  color: #172033;
+}
+
+.btn-primary.btn-ghost {
+  color: var(--link-color);
+}
+
+:is(.hljs-keyword, .hljs-selector-tag, .hljs-built_in, .hljs-name, .hljs-tag,
+    .hljs-deletion, .hljs-selector-attr, .hljs-selector-pseudo, .hljs-meta,
+    .hljs-attr, .hljs-symbol, .hljs-bullet, .hljs-link) {
+  color: var(--syntax-accent);
 }

@@ -20,7 +20,7 @@ This is an intentional state, not a placeholder contract. We do not currently ma
 What this page does mean:
 
 - there is no currently maintained, code-backed list of known issues in `apps/node/src/`
-- common operational failures are documented under exact error-code pages such as [Operator App](operator.md) and [Version Compatibility](compatibility.md)
+- common operational failures are documented under exact error-code pages such as [Androperator Operator App](operator.md) and [Version Compatibility](compatibility.md)
 - agents should use live checks like `doctor`, `version --check-compat`, and command-specific error payloads instead of assuming a hidden issue catalog exists
 
 What this page does not mean:
@@ -41,14 +41,14 @@ androperator snapshot --device <device_serial> --operator-package <package>
 
 Use those outputs to decide where the issue belongs:
 
-- installation, permissions, handshake, or crash recovery: [Operator App](operator.md)
+- installation, permissions, handshake, or crash recovery: [Androperator Operator App](operator.md)
 - CLI and APK version mismatch: [Version Compatibility](compatibility.md)
 - public API or CLI contract regression: the matching page under `docs/api/`
 
 ## Where To Track New Issues
 
 - GitHub issues for project-level bugs and regressions: `https://github.com/androperator/androperator/issues`
-- [Operator App](operator.md) for operational recovery guidance
+- [Androperator Operator App](operator.md) for operational recovery guidance
 - [Version Compatibility](compatibility.md) for CLI and APK mismatch problems
 
 If a current issue becomes reproducible and code-verifiable, add it here with:
@@ -90,7 +90,7 @@ See [Logging](../api/logging.md) for log format details and [Version Compatibili
 
 ## Related Pages
 
-- [Operator App](operator.md)
+- [Androperator Operator App](operator.md)
 - [Version Compatibility](compatibility.md)
 - [Doctor](../api/doctor.md)
 - [Errors](../api/errors.md)

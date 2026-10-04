@@ -5,7 +5,7 @@
 Androperator currently ships one product version across:
 
 - the Node API / CLI package in `apps/node`
-- the Android operator APK in `apps/android/app`
+- the Androperator Operator App APK in `apps/android/app`
 
 One git tag represents one coherent product release.
 

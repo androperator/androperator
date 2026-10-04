@@ -7,6 +7,7 @@ export function publicUrl(value) {
   if (/^(?:[a-z][a-z0-9+.-]*:|\/\/|#|\/)/i.test(value)) return value;
   const url = new URL(value, 'https://repository.invalid/');
   const path = decodeURIComponent(url.pathname).slice(1);
+  if (path === 'assets/qa-verification.png') return '/qa-verification.png' + url.search + url.hash;
   if (path === 'assets/androperator-logo.png' || path === 'docs/img/androperator-logo.png') return `/logo.png${url.search}${url.hash}`;
   if (path === 'docs/internal' || path.startsWith('docs/internal/')) return `${repository}/blob/main/${path}${url.search}${url.hash}`;
   if (path.startsWith('docs/') && path.endsWith('.md')) {
@@ -16,10 +17,25 @@ export function publicUrl(value) {
   return `${repository}/blob/main/${path}${url.search}${url.hash}`;
 }
 
-export function renderMarkdown(source) {
+export function renderMarkdown(source, { omitSections = [] } = {}) {
   // Input is the repository-owned README, including its inline logo HTML.
   const markdown = new MarkdownIt({ html: true });
-  const tokens = markdown.parse(source, {});
+  const defaultFence = markdown.renderer.rules.fence;
+  let diagramIndex = 0;
+  markdown.renderer.rules.fence = (tokens, index, options, env, renderer) => {
+    if (tokens[index].info.trim() !== 'mermaid') return defaultFence(tokens, index, options, env, renderer);
+    const code = markdown.utils.escapeHtml(tokens[index].content);
+    const title = markdown.utils.escapeHtml(tokens[index].content.match(/^\s*accTitle: (.+)$/m)?.[1] ?? 'Agent workflow');
+    return `<figure class="diagram" data-index="${diagramIndex++}"><pre><code>${code}</code></pre><figcaption>${title}</figcaption></figure>\n`;
+  };
+  const parsed = markdown.parse(source, {});
+  let omitted = false;
+  const tokens = parsed.filter((token, index) => {
+    if (token.type === 'heading_open' && ['h1', 'h2'].includes(token.tag)) {
+      omitted = omitSections.includes(parsed[index + 1].content);
+    }
+    return !omitted;
+  });
   const headings = new Map();
   for (let i = 0; i < tokens.length; i++) {
     if (tokens[i].type !== 'heading_open') continue;
@@ -39,7 +55,10 @@ export function renderMarkdown(source) {
     }
   }
   visit(tokens);
-  return markdown.renderer.render(tokens, markdown.options, {});
+  const html = markdown.renderer.render(tokens, markdown.options, {});
+  return html.split(/(?=<h2\b)/).map((section, index) =>
+    `<section class="${index === 0 ? 'intro' : 'content-section'}">${section}</section>`
+  ).join('\n');
 }
 
 function rewriteHtmlUrls(source, escape = value => value) {

@@ -162,4 +162,4 @@ out of the repeated path.
 3. Use fresh CLI timing only when measuring terminal command experience.
 4. Keep physical-device measurements as compatibility and transport data.
 5. Re-measure with the `test-io-speeds` skill after changes to snapshot,
-   transport, daemon proxying, output formatting, or Android operator timing.
+   transport, daemon proxying, output formatting, or Androperator Operator App timing.

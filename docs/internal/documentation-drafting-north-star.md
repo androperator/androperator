@@ -91,7 +91,9 @@ claim being authored.
 
 ## Terminology
 
-- Use "operator" for the Android operator app.
+- Use "Androperator Operator App" as the full product name in prose, headings,
+  diagram labels, and link text. Preserve literal command flags, package IDs,
+  code identifiers, and URLs.
 - Distinguish execution actions, CLI commands, Serve endpoints, MCP tools, Node
   contracts, and result envelopes.
 - Use "selector" except for the specific `NodeMatcher` type.

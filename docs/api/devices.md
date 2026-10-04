@@ -200,7 +200,7 @@ Use `--operator-package com.androperator.operator.dev` when:
 
 - the installed APK is a local debug build
 - `doctor` reports `OPERATOR_VARIANT_MISMATCH`
-- you are validating branch-local CLI changes against the debug Operator app
+- you are validating branch-local CLI changes against the debug Androperator Operator App
 
 Recommended deterministic pairing:
 

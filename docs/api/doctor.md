@@ -577,7 +577,7 @@ Recommended doctor loop:
 - [Setup](../setup.md)
 - [Devices](devices.md)
 - [Errors](errors.md)
-- [Operator App Troubleshooting](../troubleshooting/operator.md)
+- [Androperator Operator App Troubleshooting](../troubleshooting/operator.md)
 - [Version Compatibility](../troubleshooting/compatibility.md)
 
 ## Background observation readiness

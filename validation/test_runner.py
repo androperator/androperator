@@ -55,6 +55,7 @@ def main(argv=None):
             ['python3', '-m', 'unittest', 'discover', '-s', 'validation/foreground-observation'],
             ['bash', 'validation/test_blocked_terms_policy.sh'],
             ['bash', 'validation/install/test_install.sh'],
+            ['bash', 'validation/homebrew/test_release_dispatch.sh'],
             *[['bash', str(path.relative_to(ROOT))] for path in sorted(
                 (ROOT / 'validation/on-screen-logs').glob('test_*.sh'))],
         ],

@@ -412,6 +412,27 @@ check_curl() {
 
 # 6. Install Androperator CLI
 install_cli() {
+    local active_cli brew_prefix
+    active_cli="$(command -v androperator || true)"
+    if command -v brew &> /dev/null; then
+        brew_prefix="$(brew --prefix androperator/tap/cli 2>/dev/null || true)"
+        # Compare file identity so linked Homebrew commands are recognized,
+        # while an unlinked formula cannot take over an active npm installation.
+        if [ -n "$active_cli" ] && [ -n "$brew_prefix" ] && \
+            [ "$active_cli" -ef "$brew_prefix/bin/androperator" ]; then
+            echo -e "${BLUE}Updating the Homebrew-managed Androperator CLI...${NC}"
+            brew upgrade androperator/tap/cli || return 1
+            brew_prefix="$(brew --prefix androperator/tap/cli)" || return 1
+            ANDROPERATOR_BIN_PATH="$brew_prefix/bin/androperator"
+            if [ ! -x "$ANDROPERATOR_BIN_PATH" ]; then
+                echo -e "${RED}❌ Homebrew CLI executable is missing: $ANDROPERATOR_BIN_PATH${NC}"
+                return 1
+            fi
+            export ANDROPERATOR_BIN_PATH
+            return 0
+        fi
+    fi
+
     if ! command -v npm &> /dev/null; then
         echo -e "${RED}❌ npm not found on PATH. Ensure Node.js is correctly installed.${NC}"
         return 1

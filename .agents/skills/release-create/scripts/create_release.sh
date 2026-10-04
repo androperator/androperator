@@ -17,6 +17,16 @@ require_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"
 }
 
+request_homebrew_update() {
+  # The tap validates and commits its own formula changes. Its hourly schedule
+  # retries after propagation or Homebrew's dependency release-age restriction.
+  if gh workflow run update.yml --repo androperator/homebrew-tap --ref main; then
+    printf 'homebrew_update=requested verification=pending url=https://github.com/androperator/homebrew-tap/actions/workflows/update.yml\n'
+  else
+    printf 'homebrew_update=deferred reason=dispatch_failed retry=hourly_schedule\n' >&2
+  fi
+}
+
 current_branch() {
   git branch --show-current
 }
@@ -275,6 +285,8 @@ main() {
 
   await_workflow "Publish npm Package" "$tag_name" "$target_sha" "$repo_slug"
   await_workflow "Release APK" "$tag_name" "$target_sha" "$repo_slug"
+
+  request_homebrew_update
 
   local published_version_script
   published_version_script="$repo_root/.agents/skills/release-update-published-version/scripts/update_published_version.py"

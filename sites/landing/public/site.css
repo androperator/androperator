@@ -42,7 +42,8 @@ td,th { padding:8px; border:1px solid var(--border); }
 .agent-guide { margin-top:40px; padding:24px 28px; background:var(--glow); border-left:4px solid var(--green); border-radius:0 12px 12px 0; }
 .agent-guide h2 { font-size:1.35rem; margin-bottom:12px; }
 .site-footer { border-top:1px solid var(--border); padding:44px 4vw; margin-top:55px; font-size:.9rem; text-align:center; }
-.site-footer nav { justify-content:center; }
+.site-footer nav { justify-content:center; gap:12px; }
+.link-separator { color:var(--muted); }
 .site-footer p { max-width:650px; margin:16px auto; }
 .site-footer strong { display:block; font-size:1.25rem; }
 .skip-link { position:absolute; left:-10000px; }

@@ -2,23 +2,29 @@
 
 <img src="assets/androperator-logo.png" width="160" height="160" alt="Androperator logo" />
 
-**Give your agent eyes and hands inside Android apps.**
+**Your agent calls the shots. Androperator handles Android.**
 
-Androperator connects AI agents to a running Android app on a phone or emulator.
-Agents can inspect the UI, capture screenshots, tap controls, enter text, and
-check the result through a predictable CLI, MCP server, or HTTP API.
+Androperator is a deterministic API for Android. Your agent decides what to do;
+Androperator executes its commands on a phone or emulator and returns the results.
+Tap a button, enter text, read the screen, take a screenshot. Your agent gets
+the feedback it needs to choose the next step.
 
-Use it to **develop Android apps with an agent** and **automate QA verification**.
-Your agent is the brain. Androperator is the hand that acts on the device and
-brings back evidence.
+Use it to put your coding agent to work in the running app: reproduce bugs,
+check fixes, and run QA flows. You set the goal. Your agent makes the decisions.
+Androperator provides reliable device control through a CLI, MCP server, or HTTP API.
 
 [Quick Start](#quick-start) · [Documentation](https://docs.androperator.com/) · [GitHub](https://github.com/androperator/androperator)
 
-## Develop with eyes on the app
+<a id="develop-with-eyes-on-the-app"></a>
 
-Give your coding agent more than source code. Let it explore the running app,
-reproduce a UI bug, and inspect the screen after a fix. Screenshots show what
-users see; UI snapshots expose the accessible controls the agent can act on.
+## Give your coding agent the running app
+
+A fix can look right in code and still be wrong on screen. Let your agent open
+the app, reproduce the bug, and check its work where you'll actually use it.
+Screenshots show the layout; UI snapshots give the agent controls to target.
+
+Ask your agent: **“Reproduce the settings bug, fix it, then use Androperator to
+check the updated screen on the emulator.”**
 
 ```mermaid
 flowchart LR
@@ -30,15 +36,20 @@ flowchart LR
     D --> A
 ```
 
-Ask your agent: **“Reproduce the settings bug, fix it, then use Androperator to
-check the updated screen on the emulator.”** Your development tools build and
-install the app; Androperator supplies observation and interaction.
+Your development tools build and install the app. Androperator runs the device
+commands your agent chooses and returns what happened. The agent uses those
+results to decide whether the fix holds up.
 
-## Automate QA verification
+<a id="automate-qa-verification"></a>
 
-Have an agent exercise a user flow on a real Android UI, then compare the
-observed state with the expected outcome. Use taps, text entry, scrolling,
-snapshots, screenshots, and recordings to investigate failures and keep evidence.
+## Put your QA checklist to work
+
+“Does this setting survive a restart?” Give your agent that check and let it
+work through the app. It chooses the taps, text entry, and scrolling; Androperator
+executes them. The agent then checks the resulting screen against your expectation.
+
+Ask your agent: **“Check that changing the display preference survives closing
+and reopening the app. Capture evidence if it fails.”**
 
 ```mermaid
 flowchart LR
@@ -51,26 +62,27 @@ flowchart LR
     E -->|Next step or recovery| B
 ```
 
-Ask your agent: **“Check that changing the display preference survives closing
-and reopening the app. Capture evidence if it fails.”** A completed action is
-one step; the agent checks the resulting state before declaring the flow passed.
+A successful tap doesn't prove a test passed. Your agent makes that call from
+the state it observes, with snapshots, screenshots, and recordings available
+to help you investigate a failure.
 
 ## How it works
 
-The agent plans and interprets results. Androperator executes explicit Android
-actions and returns structured evidence. App-specific decisions and recovery
-stay with the agent.
+The division of labor is simple: your agent owns the plan, Androperator runs
+the commands. Androperator validates explicit actions, executes them on Android,
+and returns structured results or errors. Your agent interprets the response
+and decides what to try next, including when something goes wrong.
 
 ```mermaid
 flowchart TB
     accTitle: Agent and Androperator architecture
     accDescr: The agent calls the host CLI, MCP server, or HTTP API. Androperator uses adb and the Android Operator to act on the app and return evidence.
-    A[AI agent - the brain] -->|CLI / MCP / HTTP| B[Androperator on your computer]
+    A[Your agent chooses commands] -->|CLI / MCP / HTTP| B[Androperator executes commands]
     B -->|adb| C[Operator app on Android]
-    C -->|Accessibility actions| D[Your running app]
+    C -->|Accessibility actions| D[Running Android app]
     D -->|UI state| C
     C -->|Structured results| B
-    B -->|Evidence for the next decision| A
+    B -->|Results for the next decision| A
 ```
 
 The Node.js CLI runs on your computer. The Operator Android app uses
@@ -81,25 +93,23 @@ Android accessibility.
 
 - **Observe:** XML UI snapshots, compact JSON hierarchies, node queries, screenshots, and recordings.
 - **Act:** open apps, tap, type, scroll, swipe, and drag.
-- **Verify:** inspect returned state and explicit errors, then decide whether to continue, recover, or stop.
+- **Check the result:** your agent reads the returned state and errors, then decides whether to continue, recover, or stop.
 
-Reusable skills can capture workflows your agent has learned. They are optional;
-an agent can drive the documented API directly.
+Your agent can use the API directly or follow a reusable skill for a familiar
+workflow. Either way, the decisions stay with your agent.
 
 <a id="install"></a>
 
 ## Quick Start
 
-One command installs the CLI, downloads and verifies the latest Androperator
-Operator Android app when needed, and helps prepare an Android device for your agent.
-
-Tell your agent to:
+Start by asking your agent to handle setup:
 
 ```text
 Read https://androperator.com/skill.md and get me set up with Androperator.
 ```
 
-Install Androperator on macOS/Linux:
+Prefer the terminal? On macOS or Linux, this installs the CLI and helps set up
+the Operator app on your Android device:
 
 ```bash
 curl -fsSL https://androperator.com/install.sh | bash
@@ -112,8 +122,7 @@ npm install -g androperator
 androperator install
 ```
 
-No Android device handy? Have Androperator create a Google Play equipped
-Android emulator.
+No phone handy? Create an Android emulator with Google Play:
 
 ```bash
 androperator emulator provision
@@ -124,12 +133,11 @@ For a physical phone, enable USB debugging and authorize the computer.
 Follow the [setup guide](docs/setup.md) for prerequisites and permissions, and
 [emulator guidance](https://docs.androperator.com/api/serve/#endpoint-post-android-provision-emulator) for host requirements.
 
-Androperator has comprehensive documentation, setup guides, and API references
-at [docs.androperator.com](https://docs.androperator.com/).
+<a id="try-the-observation-loop"></a>
 
-### Try the observation loop
+### Take a look around
 
-Choose a device, check readiness, then inspect an app:
+Check your device is ready, open Settings, and grab a snapshot and screenshot:
 
 ```bash
 androperator devices
@@ -145,7 +153,9 @@ explicitly when multiple targets are connected. These commands use the release
 Operator; for a local debug APK, add
 `--operator-package com.androperator.operator.dev`.
 
-## Go deeper
+<a id="go-deeper"></a>
+
+## Keep going
 
 - [Quickstart](docs/quickstart.md) - your first device interaction.
 - [Setup](docs/setup.md) - host requirements and Android permissions.

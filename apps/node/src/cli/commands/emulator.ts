@@ -109,7 +109,7 @@ export async function cmdEmulatorStart(name: string, options: OutputOptions & { 
     if (runningList.some((e) => e.avdName === name)) {
       throw { code: ERROR_CODES.EMULATOR_ALREADY_RUNNING, message: `Emulator ${name} is already running` };
     }
-    startAvd(config, name);
+    await startAvd(config, name);
     const serial = await waitForEmulatorRegistration(config, name);
     await waitForBootCompletion(config, serial);
     await enableEmulatorDeveloperSettings(config, serial);

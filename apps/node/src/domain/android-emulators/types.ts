@@ -1,3 +1,5 @@
+import type { ConfiguredAvdDetails, RunningEmulatorDetails } from "../../adapters/android-emulator/contracts.js";
+
 export type EmulatorUnsupportedReason =
   | "missing_play_store"
   | "unsupported_api_level"
@@ -9,23 +11,9 @@ export interface EmulatorCompatibility {
   unsupportedReasons: EmulatorUnsupportedReason[];
 }
 
-export interface ConfiguredAvd extends EmulatorCompatibility {
-  name: string;
-  exists: boolean;
-  running: boolean;
-  apiLevel: number | null;
-  abi: string | null;
-  playStore: boolean;
-  deviceProfile: string | null;
-  systemImage: string | null;
-}
+export interface ConfiguredAvd extends ConfiguredAvdDetails, EmulatorCompatibility {}
 
-export interface RunningEmulator extends EmulatorCompatibility {
-  type: "emulator";
-  avdName: string;
-  serial: string;
-  booted: boolean;
-}
+export interface RunningEmulator extends RunningEmulatorDetails, EmulatorCompatibility {}
 
 export interface ProvisionedEmulator {
   type: "emulator";

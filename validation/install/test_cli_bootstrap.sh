@@ -162,3 +162,73 @@ for uninstall_status in 0 1; do
         assert_not_contains "$log" "install -g @androperator/cli@latest" "blocked scoped install"
     fi
 done
+
+printf '\n=== Homebrew ownership: linked CLI, npm CLI, and upgrade failures ===\n'
+for scenario in linked npm-active upgrade-failed missing-executable unavailable-formula; do
+    case_dir="$TMP_DIR/homebrew-$scenario"
+    mkdir -p "$case_dir/path" "$case_dir/brew/bin" "$case_dir/npm/bin"
+    for owner in brew npm; do
+        cat > "$case_dir/$owner/bin/androperator" <<'EOF'
+#!/usr/bin/env bash
+printf 'cli %s\n' "$*" >> "$MOCK_LOG"
+EOF
+        chmod +x "$case_dir/$owner/bin/androperator"
+    done
+    if [ "$scenario" = npm-active ]; then
+        ln -s "$case_dir/npm/bin/androperator" "$case_dir/path/androperator"
+    else
+        ln -s "$case_dir/brew/bin/androperator" "$case_dir/path/androperator"
+    fi
+    MOCK_CASE_DIR="$case_dir" MOCK_SCENARIO="$scenario" MOCK_LOG="$case_dir/calls" \
+    PATH="$case_dir/path:$PATH" bash -c '
+        source "$1" >/dev/null 2>&1
+        trap - ERR
+        brew() {
+            printf "brew %s\n" "$*" >> "$MOCK_LOG"
+            case "$*" in
+                "--prefix androperator/tap/cli")
+                    [ "$MOCK_SCENARIO" != unavailable-formula ] || return 1
+                    printf "%s/brew\n" "$MOCK_CASE_DIR" ;;
+                "upgrade androperator/tap/cli")
+                    [ "$MOCK_SCENARIO" != upgrade-failed ] || return 1
+                    if [ "$MOCK_SCENARIO" = missing-executable ]; then
+                        rm "$MOCK_CASE_DIR/brew/bin/androperator"
+                    fi ;;
+                *) return 99 ;;
+            esac
+        }
+        npm() {
+            printf "npm %s\n" "$*" >> "$MOCK_LOG"
+            case "$*" in
+                "config get prefix") printf "%s/npm\n" "$MOCK_CASE_DIR" ;;
+                "install -g @androperator/cli@latest") return 0 ;;
+                *) return 99 ;;
+            esac
+        }
+        set +e
+        install_cli > "$MOCK_CASE_DIR/output" 2>&1
+        result=$?
+        printf "%s\n" "$result" > "$MOCK_CASE_DIR/status"
+        if [ "$result" = 0 ]; then
+            printf "%s\n" "$ANDROPERATOR_BIN_PATH" > "$MOCK_CASE_DIR/bin"
+            run_post_bootstrap_install >> "$MOCK_CASE_DIR/output" 2>&1 || exit 1
+        fi
+    ' _ "$INSTALL_SCRIPT"
+    case "$scenario" in
+        linked)
+            assert_equals 0 "$(cat "$case_dir/status")" "$scenario status"
+            assert_equals "$case_dir/brew/bin/androperator" "$(cat "$case_dir/bin")" "$scenario binary"
+            assert_contains "$case_dir/calls" 'brew upgrade androperator/tap/cli' "$scenario upgrade"
+            assert_not_contains "$case_dir/calls" 'npm ' "$scenario preserves ownership"
+            assert_contains "$case_dir/calls" 'cli install --output pretty --operator-package' "$scenario delegation" ;;
+        npm-active|unavailable-formula)
+            assert_equals 0 "$(cat "$case_dir/status")" "$scenario status"
+            assert_equals "$case_dir/npm/bin/androperator" "$(cat "$case_dir/bin")" "$scenario binary"
+            assert_contains "$case_dir/calls" 'npm install -g @androperator/cli@latest' "$scenario npm install"
+            assert_not_contains "$case_dir/calls" 'brew upgrade' "$scenario prevents takeover" ;;
+        *)
+            assert_equals 1 "$(cat "$case_dir/status")" "$scenario status"
+            assert_not_contains "$case_dir/calls" 'npm ' "$scenario prevents fallback"
+            assert_not_contains "$case_dir/calls" 'cli install' "$scenario stops delegation" ;;
+    esac
+done

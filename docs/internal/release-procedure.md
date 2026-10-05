@@ -81,3 +81,25 @@ The old unscoped `androperator` package receives no further releases.
 Future versions use normal tag-triggered OIDC publication. The bootstrap does not
 prove OIDC publishing for the new package; verify that on the next release.
 Never reuse a published version or move an existing release tag.
+
+## Homebrew distribution
+
+[androperator/homebrew-tap](https://github.com/androperator/homebrew-tap) installs
+`@androperator/cli` and `@androperator/emulator` from their existing npm archives.
+There is no additional application build or artifact publication.
+
+After npm and APK workflows succeed, `release-create` requests `update.yml` in
+the tap using the release operator's existing `gh` authorization. It reports
+`homebrew_update=requested` with verification pending, or
+`homebrew_update=deferred` if dispatch fails. Neither result claims the formula
+was published. The tap's hourly schedule also detects releases without a dispatch.
+No cross-repository CI token or additional npm token is required.
+
+The tap verifies archives, installs and tests the candidates, then commits
+formula updates automatically. Homebrew can refuse dependencies published in
+the previous 24 hours; the schedule retries after that restriction elapses.
+A failed tap check leaves existing formula versions unchanged. Inspect
+[update runs](https://github.com/androperator/homebrew-tap/actions/workflows/update.yml)
+and the committed `Formula/cli.rb` version before claiming Homebrew availability.
+Do not recreate an npm release or its tag to retry a Homebrew update. A manual
+retry uses `gh workflow run update.yml --repo androperator/homebrew-tap --ref main`.

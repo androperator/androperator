@@ -83,6 +83,31 @@ Alternatively, install the CLI only via npm (Node.js 24+ required):
 npm install -g @androperator/cli
 ```
 
+Or use Homebrew, which provides Node and uses the published npm archive:
+
+```bash
+brew install androperator/tap/cli
+# Optional standalone emulator command:
+brew install androperator/tap/emulator
+```
+
+These install `androperator` and `androperator-emulator`, respectively. The CLI
+already includes the emulator library, so the second formula is optional.
+Java, Android SDK tools, and device permissions still need setup.
+If moving from a global npm installation, first run
+`npm uninstall -g androperator @androperator/cli` (and
+`npm uninstall -g @androperator/emulator` for its standalone command) to avoid
+executable conflicts.
+
+Upgrade a Homebrew-managed CLI with `brew upgrade androperator/tap/cli`;
+upgrade its standalone emulator with `brew upgrade androperator/tap/emulator`.
+Run `brew update` first if Homebrew's local definitions are stale. New versions
+become available after the tap's automatic validation succeeds; Homebrew can
+hold dependencies for 24 hours after npm publication. Do not use npm to update
+a Homebrew-managed command. The shell installer preserves Homebrew ownership
+when the active CLI is linked to that formula; an unlinked formula does not
+take over a CLI installed through npm.
+
 Then run the canonical post-bootstrap install flow:
 
 ```bash
@@ -319,7 +344,7 @@ Androperator is the hand. The agent is the brain. The agent decides what to do, 
 | `OPERATOR_VARIANT_MISMATCH` | Release/debug package mismatch | Pass `--operator-package <installed-package>` or reinstall the intended APK. |
 | `DEVICE_ACCESSIBILITY_NOT_RUNNING` | Handshake returned a runtime failure | `androperator grant-device-permissions [--device <serial>]`, rerun `doctor` and `snapshot`. |
 | `RESULT_ENVELOPE_TIMEOUT` | Broadcast sent, no result envelope arrived | If no correlated log lines were captured, run `doctor` to check version compatibility and accessibility; otherwise re-grant permissions, rerun `snapshot --timeout 5000 --verbose`, and verify `--operator-package`. |
-| `VERSION_INCOMPATIBLE` | CLI and APK version mismatch | Reinstall CLI (`npm install -g @androperator/cli@latest`) or APK to align versions. |
+| `VERSION_INCOMPATIBLE` | CLI and APK version mismatch | Update the CLI with its existing manager (`brew upgrade androperator/tap/cli` or `npm install -g @androperator/cli@latest`) or reinstall the APK to align versions. |
 
 ### When to pass `--device` and `--operator-package`
 

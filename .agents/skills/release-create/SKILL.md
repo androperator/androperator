@@ -16,7 +16,8 @@ This skill creates a release by:
 5. Creating an annotated `v<version>` tag at the requested SHA.
 6. Pushing only that tag.
 7. Inspecting the resulting `Publish npm Package` and `Release APK` workflow runs with `gh`.
-8. Attempting `.agents/skills/release-update-published-version/` after the workflows succeed, retrying briefly for npm/GitHub propagation and creating a follow-up local commit for public docs and website content when the release is discoverable.
+8. Requesting the Homebrew tap update using existing `gh` authorization. Dispatch success is not installation verification; the tap validates and commits updates automatically, and its hourly schedule retries deferred updates.
+9. Attempting `.agents/skills/release-update-published-version/` after the workflows succeed, retrying briefly for npm/GitHub propagation and creating a follow-up local commit for public docs and website content when the release is discoverable.
 
 Run:
 
@@ -60,6 +61,7 @@ The script prints:
 - local validation status
 - pushed tag confirmation
 - detected workflow run URLs and conclusions
+- Homebrew update dispatch status and its verification link; deferred tap updates do not invalidate the already published npm/APK release
 - published-version follow-up commit information when the release is already discoverable
 - or a clear skipped message if publication metadata is still propagating
 

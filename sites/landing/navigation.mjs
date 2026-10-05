@@ -10,11 +10,12 @@ if (sections.length) {
     const headerHeight = header.getBoundingClientRect().height;
     document.documentElement.style.setProperty('--header-offset', `${headerHeight + 24}px`);
     const focusLine = headerHeight + Math.min(innerHeight * 0.22, 180);
-    const ordered = sections.map(section => ({ ...section, top: section.target.getBoundingClientRect().top }))
+    const ordered = sections.filter(section => section.link.getClientRects().length > 0)
+      .map(section => ({ ...section, top: section.target.getBoundingClientRect().top }))
       .sort((first, second) => first.top - second.top);
     const active = ordered.filter(section => section.top <= focusLine).at(-1) ?? ordered[0];
     for (const section of sections) {
-      if (section.link === active.link) section.link.setAttribute('aria-current', 'location');
+      if (section.link === active?.link) section.link.setAttribute('aria-current', 'location');
       else section.link.removeAttribute('aria-current');
     }
   }

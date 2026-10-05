@@ -4,7 +4,7 @@
 
 **Your agent decides. Androperator executes and reports.**
 
-**Free and fully open source. Licensed under [Apache 2.0](https://github.com/androperator/androperator/blob/main/LICENSE).**
+**[Free and fully open source](https://github.com/androperator/androperator). Licensed under [Apache 2.0](https://github.com/androperator/androperator/blob/main/LICENSE).**
 
 Androperator (“Android Operator”) gives your agent visibility and control inside
 Android apps.
@@ -135,27 +135,30 @@ workflow. Either way, the decisions stay with your agent.
 
 ## Quick Start
 
-Start by asking your agent to handle setup:
+Instruct your agent:
 
 ```text
 Read https://androperator.com/skill.md and get me set up with Androperator.
 ```
 
-Prefer the terminal? On macOS or Linux, this installs the CLI and helps set up
-the Androperator Operator App on your Android device:
-
 ```bash
 curl -fsSL https://androperator.com/install.sh | bash
 ```
 
-Or, with Node.js 24+ and Android platform-tools already installed:
+```bash
+brew install androperator/tap/cli
+androperator install
+```
+
+Homebrew installs the CLI and Node.js. Upgrade with
+`brew upgrade androperator/tap/cli`.
 
 ```bash
 npm install -g @androperator/cli
 androperator install
 ```
 
-No phone handy? Create an Android emulator with Google Play:
+No Android device handy? Have Androperator create an emulator for you:
 
 ```bash
 androperator emulator provision
@@ -172,19 +175,14 @@ Follow the [setup guide](docs/setup.md) for prerequisites and permissions, and
 
 Check your device is ready, open Settings, and grab a snapshot and screenshot:
 
-```bash
-androperator devices
-androperator doctor --device <device_serial>
-androperator open com.android.settings --device <device_serial>
-androperator snapshot --compact --device <device_serial>
-androperator screenshot --path /tmp/android-screen.png --device <device_serial>
+```bash no-copy
+androperator doctor
+androperator open com.android.settings
+androperator snapshot --compact
+androperator screenshot --path /tmp/android-screen.png
 ```
 
-The [compact snapshot](https://docs.androperator.com/api/snapshot/) returns a bounded JSON hierarchy. Use the observed text
-or resource IDs to choose an action, then inspect again. Pass `--device`
-explicitly when multiple targets are connected. These commands use the release
-Androperator Operator App; for a local debug APK, add
-`--operator-package com.androperator.operator.dev`.
+Pass `--device` explicitly when multiple targets are connected.
 
 <a id="go-deeper"></a>
 
@@ -202,7 +200,8 @@ Androperator was formerly known as Clawperator. See the
 
 ## License
 
-[Apache 2.0](LICENSE). Built by [@chrismlacy](https://x.com/chrismlacy),
-with help from ever-nondeterministic agents.
+[Apache 2.0](LICENSE).
+
+Written by clankers. Engineered by [@chrismlacy](https://x.com/chrismlacy).
 
 Copyright (c) 2026 Action Launcher Pty Ltd

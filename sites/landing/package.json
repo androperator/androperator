@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "bash ../../scripts/site_build.sh --dependencies-installed",
-    "test": "node --test ../../validation/landing/site.test.mjs"
+    "test": "node --test ../../validation/landing/*.test.mjs"
   },
   "dependencies": {
     "esbuild": "^0.25.12",

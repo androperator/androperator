@@ -23,7 +23,10 @@ export function renderMarkdown(source, { omitSections = [] } = {}) {
   const defaultFence = markdown.renderer.rules.fence;
   let diagramIndex = 0;
   markdown.renderer.rules.fence = (tokens, index, options, env, renderer) => {
-    if (tokens[index].info.trim() !== 'mermaid') return defaultFence(tokens, index, options, env, renderer);
+    if (tokens[index].info.trim() !== 'mermaid') {
+      if (tokens[index].info.split(/\s+/).includes('no-copy')) return defaultFence(tokens, index, options, env, renderer);
+      return `<div class="code-snippet">${defaultFence(tokens, index, options, env, renderer)}<button type="button" class="copy-code" aria-label="Copy code snippet" title="Copy code snippet"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3"/><rect x="4" y="4" width="12" height="12" rx="3"/></svg></button><span class="copy-status" role="status"></span></div>\n`;
+    }
     const code = markdown.utils.escapeHtml(tokens[index].content);
     const title = markdown.utils.escapeHtml(tokens[index].content.match(/^\s*accTitle: (.+)$/m)?.[1] ?? 'Agent workflow');
     return `<figure class="diagram" data-index="${diagramIndex++}"><pre><code>${code}</code></pre><figcaption>${title}</figcaption></figure>\n`;

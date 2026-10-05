@@ -6,14 +6,14 @@ import { renderMarkdown } from '../../sites/landing/render.mjs';
 test('copy preserves multiline code literally and reports clipboard failures', async () => {
   const code = 'echo "<device>"\nsecond command\n';
   const status = { textContent: '' };
-  const button = { closest: () => ({ querySelector: selector => selector === 'pre code' ? { textContent: code } : status }) };
+  const button = { dataset: {}, setAttribute(name, value) { this[name] = value; }, closest: () => ({ querySelector: selector => selector === 'pre code' ? { textContent: code } : status }) };
   let copied;
   await copySnippet(button, { writeText: async text => { copied = text; } });
   assert.equal(copied, code);
-  assert.equal(button.textContent, 'Copied');
+  assert.equal(button['aria-label'], 'Copied');
   assert.equal(button.disabled, false);
   await copySnippet(button, { writeText: async () => { throw new Error('Denied'); } });
-  assert.equal(button.textContent, 'Retry copy');
+  assert.equal(button['aria-label'], 'Retry copy');
   assert.match(status.textContent, /Copy failed/);
   assert.equal(button.disabled, false);
 });

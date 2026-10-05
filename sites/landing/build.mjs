@@ -15,7 +15,7 @@ const template = await readFile(join(site, 'template.html'), 'utf8');
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
 await cp(join(site, 'public'), out, { recursive: true });
-await build({ entryPoints: [join(site, 'diagrams.mjs'), join(site, 'navigation.mjs'), join(site, 'copy.mjs')], outdir: join(out, 'scripts'), bundle: true, splitting: true, format: 'esm', minify: true });
+await build({ entryPoints: [join(site, 'diagrams.mjs'), join(site, 'navigation.mjs'), join(site, 'copy.mjs'), join(site, 'quick-start.mjs')], outdir: join(out, 'scripts'), bundle: true, splitting: true, format: 'esm', minify: true });
 await cp(join(root, 'assets/androperator-logo.png'), join(out, 'logo.png'));
 await cp(join(root, 'assets/qa-verification.png'), join(out, 'qa-verification.png'));
 await cp(join(root, 'sites/androperator-public/install.sh'), join(out, 'install.sh'));

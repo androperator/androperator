@@ -166,7 +166,7 @@ npm install -g @androperator/cli
 androperator install
 ```
 
-No phone handy? Create an Android emulator with Google Play:
+No Android device handy? Have Androperator create an emulator for you:
 
 ```bash
 androperator emulator provision

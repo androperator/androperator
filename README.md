@@ -141,14 +141,9 @@ Start by asking your agent to handle setup:
 Read https://androperator.com/skill.md and get me set up with Androperator.
 ```
 
-Prefer the terminal? On macOS or Linux, this installs the CLI and helps set up
-the Androperator Operator App on your Android device:
-
 ```bash
 curl -fsSL https://androperator.com/install.sh | bash
 ```
-
-With Homebrew on macOS or Linux:
 
 ```bash
 brew install androperator/tap/cli
@@ -157,8 +152,6 @@ androperator install
 
 Homebrew installs the CLI and Node.js. Upgrade with
 `brew upgrade androperator/tap/cli`.
-
-Or, with Node.js 24+ and Android platform-tools already installed:
 
 ```bash
 npm install -g @androperator/cli

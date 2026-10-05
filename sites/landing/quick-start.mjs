@@ -8,14 +8,14 @@ if (section) {
   const snippets = [...section.querySelectorAll('.code-snippet')];
   const entries = methods.map(([name, prefix, hasNote]) => {
     const snippet = snippets.find(node => node.querySelector('code').textContent.startsWith(prefix));
-    return { name, snippet, description: snippet?.previousElementSibling, note: hasNote ? snippet?.nextElementSibling : null };
+    return { name, snippet, note: hasNote ? snippet?.nextElementSibling : null };
   });
   // Keep the readable Markdown layout if any installation method is missing.
-  if (entries.every(entry => entry.snippet && entry.description)) {
+  if (entries.every(entry => entry.snippet)) {
     const card = document.createElement('div');
     card.className = 'install-card';
     card.innerHTML = '<div class="install-toolbar"><span class="terminal-dots" aria-hidden="true"><i></i><i></i><i></i></span><div class="install-switch" role="radiogroup" aria-label="Installation method"></div></div>';
-    entries[0].description.before(card);
+    entries[0].snippet.before(card);
     const controls = card.querySelector('.install-switch');
     const panels = entries.map((entry, index) => {
       const label = document.createElement('label');
@@ -32,7 +32,7 @@ if (section) {
       panel.id = `install-method-${index}`;
       panel.className = 'install-panel';
       panel.hidden = index !== 0;
-      panel.append(entry.description, entry.snippet);
+      panel.append(entry.snippet);
       if (entry.note) panel.append(entry.note);
       card.append(panel);
       input.addEventListener('change', () => {

@@ -78,3 +78,6 @@ td,th { padding:8px; border:1px solid var(--border); }
 .install-panel > :last-child { margin-bottom:0; }
 .content-section:has(#quick-start) .code-snippet pre { white-space:pre-wrap; overflow-wrap:anywhere; }
 @media(max-width:480px) { .install-toolbar { padding:12px; gap:8px; } .install-switch span { padding:6px 10px; font-size:.78rem; } .install-panel { padding:18px 16px; } .code-snippet { padding:14px; gap:10px; } .terminal-dots { gap:6px; } .terminal-dots i { width:12px; height:12px; } }
+
+.email-link { display:inline-flex; vertical-align:middle; padding:4px; line-height:1; }
+.email-link svg { fill:none; stroke:currentColor; stroke-width:1.7; }

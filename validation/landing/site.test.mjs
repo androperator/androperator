@@ -52,7 +52,7 @@ test('homepage can omit License without removing later sections or the README li
 test('built homepage renders current README, useful footer, and visible agent guidance', async () => {
   const html = await read('sites/landing/out/index.html');
   assert.ok(html.includes(renderMarkdown(await read('README.md'), { omitSections: ['License'] })));
-  for (const text of ['Written by clankers / engineered by', 'Action Launcher Pty Ltd', 'mailto:chris@actionlauncher.com', 'Release notes', 'commandId', 'taskId', '/skill.md', '/agents.md', '/llms-full.txt']) assert.ok(html.includes(text), text);
+  for (const text of ['Written by clankers / Engineered by', 'Action Launcher Pty Ltd', 'mailto:chris@actionlauncher.com', 'Release notes', 'commandId', 'taskId', '/skill.md', '/agents.md', '/llms-full.txt']) assert.ok(html.includes(text), text);
   assert.match(html, /<main[^>]*><article>/);
   assert.doesNotMatch(html, /id="license"/);
   assert.match(await read('sites/landing/out/index.md'), /## License/);

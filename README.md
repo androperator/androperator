@@ -4,7 +4,7 @@
 
 **Your agent decides. Androperator executes and reports.**
 
-**Free and fully open source. Licensed under [Apache 2.0](https://github.com/androperator/androperator/blob/main/LICENSE).**
+**[Free and fully open source](https://github.com/androperator/androperator). Licensed under [Apache 2.0](https://github.com/androperator/androperator/blob/main/LICENSE).**
 
 Androperator (“Android Operator”) gives your agent visibility and control inside
 Android apps.

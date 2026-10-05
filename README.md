@@ -155,13 +155,9 @@ brew install androperator/tap/cli
 androperator install
 ```
 
-Homebrew installs the CLI and Node.js. Android platform-tools and a connected
-Android device are still required. Upgrade the CLI with
+Homebrew installs the CLI and Node.js. Use Androperator with a physical Android
+phone or an emulator; emulator setup is covered below. Upgrade with
 `brew upgrade androperator/tap/cli`.
-
-For the optional standalone emulator command, use
-`brew install androperator/tap/emulator`. The CLI already includes
-`androperator emulator`; neither option installs the Android SDK emulator tools.
 
 Or, with Node.js 24+ and Android platform-tools already installed:
 

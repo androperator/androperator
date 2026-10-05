@@ -23,7 +23,9 @@ export function renderMarkdown(source, { omitSections = [] } = {}) {
   const defaultFence = markdown.renderer.rules.fence;
   let diagramIndex = 0;
   markdown.renderer.rules.fence = (tokens, index, options, env, renderer) => {
-    if (tokens[index].info.trim() !== 'mermaid') return defaultFence(tokens, index, options, env, renderer);
+    if (tokens[index].info.trim() !== 'mermaid') {
+      return `<div class="code-snippet">${defaultFence(tokens, index, options, env, renderer)}<button type="button" class="copy-code" aria-label="Copy code snippet">Copy</button><span class="copy-status" role="status"></span></div>\n`;
+    }
     const code = markdown.utils.escapeHtml(tokens[index].content);
     const title = markdown.utils.escapeHtml(tokens[index].content.match(/^\s*accTitle: (.+)$/m)?.[1] ?? 'Agent workflow');
     return `<figure class="diagram" data-index="${diagramIndex++}"><pre><code>${code}</code></pre><figcaption>${title}</figcaption></figure>\n`;

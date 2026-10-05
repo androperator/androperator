@@ -189,11 +189,7 @@ androperator snapshot --compact
 androperator screenshot --path /tmp/android-screen.png
 ```
 
-The [compact snapshot](https://docs.androperator.com/api/snapshot/) returns a bounded JSON hierarchy. Use the observed text
-or resource IDs to choose an action, then inspect again. Pass `--device`
-explicitly when multiple targets are connected. These commands use the release
-Androperator Operator App; for a local debug APK, add
-`--operator-package com.androperator.operator.dev`.
+Pass `--device` explicitly when multiple targets are connected.
 
 <a id="go-deeper"></a>
 

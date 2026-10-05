@@ -183,11 +183,10 @@ Follow the [setup guide](docs/setup.md) for prerequisites and permissions, and
 Check your device is ready, open Settings, and grab a snapshot and screenshot:
 
 ```bash no-copy
-androperator devices
-androperator doctor --device <device_serial>
-androperator open com.android.settings --device <device_serial>
-androperator snapshot --compact --device <device_serial>
-androperator screenshot --path /tmp/android-screen.png --device <device_serial>
+androperator doctor
+androperator open com.android.settings
+androperator snapshot --compact
+androperator screenshot --path /tmp/android-screen.png
 ```
 
 The [compact snapshot](https://docs.androperator.com/api/snapshot/) returns a bounded JSON hierarchy. Use the observed text

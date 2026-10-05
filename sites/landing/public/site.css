@@ -81,3 +81,10 @@ td,th { padding:8px; border:1px solid var(--border); }
 
 .email-link { display:inline-flex; vertical-align:middle; padding:4px; line-height:1; }
 .email-link svg { fill:none; stroke:currentColor; stroke-width:1.7; }
+
+@media(max-width:760px) {
+  .site-header { gap:10px; }
+  .site-header nav { gap:2px; flex-wrap:nowrap; width:100%; }
+  .site-header nav a { padding:6px 8px; font-size:.85rem; white-space:nowrap; }
+  .site-header nav [data-section="how-it-works"] { display:none; }
+}

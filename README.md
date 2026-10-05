@@ -135,7 +135,7 @@ workflow. Either way, the decisions stay with your agent.
 
 ## Quick Start
 
-Start by asking your agent to handle setup:
+Instruct your agent:
 
 ```text
 Read https://androperator.com/skill.md and get me set up with Androperator.

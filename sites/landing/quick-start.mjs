@@ -3,7 +3,7 @@ if (section) {
   const methods = [
     ['One-liner', 'curl -fsSL', false],
     ['npm', 'npm install -g', false],
-    ['Homebrew', 'brew install', true],
+    ['brew', 'brew install', true],
   ];
   const snippets = [...section.querySelectorAll('.code-snippet')];
   const entries = methods.map(([name, prefix, hasNote]) => {

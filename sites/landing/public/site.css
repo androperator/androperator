@@ -63,8 +63,8 @@ td,th { padding:8px; border:1px solid var(--border); }
 .copy-status, .install-switch input { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
 .install-card { margin:24px 0; border:1px solid var(--border); border-radius:18px; overflow:hidden; box-shadow:0 12px 28px rgba(28,49,80,.06); }
 .install-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 20px; background:var(--soft); border-bottom:1px solid var(--border); }
-.terminal-dots { display:flex; gap:7px; }
-.terminal-dots i { width:11px; height:11px; border-radius:50%; background:#ff6057; }
+.terminal-dots { display:flex; gap:9px; }
+.terminal-dots i { width:14px; height:14px; border-radius:50%; background:#ff6057; }
 .terminal-dots i:nth-child(2) { background:#ffbd2e; }
 .terminal-dots i:nth-child(3) { background:#28c840; }
 .install-switch { display:flex; padding:4px; margin:0; border:1px solid var(--border); border-radius:30px; gap:2px; }
@@ -77,4 +77,4 @@ td,th { padding:8px; border:1px solid var(--border); }
 .install-panel .code-snippet { background:var(--surface); border:0; padding:0; margin:0 0 16px; }
 .install-panel > :last-child { margin-bottom:0; }
 .content-section:has(#quick-start) .code-snippet pre { white-space:pre-wrap; overflow-wrap:anywhere; }
-@media(max-width:480px) { .install-toolbar { padding:12px; gap:8px; } .install-switch span { padding:6px 10px; font-size:.78rem; } .install-panel { padding:18px 16px; } .code-snippet { padding:14px; gap:10px; } .terminal-dots { gap:4px; } .terminal-dots i { width:8px; height:8px; } }
+@media(max-width:480px) { .install-toolbar { padding:12px; gap:8px; } .install-switch span { padding:6px 10px; font-size:.78rem; } .install-panel { padding:18px 16px; } .code-snippet { padding:14px; gap:10px; } .terminal-dots { gap:6px; } .terminal-dots i { width:12px; height:12px; } }

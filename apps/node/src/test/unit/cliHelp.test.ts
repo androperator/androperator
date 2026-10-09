@@ -1,3 +1,4 @@
+import { AUTOMOTIVE_KEYS } from "../../contracts/keys.js";
 import { describe, it } from "node:test";
 import assert from "node:assert";
 import { spawn } from "node:child_process";
@@ -980,16 +981,22 @@ describe("promoted flat commands - help and missing-arg errors", () => {
     assert.match(obj.message ?? "", /not both/);
   });
 
-  it("press help lists the TV remote buttons", async () => {
+  it("press help lists the TV and Automotive inputs", async () => {
     const { stdout, code } = await runCli(["press", "--help"]);
     assert.strictEqual(code, 0);
-    for (const key of ["dpad_up", "dpad_down", "dpad_left", "dpad_right", "dpad_center", "bookmark", "profile", "settings", "tv"]) assert.ok(stdout.includes(key), key);
+    for (const key of ["dpad_up", "dpad_down", "dpad_left", "dpad_right", "dpad_center", "bookmark", "profile", "settings", "tv", ...AUTOMOTIVE_KEYS]) assert.ok(stdout.includes(key), key);
   });
 
-  it("accepts TV button arguments with global device flags before or after press", async () => {
+  it("accepts TV and Automotive arguments with global device flags before or after press", async () => {
     const directory = await mkdtemp(join(tmpdir(), "androperator-tv-cli-"));
     try {
       for (const args of [
+        ...AUTOMOTIVE_KEYS.flatMap(key => [
+          ["--device", "test-device", "press", key, "--no-daemon"],
+          ["press", key, "--device", "test-device", "--no-daemon"],
+          ["--device", "test-device", "press", "--key", key, "--no-daemon"],
+          ["press", "--key", key, "--device", "test-device", "--no-daemon"],
+        ]),
         ["--device", "test-device", "press", "dpad_up", "--no-daemon"],
         ["press", "dpad_up", "--device", "test-device", "--no-daemon"],
         ["--device", "test-device", "press", "--key", "profile", "--no-daemon"],
@@ -1005,8 +1012,8 @@ describe("promoted flat commands - help and missing-arg errors", () => {
     }
   });
 
-  it("press rejects unknown and missing TV button values as structured errors", async () => {
-    for (const args of [["press", "profile_switch"], ["press", "--key", "KEYCODE_TV"], ["press", "--key"], ["press"]]) {
+  it("press rejects unknown blank and missing button values as structured errors", async () => {
+    for (const args of [["press", "rotary_unknown"], ["press", "--key", ""], ["press", "profile_switch"], ["press", "--key", "KEYCODE_TV"], ["press", "--key"], ["press"]]) {
       const { stdout, code } = await runCli(args);
       assert.strictEqual(code, 1, stdout);
       assert.ok(JSON.parse(stdout).code, stdout);

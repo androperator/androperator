@@ -715,7 +715,7 @@ Examples:
   androperator wait-for-nav --text "Settings" --timeout 5000
 `;
 
-const HELP_PRESS = `androperator press — Send navigation keys and TV remote buttons
+const HELP_PRESS = `androperator press - Send navigation keys, TV buttons, and Automotive rotary inputs
 
 Usage:
   androperator press <key> [--device <id>] [--operator-package <pkg>]
@@ -730,6 +730,10 @@ Valid keys:
   profile    Send the emulator dashboard key (notification)
   settings   Open Android TV settings
   tv         Open the emulator Live Channels activity
+  rotary_clockwise, rotary_counterclockwise  Rotate the AAOS controller one detent
+  rotary_nudge_up, rotary_nudge_down, rotary_nudge_left, rotary_nudge_right
+             Nudge between AAOS focus areas
+  rotary_center  Click the AAOS controller center button
 
 Options:
   --key <name>           System key to press (alias for positional arg)
@@ -1993,10 +1997,10 @@ COMMANDS["press"] = {
   flagAliases: PRESS_FLAG_ALIASES,
   documentedFlags: ["--key", "--no-daemon"],
   supportedFlags: ["--key", "--no-daemon"],
-  summary: "Press a navigation key or TV remote button",
+  summary: "Press a navigation key, TV button, or Automotive rotary input",
   help: HELP_PRESS,
   topLevelBlock: `  press <key> [--device <id>] [--operator-package <pkg>]
-                                            Press a navigation key or TV remote button`,
+                                            Press a navigation key, TV button, or Automotive rotary input`,
   handler: async (ctx) => {
     const { rest, format, logger, deviceId, operatorPackage, noDaemon } = ctx;
     const keyFlag = getOpt(rest, "--key");
@@ -2015,7 +2019,7 @@ COMMANDS["press"] = {
     if (!key) {
       return JSON.stringify({
         code: "MISSING_ARGUMENT",
-        message: "press requires a key name.\n\nValid keys: back, home, recents, dpad_up, dpad_down, dpad_left, dpad_right, dpad_center, bookmark, profile, settings, tv\n\nExample:\n  androperator press back",
+        message: "press requires a key name.\n\nValid keys: back, home, recents, dpad_up, dpad_down, dpad_left, dpad_right, dpad_center, bookmark, profile, settings, tv, rotary_clockwise, rotary_counterclockwise, rotary_nudge_up, rotary_nudge_down, rotary_nudge_left, rotary_nudge_right, rotary_center\n\nExample:\n  androperator press back",
       });
     }
     return (await import("./commands/action.js")).cmdActionPressKey({

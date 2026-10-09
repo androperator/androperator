@@ -919,11 +919,11 @@ Android live-route verification:
 | Field | Valid values |
 | --- | --- |
 | Required | `key` |
-| `key` | case-insensitive string in `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv` |
+| `key` | case-insensitive string in `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv`, `rotary_clockwise`, `rotary_counterclockwise`, `rotary_nudge_up`, `rotary_nudge_down`, `rotary_nudge_left`, `rotary_nudge_right`, `rotary_center` |
 | `retry` | optional retry object in raw `exec` JSON; Android defaults to `None` |
 
-Back, Home, and Recents retain Android accessibility global actions. The new
-TV remote buttons execute through the Node bridge, including CLI `press`, raw
+Back, Home, and Recents retain Android accessibility global actions.
+TV remote buttons and Automotive inputs execute through the Node bridge, including CLI `press`, raw
 `exec`, HTTP `/execute`, MCP `press`/`execute`, and daemon execution. They run in
 order with surrounding Android actions under the same device lock. A failed
 button stops the remaining sequence. The returned envelope keeps the caller's
@@ -952,11 +952,47 @@ images and apps may ignore keys. Use a fresh snapshot to verify the intended
 screen or focused item. Buttons are single presses, with no hold or repeat
 parameter.
 
+#### Automotive rotary controller
+
+Automotive inputs target the main car display through AAOS `car_service`.
+They require an Android Automotive OS emulator or development device with
+shell input injection available and its rotary service enabled. They do not
+control Android Auto projection or vehicle properties.
+
+| Key | `cmd car_service` command | Input |
+| --- | --- | --- |
+| `rotary_clockwise` | `inject-rotary -c true` | One clockwise detent |
+| `rotary_counterclockwise` | `inject-rotary` | One counterclockwise detent |
+| `rotary_nudge_up` | `inject-key 280` | Nudge up between focus areas |
+| `rotary_nudge_down` | `inject-key 281` | Nudge down between focus areas |
+| `rotary_nudge_left` | `inject-key 282` | Nudge left between focus areas |
+| `rotary_nudge_right` | `inject-key 283` | Nudge right between focus areas |
+| `rotary_center` | `inject-key 23` | Click the controller center button |
+
+Use existing `back` and `home` inputs for navigation. Rotation and nudges are
+separate operations; D-pad keys do not substitute for rotary navigation.
+For multiple detents, submit multiple rotation actions. There is no hold,
+repeat-count, seat, or display-selection parameter.
+
+A successful result requires exit code zero and the car service's explicit
+success acknowledgement. It confirms injection, not a focus or screen change.
+Observe the focused item or resulting screen after each action. The first
+rotation after touch input may enter rotary mode without advancing focus.
+Missing car services, denied injection, and unrecognized responses fail the
+step and stop the sequence.
+
+The mappings were verified on the API 35 Automotive Google APIs arm64 emulator
+using Settings: rotation moved between rows, left/right nudges moved between
+panes, up/down nudges moved between the list and toolbar, and center opened
+the focused category. Other images and apps may handle focus differently.
+
 Success data:
 
 - `key`: canonical button name
 - TV remote buttons also return `dispatchSource: "host"` and either `keyCode`
   or `activity`
+- Automotive inputs return `dispatchSource: "host"` and `carCommand`, such as
+  `"inject-rotary -c true"`
 
 Common failures:
 
@@ -964,12 +1000,19 @@ Common failures:
 - failed `press_key` step with `TV_REMOTE_KEY_FAILED` or
   `TV_REMOTE_ACTIVITY_FAILED` when host dispatch fails, including unresolved
   activities even when Android's `am start` exits with code zero
+- failed `press_key` step with `AUTOMOTIVE_INPUT_FAILED` when AAOS does not
+  acknowledge injection
+- `UNSUPPORTED_RUNTIME_AUTOMOTIVE_INPUT` for Automotive inputs sent directly
+  to the APK without the Node bridge
 - `UNSUPPORTED_RUNTIME_TV_REMOTE` for TV buttons sent directly to the APK
   without the Node bridge
 
 CLI examples:
 
 ```bash
+androperator press rotary_clockwise --device <device_serial>
+androperator press rotary_nudge_right --device <device_serial>
+androperator press rotary_center --device <device_serial>
 androperator press dpad_up --device <device_serial>
 androperator press --key dpad_center --device <device_serial>
 androperator press profile --device <device_serial>

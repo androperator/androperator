@@ -267,7 +267,14 @@ enum class UiSystemKey {
     BOOKMARK,
     PROFILE,
     SETTINGS,
-    TV;
+    TV,
+    ROTARY_CLOCKWISE,
+    ROTARY_COUNTERCLOCKWISE,
+    ROTARY_NUDGE_UP,
+    ROTARY_NUDGE_DOWN,
+    ROTARY_NUDGE_LEFT,
+    ROTARY_NUDGE_RIGHT,
+    ROTARY_CENTER;
 
     companion object {
         fun fromWire(value: String): UiSystemKey =
@@ -284,6 +291,13 @@ enum class UiSystemKey {
                 "profile" -> PROFILE
                 "settings" -> SETTINGS
                 "tv" -> TV
+                "rotary_clockwise" -> ROTARY_CLOCKWISE
+                "rotary_counterclockwise" -> ROTARY_COUNTERCLOCKWISE
+                "rotary_nudge_up" -> ROTARY_NUDGE_UP
+                "rotary_nudge_down" -> ROTARY_NUDGE_DOWN
+                "rotary_nudge_left" -> ROTARY_NUDGE_LEFT
+                "rotary_nudge_right" -> ROTARY_NUDGE_RIGHT
+                "rotary_center" -> ROTARY_CENTER
                 else -> error("unsupported key: $value")
             }
     }

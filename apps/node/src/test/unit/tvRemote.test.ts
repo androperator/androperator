@@ -5,7 +5,7 @@ import { androperatorEvents, ANDROPERATOR_EVENT_TYPES } from "../../domain/obser
 import type { ResultEnvelope } from "../../contracts/result.js";
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { runTvRemoteSequence } from "../../domain/actions/tvRemote.js";
+import { runHostInputSequence } from "../../domain/actions/hostInput.js";
 import { validateExecution } from "../../domain/executions/validateExecution.js";
 import { SYSTEM_KEYS } from "../../contracts/keys.js";
 import { getDefaultRuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
@@ -32,7 +32,7 @@ describe("TV remote", () => {
     const runner = new FakeProcessRunner();
     const keys = ["dpad_up", "dpad_down", "dpad_left", "dpad_right", "dpad_center", "bookmark", "profile"];
     keys.forEach(() => runner.queueResult(accepted));
-    const result = await runTvRemoteSequence(execution(keys), getDefaultRuntimeConfig({ deviceId: "test-device", runner }), noRuntime);
+    const result = await runHostInputSequence(execution(keys), getDefaultRuntimeConfig({ deviceId: "test-device", runner }), noRuntime);
     assert.equal(result.ok, true);
     if (!result.ok) return;
     assert.equal(result.envelope.commandId, "tv-command");
@@ -46,7 +46,7 @@ describe("TV remote", () => {
     runner.queueResult(accepted);
     runner.queueResult({ ...accepted, stdout: String(version) });
     runner.queueResult({ ...accepted, stdout: "Status: ok" });
-    const result = await runTvRemoteSequence(execution(["settings", "tv"]), getDefaultRuntimeConfig({ deviceId: "test-device", runner }), noRuntime);
+    const result = await runHostInputSequence(execution(["settings", "tv"]), getDefaultRuntimeConfig({ deviceId: "test-device", runner }), noRuntime);
     assert.equal(result.ok && result.envelope.status, "success");
     assert.deepEqual(runner.calls[0].args.slice(2), ["shell", "am", "start", "-W", "-n", "com.android.tv.settings/com.android.tv.settings.MainSettings"]);
     assert.equal(runner.calls[2].args.at(-1), version < 34 ? "com.google.android.tv/com.android.tv.MainActivity" : "com.android.tv/com.android.tv.MainActivity");
@@ -57,7 +57,7 @@ describe("TV remote", () => {
     const order: string[] = [];
     runner.queueResult(accepted, () => { order.push("bookmark"); });
     const ids: string[] = [];
-    const result = await runTvRemoteSequence(execution(["back", "bookmark", "home"]), getDefaultRuntimeConfig({ deviceId: "test-device", runner }), async segment => {
+    const result = await runHostInputSequence(execution(["back", "bookmark", "home"]), getDefaultRuntimeConfig({ deviceId: "test-device", runner }), async segment => {
       ids.push(segment.commandId);
       order.push(segment.actions[0].params!.key!);
       return { ok: true, deviceId: "test-device", terminalSource: "androperator_result", envelope: { commandId: segment.commandId, taskId: segment.taskId, status: "success", stepResults: segment.actions.map(action => ({ id: action.id, actionType: action.type, success: true, data: {} })) } };
@@ -71,7 +71,7 @@ describe("TV remote", () => {
   for (const response of [{ code: 1, stdout: "", stderr: "denied" }, { code: 0, stdout: "Error type 3\nError: Activity class does not exist", stderr: "" }]) it("keeps rejected dispatch failed and stops subsequent buttons", async () => {
     const runner = new FakeProcessRunner();
     runner.queueResult(response);
-    const result = await runTvRemoteSequence(execution(["settings", "bookmark"]), getDefaultRuntimeConfig({ deviceId: "test-device", runner }), noRuntime);
+    const result = await runHostInputSequence(execution(["settings", "bookmark"]), getDefaultRuntimeConfig({ deviceId: "test-device", runner }), noRuntime);
     assert.equal(result.ok && result.envelope.status, "failed");
     assert.equal(result.ok && result.envelope.stepResults[0].success, false);
     assert.equal(runner.calls.length, 1);
@@ -80,7 +80,7 @@ describe("TV remote", () => {
   it("stops after a runtime failure and preserves earlier button results", async () => {
     const runner = new FakeProcessRunner();
     runner.queueResult(accepted);
-    const result = await runTvRemoteSequence(execution(["bookmark", "back", "profile"]), getDefaultRuntimeConfig({ deviceId: "test-device", runner }), async segment => ({
+    const result = await runHostInputSequence(execution(["bookmark", "back", "profile"]), getDefaultRuntimeConfig({ deviceId: "test-device", runner }), async segment => ({
       ok: true, deviceId: "test-device", terminalSource: "androperator_result", envelope: {
         commandId: segment.commandId, taskId: segment.taskId, status: "failed", error: "GLOBAL_ACTION_FAILED",
         stepResults: [{ id: "key-1", actionType: "press_key", success: false, data: { error: "GLOBAL_ACTION_FAILED" } }],
@@ -94,7 +94,7 @@ describe("TV remote", () => {
   it("preserves confirmed preceding effects if a later host transport throws", async () => {
     const runner = new FakeProcessRunner();
     runner.queueResult(accepted);
-    const result = await runTvRemoteSequence(execution(["bookmark", "profile"]), getDefaultRuntimeConfig({ deviceId: "test-device", runner }), noRuntime);
+    const result = await runHostInputSequence(execution(["bookmark", "profile"]), getDefaultRuntimeConfig({ deviceId: "test-device", runner }), noRuntime);
     assert.equal(result.ok, false);
     if (!result.ok) assert.equal((result.error.details as { stepResults: unknown[] }).stepResults.length, 1);
   });
@@ -103,7 +103,7 @@ describe("TV remote", () => {
     const runner = new FakeProcessRunner();
     const controller = new AbortController();
     controller.abort();
-    const result = await runTvRemoteSequence(execution(["bookmark"]), getDefaultRuntimeConfig({ deviceId: "test-device", runner }), noRuntime, controller.signal);
+    const result = await runHostInputSequence(execution(["bookmark"]), getDefaultRuntimeConfig({ deviceId: "test-device", runner }), noRuntime, controller.signal);
     assert.equal(result.ok, false);
     assert.equal(runner.calls.length, 0);
   });

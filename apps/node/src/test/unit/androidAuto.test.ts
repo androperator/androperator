@@ -142,3 +142,37 @@ it("preserves mixed DHU/runtime ordering, caller IDs, and evidence before a late
     }
   } finally { await broker.close(); await rm(directory, { recursive: true, force: true }); }
 });
+
+
+it("reserves a mixed execution before leading phone or host actions", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "auto-leading-"));
+  const path = join(directory, "control.sock");
+  const broker = await startAndroidAutoBroker("phone", {
+    press: async () => { assert.fail("contending execution must not send input"); },
+    close: async () => {},
+  }, path);
+  const owner = AndroidAutoClient.connect(path);
+  const runner = new FakeProcessRunner();
+  try {
+    await owner.request("phone", "acquire", 1000);
+    for (const leadingKey of ["back", "dpad_right"]) {
+      const input = validateExecution({ commandId: "contender", taskId: "mixed", source: "test", expectedFormat: "android-ui-automator", timeoutMs: 5000,
+        actions: [
+          { id: "leading", type: "press_key", params: { key: leadingKey } },
+          { id: "auto", type: "press_key", params: { key: "android_auto_home" } },
+        ] });
+      let runtimeCalls = 0;
+      const result = await runHostInputSequence(input, getDefaultRuntimeConfig({ deviceId: "phone", runner }), async () => {
+        runtimeCalls++;
+        throw new Error("must not reach runtime");
+      }, undefined, () => AndroidAutoClient.connect(path));
+      assert.equal(runtimeCalls, 0);
+      assert.equal(runner.calls.length, 0);
+      assert.equal(result.ok, false);
+      if (!result.ok) {
+        assert.equal(result.error.code, "EXECUTION_CONFLICT_IN_FLIGHT");
+        assert.deepEqual(result.error.details, { stepResults: [] });
+      }
+    }
+  } finally { owner.close(); await broker.close(); await rm(directory, { recursive: true, force: true }); }
+});

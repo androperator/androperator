@@ -63,6 +63,11 @@ export async function runHostInputSequence(
   } });
   let androidAuto: AndroidAutoClient | undefined;
   try {
+    // Reserve the whole mixed execution before any phone or host action can run.
+    if (execution.actions.some(action => action.type === "press_key" && isAndroidAutoKey(action.params?.key?.trim().toLowerCase()))) {
+      androidAuto = connectAndroidAuto(config.deviceId!);
+      await androidAuto.request(config.deviceId!, "acquire", Math.max(1, deadline - Date.now()), undefined, sequenceSignal);
+    }
     for (let index = 0; index < execution.actions.length;) {
       if (sequenceSignal.aborted) return canceled();
       const action = execution.actions[index];
@@ -91,11 +96,7 @@ export async function runHostInputSequence(
       index++;
       const key = action.params!.key!.trim().toLowerCase();
       if (isAndroidAutoKey(key)) {
-        if (androidAuto === undefined) {
-          androidAuto = connectAndroidAuto(config.deviceId!);
-          await androidAuto.request(config.deviceId!, "acquire", Math.max(1, deadline - Date.now()), undefined, sequenceSignal);
-        }
-        const response = await androidAuto.request(config.deviceId!, "press", Math.max(1, deadline - Date.now()), key, sequenceSignal);
+        const response = await androidAuto!.request(config.deviceId!, "press", Math.max(1, deadline - Date.now()), key, sequenceSignal);
         if (response.dhuCommand !== ANDROID_AUTO_COMMANDS[key]) throw { code: "ANDROID_AUTO_PROTOCOL_ERROR", message: "DHU acknowledged a different command" };
         envelope.stepResults.push({ id: action.id, actionType: "press_key", success: true, data: {
           key, dispatchSource: "dhu", dhuCommand: ANDROID_AUTO_COMMANDS[key],

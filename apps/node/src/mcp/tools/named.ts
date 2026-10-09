@@ -375,7 +375,7 @@ export function getNamedMcpTools(
     },
     {
       name: "press",
-      description: "Press an Android navigation key, TV remote button, or Automotive rotary input. The aaos_rotary_* keys require AAOS car_service. Android Auto uses android_auto_* keys and a ready DHU session started with android-auto start for the selected phone. Ordinary back/home target the phone. Rotation is one detent. TV icon buttons match the emulator remote: profile sends notification; settings and tv launch activities.",
+      description: "Press an Android navigation key, TV remote button, or Automotive rotary input. The aaos_rotary_* keys require AAOS car_service. Android Auto uses android_auto_* keys and a ready DHU session started with android-auto start for the selected phone. Ordinary back/home target the phone. Car rotation is one detent. Wear OS uses wear_rotary_clockwise/counterclockwise (one scroll unit) and wear_stem_primary/1/2/3 (short presses), requires a watch target, and requires shell rotary scroll support for rotation. Button effects depend on watch configuration. TV icon buttons match the emulator remote: profile sends notification; settings and tv launch activities.",
       inputSchema: buildCommonExecutionSchema({
         key: { type: "string", enum: [...SYSTEM_KEYS] },
       }, ["key"]),

@@ -1,11 +1,12 @@
 import { AndroidAutoClient, androidAutoSocketPath } from "../android-auto/broker.js";
 import { ANDROID_AUTO_COMMANDS, isAndroidAutoKey } from "../android-auto/commands.js";
+import { preflightWearInputs, WEAR_COMMANDS } from "./wearInput.js";
 import { randomUUID } from "node:crypto";
 import { runAdb } from "../../adapters/android-bridge/adbClient.js";
 import type { RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 import type { Execution, ExecutionAction } from "../../contracts/execution.js";
 import { ERROR_CODES, isAndroperatorError } from "../../contracts/errors.js";
-import { isAaosKey, isTvRemoteKey } from "../../contracts/keys.js";
+import { isAaosKey, isTvRemoteKey, isWearKey } from "../../contracts/keys.js";
 import type { ResultEnvelope } from "../../contracts/result.js";
 import type { RunExecutionResult } from "../executions/runExecution.js";
 
@@ -31,7 +32,7 @@ const AAOS_COMMANDS: Record<string, string[]> = {
 };
 
 export function isHostInputAction(action: ExecutionAction): boolean {
-  return action.type === "press_key" && (isTvRemoteKey(action.params?.key) || isAaosKey(action.params?.key) || isAndroidAutoKey(action.params?.key?.trim().toLowerCase()));
+  return action.type === "press_key" && (isWearKey(action.params?.key) || isTvRemoteKey(action.params?.key) || isAaosKey(action.params?.key) || isAndroidAutoKey(action.params?.key?.trim().toLowerCase()));
 }
 
 /** Execute bridge-only buttons in order with runtime segments, under the caller's device lock. */
@@ -63,6 +64,8 @@ export async function runHostInputSequence(
   } });
   let androidAuto: AndroidAutoClient | undefined;
   try {
+    await preflightWearInputs(execution, config, deadline, sequenceSignal);
+    if (sequenceSignal.aborted) return canceled();
     // Reserve the whole mixed execution before any phone or host action can run.
     if (execution.actions.some(action => action.type === "press_key" && isAndroidAutoKey(action.params?.key?.trim().toLowerCase()))) {
       androidAuto = connectAndroidAuto(config.deviceId!);
@@ -103,6 +106,7 @@ export async function runHostInputSequence(
         } });
         continue;
       }
+      const wearCommand = WEAR_COMMANDS[key];
       const keyCode = KEY_EVENTS[key];
       const carCommand = AAOS_COMMANDS[key];
       let activity: string | undefined;
@@ -120,7 +124,11 @@ export async function runHostInputSequence(
       let args: string[];
       let dispatchData: Record<string, string>;
       let error: string;
-      if (carCommand !== undefined) {
+      if (wearCommand !== undefined) {
+        args = ["shell", "input", ...wearCommand];
+        dispatchData = { inputCommand: wearCommand.join(" ") };
+        error = "WEAR_INPUT_FAILED";
+      } else if (carCommand !== undefined) {
         args = ["shell", "cmd", "car_service", ...carCommand];
         dispatchData = { carCommand: carCommand.join(" ") };
         error = "AUTOMOTIVE_INPUT_FAILED";
@@ -137,9 +145,11 @@ export async function runHostInputSequence(
       if (sequenceSignal.aborted) return canceled();
       // am can print an unresolved activity error while exiting with code zero.
       const dispatchAccepted = result.code === 0 && !/Error:|Error type|Exception|Status:\s*(?!ok\b)\S+/i.test(result.stdout + result.stderr);
+      // input can print usage or unknown-command text while returning zero.
+      const wearAccepted = wearCommand === undefined || (result.stdout.trim() === "" && result.stderr.trim() === "");
       // car_service can return exit zero for rejected arguments or unavailable commands.
       // Require its explicit acknowledgement, rather than treating silence as success.
-      const accepted = dispatchAccepted && (carCommand === undefined || (
+      const accepted = dispatchAccepted && wearAccepted && (carCommand === undefined || (
         carCommand[0] === "inject-key"
           ? result.stdout.trim() === "Succeeded"
           : /^Succeeded in injecting: RotaryEvent\b[^\r\n]*$/.test(result.stdout.trim())

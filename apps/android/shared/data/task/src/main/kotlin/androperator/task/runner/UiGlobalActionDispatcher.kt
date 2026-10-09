@@ -35,6 +35,12 @@ class UiGlobalActionDispatcherAndroid(
                     "UNSUPPORTED_RUNTIME_ANDROID_AUTO_INPUT",
                     "Android Auto inputs require a Desktop Head Unit session managed by the Androperator Node bridge",
                 )
+                UiSystemKey.WEAR_ROTARY_CLOCKWISE, UiSystemKey.WEAR_ROTARY_COUNTERCLOCKWISE,
+                UiSystemKey.WEAR_STEM_PRIMARY, UiSystemKey.WEAR_STEM_1,
+                UiSystemKey.WEAR_STEM_2, UiSystemKey.WEAR_STEM_3 -> throw UiActionFailure(
+                    "UNSUPPORTED_RUNTIME_WEAR_INPUT",
+                    "Wear OS inputs require the Androperator Node bridge",
+                )
                 else -> throw UiActionFailure(
                     "UNSUPPORTED_RUNTIME_TV_REMOTE",
                     "TV remote buttons require the Androperator Node bridge",

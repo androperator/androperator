@@ -919,11 +919,11 @@ Android live-route verification:
 | Field | Valid values |
 | --- | --- |
 | Required | `key` |
-| `key` | case-insensitive string in `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv`, `aaos_rotary_clockwise`, `aaos_rotary_counterclockwise`, `aaos_rotary_nudge_up`, `aaos_rotary_nudge_down`, `aaos_rotary_nudge_left`, `aaos_rotary_nudge_right`, `aaos_rotary_center`, `android_auto_rotary_clockwise`, `android_auto_rotary_counterclockwise`, `android_auto_rotary_nudge_up`, `android_auto_rotary_nudge_down`, `android_auto_rotary_nudge_left`, `android_auto_rotary_nudge_right`, `android_auto_rotary_center`, `android_auto_back`, `android_auto_home` |
+| `key` | case-insensitive string in `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv`, `aaos_rotary_clockwise`, `aaos_rotary_counterclockwise`, `aaos_rotary_nudge_up`, `aaos_rotary_nudge_down`, `aaos_rotary_nudge_left`, `aaos_rotary_nudge_right`, `aaos_rotary_center`, `android_auto_rotary_clockwise`, `android_auto_rotary_counterclockwise`, `android_auto_rotary_nudge_up`, `android_auto_rotary_nudge_down`, `android_auto_rotary_nudge_left`, `android_auto_rotary_nudge_right`, `android_auto_rotary_center`, `android_auto_back`, `android_auto_home`, `wear_rotary_clockwise`, `wear_rotary_counterclockwise`, `wear_stem_primary`, `wear_stem_1`, `wear_stem_2`, `wear_stem_3` |
 | `retry` | optional retry object in raw `exec` JSON; Android defaults to `None` |
 
 Back, Home, and Recents retain Android accessibility global actions.
-TV remote buttons, AAOS inputs, and Android Auto inputs execute through the Node bridge, including CLI `press`, raw
+TV remote buttons, AAOS inputs, Android Auto inputs, and Wear OS inputs execute through the Node bridge, including CLI `press`, raw
 `exec`, HTTP `/execute`, MCP `press`/`execute`, and daemon execution. They run in
 order with surrounding Android actions under the same device lock. A failed
 button stops the remaining sequence. The returned envelope keeps the caller's
@@ -962,6 +962,53 @@ and replace `android_auto_nudge_*` / `android_auto_center` with
 `android_auto_rotary_nudge_*` / `android_auto_rotary_center`. The old spellings
 are rejected; there are no compatibility aliases. Android Auto rotation,
 `android_auto_back`, and `android_auto_home` retain their existing names.
+
+#### Wear OS controls
+
+Select a Wear OS device or emulator explicitly with `--device <watch_serial>`.
+The Node bridge checks `android.hardware.type.watch` before any action in an
+execution containing `wear_*` keys runs. Rotation also requires the device shell
+command `input rotaryencoder scroll --axis SCROLL,<value>`; older watch images
+may lack it. There is no swipe fallback or phone-to-watch forwarding.
+
+| Key | Shell input | Meaning |
+| --- | --- | --- |
+| `wear_rotary_clockwise` | `rotaryencoder scroll --axis SCROLL,-1` | One clockwise rotary scroll unit |
+| `wear_rotary_counterclockwise` | `rotaryencoder scroll --axis SCROLL,1` | One counterclockwise rotary scroll unit |
+| `wear_stem_primary` | `keyevent KEYCODE_STEM_PRIMARY` (264) | Short primary system-button press |
+| `wear_stem_1` | `keyevent KEYCODE_STEM_1` (265) | Short first multifunction-button press |
+| `wear_stem_2` | `keyevent KEYCODE_STEM_2` (266) | Short second multifunction-button press |
+| `wear_stem_3` | `keyevent KEYCODE_STEM_3` (267) | Short third multifunction-button press |
+
+```bash
+androperator press wear_rotary_clockwise --device <watch_serial>
+androperator press wear_stem_primary --device <watch_serial>
+```
+
+Rotary motion uses Android's rotary-encoder input source and `AXIS_SCROLL`, not
+DPAD focus navigation. A unit is not a guaranteed pixel distance or physical
+crown detent. The focused app determines scrolling, zoom, volume, or other
+behavior. The primary stem is a system button, not a center-selection key.
+Multifunction buttons may be absent, unassigned, or intercepted by the watch
+system; accepted injection does not guarantee an app callback or visible effect.
+Only single short presses are exposed, without long-press or double-press options.
+See Android's [rotary input](https://developer.android.com/training/wearables/compose/rotary-input)
+and [physical button](https://developer.android.com/training/wearables/user-input/physical-buttons)
+guidance for app behavior.
+
+Success returns `key`, `dispatchSource: "host"`, and `inputCommand` in the step
+result. It means the shell accepted dispatch. Verify the intended effect with a
+fresh snapshot or screenshot. A non-watch or unreachable feature check returns
+`WEAR_DEVICE_REQUIRED`; missing rotary shell support returns
+`WEAR_ROTARY_UNSUPPORTED`. A rejected dispatch produces a failed step with
+`WEAR_INPUT_FAILED` and stops subsequent actions. Direct Android-runtime dispatch
+without the Node bridge returns `UNSUPPORTED_RUNTIME_WEAR_INPUT`.
+
+Live verification on the Wear OS 5.1 API 35 emulator confirmed clockwise and
+counterclockwise scrolling in Recents and Settings, and primary-stem navigation
+from the watch face to Recents. All three multifunction stems were accepted but
+had no visible effect on the tested screens. Their app-specific effects remain
+unverified; this is not a claim of physical-watch coverage.
 
 #### Automotive rotary controller
 

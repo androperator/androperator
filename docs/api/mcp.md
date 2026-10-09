@@ -621,6 +621,12 @@ Example regex-validated read:
 ### `press`
 
 Press a supported Android navigation key, TV remote button, or Automotive rotary input.
+Wear OS uses `wear_rotary_clockwise`, `wear_rotary_counterclockwise`, and
+`wear_stem_primary`, `wear_stem_1`, `wear_stem_2`, `wear_stem_3`. These require a
+watch target; rotation also requires native shell rotary scroll support. Each
+rotation is one scroll unit and each button is a short press. See
+[Wear OS controls](actions.md#wear-os-controls) for mappings and result limits.
+
 The `aaos_rotary_*` inputs require AAOS shell input injection and an enabled rotary
 service. Android Auto uses `android_auto_*` keys and a ready Desktop Head Unit
 session started on the host for the selected phone. Ordinary `back` and `home`

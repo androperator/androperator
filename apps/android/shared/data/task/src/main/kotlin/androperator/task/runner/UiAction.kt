@@ -283,7 +283,13 @@ enum class UiSystemKey {
     ANDROID_AUTO_ROTARY_NUDGE_RIGHT,
     ANDROID_AUTO_ROTARY_CENTER,
     ANDROID_AUTO_BACK,
-    ANDROID_AUTO_HOME;
+    ANDROID_AUTO_HOME,
+    WEAR_ROTARY_CLOCKWISE,
+    WEAR_ROTARY_COUNTERCLOCKWISE,
+    WEAR_STEM_PRIMARY,
+    WEAR_STEM_1,
+    WEAR_STEM_2,
+    WEAR_STEM_3;
 
     companion object {
         fun fromWire(value: String): UiSystemKey =
@@ -316,6 +322,12 @@ enum class UiSystemKey {
                 "android_auto_rotary_center" -> ANDROID_AUTO_ROTARY_CENTER
                 "android_auto_back" -> ANDROID_AUTO_BACK
                 "android_auto_home" -> ANDROID_AUTO_HOME
+                "wear_rotary_clockwise" -> WEAR_ROTARY_CLOCKWISE
+                "wear_rotary_counterclockwise" -> WEAR_ROTARY_COUNTERCLOCKWISE
+                "wear_stem_primary" -> WEAR_STEM_PRIMARY
+                "wear_stem_1" -> WEAR_STEM_1
+                "wear_stem_2" -> WEAR_STEM_2
+                "wear_stem_3" -> WEAR_STEM_3
                 else -> error("unsupported key: $value")
             }
     }

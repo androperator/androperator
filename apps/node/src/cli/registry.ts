@@ -716,7 +716,7 @@ Examples:
   androperator wait-for-nav --text "Settings" --timeout 5000
 `;
 
-const HELP_PRESS = `androperator press - Send navigation keys, TV buttons, and Automotive rotary inputs
+const HELP_PRESS = `androperator press - Send navigation keys, TV buttons, car inputs, and Wear OS controls
 
 Usage:
   androperator press <key> [--device <id>] [--operator-package <pkg>]
@@ -744,6 +744,12 @@ enabled rotary service. Android Auto uses a separate DHU session and keys:
   android_auto_rotary_center, android_auto_back, android_auto_home
 Start it with: androperator android-auto start --device <phone_serial>
 Android Auto inputs require a ready DHU session; ordinary back/home target the phone.
+
+Wear OS inputs require a watch target:
+  wear_rotary_clockwise, wear_rotary_counterclockwise  One rotary scroll unit
+  wear_stem_primary, wear_stem_1, wear_stem_2, wear_stem_3  Short stem-button press
+Rotary input requires shell rotaryencoder scroll support. Button effects depend on
+watch configuration; stem_primary is a system button, not a selection key.
 
 Options:
   --key <name>           System key to press (alias for positional arg)
@@ -2007,10 +2013,10 @@ COMMANDS["press"] = {
   flagAliases: PRESS_FLAG_ALIASES,
   documentedFlags: ["--key", "--no-daemon"],
   supportedFlags: ["--key", "--no-daemon"],
-  summary: "Press a navigation key, TV button, or Automotive rotary input",
+  summary: "Press a navigation key, TV button, car input, or Wear OS control",
   help: HELP_PRESS,
   topLevelBlock: `  press <key> [--device <id>] [--operator-package <pkg>]
-                                            Press a navigation key, TV button, or Automotive rotary input`,
+                                            Press a navigation key, TV button, car input, or Wear OS control`,
   handler: async (ctx) => {
     const { rest, format, logger, deviceId, operatorPackage, noDaemon } = ctx;
     const keyFlag = getOpt(rest, "--key");

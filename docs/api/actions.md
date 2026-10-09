@@ -992,8 +992,7 @@ the focused category. Other images and apps may handle focus differently.
 Android Auto uses an explicitly started Google Desktop Head Unit (DHU) session
 on the host. It is separate from AAOS `car_service`; the `rotary_*` keys above
 retain their AAOS behavior. This interface does not control arbitrary physical
-head units. The implementation targets DHU 2.0's console interface; successful
-live input verification is still pending an Android Auto projection session.
+head units. The implementation targets DHU 2.0's console interface.
 
 Install Google's DHU using Android SDK Manager. On the selected phone or a
 compatible Google Play phone emulator, install/update the full Android Auto
@@ -1042,7 +1041,19 @@ whole execution, including intervening phone actions. Competing Android Auto
 executions fail instead of interleaving. Inputs are followed by a private DHU
 frame barrier; success confirms console processing with a live video frame,
 not that the intended control moved or activated. Check the DHU window for the
-result. Ordinary snapshots and screenshots still observe the phone screen.
+result. A frame barrier does not wait for Android Auto animations or focus
+changes to finish; observe the settled display before choosing a dependent
+action. Ordinary snapshots and screenshots still observe the phone screen.
+
+Live validation used DHU 2.0 on macOS arm64 with a Pixel 10 Pro running Android
+Auto 17.7.663654. All nine commands returned the expected DHU command evidence.
+Visible checks confirmed clockwise and counterclockwise movement in the app
+launcher, down/up focus movement between the launcher and taskbar, center
+selection opening the highlighted app, Back returning from a nested Settings
+page, and Home opening the launcher. Left/right nudges were accepted, but the
+tested screens did not demonstrate a horizontal focus transition; their visible
+effect remains unverified. Nudges move between available focus areas and can
+have no effect at a boundary.
 
 Stopping closes DHU and removes the owned ADB forward. A disconnect, failed
 barrier, or cancellation during input terminates the session because delivery

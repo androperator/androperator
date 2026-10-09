@@ -100,11 +100,22 @@ export async function runHostInputSequence(
           ? "com.google.android.tv/com.android.tv.MainActivity"
           : "com.android.tv/com.android.tv.MainActivity";
       }
-      const args = carCommand !== undefined
-        ? ["shell", "cmd", "car_service", ...carCommand]
-        : keyCode !== undefined
-        ? ["shell", "input", "keyevent", keyCode]
-        : ["shell", "am", "start", "-W", "-n", activity!];
+      let args: string[];
+      let dispatchData: Record<string, string>;
+      let error: string;
+      if (carCommand !== undefined) {
+        args = ["shell", "cmd", "car_service", ...carCommand];
+        dispatchData = { carCommand: carCommand.join(" ") };
+        error = "AUTOMOTIVE_INPUT_FAILED";
+      } else if (keyCode !== undefined) {
+        args = ["shell", "input", "keyevent", keyCode];
+        dispatchData = { keyCode };
+        error = "TV_REMOTE_KEY_FAILED";
+      } else {
+        args = ["shell", "am", "start", "-W", "-n", activity!];
+        dispatchData = { activity: activity! };
+        error = "TV_REMOTE_ACTIVITY_FAILED";
+      }
       const result = await runAdb(config, args, { timeoutMs: Math.max(1, deadline - Date.now()) });
       if (sequenceSignal.aborted) return canceled();
       // am can print an unresolved activity error while exiting with code zero.
@@ -116,10 +127,9 @@ export async function runHostInputSequence(
           ? result.stdout.trim() === "Succeeded"
           : /^Succeeded in injecting: RotaryEvent\b[^\r\n]*$/.test(result.stdout.trim())
       ));
-      const error = carCommand !== undefined ? "AUTOMOTIVE_INPUT_FAILED" : keyCode !== undefined ? "TV_REMOTE_KEY_FAILED" : "TV_REMOTE_ACTIVITY_FAILED";
       envelope.stepResults.push({ id: action.id, actionType: "press_key", success: accepted, data: {
         key, dispatchSource: "host",
-        ...(carCommand !== undefined ? { carCommand: carCommand.join(" ") } : keyCode !== undefined ? { keyCode } : { activity }),
+        ...dispatchData,
         ...(accepted ? {} : { error, message: (result.stderr || result.stdout).trim(), adbExitCode: String(result.code) }),
       } });
       if (!accepted) {

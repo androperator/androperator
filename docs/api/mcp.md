@@ -621,6 +621,8 @@ Example regex-validated read:
 ### `press`
 
 Press a supported Android navigation key, TV remote button, or Automotive rotary input.
+Automotive inputs are AAOS only; Android Auto is not supported. They require
+shell input injection and an enabled rotary service.
 
 Parameters:
 

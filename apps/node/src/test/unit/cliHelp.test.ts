@@ -984,6 +984,7 @@ describe("promoted flat commands - help and missing-arg errors", () => {
   it("press help lists the TV and Automotive inputs", async () => {
     const { stdout, code } = await runCli(["press", "--help"]);
     assert.strictEqual(code, 0);
+    assert.match(stdout, /AAOS only; Android Auto is not supported/);
     for (const key of ["dpad_up", "dpad_down", "dpad_left", "dpad_right", "dpad_center", "bookmark", "profile", "settings", "tv", ...AUTOMOTIVE_KEYS]) assert.ok(stdout.includes(key), key);
   });
 

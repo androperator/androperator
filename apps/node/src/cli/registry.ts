@@ -735,6 +735,9 @@ Valid keys:
              Nudge between AAOS focus areas
   rotary_center  Click the AAOS controller center button
 
+Automotive inputs are AAOS only; Android Auto is not supported.
+Requires shell input injection and an enabled rotary service.
+
 Options:
   --key <name>           System key to press (alias for positional arg)
   --output <json|pretty> Output format (default: json)

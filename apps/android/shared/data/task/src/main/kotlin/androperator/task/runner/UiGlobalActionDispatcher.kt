@@ -20,17 +20,17 @@ class UiGlobalActionDispatcherAndroid(
                 UiSystemKey.BACK -> AccessibilityService.GLOBAL_ACTION_BACK
                 UiSystemKey.HOME -> AccessibilityService.GLOBAL_ACTION_HOME
                 UiSystemKey.RECENTS -> AccessibilityService.GLOBAL_ACTION_RECENTS
-                UiSystemKey.ROTARY_CLOCKWISE, UiSystemKey.ROTARY_COUNTERCLOCKWISE,
-                UiSystemKey.ROTARY_NUDGE_UP, UiSystemKey.ROTARY_NUDGE_DOWN,
-                UiSystemKey.ROTARY_NUDGE_LEFT, UiSystemKey.ROTARY_NUDGE_RIGHT,
-                UiSystemKey.ROTARY_CENTER -> throw UiActionFailure(
+                UiSystemKey.AAOS_ROTARY_CLOCKWISE, UiSystemKey.AAOS_ROTARY_COUNTERCLOCKWISE,
+                UiSystemKey.AAOS_ROTARY_NUDGE_UP, UiSystemKey.AAOS_ROTARY_NUDGE_DOWN,
+                UiSystemKey.AAOS_ROTARY_NUDGE_LEFT, UiSystemKey.AAOS_ROTARY_NUDGE_RIGHT,
+                UiSystemKey.AAOS_ROTARY_CENTER -> throw UiActionFailure(
                     "UNSUPPORTED_RUNTIME_AUTOMOTIVE_INPUT",
                     "Automotive inputs require the Androperator Node bridge",
                 )
                 UiSystemKey.ANDROID_AUTO_ROTARY_CLOCKWISE, UiSystemKey.ANDROID_AUTO_ROTARY_COUNTERCLOCKWISE,
-                UiSystemKey.ANDROID_AUTO_NUDGE_UP, UiSystemKey.ANDROID_AUTO_NUDGE_DOWN,
-                UiSystemKey.ANDROID_AUTO_NUDGE_LEFT, UiSystemKey.ANDROID_AUTO_NUDGE_RIGHT,
-                UiSystemKey.ANDROID_AUTO_CENTER, UiSystemKey.ANDROID_AUTO_BACK,
+                UiSystemKey.ANDROID_AUTO_ROTARY_NUDGE_UP, UiSystemKey.ANDROID_AUTO_ROTARY_NUDGE_DOWN,
+                UiSystemKey.ANDROID_AUTO_ROTARY_NUDGE_LEFT, UiSystemKey.ANDROID_AUTO_ROTARY_NUDGE_RIGHT,
+                UiSystemKey.ANDROID_AUTO_ROTARY_CENTER, UiSystemKey.ANDROID_AUTO_BACK,
                 UiSystemKey.ANDROID_AUTO_HOME -> throw UiActionFailure(
                     "UNSUPPORTED_RUNTIME_ANDROID_AUTO_INPUT",
                     "Android Auto inputs require a Desktop Head Unit session managed by the Androperator Node bridge",

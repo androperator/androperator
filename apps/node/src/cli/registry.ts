@@ -731,17 +731,17 @@ Valid keys:
   profile    Send the emulator dashboard key (notification)
   settings   Open Android TV settings
   tv         Open the emulator Live Channels activity
-  rotary_clockwise, rotary_counterclockwise  Rotate the AAOS controller one detent
-  rotary_nudge_up, rotary_nudge_down, rotary_nudge_left, rotary_nudge_right
+  aaos_rotary_clockwise, aaos_rotary_counterclockwise  Rotate the AAOS controller one detent
+  aaos_rotary_nudge_up, aaos_rotary_nudge_down, aaos_rotary_nudge_left, aaos_rotary_nudge_right
              Nudge between AAOS focus areas
-  rotary_center  Click the AAOS controller center button
+  aaos_rotary_center  Click the AAOS controller center button
 
-The rotary_* keys above are AAOS only and require shell input injection and an
+The aaos_rotary_* keys above are AAOS only and require shell input injection and an
 enabled rotary service. Android Auto uses a separate DHU session and keys:
   android_auto_rotary_clockwise, android_auto_rotary_counterclockwise
-  android_auto_nudge_up, android_auto_nudge_down
-  android_auto_nudge_left, android_auto_nudge_right
-  android_auto_center, android_auto_back, android_auto_home
+  android_auto_rotary_nudge_up, android_auto_rotary_nudge_down
+  android_auto_rotary_nudge_left, android_auto_rotary_nudge_right
+  android_auto_rotary_center, android_auto_back, android_auto_home
 Start it with: androperator android-auto start --device <phone_serial>
 Android Auto inputs require a ready DHU session; ordinary back/home target the phone.
 

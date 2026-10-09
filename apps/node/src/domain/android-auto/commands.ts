@@ -4,11 +4,11 @@ import { ANDROID_AUTO_KEYS } from "../../contracts/keys.js";
 export const ANDROID_AUTO_COMMANDS = {
   android_auto_rotary_clockwise: "dpad rotate right",
   android_auto_rotary_counterclockwise: "dpad rotate left",
-  android_auto_nudge_up: "dpad up",
-  android_auto_nudge_down: "dpad down",
-  android_auto_nudge_left: "dpad left",
-  android_auto_nudge_right: "dpad right",
-  android_auto_center: "dpad click",
+  android_auto_rotary_nudge_up: "dpad up",
+  android_auto_rotary_nudge_down: "dpad down",
+  android_auto_rotary_nudge_left: "dpad left",
+  android_auto_rotary_nudge_right: "dpad right",
+  android_auto_rotary_center: "dpad click",
   android_auto_back: "dpad back",
   android_auto_home: "keycode home",
 } as const satisfies Record<typeof ANDROID_AUTO_KEYS[number], string>;

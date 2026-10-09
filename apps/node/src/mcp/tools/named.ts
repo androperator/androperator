@@ -375,7 +375,7 @@ export function getNamedMcpTools(
     },
     {
       name: "press",
-      description: "Press an Android navigation key, TV remote button, or Automotive rotary input. The rotary_* keys require AAOS car_service. Android Auto uses android_auto_* keys and a ready DHU session started with android-auto start for the selected phone. Ordinary back/home target the phone. Rotation is one detent. TV icon buttons match the emulator remote: profile sends notification; settings and tv launch activities.",
+      description: "Press an Android navigation key, TV remote button, or Automotive rotary input. The aaos_rotary_* keys require AAOS car_service. Android Auto uses android_auto_* keys and a ready DHU session started with android-auto start for the selected phone. Ordinary back/home target the phone. Rotation is one detent. TV icon buttons match the emulator remote: profile sends notification; settings and tv launch activities.",
       inputSchema: buildCommonExecutionSchema({
         key: { type: "string", enum: [...SYSTEM_KEYS] },
       }, ["key"]),

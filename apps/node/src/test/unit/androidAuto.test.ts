@@ -59,7 +59,7 @@ describe("Android Auto DHU session", () => {
   it("rejects DHU errors even if the following screenshot succeeds", async () => {
     await withFakeDhu("reject-input", async binary => {
       const session = await DhuSession.start(binary, 5277, 2000);
-      await assert.rejects(session.press("android_auto_center", 1000), { code: "ANDROID_AUTO_INPUT_UNCONFIRMED" });
+      await assert.rejects(session.press("android_auto_rotary_center", 1000), { code: "ANDROID_AUTO_INPUT_UNCONFIRMED" });
       await assert.rejects(session.press("android_auto_back", 1000), { code: "ANDROID_AUTO_SESSION_CLOSED" });
     });
   });
@@ -76,10 +76,10 @@ describe("Android Auto execution lease", () => {
     try {
       await first.request("phone", "acquire", 1000);
       await assert.rejects(second.request("phone", "acquire", 1000), { code: "EXECUTION_CONFLICT_IN_FLIGHT" });
-      const result = await first.request("phone", "press", 1000, "android_auto_center");
+      const result = await first.request("phone", "press", 1000, "android_auto_rotary_center");
       assert.equal(result.dhuCommand, "dpad click");
       await assert.rejects(second.request("wrong-phone", "press", 1000, "android_auto_home"), { code: "EXECUTION_VALIDATION_FAILED" });
-      assert.deepEqual(keys, ["android_auto_center"]);
+      assert.deepEqual(keys, ["android_auto_rotary_center"]);
     } finally { first.close(); second.close(); await broker.close(); await rm(directory, { recursive: true, force: true }); }
   });
   it("cancels an uncertain in-flight input and closes the session when its caller disappears", async () => {
@@ -118,7 +118,7 @@ it("preserves mixed DHU/runtime ordering, caller IDs, and evidence before a late
   }, path);
   const input = validateExecution({ commandId: "caller-command", taskId: "caller-task", source: "test", expectedFormat: "android-ui-automator", timeoutMs: 5000,
     actions: [
-      { id: "first", type: "press_key", params: { key: "android_auto_center" } },
+      { id: "first", type: "press_key", params: { key: "android_auto_rotary_center" } },
       { id: "phone", type: "press_key", params: { key: "back" } },
       { id: "failed", type: "press_key", params: { key: "android_auto_home" } },
       { id: "skipped", type: "press_key", params: { key: "android_auto_back" } },
@@ -133,7 +133,7 @@ it("preserves mixed DHU/runtime ordering, caller IDs, and evidence before a late
         stepResults: [{ id: "phone", actionType: "press_key", success: true, data: { key: "back" } }],
       } };
     }, undefined, () => AndroidAutoClient.connect(path));
-    assert.deepEqual(order, ["android_auto_center", "phone-back", "android_auto_home"]);
+    assert.deepEqual(order, ["android_auto_rotary_center", "phone-back", "android_auto_home"]);
     assert.equal(result.ok, false);
     if (!result.ok) {
       assert.equal(result.error.code, "ANDROID_AUTO_INPUT_UNCONFIRMED");

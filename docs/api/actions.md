@@ -919,7 +919,7 @@ Android live-route verification:
 | Field | Valid values |
 | --- | --- |
 | Required | `key` |
-| `key` | case-insensitive string in `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv`, `rotary_clockwise`, `rotary_counterclockwise`, `rotary_nudge_up`, `rotary_nudge_down`, `rotary_nudge_left`, `rotary_nudge_right`, `rotary_center`, `android_auto_rotary_clockwise`, `android_auto_rotary_counterclockwise`, `android_auto_nudge_up`, `android_auto_nudge_down`, `android_auto_nudge_left`, `android_auto_nudge_right`, `android_auto_center`, `android_auto_back`, `android_auto_home` |
+| `key` | case-insensitive string in `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv`, `aaos_rotary_clockwise`, `aaos_rotary_counterclockwise`, `aaos_rotary_nudge_up`, `aaos_rotary_nudge_down`, `aaos_rotary_nudge_left`, `aaos_rotary_nudge_right`, `aaos_rotary_center`, `android_auto_rotary_clockwise`, `android_auto_rotary_counterclockwise`, `android_auto_rotary_nudge_up`, `android_auto_rotary_nudge_down`, `android_auto_rotary_nudge_left`, `android_auto_rotary_nudge_right`, `android_auto_rotary_center`, `android_auto_back`, `android_auto_home` |
 | `retry` | optional retry object in raw `exec` JSON; Android defaults to `None` |
 
 Back, Home, and Recents retain Android accessibility global actions.
@@ -952,6 +952,17 @@ images and apps may ignore keys. Use a fresh snapshot to verify the intended
 screen or focused item. Buttons are single presses, with no hold or repeat
 parameter.
 
+Car-specific controller keys use explicit platform prefixes: `aaos_rotary_*`
+for AAOS and `android_auto_rotary_*` for Android Auto. Ordinary Android keys such
+as `back`, `home`, and `dpad_right` retain their device-level meanings. These car
+keys do not imply Wear OS crown or bezel support.
+
+Migration: replace the former unprefixed `rotary_*` keys with `aaos_rotary_*`,
+and replace `android_auto_nudge_*` / `android_auto_center` with
+`android_auto_rotary_nudge_*` / `android_auto_rotary_center`. The old spellings
+are rejected; there are no compatibility aliases. Android Auto rotation,
+`android_auto_back`, and `android_auto_home` retain their existing names.
+
 #### Automotive rotary controller
 
 Automotive inputs target the main car display through AAOS `car_service`.
@@ -961,13 +972,13 @@ control Android Auto projection or vehicle properties.
 
 | Key | `cmd car_service` command | Input |
 | --- | --- | --- |
-| `rotary_clockwise` | `inject-rotary -c true` | One clockwise detent |
-| `rotary_counterclockwise` | `inject-rotary` | One counterclockwise detent |
-| `rotary_nudge_up` | `inject-key 280` | Nudge up between focus areas |
-| `rotary_nudge_down` | `inject-key 281` | Nudge down between focus areas |
-| `rotary_nudge_left` | `inject-key 282` | Nudge left between focus areas |
-| `rotary_nudge_right` | `inject-key 283` | Nudge right between focus areas |
-| `rotary_center` | `inject-key 23` | Click the controller center button |
+| `aaos_rotary_clockwise` | `inject-rotary -c true` | One clockwise detent |
+| `aaos_rotary_counterclockwise` | `inject-rotary` | One counterclockwise detent |
+| `aaos_rotary_nudge_up` | `inject-key 280` | Nudge up between focus areas |
+| `aaos_rotary_nudge_down` | `inject-key 281` | Nudge down between focus areas |
+| `aaos_rotary_nudge_left` | `inject-key 282` | Nudge left between focus areas |
+| `aaos_rotary_nudge_right` | `inject-key 283` | Nudge right between focus areas |
+| `aaos_rotary_center` | `inject-key 23` | Click the controller center button |
 
 Use existing `back` and `home` inputs for navigation. Rotation and nudges are
 separate operations; D-pad keys do not substitute for rotary navigation.
@@ -990,7 +1001,7 @@ the focused category. Other images and apps may handle focus differently.
 #### Android Auto Desktop Head Unit
 
 Android Auto uses an explicitly started Google Desktop Head Unit (DHU) session
-on the host. It is separate from AAOS `car_service`; the `rotary_*` keys above
+on the host. It is separate from AAOS `car_service`; the `aaos_rotary_*` keys above
 retain their AAOS behavior. This interface does not control arbitrary physical
 head units. The implementation targets DHU 2.0's console interface.
 
@@ -1018,7 +1029,7 @@ From another terminal, with the same device selected:
 
 ```bash
 androperator press android_auto_rotary_clockwise --device <phone_serial>
-androperator press android_auto_center --device <phone_serial>
+androperator press android_auto_rotary_center --device <phone_serial>
 androperator android-auto status --device <phone_serial>
 androperator android-auto stop --device <phone_serial>
 ```
@@ -1027,11 +1038,11 @@ androperator android-auto stop --device <phone_serial>
 | --- | --- |
 | `android_auto_rotary_clockwise` | `dpad rotate right` |
 | `android_auto_rotary_counterclockwise` | `dpad rotate left` |
-| `android_auto_nudge_up` | `dpad up` |
-| `android_auto_nudge_down` | `dpad down` |
-| `android_auto_nudge_left` | `dpad left` |
-| `android_auto_nudge_right` | `dpad right` |
-| `android_auto_center` | `dpad click` |
+| `android_auto_rotary_nudge_up` | `dpad up` |
+| `android_auto_rotary_nudge_down` | `dpad down` |
+| `android_auto_rotary_nudge_left` | `dpad left` |
+| `android_auto_rotary_nudge_right` | `dpad right` |
+| `android_auto_rotary_center` | `dpad click` |
 | `android_auto_back` | `dpad back` |
 | `android_auto_home` | `keycode home` |
 
@@ -1092,9 +1103,9 @@ Common failures:
 CLI examples:
 
 ```bash
-androperator press rotary_clockwise --device <device_serial>
-androperator press rotary_nudge_right --device <device_serial>
-androperator press rotary_center --device <device_serial>
+androperator press aaos_rotary_clockwise --device <device_serial>
+androperator press aaos_rotary_nudge_right --device <device_serial>
+androperator press aaos_rotary_center --device <device_serial>
 androperator press dpad_up --device <device_serial>
 androperator press --key dpad_center --device <device_serial>
 androperator press profile --device <device_serial>

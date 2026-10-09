@@ -5,7 +5,7 @@ import { runAdb } from "../../adapters/android-bridge/adbClient.js";
 import type { RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 import type { Execution, ExecutionAction } from "../../contracts/execution.js";
 import { ERROR_CODES, isAndroperatorError } from "../../contracts/errors.js";
-import { isAutomotiveKey, isTvRemoteKey } from "../../contracts/keys.js";
+import { isAaosKey, isTvRemoteKey } from "../../contracts/keys.js";
 import type { ResultEnvelope } from "../../contracts/result.js";
 import type { RunExecutionResult } from "../executions/runExecution.js";
 
@@ -20,18 +20,18 @@ const KEY_EVENTS: Record<string, string> = {
   profile: "KEYCODE_NOTIFICATION",
 };
 
-const AUTOMOTIVE_COMMANDS: Record<string, string[]> = {
-  rotary_clockwise: ["inject-rotary", "-c", "true"],
-  rotary_counterclockwise: ["inject-rotary"],
-  rotary_nudge_up: ["inject-key", "280"],
-  rotary_nudge_down: ["inject-key", "281"],
-  rotary_nudge_left: ["inject-key", "282"],
-  rotary_nudge_right: ["inject-key", "283"],
-  rotary_center: ["inject-key", "23"],
+const AAOS_COMMANDS: Record<string, string[]> = {
+  aaos_rotary_clockwise: ["inject-rotary", "-c", "true"],
+  aaos_rotary_counterclockwise: ["inject-rotary"],
+  aaos_rotary_nudge_up: ["inject-key", "280"],
+  aaos_rotary_nudge_down: ["inject-key", "281"],
+  aaos_rotary_nudge_left: ["inject-key", "282"],
+  aaos_rotary_nudge_right: ["inject-key", "283"],
+  aaos_rotary_center: ["inject-key", "23"],
 };
 
 export function isHostInputAction(action: ExecutionAction): boolean {
-  return action.type === "press_key" && (isTvRemoteKey(action.params?.key) || isAutomotiveKey(action.params?.key) || isAndroidAutoKey(action.params?.key?.trim().toLowerCase()));
+  return action.type === "press_key" && (isTvRemoteKey(action.params?.key) || isAaosKey(action.params?.key) || isAndroidAutoKey(action.params?.key?.trim().toLowerCase()));
 }
 
 /** Execute bridge-only buttons in order with runtime segments, under the caller's device lock. */
@@ -103,7 +103,7 @@ export async function runHostInputSequence(
         continue;
       }
       const keyCode = KEY_EVENTS[key];
-      const carCommand = AUTOMOTIVE_COMMANDS[key];
+      const carCommand = AAOS_COMMANDS[key];
       let activity: string | undefined;
       if (key === "settings") activity = "com.android.tv.settings/com.android.tv.settings.MainSettings";
       if (key === "tv") {

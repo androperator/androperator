@@ -1,4 +1,4 @@
-import { AUTOMOTIVE_KEYS, ANDROID_AUTO_KEYS } from "../../contracts/keys.js";
+import { AAOS_KEYS, ANDROID_AUTO_KEYS } from "../../contracts/keys.js";
 import { describe, it } from "node:test";
 import assert from "node:assert";
 import { spawn } from "node:child_process";
@@ -986,14 +986,14 @@ describe("promoted flat commands - help and missing-arg errors", () => {
     assert.strictEqual(code, 0);
     assert.match(stdout, /rotary_\* keys above are AAOS only/);
     assert.match(stdout, /android-auto start/);
-    for (const key of ["dpad_up", "dpad_down", "dpad_left", "dpad_right", "dpad_center", "bookmark", "profile", "settings", "tv", ...AUTOMOTIVE_KEYS, ...ANDROID_AUTO_KEYS]) assert.ok(stdout.includes(key), key);
+    for (const key of ["dpad_up", "dpad_down", "dpad_left", "dpad_right", "dpad_center", "bookmark", "profile", "settings", "tv", ...AAOS_KEYS, ...ANDROID_AUTO_KEYS]) assert.ok(stdout.includes(key), key);
   });
 
   it("accepts TV and Automotive arguments with global device flags before or after press", async () => {
     const directory = await mkdtemp(join(tmpdir(), "androperator-tv-cli-"));
     try {
       for (const args of [
-        ...[...AUTOMOTIVE_KEYS, ...ANDROID_AUTO_KEYS].flatMap(key => [
+        ...[...AAOS_KEYS, ...ANDROID_AUTO_KEYS].flatMap(key => [
           ["--device", "test-device", "press", key, "--no-daemon"],
           ["press", key, "--device", "test-device", "--no-daemon"],
           ["--device", "test-device", "press", "--key", key, "--no-daemon"],
@@ -1019,6 +1019,21 @@ describe("promoted flat commands - help and missing-arg errors", () => {
       const { stdout, code } = await runCli(args);
       assert.strictEqual(code, 1, stdout);
       assert.ok(JSON.parse(stdout).code, stdout);
+    }
+  });
+
+  it("rejects removed car input names without compatibility aliases", async () => {
+    const removed = [
+      ...AAOS_KEYS.map(key => key.slice("aaos_".length)),
+      ...ANDROID_AUTO_KEYS.filter(key => key.includes("_rotary_nudge_") || key.endsWith("_rotary_center"))
+        .map(key => key.replace("_rotary_", "_")),
+    ];
+    for (const key of removed) {
+      for (const args of [["press", key], ["press", "--key", key]]) {
+        const { stdout, code } = await runCli(args);
+        assert.equal(code, 1, stdout);
+        assert.equal(JSON.parse(stdout).code, "EXECUTION_VALIDATION_FAILED", stdout);
+      }
     }
   });
 

@@ -268,20 +268,20 @@ enum class UiSystemKey {
     PROFILE,
     SETTINGS,
     TV,
-    ROTARY_CLOCKWISE,
-    ROTARY_COUNTERCLOCKWISE,
-    ROTARY_NUDGE_UP,
-    ROTARY_NUDGE_DOWN,
-    ROTARY_NUDGE_LEFT,
-    ROTARY_NUDGE_RIGHT,
-    ROTARY_CENTER,
+    AAOS_ROTARY_CLOCKWISE,
+    AAOS_ROTARY_COUNTERCLOCKWISE,
+    AAOS_ROTARY_NUDGE_UP,
+    AAOS_ROTARY_NUDGE_DOWN,
+    AAOS_ROTARY_NUDGE_LEFT,
+    AAOS_ROTARY_NUDGE_RIGHT,
+    AAOS_ROTARY_CENTER,
     ANDROID_AUTO_ROTARY_CLOCKWISE,
     ANDROID_AUTO_ROTARY_COUNTERCLOCKWISE,
-    ANDROID_AUTO_NUDGE_UP,
-    ANDROID_AUTO_NUDGE_DOWN,
-    ANDROID_AUTO_NUDGE_LEFT,
-    ANDROID_AUTO_NUDGE_RIGHT,
-    ANDROID_AUTO_CENTER,
+    ANDROID_AUTO_ROTARY_NUDGE_UP,
+    ANDROID_AUTO_ROTARY_NUDGE_DOWN,
+    ANDROID_AUTO_ROTARY_NUDGE_LEFT,
+    ANDROID_AUTO_ROTARY_NUDGE_RIGHT,
+    ANDROID_AUTO_ROTARY_CENTER,
     ANDROID_AUTO_BACK,
     ANDROID_AUTO_HOME;
 
@@ -300,20 +300,20 @@ enum class UiSystemKey {
                 "profile" -> PROFILE
                 "settings" -> SETTINGS
                 "tv" -> TV
-                "rotary_clockwise" -> ROTARY_CLOCKWISE
-                "rotary_counterclockwise" -> ROTARY_COUNTERCLOCKWISE
-                "rotary_nudge_up" -> ROTARY_NUDGE_UP
-                "rotary_nudge_down" -> ROTARY_NUDGE_DOWN
-                "rotary_nudge_left" -> ROTARY_NUDGE_LEFT
-                "rotary_nudge_right" -> ROTARY_NUDGE_RIGHT
-                "rotary_center" -> ROTARY_CENTER
+                "aaos_rotary_clockwise" -> AAOS_ROTARY_CLOCKWISE
+                "aaos_rotary_counterclockwise" -> AAOS_ROTARY_COUNTERCLOCKWISE
+                "aaos_rotary_nudge_up" -> AAOS_ROTARY_NUDGE_UP
+                "aaos_rotary_nudge_down" -> AAOS_ROTARY_NUDGE_DOWN
+                "aaos_rotary_nudge_left" -> AAOS_ROTARY_NUDGE_LEFT
+                "aaos_rotary_nudge_right" -> AAOS_ROTARY_NUDGE_RIGHT
+                "aaos_rotary_center" -> AAOS_ROTARY_CENTER
                 "android_auto_rotary_clockwise" -> ANDROID_AUTO_ROTARY_CLOCKWISE
                 "android_auto_rotary_counterclockwise" -> ANDROID_AUTO_ROTARY_COUNTERCLOCKWISE
-                "android_auto_nudge_up" -> ANDROID_AUTO_NUDGE_UP
-                "android_auto_nudge_down" -> ANDROID_AUTO_NUDGE_DOWN
-                "android_auto_nudge_left" -> ANDROID_AUTO_NUDGE_LEFT
-                "android_auto_nudge_right" -> ANDROID_AUTO_NUDGE_RIGHT
-                "android_auto_center" -> ANDROID_AUTO_CENTER
+                "android_auto_rotary_nudge_up" -> ANDROID_AUTO_ROTARY_NUDGE_UP
+                "android_auto_rotary_nudge_down" -> ANDROID_AUTO_ROTARY_NUDGE_DOWN
+                "android_auto_rotary_nudge_left" -> ANDROID_AUTO_ROTARY_NUDGE_LEFT
+                "android_auto_rotary_nudge_right" -> ANDROID_AUTO_ROTARY_NUDGE_RIGHT
+                "android_auto_rotary_center" -> ANDROID_AUTO_ROTARY_CENTER
                 "android_auto_back" -> ANDROID_AUTO_BACK
                 "android_auto_home" -> ANDROID_AUTO_HOME
                 else -> error("unsupported key: $value")

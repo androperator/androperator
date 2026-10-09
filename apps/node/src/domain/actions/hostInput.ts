@@ -1,3 +1,5 @@
+import { AndroidAutoClient, androidAutoSocketPath } from "../android-auto/broker.js";
+import { ANDROID_AUTO_COMMANDS, isAndroidAutoKey } from "../android-auto/commands.js";
 import { randomUUID } from "node:crypto";
 import { runAdb } from "../../adapters/android-bridge/adbClient.js";
 import type { RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
@@ -29,7 +31,7 @@ const AUTOMOTIVE_COMMANDS: Record<string, string[]> = {
 };
 
 export function isHostInputAction(action: ExecutionAction): boolean {
-  return action.type === "press_key" && (isTvRemoteKey(action.params?.key) || isAutomotiveKey(action.params?.key));
+  return action.type === "press_key" && (isTvRemoteKey(action.params?.key) || isAutomotiveKey(action.params?.key) || isAndroidAutoKey(action.params?.key?.trim().toLowerCase()));
 }
 
 /** Execute bridge-only buttons in order with runtime segments, under the caller's device lock. */
@@ -38,6 +40,7 @@ export async function runHostInputSequence(
   config: RuntimeConfig,
   runRuntime: (segment: Execution, signal: AbortSignal) => Promise<RunExecutionResult>,
   signal?: AbortSignal,
+  connectAndroidAuto: (deviceId: string) => AndroidAutoClient = deviceId => AndroidAutoClient.connect(androidAutoSocketPath(deviceId)),
 ): Promise<RunExecutionResult> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort({
@@ -58,6 +61,7 @@ export async function runHostInputSequence(
     message: "Host input execution canceled or timed out",
     details: { stepResults: envelope.stepResults },
   } });
+  let androidAuto: AndroidAutoClient | undefined;
   try {
     for (let index = 0; index < execution.actions.length;) {
       if (sequenceSignal.aborted) return canceled();
@@ -86,6 +90,18 @@ export async function runHostInputSequence(
       }
       index++;
       const key = action.params!.key!.trim().toLowerCase();
+      if (isAndroidAutoKey(key)) {
+        if (androidAuto === undefined) {
+          androidAuto = connectAndroidAuto(config.deviceId!);
+          await androidAuto.request(config.deviceId!, "acquire", Math.max(1, deadline - Date.now()), undefined, sequenceSignal);
+        }
+        const response = await androidAuto.request(config.deviceId!, "press", Math.max(1, deadline - Date.now()), key, sequenceSignal);
+        if (response.dhuCommand !== ANDROID_AUTO_COMMANDS[key]) throw { code: "ANDROID_AUTO_PROTOCOL_ERROR", message: "DHU acknowledged a different command" };
+        envelope.stepResults.push({ id: action.id, actionType: "press_key", success: true, data: {
+          key, dispatchSource: "dhu", dhuCommand: ANDROID_AUTO_COMMANDS[key],
+        } });
+        continue;
+      }
       const keyCode = KEY_EVENTS[key];
       const carCommand = AUTOMOTIVE_COMMANDS[key];
       let activity: string | undefined;
@@ -140,6 +156,7 @@ export async function runHostInputSequence(
     }
     return resultWithEnvelope();
   } catch (error) {
+    if (sequenceSignal.aborted) return canceled();
     return { ok: false, deviceId: config.deviceId, error: {
       ...(isAndroperatorError(error) ? { ...error } : {
         code: ERROR_CODES.RESULT_TRANSPORT_FAILED,
@@ -148,6 +165,7 @@ export async function runHostInputSequence(
       details: { stepResults: envelope.stepResults },
     } };
   } finally {
+    androidAuto?.close();
     clearTimeout(timer);
   }
 }

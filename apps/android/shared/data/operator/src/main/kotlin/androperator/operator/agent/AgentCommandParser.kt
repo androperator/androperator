@@ -394,7 +394,7 @@ class AgentCommandParserDefault : AgentCommandParser {
             "press_key", "key_press" ->
                 UiAction.PressKey(
                     id = id,
-                    key = UiSystemKey.fromWire(params.stringRequired("key", 32)),
+                    key = UiSystemKey.fromWire(params.stringRequired("key", 64)),
                 )
             "sleep" ->
                 UiAction.Sleep(

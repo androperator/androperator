@@ -27,6 +27,14 @@ class UiGlobalActionDispatcherAndroid(
                     "UNSUPPORTED_RUNTIME_AUTOMOTIVE_INPUT",
                     "Automotive inputs require the Androperator Node bridge",
                 )
+                UiSystemKey.ANDROID_AUTO_ROTARY_CLOCKWISE, UiSystemKey.ANDROID_AUTO_ROTARY_COUNTERCLOCKWISE,
+                UiSystemKey.ANDROID_AUTO_NUDGE_UP, UiSystemKey.ANDROID_AUTO_NUDGE_DOWN,
+                UiSystemKey.ANDROID_AUTO_NUDGE_LEFT, UiSystemKey.ANDROID_AUTO_NUDGE_RIGHT,
+                UiSystemKey.ANDROID_AUTO_CENTER, UiSystemKey.ANDROID_AUTO_BACK,
+                UiSystemKey.ANDROID_AUTO_HOME -> throw UiActionFailure(
+                    "UNSUPPORTED_RUNTIME_ANDROID_AUTO_INPUT",
+                    "Android Auto inputs require a Desktop Head Unit session managed by the Androperator Node bridge",
+                )
                 else -> throw UiActionFailure(
                     "UNSUPPORTED_RUNTIME_TV_REMOTE",
                     "TV remote buttons require the Androperator Node bridge",

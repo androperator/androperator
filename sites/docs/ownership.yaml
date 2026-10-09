@@ -10,6 +10,9 @@ concepts:
   recording_workflow: api/recording.md
 
 command_details:
+  android-auto:
+    href: actions.md#android-auto-inputs
+    label: Android Auto Desktop Head Unit
   notifications:
     href: notifications.md
     label: Notifications

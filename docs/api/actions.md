@@ -919,11 +919,11 @@ Android live-route verification:
 | Field | Valid values |
 | --- | --- |
 | Required | `key` |
-| `key` | case-insensitive string in `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv`, `rotary_clockwise`, `rotary_counterclockwise`, `rotary_nudge_up`, `rotary_nudge_down`, `rotary_nudge_left`, `rotary_nudge_right`, `rotary_center` |
+| `key` | case-insensitive string in `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv`, `rotary_clockwise`, `rotary_counterclockwise`, `rotary_nudge_up`, `rotary_nudge_down`, `rotary_nudge_left`, `rotary_nudge_right`, `rotary_center`, `android_auto_rotary_clockwise`, `android_auto_rotary_counterclockwise`, `android_auto_nudge_up`, `android_auto_nudge_down`, `android_auto_nudge_left`, `android_auto_nudge_right`, `android_auto_center`, `android_auto_back`, `android_auto_home` |
 | `retry` | optional retry object in raw `exec` JSON; Android defaults to `None` |
 
 Back, Home, and Recents retain Android accessibility global actions.
-TV remote buttons and Automotive inputs execute through the Node bridge, including CLI `press`, raw
+TV remote buttons, AAOS inputs, and Android Auto inputs execute through the Node bridge, including CLI `press`, raw
 `exec`, HTTP `/execute`, MCP `press`/`execute`, and daemon execution. They run in
 order with surrounding Android actions under the same device lock. A failed
 button stops the remaining sequence. The returned envelope keeps the caller's
@@ -986,11 +986,77 @@ using Settings: rotation moved between rows, left/right nudges moved between
 panes, up/down nudges moved between the list and toolbar, and center opened
 the focused category. Other images and apps may handle focus differently.
 
+<a id="android-auto-inputs"></a>
+#### Android Auto Desktop Head Unit
+
+Android Auto uses an explicitly started Google Desktop Head Unit (DHU) session
+on the host. It is separate from AAOS `car_service`; the `rotary_*` keys above
+retain their AAOS behavior. This interface does not control arbitrary physical
+head units. The implementation targets DHU 2.0's console interface; successful
+live input verification is still pending an Android Auto projection session.
+
+Install Google's DHU using Android SDK Manager. On the selected phone or a
+compatible Google Play phone emulator, install/update the full Android Auto
+app, enable its developer mode, and start its head unit server. A preinstalled
+Android Auto stub is insufficient. Complete any sign-in and projection setup
+prompts yourself. Install and enable the Operator as usual for execution.
+See [Google's DHU setup](https://developer.android.com/training/cars/testing/dhu).
+
+Run this in a terminal on the ADB host:
+
+```bash
+androperator android-auto start --device <phone_serial>
+```
+
+`start` runs in the foreground, reserves a local per-device control socket,
+creates an owned ADB forward to the phone's port 5277, and launches DHU in rotary
+mode. It reports `ready: true` only after DHU produces a complete projection
+frame. Keep this process running. Use `--dhu-path <binary>` if DHU is outside
+`ANDROID_HOME`/`ANDROID_SDK_ROOT`; on macOS the usual SDK location is also tried.
+Use `--timeout <ms>` to set a 1000-120000ms startup budget (default 30000).
+
+From another terminal, with the same device selected:
+
+```bash
+androperator press android_auto_rotary_clockwise --device <phone_serial>
+androperator press android_auto_center --device <phone_serial>
+androperator android-auto status --device <phone_serial>
+androperator android-auto stop --device <phone_serial>
+```
+
+| Key | DHU console command |
+| --- | --- |
+| `android_auto_rotary_clockwise` | `dpad rotate right` |
+| `android_auto_rotary_counterclockwise` | `dpad rotate left` |
+| `android_auto_nudge_up` | `dpad up` |
+| `android_auto_nudge_down` | `dpad down` |
+| `android_auto_nudge_left` | `dpad left` |
+| `android_auto_nudge_right` | `dpad right` |
+| `android_auto_center` | `dpad click` |
+| `android_auto_back` | `dpad back` |
+| `android_auto_home` | `keycode home` |
+
+Each rotation is one detent. CLI, raw executions, HTTP, MCP, and daemon callers
+use the session for the resolved device. One caller reserves it through the
+whole execution, including intervening phone actions. Competing Android Auto
+executions fail instead of interleaving. Inputs are followed by a private DHU
+frame barrier; success confirms console processing with a live video frame,
+not that the intended control moved or activated. Check the DHU window for the
+result. Ordinary snapshots and screenshots still observe the phone screen.
+
+Stopping closes DHU and removes the owned ADB forward. A disconnect, failed
+barrier, or cancellation during input terminates the session because delivery
+may be uncertain. Do not automatically retry an input; inspect the screen and
+restart the session. After a host process is forcibly killed, a stale local
+socket may need removal before restarting; never remove an active session's
+socket. DHU startup and shutdown do not change the phone's developer settings.
+
 Success data:
 
 - `key`: canonical button name
 - TV remote buttons also return `dispatchSource: "host"` and either `keyCode`
   or `activity`
+- Android Auto inputs return `dispatchSource: "dhu"` and `dhuCommand`
 - Automotive inputs return `dispatchSource: "host"` and `carCommand`, such as
   `"inject-rotary -c true"`
 
@@ -1003,6 +1069,11 @@ Common failures:
 - failed `press_key` step with `AUTOMOTIVE_INPUT_FAILED` when AAOS does not
   acknowledge injection
 - `UNSUPPORTED_RUNTIME_AUTOMOTIVE_INPUT` for Automotive inputs sent directly
+  to the APK without the Node bridge
+- `ANDROID_AUTO_SESSION_UNAVAILABLE` when no DHU session is reachable
+- `ANDROID_AUTO_SESSION_CLOSED` or `ANDROID_AUTO_INPUT_UNCONFIRMED` on lost
+  transport or an unconfirmed input; preceding confirmed steps are preserved
+- `UNSUPPORTED_RUNTIME_ANDROID_AUTO_INPUT` for Android Auto inputs sent directly
   to the APK without the Node bridge
 - `UNSUPPORTED_RUNTIME_TV_REMOTE` for TV buttons sent directly to the APK
   without the Node bridge

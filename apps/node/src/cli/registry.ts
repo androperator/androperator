@@ -1,5 +1,6 @@
 import { ERROR_CODES } from "../contracts/errors.js";
 import { LIMITS } from "../contracts/limits.js";
+import { SYSTEM_KEYS } from "../contracts/keys.js";
 import { normalizeEmulatorDataPartitionSize } from "../domain/android-emulators/lifecycle.js";
 import { formatError } from "./output.js";
 import type { Logger } from "../adapters/logger.js";
@@ -735,8 +736,14 @@ Valid keys:
              Nudge between AAOS focus areas
   rotary_center  Click the AAOS controller center button
 
-Automotive inputs are AAOS only; Android Auto is not supported.
-Requires shell input injection and an enabled rotary service.
+The rotary_* keys above are AAOS only and require shell input injection and an
+enabled rotary service. Android Auto uses a separate DHU session and keys:
+  android_auto_rotary_clockwise, android_auto_rotary_counterclockwise
+  android_auto_nudge_up, android_auto_nudge_down
+  android_auto_nudge_left, android_auto_nudge_right
+  android_auto_center, android_auto_back, android_auto_home
+Start it with: androperator android-auto start --device <phone_serial>
+Android Auto inputs require a ready DHU session; ordinary back/home target the phone.
 
 Options:
   --key <name>           System key to press (alias for positional arg)
@@ -2022,7 +2029,7 @@ COMMANDS["press"] = {
     if (!key) {
       return JSON.stringify({
         code: "MISSING_ARGUMENT",
-        message: "press requires a key name.\n\nValid keys: back, home, recents, dpad_up, dpad_down, dpad_left, dpad_right, dpad_center, bookmark, profile, settings, tv, rotary_clockwise, rotary_counterclockwise, rotary_nudge_up, rotary_nudge_down, rotary_nudge_left, rotary_nudge_right, rotary_center\n\nExample:\n  androperator press back",
+        message: `press requires a key name.\n\nValid keys: ${SYSTEM_KEYS.join(", ")}\n\nExample:\n  androperator press back`,
       });
     }
     return (await import("./commands/action.js")).cmdActionPressKey({
@@ -2865,6 +2872,47 @@ COMMANDS["daemon"] = {
       return command.cmdDaemonRestart({ format, deviceId, operatorPackage });
     }
     return JSON.stringify({ code: "USAGE", message: "daemon start|stop|status|restart" });
+  },
+};
+
+COMMANDS["android-auto"] = {
+  name: "android-auto",
+  group: "Execution",
+  documentedFlags: ["--dhu-path"],
+  supportedFlags: ["--dhu-path"],
+  summary: "Manage an Android Auto Desktop Head Unit session",
+  help: `androperator android-auto - Manage Android Auto projection inputs
+
+Usage:
+  androperator android-auto start --device <phone_serial> [--dhu-path <binary>] [--timeout <ms>]
+  androperator android-auto status --device <phone_serial>
+  androperator android-auto stop --device <phone_serial>
+
+Start runs in the foreground until stopped. Install Google's Desktop Head Unit,
+start the phone's Android Auto head unit server, and complete setup prompts.
+The default startup timeout is 30000ms; accepted range is 1000-120000ms.
+After ready, use press android_auto_rotary_clockwise (or other android_auto_* keys)
+from another terminal, HTTP, or MCP with the same device. Regular snapshot and
+screenshot still observe the phone. This does not control physical head units.
+`,
+  topLevelBlock: `  android-auto start|status|stop --device <phone_serial>
+                                            Manage an Android Auto Desktop Head Unit session`,
+  handler: async (ctx) => {
+    const { rest, deviceId } = ctx;
+    const positional = barePositionalTokens(rest, ["--dhu-path"], []);
+    if (positional.length !== 1) throw new UsageError("android-auto requires exactly one operation: start, status, or stop");
+    const operation = positional[0];
+    if (operation !== "start" && operation !== "stop" && operation !== "status") throw new UsageError("android-auto requires start, status, or stop");
+    if (deviceId === undefined || deviceId.trim() === "") throw new UsageError("android-auto requires --device <phone_serial>");
+    const binary = getStringOptStrict(rest, "--dhu-path", ["--dhu-path"]);
+    if (binary !== undefined && (binary.trim() === "" || operation !== "start")) throw new UsageError("--dhu-path requires a nonblank binary path and is only valid with start");
+    const timeoutMs = ctx.timeoutMs ?? 30000;
+    if (!Number.isInteger(timeoutMs) || timeoutMs < 1000 || timeoutMs > 120000) throw new UsageError("--timeout must be an integer from 1000 to 120000ms");
+    try {
+      return await (await import("./commands/androidAuto.js")).cmdAndroidAuto({ operation, deviceId, binary, timeoutMs });
+    } catch (error) {
+      return formatError(error, { format: ctx.format });
+    }
   },
 };
 

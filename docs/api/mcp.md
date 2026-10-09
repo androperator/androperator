@@ -621,14 +621,16 @@ Example regex-validated read:
 ### `press`
 
 Press a supported Android navigation key, TV remote button, or Automotive rotary input.
-Automotive inputs are AAOS only; Android Auto is not supported. They require
-shell input injection and an enabled rotary service.
+The `aaos_rotary_*` inputs require AAOS shell input injection and an enabled rotary
+service. Android Auto uses `android_auto_*` keys and a ready Desktop Head Unit
+session started on the host for the selected phone. Ordinary `back` and `home`
+still target the phone, not projection.
 
 Parameters:
 
 | Field | Required | Notes |
 | --- | --- | --- |
-| `key` | yes | One of `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv`, `rotary_clockwise`, `rotary_counterclockwise`, `rotary_nudge_up`, `rotary_nudge_down`, `rotary_nudge_left`, `rotary_nudge_right`, `rotary_center`. See [button mappings and dispatch behavior](actions.md#action-press-key). |
+| `key` | yes | One of `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv`, `aaos_rotary_clockwise`, `aaos_rotary_counterclockwise`, `aaos_rotary_nudge_up`, `aaos_rotary_nudge_down`, `aaos_rotary_nudge_left`, `aaos_rotary_nudge_right`, `aaos_rotary_center`, `android_auto_rotary_clockwise`, `android_auto_rotary_counterclockwise`, `android_auto_rotary_nudge_up`, `android_auto_rotary_nudge_down`, `android_auto_rotary_nudge_left`, `android_auto_rotary_nudge_right`, `android_auto_rotary_center`, `android_auto_back`, `android_auto_home`. See [button mappings and dispatch behavior](actions.md#action-press-key). |
 | `deviceId` | no | Explicit target device |
 | `operatorPackage` | no | Explicit operator package |
 | `timeoutMs` | no | Execution timeout. Defaults to `10000`. |

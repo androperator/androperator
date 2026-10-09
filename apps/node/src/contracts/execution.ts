@@ -69,7 +69,7 @@ export interface ActionParams {
   validatorPattern?: string;
   /** read_text: when true, return all matches */
   all?: boolean;
-  /** press_key: canonical system/TV/Automotive input name (see SYSTEM_KEYS). */
+  /** press_key: canonical system/TV/AAOS/Android Auto input name (see SYSTEM_KEYS). */
   key?: string;
   retry?: Record<string, unknown>;
   scrollRetry?: Record<string, unknown>;

@@ -919,11 +919,11 @@ Android live-route verification:
 | Field | Valid values |
 | --- | --- |
 | Required | `key` |
-| `key` | case-insensitive string in `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv`, `rotary_clockwise`, `rotary_counterclockwise`, `rotary_nudge_up`, `rotary_nudge_down`, `rotary_nudge_left`, `rotary_nudge_right`, `rotary_center` |
+| `key` | case-insensitive string in `back`, `home`, `recents`, `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`, `dpad_center`, `bookmark`, `profile`, `settings`, `tv`, `aaos_rotary_clockwise`, `aaos_rotary_counterclockwise`, `aaos_rotary_nudge_up`, `aaos_rotary_nudge_down`, `aaos_rotary_nudge_left`, `aaos_rotary_nudge_right`, `aaos_rotary_center`, `android_auto_rotary_clockwise`, `android_auto_rotary_counterclockwise`, `android_auto_rotary_nudge_up`, `android_auto_rotary_nudge_down`, `android_auto_rotary_nudge_left`, `android_auto_rotary_nudge_right`, `android_auto_rotary_center`, `android_auto_back`, `android_auto_home` |
 | `retry` | optional retry object in raw `exec` JSON; Android defaults to `None` |
 
 Back, Home, and Recents retain Android accessibility global actions.
-TV remote buttons and Automotive inputs execute through the Node bridge, including CLI `press`, raw
+TV remote buttons, AAOS inputs, and Android Auto inputs execute through the Node bridge, including CLI `press`, raw
 `exec`, HTTP `/execute`, MCP `press`/`execute`, and daemon execution. They run in
 order with surrounding Android actions under the same device lock. A failed
 button stops the remaining sequence. The returned envelope keeps the caller's
@@ -952,6 +952,17 @@ images and apps may ignore keys. Use a fresh snapshot to verify the intended
 screen or focused item. Buttons are single presses, with no hold or repeat
 parameter.
 
+Car-specific controller keys use explicit platform prefixes: `aaos_rotary_*`
+for AAOS and `android_auto_rotary_*` for Android Auto. Ordinary Android keys such
+as `back`, `home`, and `dpad_right` retain their device-level meanings. These car
+keys do not imply Wear OS crown or bezel support.
+
+Migration: replace the former unprefixed `rotary_*` keys with `aaos_rotary_*`,
+and replace `android_auto_nudge_*` / `android_auto_center` with
+`android_auto_rotary_nudge_*` / `android_auto_rotary_center`. The old spellings
+are rejected; there are no compatibility aliases. Android Auto rotation,
+`android_auto_back`, and `android_auto_home` retain their existing names.
+
 #### Automotive rotary controller
 
 Automotive inputs target the main car display through AAOS `car_service`.
@@ -961,13 +972,13 @@ control Android Auto projection or vehicle properties.
 
 | Key | `cmd car_service` command | Input |
 | --- | --- | --- |
-| `rotary_clockwise` | `inject-rotary -c true` | One clockwise detent |
-| `rotary_counterclockwise` | `inject-rotary` | One counterclockwise detent |
-| `rotary_nudge_up` | `inject-key 280` | Nudge up between focus areas |
-| `rotary_nudge_down` | `inject-key 281` | Nudge down between focus areas |
-| `rotary_nudge_left` | `inject-key 282` | Nudge left between focus areas |
-| `rotary_nudge_right` | `inject-key 283` | Nudge right between focus areas |
-| `rotary_center` | `inject-key 23` | Click the controller center button |
+| `aaos_rotary_clockwise` | `inject-rotary -c true` | One clockwise detent |
+| `aaos_rotary_counterclockwise` | `inject-rotary` | One counterclockwise detent |
+| `aaos_rotary_nudge_up` | `inject-key 280` | Nudge up between focus areas |
+| `aaos_rotary_nudge_down` | `inject-key 281` | Nudge down between focus areas |
+| `aaos_rotary_nudge_left` | `inject-key 282` | Nudge left between focus areas |
+| `aaos_rotary_nudge_right` | `inject-key 283` | Nudge right between focus areas |
+| `aaos_rotary_center` | `inject-key 23` | Click the controller center button |
 
 Use existing `back` and `home` inputs for navigation. Rotation and nudges are
 separate operations; D-pad keys do not substitute for rotary navigation.
@@ -986,11 +997,88 @@ using Settings: rotation moved between rows, left/right nudges moved between
 panes, up/down nudges moved between the list and toolbar, and center opened
 the focused category. Other images and apps may handle focus differently.
 
+<a id="android-auto-inputs"></a>
+#### Android Auto Desktop Head Unit
+
+Android Auto uses an explicitly started Google Desktop Head Unit (DHU) session
+on the host. It is separate from AAOS `car_service`; the `aaos_rotary_*` keys above
+retain their AAOS behavior. This interface does not control arbitrary physical
+head units. The implementation targets DHU 2.0's console interface.
+
+Install Google's DHU using Android SDK Manager. On the selected phone or a
+compatible Google Play phone emulator, install/update the full Android Auto
+app, enable its developer mode, and start its head unit server. A preinstalled
+Android Auto stub is insufficient. Complete any sign-in and projection setup
+prompts yourself. Install and enable the Operator as usual for execution.
+See [Google's DHU setup](https://developer.android.com/training/cars/testing/dhu).
+
+Run this in a terminal on the ADB host:
+
+```bash
+androperator android-auto start --device <phone_serial>
+```
+
+`start` runs in the foreground, reserves a local per-device control socket,
+creates an owned ADB forward to the phone's port 5277, and launches DHU in rotary
+mode. It reports `ready: true` only after DHU produces a complete projection
+frame. Keep this process running. Use `--dhu-path <binary>` if DHU is outside
+`ANDROID_HOME`/`ANDROID_SDK_ROOT`; on macOS the usual SDK location is also tried.
+Use `--timeout <ms>` to set a 1000-120000ms startup budget (default 30000).
+
+From another terminal, with the same device selected:
+
+```bash
+androperator press android_auto_rotary_clockwise --device <phone_serial>
+androperator press android_auto_rotary_center --device <phone_serial>
+androperator android-auto status --device <phone_serial>
+androperator android-auto stop --device <phone_serial>
+```
+
+| Key | DHU console command |
+| --- | --- |
+| `android_auto_rotary_clockwise` | `dpad rotate right` |
+| `android_auto_rotary_counterclockwise` | `dpad rotate left` |
+| `android_auto_rotary_nudge_up` | `dpad up` |
+| `android_auto_rotary_nudge_down` | `dpad down` |
+| `android_auto_rotary_nudge_left` | `dpad left` |
+| `android_auto_rotary_nudge_right` | `dpad right` |
+| `android_auto_rotary_center` | `dpad click` |
+| `android_auto_back` | `dpad back` |
+| `android_auto_home` | `keycode home` |
+
+Each rotation is one detent. CLI, raw executions, HTTP, MCP, and daemon callers
+use the session for the resolved device. One caller reserves it through the
+whole execution, including intervening phone actions. Competing Android Auto
+executions fail instead of interleaving. Inputs are followed by a private DHU
+frame barrier; success confirms console processing with a live video frame,
+not that the intended control moved or activated. Check the DHU window for the
+result. A frame barrier does not wait for Android Auto animations or focus
+changes to finish; observe the settled display before choosing a dependent
+action. Ordinary snapshots and screenshots still observe the phone screen.
+
+Live validation used DHU 2.0 on macOS arm64 with a Pixel 10 Pro running Android
+Auto 17.7.663654. All nine commands returned the expected DHU command evidence.
+Visible checks confirmed clockwise and counterclockwise movement in the app
+launcher, down/up focus movement between the launcher and taskbar, center
+selection opening the highlighted app, Back returning from a nested Settings
+page, and Home opening the launcher. Left/right nudges were accepted, but the
+tested screens did not demonstrate a horizontal focus transition; their visible
+effect remains unverified. Nudges move between available focus areas and can
+have no effect at a boundary.
+
+Stopping closes DHU and removes the owned ADB forward. A disconnect, failed
+barrier, or cancellation during input terminates the session because delivery
+may be uncertain. Do not automatically retry an input; inspect the screen and
+restart the session. After a host process is forcibly killed, a stale local
+socket may need removal before restarting; never remove an active session's
+socket. DHU startup and shutdown do not change the phone's developer settings.
+
 Success data:
 
 - `key`: canonical button name
 - TV remote buttons also return `dispatchSource: "host"` and either `keyCode`
   or `activity`
+- Android Auto inputs return `dispatchSource: "dhu"` and `dhuCommand`
 - Automotive inputs return `dispatchSource: "host"` and `carCommand`, such as
   `"inject-rotary -c true"`
 
@@ -1004,15 +1092,20 @@ Common failures:
   acknowledge injection
 - `UNSUPPORTED_RUNTIME_AUTOMOTIVE_INPUT` for Automotive inputs sent directly
   to the APK without the Node bridge
+- `ANDROID_AUTO_SESSION_UNAVAILABLE` when no DHU session is reachable
+- `ANDROID_AUTO_SESSION_CLOSED` or `ANDROID_AUTO_INPUT_UNCONFIRMED` on lost
+  transport or an unconfirmed input; preceding confirmed steps are preserved
+- `UNSUPPORTED_RUNTIME_ANDROID_AUTO_INPUT` for Android Auto inputs sent directly
+  to the APK without the Node bridge
 - `UNSUPPORTED_RUNTIME_TV_REMOTE` for TV buttons sent directly to the APK
   without the Node bridge
 
 CLI examples:
 
 ```bash
-androperator press rotary_clockwise --device <device_serial>
-androperator press rotary_nudge_right --device <device_serial>
-androperator press rotary_center --device <device_serial>
+androperator press aaos_rotary_clockwise --device <device_serial>
+androperator press aaos_rotary_nudge_right --device <device_serial>
+androperator press aaos_rotary_center --device <device_serial>
 androperator press dpad_up --device <device_serial>
 androperator press --key dpad_center --device <device_serial>
 androperator press profile --device <device_serial>

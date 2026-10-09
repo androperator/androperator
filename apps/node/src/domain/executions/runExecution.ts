@@ -1,4 +1,4 @@
-import { isTvRemoteAction, runTvRemoteSequence } from "../actions/tvRemote.js";
+import { isHostInputAction, runHostInputSequence } from "../actions/hostInput.js";
 import { getLoggingStatus } from "../../adapters/logger.js";
 import { verifyScreenshot } from "../observe/screenshotMetadata.js";
 import type { ScreenshotMetadata } from "../../contracts/screenshot.js";
@@ -675,7 +675,7 @@ async function performExecution(
   }
 
   try {
-    if (execution.actions.some(isTvRemoteAction)) {
+    if (execution.actions.some(isHostInputAction)) {
       cancelEarlyResultWaiter();
       const readiness = await (options.ensureInteractiveAutomationReadyFn ?? ensureInteractiveAutomationReadyCached)(config, {
         probeInteractiveStateFn: options.probeInteractiveStateFn,
@@ -685,7 +685,7 @@ async function performExecution(
       } } };
       evidence.phase = "dispatch";
       evidence.dispatchState = "unknown";
-      const result = await runTvRemoteSequence(execution, config, async (segment, signal) => {
+      const result = await runHostInputSequence(execution, config, async (segment, signal) => {
         const segmentEvidence: ExecutionFailureEvidence = {
           phase: "readiness", dispatchState: "not_dispatched", startedAt: new Date().toISOString(),
         };

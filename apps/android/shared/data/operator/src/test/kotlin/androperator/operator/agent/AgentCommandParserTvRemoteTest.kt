@@ -12,7 +12,7 @@ class AgentCommandParserTvRemoteTest {
     )
 
     @Test
-    fun `all system and TV buttons parse case insensitively`() {
+    fun `all system TV and Automotive buttons parse case insensitively`() {
         UiSystemKey.entries.forEach { key ->
             val action = parse(key.name).getOrThrow().actions.single() as UiAction.PressKey
             assertEquals(key, action.key)

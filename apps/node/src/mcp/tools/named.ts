@@ -375,7 +375,7 @@ export function getNamedMcpTools(
     },
     {
       name: "press",
-      description: "Press an Android navigation key or TV remote button. TV icon buttons match the emulator remote: profile sends notification; settings and tv launch activities.",
+      description: "Press an Android navigation key, TV remote button, or Automotive rotary input. Automotive inputs are AAOS only; Android Auto is not supported. Rotation is one detent and requires car_service shell input injection and an enabled rotary service. TV icon buttons match the emulator remote: profile sends notification; settings and tv launch activities.",
       inputSchema: buildCommonExecutionSchema({
         key: { type: "string", enum: [...SYSTEM_KEYS] },
       }, ["key"]),

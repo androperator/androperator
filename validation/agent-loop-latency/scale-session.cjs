@@ -2,10 +2,11 @@ const {spawn} = require('node:child_process');
 
 // One outstanding read-only capture request. A protocol failure poisons the
 // session; no retry or stale-frame reuse is allowed.
-function startScaleSession(device, display, remoteDex) {
+function startScaleSession(device, display, remoteDex, directSize) {
   const started = performance.now();
   const child = spawn('adb', ['-s', device, 'shell', '-T', 'env', `CLASSPATH=${remoteDex}`,
-    'app_process', '/system/bin', 'ScaleCapture', 'session', display], {stdio: ['pipe', 'pipe', 'pipe']});
+    'app_process', '/system/bin', directSize ? 'DirectCapture' : 'ScaleCapture', 'session', directSize ? '0' : display,
+    ...(directSize ? [String(directSize.width), String(directSize.height), String(directSize.rotation)] : [])], {stdio: ['pipe', 'pipe', 'pipe']});
   let pending, fatal, bytes = Buffer.alloc(0), first = true;
   function fail(error) {
     fatal = error;
@@ -14,8 +15,11 @@ function startScaleSession(device, display, remoteDex) {
   }
   child.on('error', fail);
   child.stdin.on('error', fail);
-  child.on('close', () => { if (pending) fail(Error('Capture session closed during request')); });
-  child.stderr.on('data', () => fail(Error('Unexpected host stderr from capture session')));
+  child.on('close', () => {
+    fatal ??= Error('Capture session closed');
+    if (pending) fail(fatal);
+  });
+  child.stderr.on('data', chunk => fail(Error(`Capture session stderr: ${chunk.toString().slice(0,4096)}`)));
   child.stdout.on('data', chunk => {
     if (!pending) return fail(Error('Unsolicited capture bytes'));
     pending.firstByteMs ??= performance.now() - pending.start;

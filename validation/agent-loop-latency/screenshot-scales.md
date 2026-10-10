@@ -45,6 +45,44 @@ The stock variant always starts a fresh `screencap` process. Fresh helper mode
 also starts `app_process` for each capture. Persistent mode keeps one Java process
 and a bidirectional, non-PTY ADB shell open; every request still captures new raw
 pixels. Its first warmup includes session startup. No cached frames are returned.
+Each trial also runs branch-local doctor and stops before capture if readiness
+fails. The readiness results and logs are retained in the private trial directory.
+
+## Direct reduced-buffer backend
+
+Compile `DirectCapture.java` alongside `ScaleCapture.java`, include both class
+files in the dex build, and run the same harness with `--direct`. This always
+uses a persistent session. Stock PNG capture remains a full-size control.
+
+This backend has been exercised only on the tested physical API 37 build. It
+uses the device's internal `IWindowManager.captureDisplay` and
+`ScreenCaptureInternal.CaptureArgs` APIs, with a full-display source crop and
+frame scale calculated from the requested output dimensions. The returned
+HardwareBuffer dimensions are verified before readback. No bitmap resize occurs;
+only that returned buffer is copied into a software bitmap and PNG-encoded.
+The host validates buffer dimensions, PNG dimensions, rotation, response sequence
+and phase timings. Source geometry is obtained from logical display 0, which
+must correspond to the host-selected primary display.
+
+These are internal interfaces, not a portable public Android screenshot API.
+The earlier `ScreenCapture.DisplayCaptureArgs` API was absent on this device.
+Do not silently fall back to full-size capture or claim equivalent performance
+on other Android builds. This experiment adds no dependencies or platform code.
+
+The helper checks display geometry, rotation, awake state and keyguard before
+capture and again before publishing. Any discrepancy ends the session. This
+closes a live-discovered failure where rotation could leave a requested-size
+buffer with an outdated crop. Checks bracket capture; they are not an atomic
+display-state transaction and cannot rule out every change-and-change-back race.
+Secure/protected content policies request an error, and an unexpected returned
+secure-content flag is rejected. Secure/HDR behavior has not been validated with
+such content. The test uses ordinary Settings screens and includes system overlays.
+
+`deviceCaptureMs` includes the initial state check, capture request and wait for
+the hardware buffer. `readbackMs` includes wrapping/copying it and the second
+state check. `encodeAndWriteMs` includes PNG encoding and output backpressure.
+All overlap host `captureMs`; do not add them to the host total. Warmup and session
+startup remain separate from the eight measured samples per variant.
 
 ## Evidence and interpretation
 

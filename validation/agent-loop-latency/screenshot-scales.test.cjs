@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const {createRequire} = require('node:module');
 const nodeRequire = createRequire(require('node:path').resolve('apps/node/package.json'));
 const {PNG} = nodeRequire('pngjs');
-const {splitPacket, expectedSize, aggregate, experimentDisplay} = require('./screenshot-scales.cjs');
+const {splitPacket, expectedSize, aggregate, experimentDisplay, validateDirectMetrics} = require('./screenshot-scales.cjs');
 const {verifyScreenshot} = require('../../apps/node/dist/domain/observe/screenshotMetadata.js');
 
 test('remote stderr trailer is separated without weakening PNG validation', () => {
@@ -23,6 +23,17 @@ test('remote stderr trailer is separated without weakening PNG validation', () =
 
 test('quarter-size coordinates use actual rounded dimensions', () => {
   assert.deepEqual(expectedSize({width: 1080, height: 2410}, 25), {width:270, height:602});
+});
+
+test('direct capture proves smaller buffer geometry, rotation and ordered responses', () => {
+  const metrics = {bufferWidth:270, bufferHeight:602, rotation:0, sequence:3, containsHdrLayers:false,
+    deviceCaptureMs:10, readbackMs:2, encodeAndWriteMs:5};
+  validateDirectMetrics(metrics, 270, 602, 0, 3);
+  assert.throws(() => validateDirectMetrics({...metrics, bufferWidth:1080}, 270, 602, 0, 3), /geometry/);
+  assert.throws(() => validateDirectMetrics(metrics, 270, 602, 1, 3), /geometry/);
+  assert.throws(() => validateDirectMetrics(metrics, 270, 602, 0, 4), /sequence/);
+  assert.throws(() => validateDirectMetrics({...metrics, containsHdrLayers:undefined}, 270, 602, 0, 3));
+  assert.throws(() => validateDirectMetrics({...metrics, readbackMs:NaN}, 270, 602, 0, 3), /timing/);
 });
 
 test('aggregation excludes warmups and failures without hiding failure records', () => {

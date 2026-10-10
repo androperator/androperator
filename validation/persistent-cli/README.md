@@ -71,3 +71,6 @@ completed batch, run `node validation/persistent-cli/analyze.cjs <output_directo
 For the device-free timing check, run `node validation/persistent-cli/loading.cjs`.
 Neither command requires provider calls; keep their output private if it contains
 local diagnostics.
+
+See [production launcher follow-up](production-gains.md) for the subsequent
+transparent integration, paired measurements, reliability checks and limitations.

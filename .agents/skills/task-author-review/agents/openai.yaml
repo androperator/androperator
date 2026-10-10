@@ -1,4 +1,0 @@
-interface:
-  display_name: "Task Author Review"
-  short_description: "Check task plans against current code"
-  default_prompt: "Use $task-author-review to review and tighten this task pack against current code and its intended outcome."

@@ -1,8 +1,13 @@
 # Android System Gesture Detection Findings
 
+Historical research migrated from the former planning area. Observations and
+proposals below apply to the recorded revision/date, not a claim of current
+behavior. Reconcile against current code before acting. Task plans and unresolved
+work live in the project notebook; durable evidence remains here.
+
 Created: 2026-03-19
 
-This document captures runtime findings about how Android system navigation is exposed through accessibility during recording. It is the findings log for the dedicated system-gesture-detection task, and it should be read together with [plan.md](~/src/androperator/tasks/android/system-gesture-detection/plan.md) when implementation begins.
+This document captures runtime findings about how Android system navigation is exposed through accessibility during recording. It is the findings log for the dedicated system-gesture-detection task, and it should be read together with plan.md (Notebook task android-system-gesture-detection) when implementation begins.
 
 The main question is not just "did Back happen?", but "what accessibility evidence do we get when Back or Home happens under different navigation modes, and is that evidence strong enough to reconstruct replayable intent?"
 
@@ -630,7 +635,7 @@ Cons:
 
 ## Implementation Readiness
 
-An implementation agent should be able to start a first-pass Back / Home / Recents normalization layer from this document and [plan.md](~/src/androperator/tasks/android/system-gesture-detection/plan.md) alone.
+An implementation agent should be able to start a first-pass Back / Home / Recents normalization layer from this document and plan.md (Notebook task android-system-gesture-detection) alone.
 
 What this document already provides:
 
@@ -649,9 +654,9 @@ What an implementation agent would still need beyond these task documents:
 
 What the agent should not need:
 
-- access to `~/src/androperator-dumps/recordings/` just to understand the findings in this document
+- access to `<private_recordings_dir>/` just to understand the findings in this document
 
-The `~/src/androperator-dumps/recordings/` files were useful during investigation, but the key findings and representative event sequences are preserved here precisely so future work does not depend on local capture artifacts.
+The `<private_recordings_dir>/` files were useful during investigation, but the key findings and representative event sequences are preserved here precisely so future work does not depend on local capture artifacts.
 
 ## Current Bottom Line
 

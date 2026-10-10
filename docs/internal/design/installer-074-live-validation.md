@@ -1,13 +1,18 @@
 # Live Installer Test Findings
 
+Historical research migrated from the former planning area. Observations and
+proposals below apply to the recorded revision/date, not a claim of current
+behavior. Reconcile against current code before acting. Task plans and unresolved
+work live in the project notebook; durable evidence remains here.
+
 ## Scope
 
 - Live release under test: `0.7.4`
-- Starting global CLI: `/opt/homebrew/bin/androperator`, version `0.7.3`
+- Starting global CLI: `<global_cli_path>`, version `0.7.3`
 - Existing state preserved: `~/.androperator`
 - Connected devices at start:
   - `<physical_device>` - `device`
-  - `emulator-5554` - `device`
+  - `<emulator_serial>` - `device`
 
 ## Phase 1 - Global Bundled `androperator-upgrade` Skill
 
@@ -29,7 +34,7 @@ Progress:
 - `java -version` succeeded and returned OpenJDK `17.0.18`.
 - Decision: use the CLI-first upgrade path from the bundled skill.
 - `npm install -g androperator@latest` succeeded.
-- Global CLI after npm upgrade: `/opt/homebrew/bin/androperator`, version `0.7.4`.
+- Global CLI after npm upgrade: `<global_cli_path>`, version `0.7.4`.
 - `androperator install` succeeded with `status: "warn"`.
 - Warning reason: two connected devices are ready, so future commands must use `--device`.
 - `androperator install` remediated both connected release-package devices from installed APK `0.7.3` to `0.7.4`.
@@ -38,7 +43,7 @@ Progress:
 - Host setup completed and updated `~/.androperator/install-state.json` and `~/.androperator/mcp-config-snippet.json`.
 - `androperator doctor --json` exited `0` and returned `criticalOk: true`; because multiple devices were connected, it reported `MULTIPLE_DEVICES_DEVICE_ID_REQUIRED` as a warning.
 - `androperator doctor --json --device <physical_device>` exited `0` and returned `criticalOk: true`.
-- `androperator doctor --json --device emulator-5554` exited `0` and returned `criticalOk: true`.
+- `androperator doctor --json --device <emulator_serial>` exited `0` and returned `criticalOk: true`.
 
 Finding:
 
@@ -68,10 +73,10 @@ Progress:
   - Skills install: synced to `~/.androperator/skills`.
   - Bundled-skills install: installed.
   - Host setup: complete.
-- After public install, global CLI was `/opt/homebrew/bin/androperator`, version `0.7.4`.
+- After public install, global CLI was `<global_cli_path>`, version `0.7.4`.
 - `androperator doctor --json` exited `0` and returned `criticalOk: true`; because multiple devices were connected, it reported `MULTIPLE_DEVICES_DEVICE_ID_REQUIRED` as a warning.
 - `androperator doctor --json --device <physical_device>` exited `0` and returned `criticalOk: true`.
-- `androperator doctor --json --device emulator-5554` exited `0` and returned `criticalOk: true`.
+- `androperator doctor --json --device <emulator_serial>` exited `0` and returned `criticalOk: true`.
 
 Finding:
 

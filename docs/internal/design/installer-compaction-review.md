@@ -1,5 +1,10 @@
 # Install Compaction Final Review Findings
 
+Historical research migrated from the former planning area. Observations and
+proposals below apply to the recorded revision/date, not a claim of current
+behavior. Reconcile against current code before acting. Task plans and unresolved
+work live in the project notebook; durable evidence remains here.
+
 Review date: 2026-04-24
 
 Reviewed range: `0c3ce93b9cac5d48635677f77f50b431d4231eca^..1f1943b75dda84273be4707f2b65d7ba2a6b7a98`.
@@ -22,7 +27,7 @@ Surfaces inspected:
 - `apps/node/src/test/unit/*install*`
 - `apps/node/bundled-skills/androperator-upgrade/`
 - authored docs changed under `docs/`
-- task pack files under `tasks/install/compact/`
+- notebook plan files under the predecessor planning record
 
 Validation run during review:
 
@@ -40,12 +45,12 @@ npm install -g androperator@latest
 androperator install
 androperator doctor --json
 androperator doctor --json --device <physical_device>
-androperator doctor --json --device emulator-5554
+androperator doctor --json --device <emulator_serial>
 npm uninstall -g androperator
 curl -fsSL https://androperator.com/install.sh | bash
 androperator doctor --json
 androperator doctor --json --device <physical_device>
-androperator doctor --json --device emulator-5554
+androperator doctor --json --device <emulator_serial>
 ```
 
 Result: passed. The global bundled `androperator-upgrade` route upgraded a
@@ -67,7 +72,7 @@ androperator install --output pretty --operator-package "$DEFAULT_OPERATOR_PACKA
 ```
 
 The installer is materially slimmer. The current shell script is 526 lines,
-which is below the task pack target of 700 lines and far below the previous
+which is below the notebook plan target of 700 lines and far below the previous
 shell middleware shape. The remaining shell is mostly bootstrap work that the
 task explicitly kept in scope for the wrapper: OS detection, Java, Node, curl,
 adb, git, npm global CLI install, and shell activation hints.

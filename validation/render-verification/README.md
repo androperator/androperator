@@ -1,5 +1,8 @@
 # Post-action rendering verification validation
 
+See the [physical findings](findings.md) for timings, retained pilot failures and
+reliability limits.
+
 The maintained Node helper is `apps/node/src/renderVerification.ts`. Its tests
 run in the Node suite. `policy.test.cjs` tests the example-owned Settings predicate
 and runs in validation CI. No physical device or OCR is needed for either suite.

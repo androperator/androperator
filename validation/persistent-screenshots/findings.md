@@ -249,3 +249,108 @@ policies guarantee rejection must be read with this correction. The existing
 implementation still has an unresolved fail-closed requirement for protected
 buffers; no live DRM fixture has demonstrated enforcement. See the durable
 source audit for exact symbols, source links and the required follow-up.
+
+
+## Protected-buffer fix and older adapter (2026-10-11)
+
+This follow-up supersedes the unresolved safety status above. The helper now
+requires protected GPU composition, requests protected composition, and rejects
+any returned HardwareBuffer carrying USAGE_PROTECTED_CONTENT before asBitmap,
+software copy or PNG encoding. Secure-layer metadata is independently rejected;
+secure pixels are never requested. The source rationale and exact requirements
+are maintained in `docs/internal/design/persistent-screenshots.md`. Merely finding
+the newer throw-policy constants is no longer a safety criterion.
+
+A first-party fixture presents a synthetic EGL protected buffer independently of
+FLAG_SECURE. On the API 37.1 physical phone, SurfaceFlinger reported buffer usage
+0x4b00 (including the protected bit), while the fixture window was non-secure.
+The automated final run verified fixture foreground/state before each negative
+capture. Ordinary capture at 100/50/25 succeeded; protected-buffer capture at all
+three sizes returned the specific pre-readback rejection and no file; ordinary
+recovery succeeded. FLAG_SECURE rejection at all three sizes and recovery also
+passed. Decoded ordinary/recovery images visibly showed the expected fixture
+states. Seven host checks exercise the production readback callback boundary,
+including mixed usage bits and failure propagation.
+
+Both class layouts are now implemented: older ScreenCapture nested types and
+newer ScreenCaptureInternal nested types. On API 35 and API 36.0 emulators, the
+older adapter resolved successfully but the compositor capability was false.
+The API 37.2 emulator resolved the newer adapter and reported the same false
+capability. All three emulators rejected explicit 100/50/25 with `incompatible`,
+no automatic fallback and no PNG. Omitted-scale stock capture remained successful;
+all three images decoded and were visually inspected. Earlier emulator timings
+above used the insufficient guard and do not establish safe current support.
+Older physical hardware with protected GPU composition remains untested.
+
+The hardware distinction matters: SurfaceFlinger can support protected display
+or codec paths without protected GPU composition. Without the latter, a protected
+layer can be silently redacted into ordinary output. Diagnostics therefore name
+the compositor capability and recommend another verified device, without
+promising that upgrading Android alone resolves it.
+
+### Repeated physical measurements after the fix
+
+The phone used the ordinary synthetic fixture at native 1080 x 2410. Four rounds
+per mode covered helper 100/50/25 plus stock capture. All 48 final images decoded
+and contained the exact current FRAME marker. A 500 ms laboratory presentation
+delay preceded each timed capture; it is excluded from timing and absent from
+production. Warm values below are medians of three observations, not benchmark
+confidence intervals. The persistent CLI used one helper session with sequences
+1 through 12. Complete API/CLI time includes readiness and publication work.
+
+| Path | 100% | 50% | 25% | Stock full size |
+| --- | ---: | ---: | ---: | ---: |
+| Backend, verify and save | 390.4 ms | 286.7 ms | 159.0 ms | 1153.9 ms |
+| Complete Node API | 842.9 ms | 685.5 ms | 533.2 ms | 1941.9 ms |
+| Complete persistent CLI | 1139.8 ms | 887.0 ms | 802.8 ms | 1622.3 ms |
+
+Backend cold helper captures were 1544.5/926.0/1015.5 ms at 100/50/25; complete
+Node cold captures were 2515.8/1755.9/1673.3 ms. The first CLI helper capture was
+2068.8 ms; subsequent sizes reused that helper. The daemon had already started
+for marker presentation, so this is not daemon startup timing. Compared with
+helper 100%, quarter size reduced warm backend time by 59%, complete Node by
+37%, and complete CLI by 30%. These small fixture batches neither establish
+full-agent-task gains nor isolate the safety fix's performance cost; earlier
+batches used different screens and host/device conditions.
+
+The maintained fault harness passed rotation (270 x 602 to 602 x 270 and back),
+helper death, cancellation, transport reconnect and injected stale request ID.
+After helper death, the pending acquisition failed in 90 ms; a separate explicit
+request recovered in 1137 ms. Cancellation failed in 6 ms; reconnect interrupted
+capture in 19 ms; explicit recovery took 1347 ms. Stale output failed as protocol.
+No navigation or uncertain acquisition was replayed. Rotation PNGs were decoded
+and inspected, with native and returned dimensions matching orientation.
+
+Retained failures/preparation limits:
+
+- An initial manual protected test subsequently captured the browser, not the
+  fixture. Foreground had changed for an unknown reason; no active protected
+  fixture buffer was present. That pilot is excluded. The automated final test
+  now asserts fixture foreground and state before every negative capture.
+- The lab OCR detector initially mistook the fixture's heading for the black
+  overlay. The saved image contained the expected marker; the batch failed.
+  Requiring a contiguous dark row to locate the overlay fixed the verifier.
+  The final 48-image runs passed exact-marker checks; no failed sample was retried
+  inside a batch or relabeled as successful.
+- API 36 and API 37 CLI preparations initially reported missing development
+  Operator packages. Canonical setup installed the matching local APKs; only
+  subsequent runs count as capture compatibility evidence.
+- The sandbox blocked process-group inspection in three Node tests. The complete
+  suite rerun with the required host access passed all 1512 tests. Android debug
+  build/unit tests, fixture checks and package checks also passed.
+
+Remaining limits: no successful reduced capture on older physical hardware or
+Android 16 QPR2 runtime, no exhaustive OEM/commercial DRM coverage, and no new HDR,
+fold/unfold, secondary display, physical cable removal or reboot guarantees.
+Protected GPU buffer and FLAG_SECURE tests are distinct evidence. Incompatible
+hardware continues to fail closed rather than weakening the output contract.
+
+Final validation: all 1512 Node tests, 21 focused helper/package/CLI checks,
+seven production Java readback-boundary checks, Android debug build/unit tests,
+fixture compilation/signature checks, and the full docs build passed. Docs
+organization checks emitted no warnings. The synthetic fixture was uninstalled,
+the prior phone app restored, overlays/rotation restored, and test-owned daemons
+and the API 37 emulator stopped. Two exact directories left by cancellation and
+transport interruption were removed using their recorded owned session IDs;
+no helper directories remained on the four targets. Existing API 35/36 emulators
+were left running. No model calls, third-party imports, merge, push or release.

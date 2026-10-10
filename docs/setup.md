@@ -451,17 +451,17 @@ See [background readiness](api/doctor.md#background-observation-readiness).
 
 `screenshot --scale 100|50|25` automatically deploys the bundled shell capture
 helper on first use. It requires authorized ADB, writable `/data/local/tmp`,
-and compatible Android internal capture APIs with strict protected-content
-policies. No additional Operator permission, root, Java installation or Android
-SDK is required on the host. The normal screenshot command remains full size.
-The maintained backend is verified on Android 17/API 37.1 physical hardware and
-an Android 17/API 37.2 emulator. The tested API 35/36 builds lack the required
-newer interfaces; emulation itself is not a restriction. Compatibility is probed
-at runtime rather than inferred solely from the OS version. Android 16 QPR2
-source also has the new interfaces, but has not received local runtime validation.
-Doctor checks API presence, not enforcement of protected-content policy; the
-[screenshot contract](api/actions.md#action-take-screenshot) records the unresolved
-hardware-protected DRM safety limitation.
+a compatible Android capture interface and protected GPU composition. No extra
+Operator permission, root, Java installation or Android SDK is required on the
+host. The normal screenshot command remains full size.
+
+Both older Android 15/16 and newer capture APIs have adapters. The helper must
+be able to distinguish protected output buffers before pixel readback; a newer
+OS alone is insufficient. The tested Android 17 phone supports this capability.
+The available API 35/36/37.2 emulators do not, so explicit scaled captures fail
+closed on all three. Older physical devices need live compatibility validation.
+See the [screenshot contract](api/actions.md#action-take-screenshot) for evidence,
+content rejection and the explicit full-resolution option.
 
 Run `androperator doctor --device <device_serial> --operator-package com.androperator.operator.dev`
 to see `capture.reduced`. Doctor temporarily deploys and probes the helper but

@@ -1544,34 +1544,42 @@ navigation to recover capture. See [setup](../setup.md#optional-reduced-screensh
 This probes APIs with a temporary helper deployment, without acquiring an image.
 Supported capability does not prove that the current screen can be captured.
 
-**Compatibility and fallback:** reduced capture is verified on an Android 17
-phone (API 37.1) and Android 17 emulator (API 37.2). Both support the required
-internal capture interface and strict secure/protected-content policies. The
-tested Android 15 (API 35) and Android 16 (API 36) emulators have an older scaling
-interface but lack the newer capture class and policy parameters. This is an
-Android-build capability restriction, not a general emulator restriction.
-API 37.0, other manufacturers and other builds are not guaranteed compatible.
-Run `doctor` to check capability, then verify an actual screenshot. Android 16
-QPR2 source also contains the newer interface, but that build has not been tested
-locally. The screen must be unlocked, interactive and stable.
-Explicit scaled captures fail closed if required APIs are unavailable; Node
-does not automatically substitute a full-size image. **Protected-content limit:**
-API presence and the secure-window fixture do not prove rejection of hardware-
-protected DRM buffers. Source inspection found a gap in throw-policy propagation
-on the layer-capture path. Successful reduced capture is not certification that
-no protected regions were redacted. This safety requirement remains unresolved;
-see the source repository's `docs/internal/design/persistent-screenshots.md`
-source audit. Omit `scale`/`--scale`
-for the existing ordinary full-resolution capture, which retains Android's
-standard redaction behavior. This is an explicit caller choice, not automatic
-recovery after a locked, protected or uncertain capture.
+**Compatibility and fallback:** the helper supports the older
+`ScreenCapture` interface found on Android 15/16 and the newer
+`ScreenCaptureInternal` interface found in Android 16 QPR2 source and tested on
+Android 17. Both require **protected GPU composition**. OS version alone is not
+a compatibility test: run `doctor`, then verify an actual screenshot.
+
+The helper requests protected composition and checks the returned hardware
+buffer before pixel readback. It rejects secure-layer results and buffers with
+`USAGE_PROTECTED_CONTENT`; protected pixels are never copied or encoded. It does
+not rely on Android's throw-policy constants, which can lose their rejection
+semantics on the layer-capture path. Without protected GPU composition, Android
+can redact instead of marking the output protected, so the helper fails closed
+before capture even on an ordinary screen.
+
+An API 37.1 physical device passed ordinary capture and independent secure-window
+and protected-buffer rejection tests at all three sizes. The API 35/36 emulator
+adapters initialize, but all tested API 35/36/37.2 emulators lack protected GPU
+composition and correctly reject explicit scaled capture. Successful reduced
+capture on older physical hardware, Android 16 QPR2 runtime behavior and other
+manufacturers remain unverified. An OS upgrade alone may not fix a missing GPU
+or driver capability. The screen must be unlocked, interactive and stable.
+
+Node never automatically substitutes a full-size image. Omit `scale`/`--scale`
+only for an explicit ordinary full-resolution request, which retains Android's
+standard redaction behavior. This is a caller choice, not automatic recovery
+after a locked, protected or uncertain capture.
 
 Failed helper acquisition returns `EVIDENCE_CAPTURE_FAILED` on the screenshot
 step, with `data.captureFailureReason` and `data.fallbackAttempted: "false"`.
 Reasons are `incompatible`, `unavailable`, `rejected`, `protocol`, `transport`,
-`cancelled`, `timeout`, or `busy`. Incompatible means use a supported device;
-unavailable means check ADB/deployment; rejected means unlock/stabilize the screen
-or avoid protected content. Protocol/transport failure discards the session; a
+`cancelled`, `timeout`, or `busy`. Incompatible means check the reported API or
+protected-composition limitation and use a supported device; unavailable means
+check ADB/deployment. Rejected messages distinguish protected buffers, secure
+windows, lost protected-composition capability and other acquisition uncertainty.
+Use an ordinary unprotected screen for content rejection; unlock/stabilize the
+display for state/geometry failures. Protocol/transport failure discards the session; a
 new read-only screenshot request starts a new one. Timeout needs sufficient
 remaining budget; busy means await the prior capture. Never treat a failure or
 an old file still present at the requested path as a new observation.

@@ -55,12 +55,14 @@ Android reboot. See [findings](findings.md) for measured results and limits.
 Use the same explicit-device commands on an emulator. The maintained backend
 has no physical-device-only requirement. Record the exact build and full SDK
 version, not just the major API number. `CaptureApiProbe.java` distinguishes the
-older scaling interface from the newer strict-policy interface without acquiring
+older capture interface from the newer policy interface without acquiring
 images. Compile against SDK 35, convert with build-tools 35.0.0 `d8`, push the DEX
 to a uniquely owned temporary device path, and run
 `CLASSPATH=<remote_dex> app_process /system/bin CaptureApiProbe` through explicit
 `adb -s <device_serial> shell`. Remove only that owned DEX afterward. The probe
-prints UID, OS build, full SDK version, classes, policy constants and signatures.
+prints UID, OS build, full SDK version, classes, policy constants, signatures and
+protected GPU composition support. Both adapters require that capability; OS
+version or policy constants alone are insufficient.
 It does not replace the maintained doctor probe or a successful live image.
 
 `overlay-ocr.cjs` is an optional verifier for the exact overlay layout used by
@@ -83,37 +85,54 @@ results reuse `captureSessionId` with increasing `captureSequence`. A sandbox
 that cannot access the socket can fall back to direct CLI execution; those
 samples must not be called warm persistent captures.
 
-## Secure-window fixture
+## Secure-window and protected-buffer fixture
 
-`secure-fixture/` is a first-party, local-only APK with ordinary and FLAG_SECURE
-window states. It has no private content or external dependencies. Build with:
+`secure-fixture/` is a first-party, local-only APK with ordinary, FLAG_SECURE and
+independent EGL protected-buffer states. It uses synthetic colored pixels, no
+DRM media, private content or external dependencies. Build with:
 
 ```sh
 bash validation/persistent-screenshots/secure-fixture/build.sh /tmp/capture-policy-fixture.apk
 ```
 
 The fixture requires JDK, SDK platform 35 and build-tools 35.0.0, and uses an
-ephemeral test signing key. `check-fixtures.sh` compiles the API probe and builds
-and verifies the APK in the shared Android CI suite without contacting a device.
+ephemeral test signing key. `check-fixtures.sh` compiles the API probe, runs seven
+checks against the production helper's readback boundary, and builds/verifies
+the APK in the shared Android CI suite without contacting a device.
 
-On an explicitly selected test emulator, first check that
+On an explicitly selected device, first check that
 `com.androperator.capturefixture` is not already installed. Install this fixture
 APK with `adb -s <device_serial> install /tmp/capture-policy-fixture.apk`; the
-Operator itself must still use canonical `operator setup`. Through the
-branch-local CLI with explicit device and development Operator package:
+Operator itself must still use canonical `operator setup`. Run:
 
-1. `open com.androperator.capturefixture`, then `screenshot --scale 25` to a new
-   evidence path. Decode and inspect the ordinary fixture image.
-2. `click --text 'ENABLE SECURE WINDOW'`; confirm the action succeeded and
-   `dumpsys window windows` reports SECURE on the fixture window before capture.
-3. Capture to a new path with `--scale 25`: require `EVIDENCE_CAPTURE_FAILED`,
-   `captureFailureReason: rejected`, `fallbackAttempted: "false"`, and no file.
-4. Omit scale for a separate explicit stock capture. On the tested API 37.2
-   emulator, stock succeeds with the fixture area blacked out. Decode and
-   visually inspect it; successful PNG encoding does not prove unredacted content.
-5. `click --text 'DISABLE SECURE WINDOW'`, then verify a new quarter-size image
-   shows `ORDINARY WINDOW RESTORED`. Uninstall only the fixture installed by this
-   run and stop the test-owned daemon/emulator when finished.
+```sh
+node validation/persistent-screenshots/protection.mjs <device_serial> /tmp/new-capture-protection-evidence
+```
 
-This exercises secure windows, not hardware-protected DRM buffers. Do not treat
-FLAG_SECURE evidence as proof of the separate protected-buffer policy.
+The harness opens the fixture, checks ordinary images at 100/50/25, enables the
+protected buffer, and requires rejection at every scale. It then removes that
+buffer, verifies recovery, and repeats rejection/recovery with FLAG_SECURE.
+Before each negative capture, it verifies the fixture foreground and state.
+Each rejection must report `rejected`, `fallbackAttempted: "false"`, the specific
+secure/protected reason, and no PNG at the new path. Inspect the ordinary and
+recovery images; successful decoding alone does not prove correct contents.
+
+The protected fixture requires `EGL_EXT_protected_content`, queries the surface's
+protected attribute, and repeatedly presents a synthetic buffer from a protected
+context. Independently inspect SurfaceFlinger layer/buffer usage to confirm the
+fixture's buffer has the protected bit, and window state to confirm its window
+is not FLAG_SECURE. This distinguishes the two guards. An unsupported fixture
+reports an error; it must not count as a passing rejection test.
+
+Both capture adapters also require protected GPU composition. The tested API
+35, 36 and 37 emulators report it unavailable and reject explicit scales even
+on ordinary screens. This is intentional: without it, a protected layer could
+be redacted into an unprotected screenshot buffer. Do not bypass that check to
+obtain emulator timing results. Stock omitted-scale capture remains separately
+available with ordinary Android redaction semantics.
+
+The harness restores ordinary fixture state if it is still foreground, without
+reopening it after an external navigation. After inspection, uninstall only the
+fixture installed by this run, restore the prior foreground app, and stop only
+test-owned daemons/emulators. Protected GPU buffer evidence does not establish
+the behavior of every commercial DRM service or OEM compositor.

@@ -19,8 +19,12 @@ const owners = new Set<Session>();
 process.once("exit", () => { for (const session of owners) session.close(); });
 
 export async function bundledCaptureHelper() {
-  const bytes = await readFile(artifactPath);
-  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  let bytes: Buffer;
+  let manifest: { protocol: number; sha256: string };
+  try {
+    bytes = await readFile(artifactPath);
+    manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  } catch { throw fail("unavailable", "Capture helper bundle is missing or unreadable. Reinstall the Node package, then retry screenshot."); }
   if (manifest.protocol !== 1 || manifest.sha256 !== createHash("sha256").update(bytes).digest("hex")) {
     throw fail("incompatible", "Capture helper bundle checksum/protocol mismatch; reinstall this Node package.");
   }
@@ -128,6 +132,7 @@ class Session {
       child.on("close", () => this.close());
       const { header } = await handshake;
       if (header.status === "incompatible") throw fail("incompatible", `Android API ${Number.isInteger(header.androidApi) ? header.androidApi : "unknown"}: ${["capture_class", "strict_policy_constant", "capture_method", "capture_initialization"].includes(header.missingCapability) ? header.missingCapability : "required capability"} unavailable. Reduced screenshot capture is unsupported: Android lacks the required capture interface or strict secure/protected-content policies. Use a device with a newer supported Android build and run androperator doctor to verify capability. Omit --scale (or Node scale) for ordinary full-resolution capture with Android's standard redaction behavior. No automatic fallback was attempted.`);
+      if (header.status === "unavailable") throw fail("unavailable", "Android capture service could not initialize. Check device readiness and retry screenshot; no automatic fallback was attempted.");
       if (header.status !== "ready") throw fail("protocol", "Invalid capture handshake.");
     } catch (error) {
       this.close();

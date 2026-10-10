@@ -15,13 +15,14 @@ test('packaged DEX matches maintained source and the shipped manifest', () => {
     assert.ok(pack.files.some(file => file.path === path), path);
   }
 });
-test('CLI rejects invalid and missing scale values as structured failures in either flag placement', () => {
+test('CLI rejects invalid local scales and unsupported pre-command placement as structured failures', () => {
   for (const value of ['0', '1', '0.25', '75', 'NaN', '']) {
     for (const args of [['screenshot', '--scale', value], ['--scale', value, 'screenshot']]) {
       let failure;
       try { execFileSync('node', ['apps/node/dist/cli/index.js', ...args], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }); }
       catch (error) { failure = error; }
       assert.ok(failure, JSON.stringify(args));
+      assert.ok(failure.status > 0);
       const output = JSON.parse(failure.stdout);
       assert.ok(output.code); assert.match(output.message, /scale|value/i);
     }

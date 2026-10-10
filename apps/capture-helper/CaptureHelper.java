@@ -37,6 +37,18 @@ public final class CaptureHelper {
         policies.getField("PROTECTED_CONTENT_POLICY_THROW_EXCEPTION");
         builderType.getMethod("setSecureContentPolicy", int.class);
         builderType.getMethod("setProtectedContentPolicy", int.class);
+        builderType.getConstructor();
+        builderType.getMethod("setSourceCrop", Rect.class);
+        builderType.getMethod("setFrameScale", float.class, float.class);
+        builderType.getMethod("setPixelFormat", int.class);
+        builderType.getMethod("setIncludeSystemOverlays", boolean.class);
+        builderType.getMethod("build");
+        captureType.getMethod("createSyncCaptureListener").getReturnType().getMethod("getBuffer");
+        resultType.getMethod("getHardwareBuffer");
+        resultType.getMethod("containsSecureLayers");
+        resultType.getMethod("containsHdrLayers");
+        resultType.getMethod("asBitmap");
+        Class.forName("android.view.IWindowManager").getMethod("isKeyguardLocked");
     }
 
     private static void reply(String json) {
@@ -76,7 +88,8 @@ public final class CaptureHelper {
             String missing = unavailable instanceof ClassNotFoundException ? "capture_class"
                 : unavailable instanceof NoSuchFieldException ? "strict_policy_constant"
                 : unavailable instanceof NoSuchMethodException ? "capture_method" : "capture_initialization";
-            reply("{\"protocol\":1,\"session\":\"" + session + "\",\"status\":\"incompatible\",\"missingCapability\":\""
+            String status = missing.equals("capture_initialization") ? "unavailable" : "incompatible";
+            reply("{\"protocol\":1,\"session\":\"" + session + "\",\"status\":\"" + status + "\",\"missingCapability\":\""
                 + missing + "\",\"androidApi\":" + android.os.Build.VERSION.SDK_INT + "}");
             return;
         }

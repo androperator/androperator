@@ -301,3 +301,25 @@ Before merging any CLI or API change, verify:
       that has never read the source?
 - [ ] **Deterministic:** does the command behave identically given identical
       inputs?
+
+## Keep daemon clients independent of direct execution loading
+
+Normal CLI commands should not load the direct device execution implementation
+before trying the existing daemon. Command construction and validation remain in
+the caller; `domain/executions/lazyExecution.ts` loads the canonical direct runtime
+only when an existing direct-execution or fallback path actually calls it. Builders
+shared with direct domain helpers must preserve this import boundary too. Importing
+a builder must not pull in screenshot capture, result readers or device readiness.
+
+The CLI registry also defers emulator storage normalization until an emulator
+command needs it. Ordinary device commands and help must not load the emulator
+implementation simply to construct the command registry.
+
+This is a loading optimization, not a new execution protocol. Preserve daemon
+ownership/build checks, validation, command/task correlation, caller-relative file
+handling, stdout/stderr and exit classification. In particular, a returned daemon
+failure is still a failure; loading direct execution must never introduce a replay
+after uncertain dispatch. `--no-daemon`, unsupported-daemon paths and eligible
+pre-dispatch fallback continue through the same canonical runtime. Test import
+boundaries in a fresh process so another test's module cache cannot hide eager
+loading regressions.

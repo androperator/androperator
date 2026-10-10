@@ -3,7 +3,7 @@ import type { DragParams } from "../../contracts/drag.js";
 import { buildToastExecution } from "../../domain/actions/toast.js";
 import { buildNotificationMediaExecution } from "../../domain/notifications/service.js";
 import type { NotificationMediaAction } from "../../contracts/notifications.js";
-import { runExecution } from "../../domain/executions/runExecution.js";
+import { runExecution } from "../../domain/executions/lazyExecution.js";
 import { buildClickExecution } from "../../domain/actions/click.js";
 import { buildReadExecution } from "../../domain/actions/read.js";
 import { buildWaitExecution } from "../../domain/actions/wait.js";

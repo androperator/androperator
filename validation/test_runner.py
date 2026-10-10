@@ -46,6 +46,7 @@ def main(argv=None):
         'evals': [['uv', 'run', '--project', 'evals', '--extra', 'dev', 'pytest', 'evals/harness', '-v']],
         'validation': [
             ['node', '--test', 'validation/agent-loop-latency/benchmark.test.cjs'],
+            ['node', '--test', 'validation/agent-loop-latency/screenshot-scales.test.cjs'],
             ['python3', '-m', 'unittest', 'discover', '-s', 'validation/npm-release'],
             ['python3', '-m', 'unittest', 'discover', '-s', 'validation/cloudflare'],
             ['node', 'validation/video-stream-verification/test-video-stream.mjs'],

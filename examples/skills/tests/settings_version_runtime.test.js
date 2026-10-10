@@ -69,3 +69,26 @@ test('a later failed snapshot cannot satisfy final verification with earlier col
   assert.throws(()=>verifyEvidence(f.frame),error=>error.failure.scope==='terminal_verification');
  }finally{f.cleanup();}
 });
+
+test('an injected command runner retains original arguments, evidence and failure semantics',()=>{
+ const f=fixture();const runtime=require('../utils/settings_version_runtime');
+ const old=process.env.ANDROPERATOR_BIN;
+ try {
+  process.env.ANDROPERATOR_BIN='synthetic-cli';
+  fs.unlinkSync(path.join(f.dir,'events.json'));
+  const failure={code:'RESULT_TRANSPORT_FAILED',details:{phase:'dispatch',dispatchState:'unknown',commandId:'original'}};
+  let calls=0;
+  runtime.setCommandRunner((args,options)=>{
+   calls++;assert.deepEqual(args,['snapshot']);
+   assert.ok(options.timeout>0 && options.timeout<=20000);
+   assert.equal(options.logDir,path.join(f.dir,'logs'));
+   return {status:1,signal:null,stdout:JSON.stringify(failure),stderr:'original diagnostics'};
+  });
+  assert.throws(()=>runtime.command(['snapshot']),/RESULT_TRANSPORT_FAILED/);
+  assert.equal(calls,1);
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(f.dir,'command-0.json'))),failure);
+  const event=JSON.parse(fs.readFileSync(path.join(f.dir,'events.json')))[0];
+  assert.equal(event.failure.dispatchState,'unknown');
+  assert.equal(fs.readFileSync(path.join(f.dir,'command-0.stderr'),'utf8'),'original diagnostics');
+ }finally{runtime.setCommandRunner(undefined);if(old===undefined)delete process.env.ANDROPERATOR_BIN;else process.env.ANDROPERATOR_BIN=old;f.cleanup();}
+});

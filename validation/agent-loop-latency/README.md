@@ -31,6 +31,11 @@ Two physical comparisons are complete, each with 5/5 verified tasks per arm:
   25.42 s versus 21.65 s median, a 14.8% reduction. This uses a documented
   experimental helper copy; the stock `cli` harness still disables the daemon.
 
+The [production persistent CLI integration comparison](persistent-cli-production-findings.md)
+measured 28.113 s versus 28.158 s median with unchanged command usage: no demonstrated
+end-to-end gain, despite a smaller request-arrival overhead. It includes recovery,
+no-replay and caller-context checks.
+
 These are separate paired batches. A persistent screenshot helper is a different optimization. Do not infer broad vision accuracy or human
 parity from successful extraction on this known, text-rich route.
 

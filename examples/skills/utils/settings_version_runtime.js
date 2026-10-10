@@ -16,6 +16,9 @@ const file = name => path.join(directory(),name);
 const read = name => JSON.parse(fs.readFileSync(file(name),'utf8'));
 const save = (name,value) => fs.writeFileSync(file(name),JSON.stringify(value,null,2));
 let commandDeadline = Infinity;
+let commandRunner;
+// Experimental hosts may reuse the Node API while preserving this helper's policy.
+function setCommandRunner(runner) { commandRunner = runner; }
 function withDeadline(deadline, operation) {
   const previous=commandDeadline;commandDeadline=Math.min(previous,deadline);
   try {return operation();} finally {commandDeadline=previous;}
@@ -39,7 +42,10 @@ function executeCommand(args) {
   const started=performance.now();
   const argv=[...bin.args,...args,'--device',process.env.ANDROPERATOR_DEVICE_ID,'--operator-package',resolveOperatorPackage(),'--no-daemon','--output','json'];
   if(['open','click','scroll'].includes(args[0]) && fs.existsSync(file('state.json'))) save('state.json',invalidate(read('state.json'),'action_dispatch'));
-  const child=spawnSync(bin.cmd,argv,{encoding:'utf8',timeout:Math.max(1,Math.min(20000,remaining)),killSignal:'SIGKILL',maxBuffer:8*1024*1024,env:{...process.env,ANDROPERATOR_LOG_DIR:logging.destination}});
+  const timeout=Math.max(1,Math.min(20000,remaining));
+  const child=commandRunner
+    ? commandRunner(args,{timeout,logDir:logging.destination})
+    : spawnSync(bin.cmd,argv,{encoding:'utf8',timeout,killSignal:'SIGKILL',maxBuffer:8*1024*1024,env:{...process.env,ANDROPERATOR_LOG_DIR:logging.destination}});
   const elapsedMs=performance.now()-started;
   fs.writeFileSync(file(`command-${index}.stdout`),child.stdout ?? '');
   fs.writeFileSync(file(`command-${index}.stderr`),child.stderr ?? '');
@@ -193,4 +199,4 @@ function finish() {
 function fallbackState() {
   return fs.existsSync(file('state.json')) ? publicState(read('state.json')) : {candidates:[],collected:{},freshness:{status:'stale',reason:'no_observation'}};
 }
-module.exports={withDeadline,runDeadline,fallbackState,command,observe,approveOverlay,act,finish,verifyEvidence,file,read,save,publicState};
+module.exports={setCommandRunner,withDeadline,runDeadline,fallbackState,command,observe,approveOverlay,act,finish,verifyEvidence,file,read,save,publicState};

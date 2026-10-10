@@ -6,6 +6,8 @@ const path = require('node:path');
 const {statistics, summarize} = require('./summary.cjs');
 const {options} = require('./benchmark.cjs');
 const {measureSync, measureAsync} = require('../../examples/skills/utils/settings_version_timing');
+const {createBridge} = require('./api-bridge.cjs');
+const {context} = require('./node-api.cjs');
 
 test('timing preserves returned results and original synchronous/asynchronous failures', async () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-timing-'));
@@ -59,4 +61,39 @@ test('statistics and arguments reject missing, malformed and non-finite inputs',
   for (const args of [[], ['--device'], ['--device', 'x', '--out', 'relative'],
     ['--device', 'x', '--out', '/tmp/test', '--extra', 'x']]) assert.throws(() => options(args));
   assert.equal(options(['--device', 'test-device', '--out', '/tmp/test'])['--device'], 'test-device');
+  assert.equal(options(['--device', 'test-device', '--out', '/tmp/test', '--backend', 'persistent'])['--backend'], 'persistent');
+  assert.throws(() => options(['--device', 'test-device', '--out', '/tmp/test', '--backend', 'unknown']));
+});
+
+test('persistent worker retains state, preserves failures and closes permanently on a deadline', async () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-api-'));
+  const fixture = path.join(directory, 'api.cjs');
+  fs.writeFileSync(fixture, `let count=0; exports.execute=async args=>{
+    if(args[0]==='timeout') await new Promise(resolve=>setTimeout(resolve,1000));
+    if(args[0]==='throw') throw Error('test error');
+    return {stdout:JSON.stringify({count:++count}),status:args[0]==='fail'?1:0,signal:null};
+  };`);
+  const bridge = createBridge(fixture);
+  try {
+    assert.equal(JSON.parse(bridge.execute(['ok'], {timeout: 5000}).stdout).count, 1);
+    assert.equal(JSON.parse(bridge.execute(['ok'], {timeout: 5000}).stdout).count, 2);
+    assert.equal(bridge.execute(['fail'], {timeout: 5000}).status, 1);
+    const error = bridge.execute(['throw'], {timeout: 5000});
+    assert.equal(error.status, 1);
+    assert.match(error.stderr, /test error/);
+    assert.equal(bridge.execute(['timeout'], {timeout: 20}).error.code, 'ETIMEDOUT');
+    assert.throws(() => bridge.execute(['ok'], {timeout: 5000}), /closed/);
+  } finally { await bridge.close(); fs.rmSync(directory, {recursive: true, force: true}); }
+});
+
+test('API context retains exact helper arguments, explicit targeting and direct execution', () => {
+  const args = ['snapshot', '--compact', '--max-nodes', '200', '--max-text-chars', '1024', '--raw-path', '/tmp/capture.xml'];
+  const result = context(args, 'test-device', 'test.operator', {});
+  assert.deepEqual(result.rest, args.slice(1));
+  assert.equal(result.deviceId, 'test-device');
+  assert.equal(result.operatorPackage, 'test.operator');
+  assert.equal(result.noDaemon, true);
+  assert.equal(result.format, 'json');
+  assert.throws(() => context(['exec'], 'test-device', 'test.operator', {}));
+  assert.throws(() => context(args, '', 'test.operator', {}));
 });

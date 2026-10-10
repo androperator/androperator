@@ -13,12 +13,14 @@ function options(argv) {
   for (let i = 0; i < argv.length; i += 2) {
     const name = argv[i];
     const value = argv[i + 1];
-    if (!['--device', '--out'].includes(name) || !value?.trim() || value.startsWith('--') || result[name]) {
-      throw Error('Usage: node validation/agent-loop-latency/benchmark.cjs --device <serial> --out <new-absolute-directory>');
+    if (!['--device', '--out', '--backend'].includes(name) || !value?.trim() || value.startsWith('--') || result[name]) {
+      throw Error('Usage: node validation/agent-loop-latency/benchmark.cjs --device <serial> --out <new-absolute-directory> [--backend cli|persistent]');
     }
     result[name] = value;
   }
   if (!result['--device'] || !path.isAbsolute(result['--out'] ?? '')) throw Error('Explicit device and absolute output directory required');
+  result['--backend'] ??= 'cli';
+  if (!['cli', 'persistent'].includes(result['--backend'])) throw Error('Backend must be cli or persistent');
   return result;
 }
 
@@ -58,7 +60,12 @@ function run(argv) {
   const started = performance.now();
   let status = 'failed';
   let stoppedAt = 'reset';
-  if (resetVerified) {
+  if (resetVerified && args['--backend'] === 'persistent') {
+    const result = execute('controller', path.join(__dirname, 'persistent-controller.cjs'), [], 280000);
+    if (Array.isArray(result.response?.operations)) operations.push(...result.response.operations);
+    stoppedAt = result.response?.stoppedAt ?? 'controller';
+    if (result.ok && result.response?.status === 'verified') status = 'verified';
+  } else if (resetVerified) {
     for (const operation of ['open', 'jev', 'finish']) {
       stoppedAt = operation;
       const result = execute(operation, helper, [operation], 280000);
@@ -68,7 +75,7 @@ function run(argv) {
       if (operation === 'finish') status = 'verified';
     }
   }
-  const trial = {status, stoppedAt, taskMs: resetVerified ? performance.now() - started : null, operations};
+  const trial = {backend: args['--backend'], status, stoppedAt, taskMs: resetVerified ? performance.now() - started : null, operations};
   fs.writeFileSync(path.join(directory, 'trial.json'), JSON.stringify(trial, null, 2));
   const summary = summarize(directory, trial);
   fs.writeFileSync(path.join(directory, 'summary.json'), JSON.stringify(summary, null, 2));

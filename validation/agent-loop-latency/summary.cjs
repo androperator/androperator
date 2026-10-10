@@ -25,17 +25,17 @@ function summarize(directory, trial) {
   const spanNames = ['command', 'observation', 'operation.open', 'operation.jev', 'operation.finish'];
   const timings = Object.fromEntries(spanNames.map(name => [name,
     statistics(spans.filter(span => span.name === name).map(span => span.elapsedMs))]));
-  const cli = statistics(events.map(event => event.elapsedMs));
+  const commandCalls = statistics(events.map(event => event.elapsedMs));
   const requests = statistics(provider.map(event => event.elapsedMs));
-  return {schemaVersion: 1, status: trial.status, stoppedAt: trial.stoppedAt, taskMs: trial.taskMs,
+  return {schemaVersion: 2, backend: trial.backend ?? 'cli', status: trial.status, stoppedAt: trial.stoppedAt, taskMs: trial.taskMs,
     operations: trial.operations.map(({operation, elapsedMs, exitCode, signal}) => ({operation, elapsedMs, exitCode, signal})),
     commandCount: events.length, failedCommands: events.filter(event => event.failure || event.exitCode !== 0).length,
     navigationActions: events.filter(event => ['click', 'scroll'].includes(event.args[0])).length,
     provider: {requests, acceptedChoices: provider.filter(event => event.choice !== undefined).length,
       failedAttempts: provider.filter(event => event.error !== undefined).length,
       httpStatuses: provider.map(event => event.httpStatus ?? null)},
-    cli, commands, spans: timings,
-    otherMs: trial.taskMs === null ? null : trial.taskMs - (cli.totalMs ?? 0) - (requests.totalMs ?? 0),
+    commandCalls, commands, spans: timings,
+    otherMs: trial.taskMs === null ? null : trial.taskMs - (commandCalls.totalMs ?? 0) - (requests.totalMs ?? 0),
     terminalEvidencePresent: fs.existsSync(path.join(directory, 'verified-result.json')),
   };
 }

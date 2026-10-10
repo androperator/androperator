@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { measureSync } = require('./settings_version_timing');
 const { resolveAndroperatorBin, resolveOperatorPackage } = require('./common');
 const {failureFrom,failureError,localFailure} = require('./settings_version_failure');
 const {invalidate,publicObservation} = require('./settings_version_state');
@@ -24,6 +25,9 @@ function runDeadline() {
   return read('budget.json').deadline;
 }
 function command(args) {
+  return measureSync('command', () => executeCommand(args));
+}
+function executeCommand(args) {
   if (!process.env.ANDROPERATOR_BIN?.trim() || !process.env.ANDROPERATOR_DEVICE_ID?.trim()) throw Error('Explicit ANDROPERATOR_BIN and device required');
   const remaining=Math.floor(Math.min(commandDeadline,runDeadline())-Date.now());
   if(remaining<=0) throw failureError(localFailure('RUN_BUDGET_EXHAUSTED','command_execution','No time remains for a device command.'));
@@ -52,7 +56,7 @@ function command(args) {
   return {response,index};
 }
 function observe() {
-  try {return acquireObservation();}
+  try {return measureSync('observation', acquireObservation);}
   catch(error) {
     if(fs.existsSync(file('state.json'))) save('state.json',invalidate(read('state.json'),'observation_failed'));
     throw error;

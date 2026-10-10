@@ -3,7 +3,7 @@ const {extname} = require('node:path');
 function resolveAndroperatorBin() {
   const command = process.env.ANDROPERATOR_BIN;
   if (typeof command !== 'string' || !command.trim()) throw Error('Explicit ANDROPERATOR_BIN is required');
-  if (existsSync(command)) return extname(command) === '.js' ? {cmd:process.execPath,args:[command]} : {cmd:command,args:[]};
+  if (existsSync(command)) return ['.js', '.cjs', '.mjs'].includes(extname(command)) ? {cmd:process.execPath,args:[command]} : {cmd:command,args:[]};
   const parsed = parseCommandSpec(command);
   if (!parsed) throw Error('Invalid ANDROPERATOR_BIN command');
   return parsed;

@@ -92,3 +92,24 @@ test('an injected command runner retains original arguments, evidence and failur
   assert.equal(fs.readFileSync(path.join(f.dir,'command-0.stderr'),'utf8'),'original diagnostics');
  }finally{runtime.setCommandRunner(undefined);if(old===undefined)delete process.env.ANDROPERATOR_BIN;else process.env.ANDROPERATOR_BIN=old;f.cleanup();}
 });
+
+// A raw TypeScript build is not executable; every Node module extension needs Node.
+test('example launcher supports non-executable JavaScript entries',()=>{
+ const {resolveAndroperatorBin}=require('../utils/common');
+ const directory=fs.mkdtempSync(path.join(os.tmpdir(),'version-launcher-'));
+ const previous=process.env.ANDROPERATOR_BIN;
+ try {
+  for(const extension of ['js','cjs','mjs']) {
+   const entry=path.join(directory,`entry.${extension}`);
+   fs.writeFileSync(entry,'console.log("launched")',{mode:0o600});
+   process.env.ANDROPERATOR_BIN=entry;
+   const {cmd,args}=resolveAndroperatorBin();
+   const result=spawnSync(cmd,args,{encoding:'utf8'});
+   assert.equal(result.status,0);
+   assert.equal(result.stdout,'launched\n');
+  }
+ } finally {
+  if(previous===undefined)delete process.env.ANDROPERATOR_BIN;else process.env.ANDROPERATOR_BIN=previous;
+  fs.rmSync(directory,{recursive:true,force:true});
+ }
+});

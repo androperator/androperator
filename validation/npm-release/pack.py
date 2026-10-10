@@ -24,15 +24,15 @@ def validate_archive(path, version):
             if not entry.isfile() or relative.as_posix() in files:
                 raise ValueError(f'Unsupported or duplicate archive entry: {entry.name}')
             files[relative.as_posix()] = entry
-        if not {'package/package.json', 'package/dist/cli/index.js'} <= files.keys():
+        if not {'package/package.json', 'package/dist/cli/index.cjs'} <= files.keys():
             raise ValueError('Archive must contain package.json and the built CLI entry point')
         with archive.extractfile(files['package/package.json']) as source:
             manifest = json.load(source)
         if manifest.get('name') != '@androperator/cli' or manifest.get('version') != version:
             raise ValueError('Packed package name/version does not match the intended release')
-        if manifest.get('bin') != {'androperator': 'dist/cli/index.js'}:
+        if manifest.get('bin') != {'androperator': 'dist/cli/index.cjs'}:
             raise ValueError('Packed package must expose the androperator executable')
-        if not files['package/dist/cli/index.js'].size:
+        if not files['package/dist/cli/index.cjs'].size:
             raise ValueError('Packed CLI entry point is empty')
     return len(files)
 

@@ -27,8 +27,8 @@ class ReleaseArchiveTests(unittest.TestCase):
                         entry.size = len(content)
                         target.addfile(entry, io.BytesIO(content))
             valid = [
-                ('package/package.json', b'{"name":"@androperator/cli","version":"1.0.0","bin":{"androperator":"dist/cli/index.js"}}', tarfile.REGTYPE),
-                ('package/dist/cli/index.js', b'console.log("fixture");', tarfile.REGTYPE),
+                ('package/package.json', b'{"name":"@androperator/cli","version":"1.0.0","bin":{"androperator":"dist/cli/index.cjs"}}', tarfile.REGTYPE),
+                ('package/dist/cli/index.cjs', b'console.log("fixture");', tarfile.REGTYPE),
             ]
             write(valid)
             self.assertEqual(pack.validate_archive(archive, '1.0.0'), 2)
@@ -44,7 +44,7 @@ class ReleaseArchiveTests(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         pack.validate_archive(archive, '1.0.0')
             wrong_bin = valid.copy()
-            wrong_bin[0] = (valid[0][0], json.dumps({'name': '@androperator/cli', 'version': '1.0.0', 'bin': {'cli': 'dist/cli/index.js'}}).encode(), tarfile.REGTYPE)
+            wrong_bin[0] = (valid[0][0], json.dumps({'name': '@androperator/cli', 'version': '1.0.0', 'bin': {'cli': 'dist/cli/index.cjs'}}).encode(), tarfile.REGTYPE)
             write(wrong_bin)
             with self.assertRaisesRegex(ValueError, 'executable'):
                 pack.validate_archive(archive, '1.0.0')
@@ -56,8 +56,8 @@ class ReleaseArchiveTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / 'dist/cli').mkdir(parents=True)
-            (root / 'dist/cli/index.js').write_text('export {};')
-            manifest = {'name': '@androperator/cli', 'version': '1.0.0', 'bin': {'androperator': 'dist/cli/index.js'}, 'files': ['dist/'],
+            (root / 'dist/cli/index.cjs').write_text('module.exports = {};')
+            manifest = {'name': '@androperator/cli', 'version': '1.0.0', 'bin': {'androperator': 'dist/cli/index.cjs'}, 'files': ['dist/'],
                         'scripts': {'prepack': 'node hook.cjs before', 'postpack': 'node hook.cjs after'}}
             (root / 'package.json').write_text(json.dumps(manifest))
             (root / 'hook.cjs').write_text(
@@ -76,15 +76,15 @@ class ReleaseArchiveTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / 'dist/cli').mkdir(parents=True)
-            cli = root / 'dist/cli/index.js'
-            cli.write_text('export {};')
+            cli = root / 'dist/cli/index.cjs'
+            cli.write_text('module.exports = {};')
             (root / 'hook.cjs').write_text(
                 "const fs = require('node:fs');\n"
                 "if (process.argv[2] === 'before') fs.writeFileSync('dist/packed.txt', 'packed');\n"
                 "else if (process.argv[2] === 'after') fs.unlinkSync('dist/packed.txt');\n"
                 "else fs.writeFileSync('publish-hook-ran', 'unexpected');\n")
             (root / 'package.json').write_text(json.dumps({
-                'name': '@androperator/cli', 'version': '1.0.0', 'bin': {'androperator': 'dist/cli/index.js'}, 'files': ['dist/'],
+                'name': '@androperator/cli', 'version': '1.0.0', 'bin': {'androperator': 'dist/cli/index.cjs'}, 'files': ['dist/'],
                 'scripts': {'prepack': 'node hook.cjs before', 'postpack': 'node hook.cjs after',
                             'prepublishOnly': 'node hook.cjs publish', 'publish': 'node hook.cjs publish'},
             }))

@@ -93,6 +93,12 @@ material only where release/version management requires it.
   for task plans, handoffs, working context, and actionable unfinished work.
   Follow its live project mappings and shared-checkout rules. Do not create
   repository-local task packs or duplicate notebook plans here.
+- Agents may freely record relevant notes, research, findings, and working
+  documentation in the notebook within the authorized task. A notebook write
+  does not satisfy this project's documentation requirements. Put durable
+  engineering guidance in `docs/internal/design/`, public behavior in the
+  appropriate `docs/` page, reusable workflows in skills, and implementation
+  rationale beside the owning code, following the routing above.
 - Documentation cleanup is an explicit completion step. Before closing a task
   or retiring obsolete guidance, move still-useful engineering knowledge,
   decisions, sanitized evidence, and code rationale into the appropriate docs,

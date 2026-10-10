@@ -512,9 +512,9 @@ Examples:
   androperator screenshot --path /tmp/screen.png
   androperator screenshot --device <device_serial>
 
---scale selects a percentage per dimension with the persistent shell helper.
+--scale selects a percentage per dimension, using direct capture or stock capture plus resize.
 Omitted: ordinary full-resolution capture. Images report actual size and method.
-Unsupported strict content policies fail closed; use doctor for diagnostics.
+Protected-content state may be unknown; inspect captureMethod and protectedContent.
 `;
 
 const HELP_CLICK = `androperator click — Tap a UI element by selector or coordinates

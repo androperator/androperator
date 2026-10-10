@@ -20,8 +20,8 @@ for (let y = 0; y < png.height * 0.3; y++) {
     longestRun = Math.max(longestRun, run);
     previous = x;
   }
-  // Start only on a solid rectangle border, not a large dark text heading.
-  if ((top < 0 ? longestRun > png.width * 0.3 : dark.length > png.width * 0.2)) {
+  // Start on an inset rectangle border, not a heading or edge-to-edge status bar.
+  if ((top < 0 ? dark[0] > 0 && longestRun > png.width * 0.3 : dark.length > png.width * 0.2)) {
     if (top < 0) { top = y; left = dark[0]; right = dark.at(-1); }
     bottom = y;
   } else if (top >= 0) break;

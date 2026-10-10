@@ -31,7 +31,8 @@ async function fixture(mode = "valid") {
         const buffer = PNG.sync.write(png);
         const header: any = { protocol: 1, session, request, status: "ok", length: buffer.length,
           sourceWidth: 8, sourceHeight: 8, physicalId: "12345678901234567890", rotation: 0,
-          scale, sequence: ++sequence, captureNanos: String(sequence) };
+          protectedContent: mode === "unknown" ? "unknown" : "absent", scale, sequence: ++sequence, captureNanos: String(sequence) };
+        if (mode === "invalid-protection") header.protectedContent = "present";
         if (mode === "stale") header.request = "old-request";
         if (mode === "session") header.session = "wrong-session";
         if (mode === "geometry") header.sourceWidth = 16;
@@ -73,7 +74,7 @@ test("captures all scales, reuses only the owned session and reports decoded geo
   assert.equal(ids.size, 3); assert.equal(children.length, 1);
   assert.equal(commands.filter(args => args.includes("push")).length, 1);
 });
-for (const mode of ["stale", "session", "geometry", "rotation", "sequence", "timestamp", "corrupt", "rejected", "death", "incompatible", "unsolicited"]) {
+for (const mode of ["stale", "invalid-protection", "session", "geometry", "rotation", "sequence", "timestamp", "corrupt", "rejected", "death", "incompatible", "unsolicited"]) {
   test(`rejects ${mode} without publishing or replaying any action`, async () => {
     const { config, commands } = await fixture(mode);
     await assert.rejects(captureWithHelper(config, { scale: 25, timeoutMs: 1000 }));
@@ -111,18 +112,10 @@ test("scale contract preserves omission, rejects invalid types and ambiguous exe
   assert.throws(() => validateExecution(execution), (error: any) => /single final/.test(error.message));
 });
 
-test("missing protected composition gives a hardware-aware failure and doctor diagnostic", async () => {
-  const { config, commands } = await fixture("protected_composition");
-  await assert.rejects(captureWithHelper(config, { scale: 25, timeoutMs: 1000 }), (error: any) => {
-    assert.equal(error.reason, "incompatible");
-    assert.match(error.message, /protected GPU composition/);
-    assert.match(error.message, /OS upgrade alone may not/);
-    return true;
-  });
-  const probe = await probeCaptureHelper(config);
-  assert.equal(probe.status, "incompatible");
-  assert.match(probe.detail, /protected GPU composition/);
-  assert.ok(commands.every(args => !args.includes("screencap")));
+test("unknown protection does not block ordinary scaled capture", async () => {
+  const { config } = await fixture("unknown");
+  const image = await captureWithHelper(config, { scale: 25, timeoutMs: 1000 });
+  assert.equal(image.metadata.protectedContent, "unknown");
 });
 for (const reason of ["protected_content", "secure_content"]) {
   test(`${reason} rejects pixels with actionable diagnostics and no stock fallback`, async () => {
@@ -130,6 +123,7 @@ for (const reason of ["protected_content", "secure_content"]) {
     await assert.rejects(captureWithHelper(config, { scale: 25, timeoutMs: 1000 }), (error: any) => {
       assert.equal(error.reason, "rejected");
       assert.match(error.message, /before pixel readback/);
+      assert.equal(error.protectedContent, reason === "protected_content" ? "present" : "unknown");
       return true;
     });
     assert.ok(commands.every(args => !args.includes("screencap") && !args.includes("input")));

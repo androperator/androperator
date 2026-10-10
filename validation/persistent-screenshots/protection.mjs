@@ -40,6 +40,7 @@ async function capture(name, scale, rejection) {
     assert.equal(step.data.captureFailureReason, 'rejected');
     assert.equal(step.data.fallbackAttempted, 'false');
     assert.ok(step.data.message.includes(rejection), step.data.message);
+    assert.equal(step.data.protectedContent, name === 'protected' ? 'present' : 'unknown');
     await assert.rejects(access(path), { code: 'ENOENT' });
   } else {
     assert.equal(result.envelope.status, 'success', JSON.stringify(result));

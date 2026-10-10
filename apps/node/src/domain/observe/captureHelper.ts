@@ -8,6 +8,9 @@ import { verifyScreenshot } from "./screenshotMetadata.js";
 export type CaptureScale = 100 | 50 | 25;
 export class CaptureHelperError extends Error {
   readonly code = "EVIDENCE_CAPTURE_FAILED";
+  fallbackAllowed = false;
+  fallbackAttempted = false;
+  protectedContent: "present" | "absent" | "unknown" = "unknown";
   constructor(readonly reason: "unavailable" | "incompatible" | "rejected" | "protocol" | "transport" | "cancelled" | "timeout" | "busy", message: string) { super(message); }
 }
 const fail = (reason: CaptureHelperError["reason"], message: string) => new CaptureHelperError(reason, message);
@@ -133,12 +136,9 @@ class Session {
       const { header } = await handshake;
       if (header.status === "incompatible") {
         const api = Number.isInteger(header.androidApi) ? header.androidApi : "unknown";
-        const cause = header.missingCapability === "protected_composition"
-          ? "The device compositor lacks protected GPU composition. Reduced capture cannot reliably distinguish protected buffers from redacted output. Use another device with protected composition support and run androperator doctor; an OS upgrade alone may not resolve this hardware/driver capability."
-          : "The Android build lacks a required capture API or buffer-safety check. Use a compatible device/build and run androperator doctor to verify capability.";
-        throw fail("incompatible", `Android API ${api}: ${cause} Omit --scale (or Node scale) only for an explicit ordinary full-resolution capture with Android's standard redaction behavior. No automatic fallback was attempted.`);
+        throw fail("incompatible", `Android API ${api}: direct scaled capture API unavailable. Stock capture and resize can provide the requested size.`);
       }
-      if (header.status === "unavailable") throw fail("unavailable", "Android capture service could not initialize. Check device readiness and retry screenshot; no automatic fallback was attempted.");
+      if (header.status === "unavailable") throw fail("unavailable", "Android capture service could not initialize. Stock capture and resize can provide the requested size; check device readiness if that also fails.");
       if (header.status !== "ready") throw fail("protocol", "Invalid capture handshake.");
     } catch (error) {
       this.close();
@@ -163,14 +163,16 @@ class Session {
     if (header.status !== "ok") {
       const detail = header.reason === "protected_content" ? "Protected buffer rejected before pixel readback. Capture an ordinary unprotected screen."
         : header.reason === "secure_content" ? "Secure window rejected before pixel readback. Capture an ordinary unprotected screen."
-        : header.reason === "protected_composition" ? "Protected composition capability became unavailable. Use a device with protected GPU composition support and rerun doctor."
         : "Display locked/off, geometry changed, or capture uncertain. Unlock or stabilize the display and retry screenshot.";
-      throw fail("rejected", `Capture rejected: ${detail} No fallback was attempted.`);
+      const error = fail("rejected", `Capture rejected: ${detail} No fallback was attempted.`);
+      if (header.reason === "protected_content") error.protectedContent = "present";
+      throw error;
     }
     const { sourceWidth, sourceHeight, rotation, physicalId, captureNanos } = header;
     if (!Number.isSafeInteger(sourceWidth) || sourceWidth < 2 || !Number.isSafeInteger(sourceHeight) || sourceHeight < 2
       || sourceWidth * sourceHeight > 32_000_000 || ![0, 1, 2, 3].includes(rotation)
       || typeof physicalId !== "string" || !/^\d+$/.test(physicalId)
+      || !["absent", "unknown"].includes(header.protectedContent)
       || header.scale !== scale || header.sequence !== this.sequence + 1
       || typeof captureNanos !== "string" || !/^\d+$/.test(captureNanos) || BigInt(captureNanos) <= this.captureNanos) {
       throw fail("protocol", "Screenshot geometry, sequence or capture timestamp mismatch.");
@@ -185,7 +187,7 @@ class Session {
     this.idle.unref();
     this.child!.unref();
     for (const stream of [this.child!.stdin, this.child!.stdout, this.child!.stderr]) (stream as any).unref?.();
-    return { buffer, metadata: { captureMethod: "shell_hardware_buffer", requestedScale: String(scale), appliedScale: String(scale),
+    return { buffer, metadata: { protectedContent: header.protectedContent, fallbackAttempted: "false", captureMethod: "shell_hardware_buffer", requestedScale: String(scale), appliedScale: String(scale),
       nativeWidthPx: String(sourceWidth), nativeHeightPx: String(sourceHeight), rotation: String(rotation), logicalDisplayId: "0", physicalDisplayId: physicalId,
       captureId: request, captureSessionId: this.id, captureSequence: String(header.sequence), deviceCaptureNanos: captureNanos } };
   }
@@ -209,12 +211,22 @@ export async function captureWithHelper(config: RuntimeConfig, options: { scale:
   const abort = () => session!.close(fail("cancelled", "Screenshot cancelled; helper session discarded."));
   options.signal?.addEventListener("abort", abort, { once: true });
   try {
-    if (fresh) await session.start(deadline);
+    if (fresh) {
+      try { await session.start(deadline); }
+      catch (error) {
+        // Only setup failures permit a different backend. Never retry an uncertain frame.
+        if (error instanceof CaptureHelperError && ["incompatible", "unavailable"].includes(error.reason)) error.fallbackAllowed = true;
+        throw error;
+      }
+    }
     const result = await session.capture(options.scale, deadline);
     if (options.signal?.aborted) throw fail("cancelled", "Screenshot cancelled.");
     if (performance.now() >= deadline) throw fail("timeout", "Screenshot deadline exhausted during decoding.");
     return result;
-  } catch (error) { session.close(); throw error; }
+  } catch (error) {
+    session.close();
+    throw error instanceof CaptureHelperError ? error : fail("protocol", "Screenshot acquisition or decoding failed; retry screenshot. No fallback was attempted.");
+  }
   finally { session.busy = false; options.signal?.removeEventListener("abort", abort); }
 }
 
@@ -223,7 +235,7 @@ export async function probeCaptureHelper(config: RuntimeConfig): Promise<{ statu
   const session = new Session(config);
   try {
     await session.start(performance.now() + 5000);
-    return { status: "supported", detail: "Shell capture APIs and protected GPU composition available. The helper rejects secure layers and protected output buffers before readback. Live capture and image contents are unverified until screenshot succeeds." };
+    return { status: "supported", detail: "Direct scaled capture APIs available. Protected-content detection may be unknown; that does not block ordinary screenshots. Live capture and image contents are unverified until screenshot succeeds." };
   } catch (error) {
     return { status: error instanceof CaptureHelperError && error.reason === "incompatible" ? "incompatible" : "unavailable",
       detail: error instanceof Error ? error.message : "Capture helper probe failed; check ADB and reinstall Node package." };

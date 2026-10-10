@@ -11,7 +11,7 @@ test('packaged DEX matches maintained source and the shipped manifest', () => {
   assert.equal(manifest.sha256, digest('apps/node/capture-helper/capture.dex'));
   assert.equal(manifest.sourceSha256, digest('apps/capture-helper/CaptureHelper.java'));
   const [pack] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts', '--cache', '/tmp/androperator-capture-npm-cache'], { cwd: new URL('apps/node/', root), encoding: 'utf8' }));
-  for (const path of ['capture-helper/capture.dex', 'capture-helper/manifest.json', 'dist/domain/observe/captureHelper.js']) {
+  for (const path of ['capture-helper/capture.dex', 'capture-helper/manifest.json', 'dist/domain/observe/captureHelper.js', 'dist/domain/observe/scaledScreenshot.js']) {
     assert.ok(pack.files.some(file => file.path === path), path);
   }
 });

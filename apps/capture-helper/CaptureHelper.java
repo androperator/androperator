@@ -18,8 +18,6 @@ public final class CaptureHelper {
     private final Class<?> argsType = Class.forName(captureType.getName() + "$CaptureArgs");
     private final Class<?> listenerType = Class.forName(captureType.getName() + "$ScreenCaptureListener");
     private final Class<?> resultType = Class.forName(captureType.getName() + "$ScreenshotHardwareBuffer");
-    private final Method protectedComposition = Class.forName("android.view.SurfaceControl")
-        .getMethod("getProtectedContentSupport");
     private final Object manager = Class.forName("android.view.IWindowManager$Stub")
         .getMethod("asInterface", IBinder.class).invoke(null,
             Class.forName("android.os.ServiceManager").getMethod("getService", String.class).invoke(null, "window"));
@@ -53,10 +51,7 @@ public final class CaptureHelper {
         resultType.getMethod("containsHdrLayers");
         resultType.getMethod("asBitmap");
         Class.forName("android.view.IWindowManager").getMethod("isKeyguardLocked");
-        if (!supportsProtectedComposition()) throw new IncompatibleProtection();
     }
-
-    private static final class IncompatibleProtection extends Exception {}
 
     static final class UnsafeCapture extends Exception {
         final String reason;
@@ -64,9 +59,8 @@ public final class CaptureHelper {
     }
 
     /** The callback is the first operation allowed to inspect pixel contents. */
-    static <T> T readUnprotected(boolean compositionSupported, boolean secure, long usage,
+    static <T> T readUnprotected(boolean secure, long usage,
             java.util.concurrent.Callable<T> readPixels) throws Exception {
-        if (!compositionSupported) throw new UnsafeCapture("protected_composition");
         if (secure) throw new UnsafeCapture("secure_content");
         if ((usage & HardwareBuffer.USAGE_PROTECTED_CONTENT) != 0) {
             throw new UnsafeCapture("protected_content");
@@ -74,8 +68,11 @@ public final class CaptureHelper {
         return readPixels.call();
     }
 
-    private boolean supportsProtectedComposition() throws Exception {
-        return Boolean.TRUE.equals(protectedComposition.invoke(null));
+    private boolean supportsProtectedComposition() {
+        try {
+            return Boolean.TRUE.equals(Class.forName("android.view.SurfaceControl")
+                .getMethod("getProtectedContentSupport").invoke(null));
+        } catch (Exception unavailable) { return false; }
     }
 
     private void configureProtection(Object builder) throws Exception {
@@ -127,8 +124,7 @@ public final class CaptureHelper {
         try {
             helper = new CaptureHelper(session);
         } catch (Throwable unavailable) {
-            String missing = unavailable instanceof IncompatibleProtection ? "protected_composition"
-                : unavailable instanceof ClassNotFoundException ? "capture_class"
+            String missing = unavailable instanceof ClassNotFoundException ? "capture_class"
                 : unavailable instanceof NoSuchFieldException ? "capture_policy_constant"
                 : unavailable instanceof NoSuchMethodException ? "capture_method" : "capture_initialization";
             String status = missing.equals("capture_initialization") ? "unavailable" : "incompatible";
@@ -187,7 +183,7 @@ public final class CaptureHelper {
         int width = Math.max(1, sourceWidth * percent / 100);
         int height = Math.max(1, sourceHeight * percent / 100);
         verifyDisplay();
-        if (!supportsProtectedComposition()) throw new UnsafeCapture("protected_composition");
+        boolean protectionKnown = supportsProtectedComposition();
         Object builder = builderType.getConstructor().newInstance();
         builderType.getMethod("setSourceCrop", Rect.class).invoke(builder, new Rect(0, 0, sourceWidth, sourceHeight));
         builderType.getMethod("setFrameScale", float.class, float.class)
@@ -207,7 +203,7 @@ public final class CaptureHelper {
             // allocates a PROTECTED output if its captured snapshots contain protected
             // layers. Reject that output before asBitmap/copy/encoding, not by guessing
             // from black pixels or by a separate, racy window scan.
-            byte[] png = readUnprotected(supportsProtectedComposition(), secure, buffer.getUsage(), () -> {
+            byte[] png = readUnprotected(secure, buffer.getUsage(), () -> {
                 if (buffer.getWidth() != width || buffer.getHeight() != height) {
                     throw new IllegalStateException("Returned hardware buffer dimensions mismatch");
                 }
@@ -232,14 +228,14 @@ public final class CaptureHelper {
                 }
             });
             verifyDisplay();
-            if (!supportsProtectedComposition()) throw new UnsafeCapture("protected_composition");
+            String protection = protectionKnown && supportsProtectedComposition() ? "absent" : "unknown";
             long captured = System.nanoTime();
             reply("{\"protocol\":1,\"session\":\"" + session
                 + "\",\"request\":\"" + request + "\",\"status\":\"ok\",\"length\":" + png.length
                 + ",\"sourceWidth\":" + sourceWidth + ",\"sourceHeight\":" + sourceHeight
                 + ",\"physicalId\":\"" + sourceUniqueId.substring(6) + "\",\"rotation\":" + sourceRotation
                 + ",\"scale\":" + percent + ",\"sequence\":" + (++sequence)
-                + ",\"captureNanos\":\"" + captured + "\"}");
+                + ",\"protectedContent\":\"" + protection + "\",\"captureNanos\":\"" + captured + "\"}");
             System.out.write(png);
             System.out.flush();
         } finally {

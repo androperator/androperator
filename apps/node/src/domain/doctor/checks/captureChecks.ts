@@ -8,5 +8,5 @@ export async function checkCaptureHelper(config: RuntimeConfig): Promise<DoctorC
     summary: `Reduced screenshot capture: ${result.status}.`, detail: result.detail,
     evidence: { capability: result.status, imageVerified: false, defaultMethod: "adb_screencap" },
     ...(result.status !== "supported" ? { fix: { title: "Capture compatibility", platform: "any" as const,
-      steps: [{ kind: "manual" as const, value: "Check ADB connectivity and free /data/local/tmp space, then retry doctor. Reduced capture requires compatible capture APIs and protected GPU composition. A missing hardware/driver capability may require another device, not just an OS upgrade. Omitting --scale explicitly selects ordinary full-resolution capture with standard Android redaction." }] } } : {}) };
+      steps: [{ kind: "manual" as const, value: "Check ADB connectivity and free /data/local/tmp space, then retry doctor. When direct scaled capture cannot initialize, screenshot uses stock capture and resizes to the requested dimensions. Protected-content state is unknown on that path. Inspect the returned captureMethod and actual dimensions." }] } } : {}) };
 }

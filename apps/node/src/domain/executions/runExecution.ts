@@ -1,4 +1,5 @@
-import { captureWithHelper, CaptureHelperError } from "../observe/captureHelper.js";
+import { captureScaledScreenshot } from "../observe/scaledScreenshot.js";
+import { CaptureHelperError } from "../observe/captureHelper.js";
 import { isHostInputAction, runHostInputSequence } from "../actions/hostInput.js";
 import { getLoggingStatus } from "../../adapters/logger.js";
 import { verifyScreenshot } from "../observe/screenshotMetadata.js";
@@ -868,7 +869,7 @@ async function performExecution(
           const screenStep = result.envelope.stepResults.find(s => s.actionType === "take_screenshot");
 
           const captureBudget = execution.timeoutMs - (Date.now() - dispatchStart);
-          const scaled = screenAction?.params?.scale !== undefined ? await captureWithHelper(config, {
+          const scaled = screenAction?.params?.scale !== undefined ? await captureScaledScreenshot(config, {
             scale: screenAction.params.scale, timeoutMs: captureBudget, signal: options.signal,
           }) : undefined;
           const buffer = scaled?.buffer ?? await captureScreenshot(config, {
@@ -887,7 +888,7 @@ async function performExecution(
             await rename(temporaryPath, screenshotPath);
           } finally { await rm(temporaryPath, { force: true }); }
           finalizeSuccessfulScreenshotCapture(screenStep, screenshotPath, image);
-          if (screenStep) screenStep.data = { ...screenStep.data, ...(scaled?.metadata ?? { captureMethod: "adb_screencap", requestedScale: "100", appliedScale: "100" }) };
+          if (screenStep) screenStep.data = { ...screenStep.data, ...(scaled?.metadata ?? { captureMethod: "adb_screencap", protectedContent: "unknown", requestedScale: "100", appliedScale: "100" }) };
         } catch (e) {
           const screenStep = result.envelope.stepResults.find(step => step.actionType === "take_screenshot");
           if (screenStep !== undefined) {
@@ -895,7 +896,7 @@ async function performExecution(
             const { path: _path, capturedAt: _capturedAt, persistedAt: _persistedAt, captureWidthPx: _width, captureHeightPx: _height, coordinateSpace: _space, origin: _origin, ...previousData } = screenStep.data;
             screenStep.data = { ...previousData,
               runtimeError: previousData.error ?? "",
-              ...(e instanceof CaptureHelperError ? { captureFailureReason: e.reason, requestedScale: String(screenAction?.params?.scale ?? 100), fallbackAttempted: "false" } : {}),
+              ...(e instanceof CaptureHelperError ? { captureFailureReason: e.reason, requestedScale: String(screenAction?.params?.scale ?? 100), fallbackAttempted: String(e.fallbackAttempted), protectedContent: e.protectedContent } : {}),
               error: ERROR_CODES.EVIDENCE_CAPTURE_FAILED,
               errorCode: ERROR_CODES.EVIDENCE_CAPTURE_FAILED,
               message: (typeof e === "object" && e !== null && "message" in e ? String(e.message) : String(e)).slice(0, 1024), failurePhase: "post_processing", dispatchState: "dispatched",

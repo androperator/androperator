@@ -64,8 +64,8 @@ intermediate capture timing from execution post-processing.
 ## Compatibility and safe full-resolution choice
 
 The API 37 physical test build has `android.window.ScreenCaptureInternal` and
-strict secure/protected-content policy constants. The tested API 35 emulator
-does not have that class. This is a capability check, not a promise based on an
+strict secure/protected-content policy constants. The tested API 35 and API 36 emulators
+do not have that class. This is a capability check, not a promise based on an
 SDK number. Reflection success is not proof of a live image; doctor labels that
 distinction explicitly. Capture errors remain failures even if an ordinary
 `screencap` command might exit successfully.

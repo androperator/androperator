@@ -1546,7 +1546,7 @@ Supported capability does not prove that the current screen can be captured.
 
 **Compatibility and fallback:** the tested API 37 phone supports the required
 internal capture interface and strict secure/protected-content policies. The
-tested Android 15 (API 35) emulator lacks the capture class. Other OS builds,
+tested Android 15 (API 35) and Android 16 (API 36) emulators lack the capture class. Other OS builds,
 including other manufacturers' API 37 builds, are not guaranteed compatible.
 Use a device with a supported newer Android build and run `doctor` to check.
 Explicit scaled captures fail closed if these guarantees are unavailable; Node

@@ -446,3 +446,18 @@ For screen-off notification/media observation, use
 `androperator doctor --capability background-observation` after setup. The default
 interactive doctor can fail on a locked screen while these reads remain available.
 See [background readiness](api/doctor.md#background-observation-readiness).
+
+## Optional reduced screenshot capture
+
+`screenshot --scale 100|50|25` automatically deploys the bundled shell capture
+helper on first use. It requires authorized ADB, writable `/data/local/tmp`,
+and compatible Android internal capture APIs with strict protected-content
+policies. No additional Operator permission, root, Java installation or Android
+SDK is required on the host. The normal screenshot command remains full size.
+
+Run `androperator doctor --device <device_serial> --operator-package com.androperator.operator.dev`
+to see `capture.reduced`. Doctor temporarily deploys and probes the helper but
+does not capture screen pixels. Unsupported optional capture does not fail core
+Operator readiness. See the [screenshot contract](api/actions.md#action-take-screenshot)
+for supported values, compatibility, failure recovery and the explicit
+full-resolution choice.

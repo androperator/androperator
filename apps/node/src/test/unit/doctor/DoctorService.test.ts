@@ -13,6 +13,7 @@ import { getCliVersion } from "../../../domain/version/compatibility.js";
 // Existing readiness fixtures assume optional video tooling is healthy.
 class FakeProcessRunner extends BaseFakeProcessRunner {
   override async run(command: string, args: string[]) {
+    if (args.some(arg => arg.includes("androperator-capture-"))) return { code: 1, stdout: "", stderr: "Optional capture helper unavailable in readiness fixture" };
     if (command === "scrcpy") return { code: 0, stdout: "--capture-orientation --no-window --no-audio --no-control --video-codec --max-size --record-format --time-limit", stderr: "" };
     if (command === "ffmpeg" || command === "ffprobe") return { code: 0, stdout: "ffmpeg version 6.1", stderr: "" };
     return super.run(command, args);

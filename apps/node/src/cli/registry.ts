@@ -492,10 +492,11 @@ Examples:
 const HELP_SCREENSHOT = `androperator screenshot — Capture device screen
 
 Usage:
-  androperator screenshot [--path <file>] [--device <id>] [--operator-package <pkg>]
+  androperator screenshot [--scale <100|50|25>] [--path <file>] [--device <id>] [--operator-package <pkg>]
 
 Options:
-  --path <file>          Save PNG to file path (if omitted, output is base64)
+  --path <file>          Save PNG to file path (default: generated host temporary path)
+  --scale <100|50|25>     Explicit percentage per dimension; omitted uses stock full size
   --output <json|pretty> Output format (default: json)
   --timeout <ms>         Max time to wait (default: 30000ms)
   --no-daemon            Force direct execution instead of daemon proxy
@@ -510,6 +511,10 @@ Result geometry:
 Examples:
   androperator screenshot --path /tmp/screen.png
   androperator screenshot --device <device_serial>
+
+--scale selects a percentage per dimension with the persistent shell helper.
+Omitted: ordinary full-resolution capture. Images report actual size and method.
+Unsupported strict content policies fail closed; use doctor for diagnostics.
 `;
 
 const HELP_CLICK = `androperator click — Tap a UI element by selector or coordinates
@@ -1458,8 +1463,8 @@ COMMANDS["screenshot"] = {
   synonyms: ["take-screenshot", "take_screenshot", "capture-screenshot"],
   group: "Device Interaction",
   flagAliases: SCREENSHOT_FLAG_ALIASES,
-  documentedFlags: ["--path", "--no-daemon"],
-  supportedFlags: ["--path", "--no-daemon"],
+  documentedFlags: ["--path", "--scale", "--no-daemon"],
+  supportedFlags: ["--path", "--scale", "--no-daemon"],
   summary: "Capture a screenshot from the device",
   help: HELP_SCREENSHOT,
   topLevelBlock: `  screenshot [--device <id>] [--operator-package <pkg>] [--path <file>]
@@ -1469,12 +1474,17 @@ COMMANDS["screenshot"] = {
     const invalidTimeout = getInvalidTimeoutResult(timeoutMs, { format });
     if (invalidTimeout) return invalidTimeout;
     const path = getStringOpt(rest, "--path");
+    const scaleIndex = rest.indexOf("--scale");
+    const scaleValue = scaleIndex < 0 ? undefined : rest[scaleIndex + 1];
+    if (hasFlag(rest, "--scale") && !["100", "50", "25"].includes(scaleValue ?? "")) return formatError({ code: "EXECUTION_VALIDATION_FAILED", message: "--scale requires 100, 50 or 25 (percentage per dimension). Example: androperator screenshot --scale 25" }, { format });
+    const scale = scaleValue === undefined ? undefined : Number(scaleValue) as 100 | 50 | 25;
     return (await import("./commands/observe.js")).cmdObserveScreenshot({
       format,
       deviceId,
       operatorPackage,
       timeoutMs,
       path,
+      scale,
       noDaemon: noDaemon || hasFlag(rest, "--no-daemon"),
       logger,
     });

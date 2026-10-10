@@ -1,3 +1,4 @@
+import { checkCaptureHelper } from "./checks/captureChecks.js";
 import { type RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 import { type DoctorReport, type DoctorCheckResult } from "../../contracts/doctor.js";
 import { resolveDevice } from "../devices/resolveDevice.js";
@@ -39,6 +40,7 @@ export interface RunDoctorOptions {
 }
 
 export interface DoctorServiceDeps {
+  checkCaptureHelper?: typeof checkCaptureHelper;
   checkLogDestination?: typeof checkLogDestination;
   runHandshake?: typeof runHandshake;
   checkDeviceInteractiveState?: typeof checkDeviceInteractiveState;
@@ -107,6 +109,7 @@ export class DoctorService {
         }));
       }
       if (id === "readiness.version.compatibility") {
+        checks.push(await (this.deps.checkCaptureHelper ?? checkCaptureHelper)(config));
         checks.push(...await checkSettings(config));
       }
     }

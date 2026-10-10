@@ -1,10 +1,12 @@
+import { captureWithHelper, CaptureHelperError } from "../observe/captureHelper.js";
 import { isHostInputAction, runHostInputSequence } from "../actions/hostInput.js";
 import { getLoggingStatus } from "../../adapters/logger.js";
 import { verifyScreenshot } from "../observe/screenshotMetadata.js";
 import type { ScreenshotMetadata } from "../../contracts/screenshot.js";
 import { probeUserUnlockState } from "../device/userUnlockState.js";
 import { isBackgroundServiceExecution } from "../../contracts/notifications.js";
-import { writeFile } from "node:fs/promises";
+import { writeFile, rename, rm } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { captureScreenshot } from "../observe/captureScreenshot.js";
@@ -865,15 +867,27 @@ async function performExecution(
           const screenshotPath = screenAction?.params?.path ?? join(tmpdir(), `androperator-screenshot-${execution.commandId}-${Date.now()}.png`);
           const screenStep = result.envelope.stepResults.find(s => s.actionType === "take_screenshot");
 
-          const buffer = await captureScreenshot(config, {
-            timeoutMs: execution.timeoutMs,
+          const captureBudget = execution.timeoutMs - (Date.now() - dispatchStart);
+          const scaled = screenAction?.params?.scale !== undefined ? await captureWithHelper(config, {
+            scale: screenAction.params.scale, timeoutMs: captureBudget, signal: options.signal,
+          }) : undefined;
+          const buffer = scaled?.buffer ?? await captureScreenshot(config, {
+            timeoutMs: captureBudget,
+            signal: options.signal,
             commandId: execution.commandId,
             taskId: execution.taskId,
           });
 
           const image = verifyScreenshot(buffer);
-          await writeFile(screenshotPath, buffer);
+          if (options.signal?.aborted) throw new Error("Screenshot cancelled before publication");
+          const temporaryPath = `${screenshotPath}.${randomUUID()}.tmp`;
+          try {
+            await writeFile(temporaryPath, buffer, { flag: "wx", mode: 0o600 });
+            if (options.signal?.aborted || Date.now() - dispatchStart >= execution.timeoutMs) throw new Error("Screenshot cancelled or deadline exhausted before publication");
+            await rename(temporaryPath, screenshotPath);
+          } finally { await rm(temporaryPath, { force: true }); }
           finalizeSuccessfulScreenshotCapture(screenStep, screenshotPath, image);
+          if (screenStep) screenStep.data = { ...screenStep.data, ...(scaled?.metadata ?? { captureMethod: "adb_screencap", requestedScale: "100", appliedScale: "100" }) };
         } catch (e) {
           const screenStep = result.envelope.stepResults.find(step => step.actionType === "take_screenshot");
           if (screenStep !== undefined) {
@@ -881,6 +895,7 @@ async function performExecution(
             const { path: _path, capturedAt: _capturedAt, persistedAt: _persistedAt, captureWidthPx: _width, captureHeightPx: _height, coordinateSpace: _space, origin: _origin, ...previousData } = screenStep.data;
             screenStep.data = { ...previousData,
               runtimeError: previousData.error ?? "",
+              ...(e instanceof CaptureHelperError ? { captureFailureReason: e.reason, requestedScale: String(screenAction?.params?.scale ?? 100), fallbackAttempted: "false" } : {}),
               error: ERROR_CODES.EVIDENCE_CAPTURE_FAILED,
               errorCode: ERROR_CODES.EVIDENCE_CAPTURE_FAILED,
               message: (typeof e === "object" && e !== null && "message" in e ? String(e.message) : String(e)).slice(0, 1024), failurePhase: "post_processing", dispatchState: "dispatched",

@@ -348,7 +348,11 @@ export function createServeApp(options: ServeAppOptions): express.Application {
       return;
     }
 
-    const { deviceId, operatorPackage, path } = req.body;
+    const { deviceId, operatorPackage, path, scale } = req.body;
+    if (scale !== undefined && ![100, 50, 25].includes(scale)) {
+      res.status(400).json({ ok: false, error: { code: "INVALID_SCALE", message: "scale must be 100, 50 or 25 (percentage per dimension); omit for ordinary full-resolution capture" } });
+      return;
+    }
 
     if (deviceId !== undefined && typeof deviceId !== "string") {
       res.status(400).json({ ok: false, error: { code: "INVALID_DEVICE_ID", message: "'deviceId' must be a string" } });
@@ -380,7 +384,7 @@ export function createServeApp(options: ServeAppOptions): express.Application {
       source: "serve-api",
       expectedFormat: "android-ui-automator",
       timeoutMs: 30000,
-      actions: [{ id: "shot", type: "take_screenshot", params: path !== undefined ? { path } : {} }],
+      actions: [{ id: "shot", type: "take_screenshot", params: { ...(path !== undefined ? { path } : {}), ...(scale !== undefined ? { scale } : {}) } }],
     };
 
     try {

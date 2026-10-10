@@ -58,6 +58,7 @@ export async function cmdObserveScreenshot(options: {
   operatorPackage?: string;
   timeoutMs?: number;
   path?: string;
+  scale?: 100 | 50 | 25;
   noDaemon?: boolean;
   logger?: Logger;
   tryDaemonExecutionFn?: typeof tryDaemonExecution;
@@ -67,6 +68,7 @@ export async function cmdObserveScreenshot(options: {
     const execution = validateExecution(buildScreenshotExecution({
       timeoutMs: options.timeoutMs,
       path: options.path,
+      scale: options.scale,
     }));
     validatePayloadSize(JSON.stringify(execution));
     const tryDaemonExecutionFn = options.tryDaemonExecutionFn ?? tryDaemonExecution;

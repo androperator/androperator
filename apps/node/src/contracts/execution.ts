@@ -18,6 +18,8 @@ export interface ActionParams {
   holdDurationMs?: number;
   moveDurationMs?: number;
   path?: string;
+  /** Screenshot percentage per dimension; omitted preserves stock full-resolution capture. */
+  scale?: 100 | 50 | 25;
   matcher?: NodeMatcher;
   visibility?: "on_screen" | "all";
   limit?: number;

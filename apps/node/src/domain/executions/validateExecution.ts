@@ -78,6 +78,7 @@ const actionParamsSchema = z.object({
   uri: z.string().max(LIMITS.MAX_URI_LENGTH).optional(),
   durationMs: z.number().optional(),
   path: z.string().optional(),
+  scale: z.custom<100 | 50 | 25>(value => [100, 50, 25].includes(value as number), "scale must be 100, 50 or 25 (percentage per dimension). Example: params: { scale: 25 }").optional(),
   matcher: nodeMatcherSchema.optional(),
   coordinate: coordinateSchema.optional(),
   text: z.string().max(LIMITS.MAX_MATCHER_VALUE_LENGTH).optional(),
@@ -255,6 +256,7 @@ const executionSchema = z.object({
       return;
     }
     const params = action.params as ActionParams | undefined;
+    if (params?.scale !== undefined && action.type !== "take_screenshot") addIssue(index, "scale is only supported by take_screenshot", ["params", "scale"]);
     const selectionActions = ["click", "enter_text", "read_text", "wait_for_node", "scroll", "scroll_until", "scroll_and_click"];
     if (params?.strict !== undefined && !selectionActions.includes(action.type)) {
       addIssue(index, "strict is only supported by node-targeted actions", ["params", "strict"]);
@@ -489,6 +491,10 @@ const executionSchema = z.object({
         break;
       }
       case "take_screenshot":
+        if (params?.scale !== undefined && (index !== execution.actions.length - 1
+          || execution.actions.filter(item => item.type === "take_screenshot").length !== 1)) {
+          addIssue(index, "Scaled take_screenshot must be the single final screenshot action; capture intermediate observations in separate executions", ["params", "scale"]);
+        }
         if (params?.path !== undefined && params.path.trim() === "") {
           addIssue(index, "take_screenshot params.path must be a non-empty string", ["params", "path"]);
         }

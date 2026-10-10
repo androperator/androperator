@@ -24,7 +24,8 @@
     "!dist/**/*.map",
     "README.md",
     "LICENSE",
-    "bundled-skills/"
+    "bundled-skills/",
+    "capture-helper/"
   ],
   "engines": {
     "node": ">=24.0.0"

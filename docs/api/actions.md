@@ -1441,6 +1441,7 @@ Example:
 | --- | --- |
 | Required | none |
 | `path` | optional non-empty string |
+| `scale` | optional number: `100`, `50`, or `25`, percentage per dimension |
 | `retry` | optional retry object in raw `exec` JSON; Android defaults to `None` |
 
 Semantics:
@@ -1505,6 +1506,65 @@ Example:
 ```
 
 <a id="action-close-app"></a>
+Explicit `scale` uses the persistent shell capture helper. Omission preserves the
+existing ordinary full-resolution ADB capture. The CLI spelling is
+`androperator screenshot --scale 25 --path /tmp/screen.png`. The Node
+`observeScreenshot({ scale: 25 })` helper and HTTP `POST /screenshot` accept the
+same numeric values. Numeric strings, arbitrary percentages and empty values are
+invalid. A scaled screenshot must be the only screenshot and the final action
+in its execution; use separate executions for intermediate observations.
+
+All successful captures also report `data.captureMethod` (`adb_screencap` or
+`shell_hardware_buffer`), `data.requestedScale`, and `data.appliedScale` as strings.
+A helper capture additionally reports:
+
+- `nativeWidthPx`, `nativeHeightPx`: full display coordinate extent in its current
+  rotation, before scaling; these are logical display pixels, not panel hardware
+  mode dimensions or Android dp.
+- `rotation`: Android quarter-turn rotation, `0` through `3`; `logicalDisplayId`
+  is `0`, and `physicalDisplayId` remains a decimal string without numeric rounding.
+- `captureId`, `captureSessionId`, `captureSequence`: request and session
+  correlation, independent of the unchanged command/task IDs in the envelope.
+- `deviceCaptureNanos`: a monotonic device timestamp, never a host UTC timestamp.
+
+Dimensions are floored per axis: 1080 x 2410 at 25% produces 270 x 602. Convert
+image coordinates to the current full display using each actual ratio, for
+example `floor(imageX * nativeWidthPx / captureWidthPx)`. Verify that display
+geometry and content still match before acting. Image capture does not establish
+that an app destination has finished rendering.
+
+The helper is deployed automatically from the Node package; consumers need ADB,
+not Java or an Android SDK. A long-lived Node process or the existing CLI daemon
+reuses its session. Direct one-shot CLI invocations pay setup/startup costs.
+Sessions expire after 30 seconds idle and are discarded after acquisition
+failure or cancellation. Retry only the screenshot; never repeat preceding
+navigation to recover capture. See [setup](../setup.md#optional-reduced-screenshot-capture) for prerequisites.
+
+`doctor` reports `capture.reduced` as supported, unavailable or incompatible.
+This probes APIs with a temporary helper deployment, without acquiring an image.
+Supported capability does not prove that the current screen can be captured.
+
+**Compatibility and fallback:** the tested API 37 phone supports the required
+internal capture interface and strict secure/protected-content policies. The
+tested Android 15 (API 35) emulator lacks the capture class. Other OS builds,
+including other manufacturers' API 37 builds, are not guaranteed compatible.
+Use a device with a supported newer Android build and run `doctor` to check.
+Explicit scaled captures fail closed if these guarantees are unavailable; Node
+does not silently substitute a redacted full-size image. Omit `scale`/`--scale`
+for the existing ordinary full-resolution capture, which retains Android's
+standard redaction behavior. This is an explicit caller choice, not automatic
+recovery after a locked, protected or uncertain capture.
+
+Failed helper acquisition returns `EVIDENCE_CAPTURE_FAILED` on the screenshot
+step, with `data.captureFailureReason` and `data.fallbackAttempted: "false"`.
+Reasons are `incompatible`, `unavailable`, `rejected`, `protocol`, `transport`,
+`cancelled`, `timeout`, or `busy`. Incompatible means use a supported device;
+unavailable means check ADB/deployment; rejected means unlock/stabilize the screen
+or avoid protected content. Protocol/transport failure discards the session; a
+new read-only screenshot request starts a new one. Timeout needs sufficient
+remaining budget; busy means await the prior capture. Never treat a failure or
+an old file still present at the requested path as a new observation.
+
 ### `close_app`
 
 | Field | Valid values |

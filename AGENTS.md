@@ -16,6 +16,23 @@ Stop when the scope is complete or a missing decision, permission, or external
 dependency blocks it. Report any validation that could not run and what remains
 unproven. Do not expand into unrelated fixes or later PRs.
 
+## Establish Value Before Substantial Changes
+
+For new public APIs, architectural changes, or substantial performance work, use
+[change-preflight](.agents/skills/change-preflight/SKILL.md) before implementation.
+Routine fixes and documentation edits do not need this process.
+
+- Define the user benefit with concrete usage and the work left to callers.
+- Set evidence-based acceptance and stopping conditions before investing in
+  production integration. Prototype results are not production predictions.
+- Reassess usefulness when measurements or adoption costs contradict the plan.
+  Passing tests and code review establish correctness, not value worth shipping.
+- Preserve useful negative findings. Recommend stopping or narrowing work when
+  the benefit does not justify complexity; do not weaken behavior to meet a target.
+
+See [change evaluation lessons](docs/internal/design/change-evaluation.md) for
+measurement pitfalls and examples. These checks do not add a routine approval gate.
+
 ## Runtime Contracts
 
 - The Node API/CLI is the canonical interface for agent-driven device actions.

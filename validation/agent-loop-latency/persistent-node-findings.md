@@ -74,7 +74,7 @@ The persistent worker uses the existing readiness cache, so this comparison on a
 
 Keeping canonical Node command handlers alive materially reduced time in this tested workflow without changing command count, navigation or the checked evidence. The effect is large enough to prioritize process reuse over replacing the decision provider for this task. It does not require weakening screenshot or terminal verification policy.
 
-The next execution-specific decision is to measure the same helper through the already available daemon-backed CLI before building another production persistent API. The current experiment shows a cost in the explicitly no-daemon helper configuration, not an unmet requirement for a second daemon. If finer attribution is needed, instrument readiness/cache hits, dispatch, snapshot construction and host startup separately under matched conditions.
+The subsequent [normal daemon-backed CLI comparison](daemon-node-findings.md) is now complete: median 25.42 s daemon versus 21.65 s persistent, a 14.8% reduction with 5/5 verified tasks per arm. Those are separate paired measurements, not a three-arm comparison or a replacement for the 28.3% no-daemon result above. The next execution-specific step is to isolate client startup/imports, daemon checks, request transport, readiness and device work before choosing a production API. Neither comparison establishes a need for a second daemon.
 
 Preserve canonical command semantics and independent outcome verification; do not simply move this worker bridge into production.
 

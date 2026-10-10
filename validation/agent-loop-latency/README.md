@@ -23,9 +23,15 @@ prototype uses a fixed temporary DEX path and has no production session manager.
 | Rendering retries | `decisions-25-fastgate`, `decisions-25-retrygate` | Immediate full fallback versus up to two extra quarter probes |
 
 Fault modes are separate recovery tests, excluded from normal timing comparisons.
-The [physical persistent Node comparison](persistent-node-findings.md) is complete:
-30.78 s versus 22.08 s median, with 5/5 verified tasks per arm. A persistent screenshot
-helper is a different optimization. Do not infer broad vision accuracy or human
+Two physical comparisons are complete, each with 5/5 verified tasks per arm:
+
+- [Fresh no-daemon CLI versus persistent Node](persistent-node-findings.md):
+  30.78 s versus 22.08 s median, a 28.3% reduction.
+- [Normal daemon-backed CLI versus persistent Node](daemon-node-findings.md):
+  25.42 s versus 21.65 s median, a 14.8% reduction. This uses a documented
+  experimental helper copy; the stock `cli` harness still disables the daemon.
+
+These are separate paired batches. A persistent screenshot helper is a different optimization. Do not infer broad vision accuracy or human
 parity from successful extraction on this known, text-rich route.
 
 ## Baseline setup
@@ -356,9 +362,10 @@ The following are intentionally outside this tooling PR:
 - Rendering-verification contract: distinct action and observation outcomes,
   shared deadlines, skill-owned expected conditions, truthful failure and no replay.
   Title checks must not be advertised as scroll/content settling or atomic capture.
-- Daemon-aware execution comparison and finer phase profiling after the completed
-  [persistent canonical execution measurements](persistent-node-findings.md), followed
-  by transport or snapshot changes only when equivalent-work measurements justify them.
+- Finer phase profiling after the completed [no-daemon](persistent-node-findings.md)
+  and [normal-daemon](daemon-node-findings.md) execution comparisons: isolate client
+  startup/imports, daemon checks, transport, readiness and device work before choosing
+  a production API. The results do not justify introducing a second daemon.
 - A supported Decisions example skill and portable visual-verifier boundary.
 - Broader image-dependent tasks, device/build coverage, secure/HDR and transition
   cases, matched provider comparisons and a human baseline before default changes.

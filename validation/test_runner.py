@@ -47,6 +47,7 @@ def main(argv=None):
         'validation': [
             ['node', '--test', 'validation/agent-loop-latency/benchmark.test.cjs'],
             ['node', '--test', 'validation/persistent-cli/test.cjs'],
+            ['node', '--test', 'validation/render-verification/policy.test.cjs'],
             ['node', '--test', 'validation/agent-loop-latency/screenshot-scales.test.cjs'],
             ['node', '--test', 'validation/agent-loop-latency/jev-screenshots.test.cjs'],
             ['node', '--test', 'validation/agent-loop-latency/decisions.test.cjs'],

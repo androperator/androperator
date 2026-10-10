@@ -432,3 +432,133 @@ stop use `{session: absoluteManifestPath}` with optional matching target fields.
 The injectable video `baseDir` overrides the evidence root containing `bundles/`;
 it cannot move the device lock. Still capture's existing `baseDir` dependency
 continues to mean its bundle root.
+
+## Optional post-action rendering verification (Node)
+
+An action receipt proves execution, not that the destination has rendered.
+`createRenderVerifier` is an opt-in Node orchestration helper for agents with
+an acquisition adapter and a trusted semantic/pixel verifier. It does not add
+CLI flags or change what an existing `click`, `snapshot` or `screenshot` reports.
+It does not include OCR, a model, or an accelerated screenshot backend.
+
+```javascript
+import { createRenderVerifier } from '@androperator/cli/dist/renderVerification.js';
+
+const verifyRendering = createRenderVerifier({
+  acquire: acquireFreshObservation, // Adapter described below; no navigation.
+  verify: verifyExpectedPixelsAndSnapshot, // Skill-owned condition; no navigation.
+});
+const observation = await verifyRendering({
+  action: clickResult.envelope, // Preserve the actual canonical receipt.
+  deviceId: selectedDevice,
+  conditionId: 'destination-heading-and-required-content',
+  timeoutMs: 30000,
+  reducedAttempts: 3,
+  fullAttempts: 2,
+  fallbackReserveMs: 3000,
+  signal: abortController.signal,
+});
+if (observation.status === 'verified') {
+  const accepted = observation.attempts.find(
+    attempt => attempt.captureId === observation.acceptedCaptureId);
+  // Persist/use accepted.frame.png itself. Do not replace it with a later capture.
+} else {
+  // Inspect observation.code and retained attempts. Do not replay clickResult.
+}
+```
+
+The functions in the example are caller-supplied adapters, not built-in functions.
+The maintained TypeScript types are exported from the same module. A concrete
+Settings predicate is provided in `examples/skills/utils/settings_render_condition.js`;
+its opt-in physical consumer is `validation/render-verification/live.mjs`.
+That laboratory consumer uses experimental capture and local OCR, not portable
+product dependencies. Ordinary callers can set `reducedAttempts: 0` and implement
+only canonical full-resolution acquisition and their own verifier.
+
+### Adapter contracts
+
+`acquire({captureId, scale, timeoutMs, signal})` returns a fresh `RenderFrame`:
+
+- Echo `captureId` and the explicit `deviceId`; provide PNG bytes as a `Buffer`,
+  a nonblank `backend`, and independently observed native `source` geometry:
+  `{width, height, rotation, displayId}`. Rotation is `0..3`; display ID is a string.
+- Deliver exactly `floor(source dimension * scale)` pixels per dimension, minimum
+  one. Scale is `0.25` or `1`. The helper decodes PNGs, validates geometry and
+  hashes retained bytes. Do not silently substitute full-size bytes for a reduced
+  request; return the classified failure below and let the helper record fallback.
+- Supply nonblank `beforeKey` and `afterKey` for relevant observed state around
+  capture, plus structured-cloneable `evidence` for semantic verification. Include
+  relevant window identity, hierarchy/content and display state in these keys.
+  A different key rejects that observation; a subsequent consistent observation
+  may pass. Source geometry/display changes across attempts terminate verification.
+- Use canonical Node device checks and read-only acquisition. Check readiness,
+  foreground/overlays and geometry as required by the adapter. Fail closed on lock,
+  protected content, ambiguous display and unknown acquisition errors. Do not
+  synthesize canonical Android receipts for experimental images.
+
+The helper cannot attest freshness, device identity, safety or the meaning of
+opaque context keys independently of the adapter. Do not pass cached frames or
+invent geometry/keys. The caller must associate the action receipt with this
+same device and await its completion before invoking verification.
+
+`verify(frame, conditionId, {timeoutMs, signal})` must inspect **this exact PNG**
+and the retained semantic evidence. Return both:
+
+```javascript
+{
+  semantic: { matched: true, reason: 'Expected visible content in snapshot evidence' },
+  visual: { matched: true, reason: 'Expected heading and content in these pixels' }
+}
+```
+
+Both `matched` fields must be booleans and both reasons nonblank strings. A
+matching tree, valid PNG, stable old frame or larger image is insufficient.
+The verifier receives copied bytes; mutating its PNG or geometry invalidates
+verification. The helper trusts the verifier's predicate, so a title-only check
+proves only that title condition, not that all content or animations have settled.
+Unknown overlays should return control to the agent's review policy. Keep app
+strategy and acceptance conditions outside the runtime.
+
+### Budgets, fallback and results
+
+`timeoutMs` is a required integer `1..120000`. Defaults are three reduced attempts,
+two full attempts and a 3000 ms fallback reserve. Reduced attempts accept `0..3`,
+full attempts `1..3`; the reserve must be an integer `1..timeoutMs`. The reserve
+is shared by fallback acquisition and verification, not a guarantee they can finish.
+There is no fixed sleep. Each rejected observation consumes one bounded attempt.
+Full-resolution fallback is fresh and must independently pass both checks.
+
+An adapter may throw exported `ReducedCaptureUnavailable` **during reduced
+acquisition only** for a classified unsupported capability or transport failure.
+This skips remaining reduced attempts. Do not use it for lock, protected content,
+geometry, unknown errors or verifier failures. Ordinary callback exceptions stop
+verification without fallback. A reduced callback budget expiry can advance to
+full resolution only after that callback has settled and time remains.
+
+Callbacks must be asynchronous, read-only and honor their remaining budget and
+`AbortSignal`. The helper rejects late completion and never publishes it as
+verified. JavaScript cannot preempt blocking synchronous code or force arbitrary
+callbacks to stop. An unsettled callback keeps this verifier instance busy;
+subsequent requests return `RENDER_BUSY` until it settles. Separate instances are
+not a cross-process/device lock. The caller must prevent concurrent navigation.
+
+The result keeps `action` unchanged and reports rendering separately:
+
+| Code | Meaning |
+| --- | --- |
+| `RENDER_VERIFIED` | Both predicates passed for `acceptedCaptureId`; use that retained frame. |
+| `RENDER_NOT_VERIFIED` | Bounded observations did not establish the condition, including at full resolution. |
+| `RENDER_TIMEOUT` / `RENDER_CANCELLED` | Deadline or cancellation stopped verification; no accepted capture is published. |
+| `RENDER_INVALID_EVIDENCE` | Invalid correlation, PNG, geometry or verifier result; stop and inspect the adapter. |
+| `RENDER_CALLBACK_FAILED` | Acquisition/verifier threw an unclassified error; stop and inspect retained adapter diagnostics. |
+| `RENDER_BUSY` | A previous invocation/callback still owns this instance; no acquisition started. |
+| `ACTION_NOT_SUCCESSFUL` | The supplied action or one of its steps failed; no observation started. |
+
+Only `RENDER_VERIFIED` has `status: "verified"`; other results use `"not_verified"`.
+Invalid request options throw `TypeError` before acquisition. Attempts retain IDs,
+requested scale, actual source/backend, PNG bytes, dimensions, SHA-256, decisions
+and rejection/failure reasons when available. Persist these privately; omit Buffer
+payloads when serializing a JSON manifest and save images separately. `startedAt`
+is host UTC time and `elapsedMs` uses the host monotonic clock. Neither is a device
+frame timestamp. This API does not claim atomic screenshot/tree capture or general
+visual settling. Rendering failure does not undo action success or authorize replay.

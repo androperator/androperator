@@ -37,3 +37,12 @@ value reads and `finish` verification as the primary example.
 
 No Codex launcher, model setting, registry, or catalog is needed. Your host remains
 the orchestrator. Do not put provider-specific delegation in the core runtime.
+
+For an image-consuming integration, an action receipt and matching snapshot do not
+prove destination pixels are ready. The optional Node `createRenderVerifier`
+helper described in [evidence documentation](../../../docs/api/evidence.md#optional-post-action-rendering-verification-node)
+can bound fresh observations and full-resolution fallback using a skill-owned
+predicate. The Settings example predicate checks the heading position and any
+explicitly requested visible content. It is not automatically enabled in this
+text-only Jev example. Use the exact accepted image; never replay navigation after
+an unverified observation or treat full resolution alone as success.

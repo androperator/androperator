@@ -1505,7 +1505,6 @@ Example:
 }
 ```
 
-<a id="action-close-app"></a>
 Explicit `scale` prefers the persistent shell capture helper, with stock capture
 and resize when helper setup is unavailable. Omission preserves the
 existing ordinary full-resolution ADB capture. The CLI spelling is
@@ -1601,6 +1600,7 @@ one. Timeout needs sufficient remaining budget; busy means await the prior
 capture. Never treat a failure or an old file at the requested path as a new
 observation.
 
+<a id="action-close-app"></a>
 ### `close_app`
 
 | Field | Valid values |

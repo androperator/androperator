@@ -21,14 +21,15 @@ export function buildBroadcastShellCommand(config: RuntimeConfig, payloadJson: s
  */
 export async function broadcastAgentCommand(
   config: RuntimeConfig,
-  payloadJson: string
+  payloadJson: string,
+  signal?: AbortSignal
 ): Promise<{ success: boolean; stdout: string; stderr: string }> {
   const shellCommand = buildBroadcastShellCommand(config, payloadJson);
   const redactedShellCommand = buildBroadcastShellCommand(config, "[REDACTED]");
   const result = await runAdb(
     config,
     ["shell", shellCommand],
-    { redactedArgs: ["shell", redactedShellCommand] }
+    { redactedArgs: ["shell", redactedShellCommand], signal }
   );
 
   return { success: result.code === 0, stdout: result.stdout, stderr: result.stderr };

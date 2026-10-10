@@ -99,7 +99,8 @@ const WAKE_COMMANDS: WakeCommand[] = [
 
 export async function runDoctorPingCommand(
   config: RuntimeConfig,
-  waitForEnvelope: WaitForResultEnvelopeFn = waitForResultEnvelope
+  waitForEnvelope: WaitForResultEnvelopeFn = waitForResultEnvelope,
+  signal?: AbortSignal
 ): Promise<LogcatResult & { probeEvidence: Record<string, unknown> }> {
   const commandId = `doctor-handshake-${Date.now()}-${randomUUID()}`;
   const payload = JSON.stringify({
@@ -117,11 +118,11 @@ export async function runDoctorPingCommand(
   try {
     result = await waitForEnvelope(
       config,
-      { commandId, taskId: "doctor-handshake", timeoutMs: 7000 },
+      { commandId, taskId: "doctor-handshake", timeoutMs: 7000, cancelSignal: signal },
       async (beginDispatchCapture) => {
         beginDispatchCapture();
         dispatchState = "unknown";
-        const broadcast = await broadcastAgentCommand(config, payload);
+        const broadcast = await broadcastAgentCommand(config, payload, signal);
         if (broadcast.success) dispatchState = "dispatched";
         return broadcast;
       }
@@ -166,9 +167,10 @@ export function isInteractiveAutomationReady(
 
 export async function probeInteractiveState(
   config: RuntimeConfig,
-  waitForEnvelope: WaitForResultEnvelopeFn = waitForResultEnvelope
+  waitForEnvelope: WaitForResultEnvelopeFn = waitForResultEnvelope,
+  signal?: AbortSignal
 ): Promise<InteractiveStateProbeResult> {
-  const result = await runDoctorPingCommand(config, waitForEnvelope);
+  const result = await runDoctorPingCommand(config, waitForEnvelope, signal);
 
   if (!result.ok) {
     if (("timeout" in result && result.timeout) || ("broadcastFailed" in result && result.broadcastFailed)) {

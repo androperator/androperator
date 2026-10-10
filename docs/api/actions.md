@@ -1584,8 +1584,16 @@ Omitted scale retains the existing full-resolution behavior and method.
 Failed scaled acquisition returns `EVIDENCE_CAPTURE_FAILED` on the screenshot step,
 with `data.captureFailureReason`, `data.protectedContent` and
 `data.fallbackAttempted` (`"true"` or `"false"`). Reasons are `incompatible`,
-`unavailable`, `rejected`, `protocol`, `transport`, `cancelled`, `timeout`, or
-`busy`. If fallback also fails, check the reported stock/resize error and ADB
+`unavailable`, `rejected`, `protocol`, `transport`, `cancelled`, `timeout`,
+`busy`, or `publication`. Publication means image acquisition succeeded but the
+host could not save the image. Publication failures retain `requestedScale`,
+`protectedContent`, `captureMethod`, `fallbackAttempted` and, when applicable,
+`fallbackReason`. Cancellation and deadline exhaustion during publication retain
+their `cancelled` or `timeout` reason. No successful path or persisted timestamp
+is returned, and a pre-existing destination is preserved when publication is
+interrupted before its atomic rename.
+
+If fallback also fails, check the reported stock/resize error and ADB
 readiness. Use an ordinary unprotected screen for direct content rejection;
 unlock/stabilize the display for state/geometry failures. Protocol/transport
 failure discards the session; a new read-only screenshot request starts a new

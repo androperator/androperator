@@ -64,3 +64,48 @@ test("fallback respects cancellation and a shared deadline", async () => {
   await assert.rejects(captureScaledScreenshot(config, { scale: 25, timeoutMs: 5 }, g.deps), (e: any) => e.reason === "timeout");
   assert.equal(g.captures(), 0);
 });
+
+// Use the production probe/result reader and ADB adapters, not the injected
+// interactive no-op above: cancellation must reach their actual pending work.
+for (const stage of ["reader", "broadcast", "before-display", "capture-display", "after-display"]) {
+  for (const interruption of ["cancelled", "timeout"]) {
+    test(`fallback ${interruption} interrupts ${stage} and stops further work`, async () => {
+      const { scaledCaptureRunner } = await import("./fakes/scaledCaptureRunner.js");
+      const f = await scaledCaptureRunner(true);
+      const controller = new AbortController();
+      const run = f.runner.run.bind(f.runner), spawn = f.runner.spawn.bind(f.runner);
+      let displayReads = 0, stopped = false, probeKilled = false;
+      const displayTarget = stage === "before-display" ? 1 : stage === "capture-display" ? 2 : 3;
+      f.runner.run = async (command, args, options) => {
+        const isBroadcast = args.join(" ").includes("am broadcast");
+        const isDisplay = args.slice(-2).join(" ") === "dumpsys display";
+        if (isDisplay) displayReads++;
+        const block = stage === "broadcast" ? isBroadcast : stage.endsWith("display") && isDisplay && displayReads === displayTarget;
+        if (!block) return run(command, args, options);
+        assert.ok(options?.signal, "pending subprocess must receive cancellation");
+        return new Promise(resolve => {
+          options.signal!.addEventListener("abort", () => { stopped = true; resolve({ code: null, stdout: "", stderr: "interrupted" }); }, { once: true });
+          if (interruption === "cancelled") controller.abort();
+        });
+      };
+      f.runner.spawn = (command, args, options) => {
+        const child = spawn(command, args, options);
+        if (args.includes("logcat")) {
+          const kill = child.kill.bind(child);
+          child.kill = () => { probeKilled = true; return kill(); };
+          if (stage === "reader" && interruption === "cancelled") setImmediate(() => controller.abort());
+        }
+        return child;
+      };
+      const runtime = getDefaultRuntimeConfig({ deviceId: "test-device", runner: f.runner });
+      await assert.rejects(captureScaledScreenshot(runtime, {
+        scale: 25, timeoutMs: stage === "reader" && interruption === "timeout" ? 30 : 500,
+        signal: controller.signal,
+      }), (error: any) => error.reason === interruption && error.fallbackAttempted === true);
+      assert.equal(probeKilled, true);
+      if (stage === "reader") assert.equal(f.calls.some(args => args.join(" ").includes("am broadcast")), false);
+      else assert.equal(stopped, true);
+      assert.equal(f.captures(), stage === "after-display" ? 1 : 0);
+    });
+  }
+}

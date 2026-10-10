@@ -129,3 +129,33 @@ for (const reason of ["protected_content", "secure_content"]) {
     assert.ok(commands.every(args => !args.includes("screencap") && !args.includes("input")));
   });
 }
+
+for (const stage of ["mkdir", "push", "sha256sum"]) {
+  for (const interruption of ["cancelled", "timeout"]) {
+    test(`${interruption} interrupts helper ${stage} without fallback or acquisition`, async () => {
+      const { config, children } = await fixture();
+      const run = config.runner.run.bind(config.runner);
+      const controller = new AbortController();
+      let interrupted = false;
+      config.runner.run = async (command, args, options) => {
+        if (!args.some(arg => arg.includes(stage))) return run(command, args, options);
+        assert.ok(options?.signal, "deployment must pass cancellation to its process");
+        return new Promise(resolve => {
+          const finish = () => { interrupted = true; clearTimeout(timer); resolve({ code: null, stdout: "", stderr: "interrupted" }); };
+          const timer = setTimeout(finish, Math.ceil(options.timeoutMs!));
+          options.signal!.addEventListener("abort", finish, { once: true });
+          if (interruption === "cancelled") controller.abort();
+        });
+      };
+      await assert.rejects(captureWithHelper(config, { scale: 25, timeoutMs: interruption === "timeout" ? 30 : 5000, signal: controller.signal }), (error: any) => {
+        assert.equal(error.reason, interruption);
+        assert.equal(error.fallbackAllowed, false);
+        return true;
+      });
+      assert.equal(interrupted, true);
+      assert.equal(children.length, 0);
+      config.runner.run = run;
+      assert.equal((await captureWithHelper(config, { scale: 25, timeoutMs: 1000 })).metadata.appliedScale, "25");
+    });
+  }
+}

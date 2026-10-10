@@ -50,12 +50,14 @@ class Session {
   private captureNanos = 0n;
   private idle?: NodeJS.Timeout;
   private remote?: string;
+  private readonly setupAbort = new AbortController();
   busy = true;
   constructor(private readonly config: RuntimeConfig) { owners.add(this); }
 
   close(error = fail("transport", "Capture helper closed. Retry the screenshot; navigation was not replayed.")) {
     if (this.dead) return;
     this.dead = error;
+    this.setupAbort.abort(error);
     if (this.idle) clearTimeout(this.idle);
     if (this.pending) { clearTimeout(this.pending.timer); this.pending.reject(this.dead); this.pending = undefined; }
     // EOF lets the shell wrapper remove only this session's private directory.
@@ -111,7 +113,9 @@ class Session {
       if (this.dead) throw this.dead;
       const remaining = deadline - performance.now();
       if (remaining <= 0) throw fail("timeout", "Capture setup deadline exhausted.");
-      const result = await this.config.runner.run(this.config.adbPath, ["-s", this.config.deviceId!, ...args], { timeoutMs: remaining });
+      const result = await this.config.runner.run(this.config.adbPath, ["-s", this.config.deviceId!, ...args], { timeoutMs: Math.ceil(remaining), signal: this.setupAbort.signal });
+      if (this.dead) throw this.dead;
+      if (performance.now() >= deadline) throw fail("timeout", "Capture setup deadline exhausted.");
       if (result.code !== 0 || result.error) throw fail("unavailable", "Cannot deploy capture helper. Check ADB connection and /data/local/tmp space; retry screenshot.");
       return result.stdout;
     };
@@ -143,7 +147,8 @@ class Session {
     } catch (error) {
       this.close();
       // Only the newly allocated directory is ours, never another client's helper.
-      try { await this.config.runner.run(this.config.adbPath, ["-s", this.config.deviceId!, "shell", "rm", "-rf", this.remote], { timeoutMs: 1000 }); } catch { /* Preserve the acquisition failure if disconnected during cleanup. */ }
+      // Cleanup has its own short bound and must not delay cancellation or fallback.
+      void this.config.runner.run(this.config.adbPath, ["-s", this.config.deviceId!, "shell", "rm", "-rf", this.remote], { timeoutMs: 250 }).catch(() => undefined);
       throw error;
     }
   }

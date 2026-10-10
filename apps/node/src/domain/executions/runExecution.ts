@@ -864,6 +864,7 @@ async function performExecution(
       const hasScreenshot = result.envelope.stepResults.some(s => s.actionType === "take_screenshot");
       const screenAction = execution.actions.find(a => a.type === "take_screenshot");
       if (hasScreenshot) {
+        let captureMetadata: Record<string, string> | undefined;
         try {
           const screenshotPath = screenAction?.params?.path ?? join(tmpdir(), `androperator-screenshot-${execution.commandId}-${Date.now()}.png`);
           const screenStep = result.envelope.stepResults.find(s => s.actionType === "take_screenshot");
@@ -872,6 +873,11 @@ async function performExecution(
           const scaled = screenAction?.params?.scale !== undefined ? await captureScaledScreenshot(config, {
             scale: screenAction.params.scale, timeoutMs: captureBudget, signal: options.signal,
           }) : undefined;
+          if (scaled) {
+            const { captureMethod, requestedScale, protectedContent, fallbackAttempted, fallbackReason } = scaled.metadata;
+            captureMetadata = { captureMethod, requestedScale, protectedContent, fallbackAttempted,
+              ...(fallbackReason !== undefined ? { fallbackReason } : {}) };
+          }
           const buffer = scaled?.buffer ?? await captureScreenshot(config, {
             timeoutMs: captureBudget,
             signal: options.signal,
@@ -880,23 +886,38 @@ async function performExecution(
           });
 
           const image = verifyScreenshot(buffer);
-          if (options.signal?.aborted) throw new Error("Screenshot cancelled before publication");
+          const checkPublicationBudget = () => {
+            if (options.signal?.aborted) throw new CaptureHelperError("cancelled", "Screenshot cancelled before publication");
+            if (Date.now() - dispatchStart >= execution.timeoutMs) throw new CaptureHelperError("timeout", "Screenshot deadline exhausted before publication");
+          };
+          checkPublicationBudget();
           const temporaryPath = `${screenshotPath}.${randomUUID()}.tmp`;
+          const publicationDeadline = new AbortController();
+          const publicationSignal = options.signal ? AbortSignal.any([options.signal, publicationDeadline.signal]) : publicationDeadline.signal;
+          const publicationTimer = setTimeout(() => publicationDeadline.abort(), Math.max(1, execution.timeoutMs - (Date.now() - dispatchStart)));
           try {
-            await writeFile(temporaryPath, buffer, { flag: "wx", mode: 0o600 });
-            if (options.signal?.aborted || Date.now() - dispatchStart >= execution.timeoutMs) throw new Error("Screenshot cancelled or deadline exhausted before publication");
+            await writeFile(temporaryPath, buffer, { flag: "wx", mode: 0o600, signal: publicationSignal });
+            checkPublicationBudget();
             await rename(temporaryPath, screenshotPath);
-          } finally { await rm(temporaryPath, { force: true }); }
+          } finally { clearTimeout(publicationTimer); await rm(temporaryPath, { force: true }); }
           finalizeSuccessfulScreenshotCapture(screenStep, screenshotPath, image);
           if (screenStep) screenStep.data = { ...screenStep.data, ...(scaled?.metadata ?? { captureMethod: "adb_screencap", protectedContent: "unknown", requestedScale: "100", appliedScale: "100" }) };
         } catch (e) {
           const screenStep = result.envelope.stepResults.find(step => step.actionType === "take_screenshot");
           if (screenStep !== undefined) {
             screenStep.success = false;
+            const captureFailureReason = options.signal?.aborted ? "cancelled"
+              : Date.now() - dispatchStart >= execution.timeoutMs ? "timeout"
+              : e instanceof CaptureHelperError ? e.reason : "publication";
             const { path: _path, capturedAt: _capturedAt, persistedAt: _persistedAt, captureWidthPx: _width, captureHeightPx: _height, coordinateSpace: _space, origin: _origin, ...previousData } = screenStep.data;
             screenStep.data = { ...previousData,
               runtimeError: previousData.error ?? "",
-              ...(e instanceof CaptureHelperError ? { captureFailureReason: e.reason, requestedScale: String(screenAction?.params?.scale ?? 100), fallbackAttempted: String(e.fallbackAttempted), protectedContent: e.protectedContent } : {}),
+              ...(screenAction?.params?.scale !== undefined ? {
+                captureFailureReason, requestedScale: String(screenAction.params.scale),
+                fallbackAttempted: String(e instanceof CaptureHelperError && e.fallbackAttempted),
+                protectedContent: e instanceof CaptureHelperError ? e.protectedContent : "unknown",
+                ...captureMetadata,
+              } : {}),
               error: ERROR_CODES.EVIDENCE_CAPTURE_FAILED,
               errorCode: ERROR_CODES.EVIDENCE_CAPTURE_FAILED,
               message: (typeof e === "object" && e !== null && "message" in e ? String(e.message) : String(e)).slice(0, 1024), failurePhase: "post_processing", dispatchState: "dispatched",

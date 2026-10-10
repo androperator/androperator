@@ -103,3 +103,43 @@ for (const customHandler of [false, true]) {
     }
   });
 }
+
+test("cancellation terminates an owned process and releases its pipes before its timeout", async () => {
+  const root = await mkdtemp(join(tmpdir(), "runner-cancellation-"));
+  const pidFile = join(root, "pid");
+  const controller = new AbortController();
+  const pending = runner.run(process.execPath, ["-e", `
+    require('node:fs').writeFileSync(${JSON.stringify(pidFile)}, String(process.pid));
+    process.on('SIGTERM', () => {});
+    setInterval(() => {}, 1000);
+  `], { timeoutMs: 10000, signal: controller.signal });
+  try {
+    const deadline = Date.now() + 5000;
+    let pid: number | undefined;
+    while (Date.now() < deadline) {
+      try { pid = Number(await readFile(pidFile, "utf8")); break; }
+      catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+      await delay(20);
+    }
+    assert.ok(pid, "fixture must start before cancellation");
+    const started = Date.now();
+    controller.abort();
+    const result = await pending;
+    assert.equal(result.code, null);
+    assert.match(result.stderr, /cancelled/);
+    assert.ok(Date.now() - started < 1000, "cancellation must not await the command timeout");
+    await delay(100);
+    assert.throws(() => process.kill(pid!, 0), (error: any) => error.code === "ESRCH");
+  } finally {
+    controller.abort();
+    await pending;
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("an already-cancelled process does not spawn", async () => {
+  const result = await runner.run("androperator-test-missing-executable", [], { signal: AbortSignal.abort() });
+  assert.equal(result.code, null);
+  assert.equal(result.error, undefined);
+  assert.match(result.stderr, /cancelled/);
+});

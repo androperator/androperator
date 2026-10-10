@@ -24,7 +24,7 @@ export function formatCommandLine(command: string, args: string[]): string {
 export async function runAdb(
   config: RuntimeConfig,
   args: string[],
-  options?: { timeoutMs?: number; logOutput?: boolean; redactedArgs?: string[] }
+  options?: { timeoutMs?: number; logOutput?: boolean; redactedArgs?: string[]; signal?: AbortSignal }
 ): Promise<AdbResult> {
   const deviceArgs = config.deviceId ? ["-s", config.deviceId, ...args] : args;
   const loggedArgs = config.deviceId ? ["-s", config.deviceId, ...(options?.redactedArgs ?? args)] : (options?.redactedArgs ?? args);

@@ -50,9 +50,18 @@ both bitmaps are freed in `finally`, including rejection paths.
 Node bounds headers to 4 KiB, encoded images to 64 MiB and decoded images to
 32 million pixels. It decodes PNG data with CRC validation and checks its actual
 dimensions. Capture and publication use the remaining execution budget from
-dispatch; cancellation discards the session. A unique sibling temporary file is
-renamed into the destination only after validation. Storage failure does not
-recapture. Existing command/task correlation, paths, envelope source and earlier
+dispatch; cancellation discards the session and interrupts deployment
+subprocesses. Fallback probes, their broadcasts and display queries receive the same cancellation and
+an absolute deadline signal, including time spent attaching the result reader.
+Failed setup launches best-effort removal of only its owned directory with a
+250 ms process bound; that cleanup does not delay the failed request.
+A unique sibling temporary file is renamed into the destination only after
+validation. Storage failure does not
+recapture. Publication cancellation, timeout and storage failure retain the
+acquired image's protection/backend/fallback metadata, with failure reasons
+`cancelled`, `timeout` and `publication` respectively. File writes receive the
+cancellation/deadline signal, and the budget is checked again before rename.
+Existing command/task correlation, paths, envelope source and earlier
 action outcomes remain intact.
 
 A failed or dead helper is removed from the session registry. The next explicit

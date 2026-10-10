@@ -31,9 +31,9 @@ const defaults = {
   helper: captureWithHelper,
   capture: captureScreenshot,
   display: readActiveDisplay,
-  interactive: async (config: RuntimeConfig, remaining: () => number) => {
+  interactive: async (config: RuntimeConfig, remaining: () => number, signal?: AbortSignal) => {
     const result = await probeInteractiveState(config, (runtime, options, trigger) =>
-      waitForResultEnvelope(runtime, { ...options, timeoutMs: Math.min(options.timeoutMs, remaining()) }, trigger));
+      waitForResultEnvelope(runtime, { ...options, timeoutMs: Math.min(options.timeoutMs, remaining()) }, trigger), signal);
     remaining();
     if (!result.ok) throw new CaptureHelperError("unavailable", `Could not verify device state: ${result.message}`);
     if (!isInteractiveAutomationReady(result.state)) throw new CaptureHelperError("rejected", "Screenshot requires an unlocked, interactive device. Unlock the device and retry screenshot.");
@@ -57,17 +57,23 @@ export async function captureScaledScreenshot(config: RuntimeConfig,
     if (!(error instanceof CaptureHelperError) || !error.fallbackAllowed || !["unavailable", "incompatible"].includes(error.reason)) throw error;
     reason = error.reason;
   }
+  // The result reader starts its own timeout after attaching/broadcasting. An
+  // absolute deadline signal also bounds that startup and its ADB broadcast.
+  const deadlineAbort = new AbortController();
+  const signal = options.signal ? AbortSignal.any([options.signal, deadlineAbort.signal]) : deadlineAbort.signal;
+  const timer = setTimeout(() => deadlineAbort.abort(new CaptureHelperError("timeout", "Screenshot deadline exhausted.")), Math.max(0, Math.ceil(deadline - performance.now())));
   try {
-    await dependencies.interactive(config, remaining);
-    const before = await dependencies.display(config, remaining());
-    const native = await dependencies.capture(config, { timeoutMs: remaining(), signal: options.signal });
+    remaining();
+    await dependencies.interactive(config, remaining, signal);
+    const before = await dependencies.display(config, remaining(), signal);
+    const native = await dependencies.capture(config, { timeoutMs: remaining(), signal });
     const dimensions = verifyScreenshot(native);
-    const after = await dependencies.display(config, remaining());
+    const after = await dependencies.display(config, remaining(), signal);
     if (JSON.stringify(before) !== JSON.stringify(after) || (before &&
       (dimensions.captureWidthPx !== before.width || dimensions.captureHeightPx !== before.height))) {
       throw new CaptureHelperError("rejected", "Display changed during fallback capture. Retry screenshot; navigation was not replayed.");
     }
-    await dependencies.interactive(config, remaining);
+    await dependencies.interactive(config, remaining, signal);
     const buffer = resizeScreenshot(native, options.scale);
     const image = verifyScreenshot(buffer);
     remaining();
@@ -80,8 +86,8 @@ export async function captureScaledScreenshot(config: RuntimeConfig,
   } catch (cause) {
     const message = typeof cause === "object" && cause !== null && "message" in cause ? String(cause.message) : String(cause);
     const reason = options.signal?.aborted ? "cancelled" : performance.now() >= deadline ? "timeout" : "unavailable";
-    const error = cause instanceof CaptureHelperError ? cause : new CaptureHelperError(reason, `Stock capture/resize failed: ${message}`);
+    const error = cause instanceof CaptureHelperError && reason === "unavailable" ? cause : new CaptureHelperError(reason, `Stock capture/resize failed: ${message}`);
     error.fallbackAttempted = true;
     throw error;
-  }
+  } finally { clearTimeout(timer); }
 }

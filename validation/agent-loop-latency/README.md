@@ -218,3 +218,45 @@ accuracy or human-speed control.
 before the second selected capture. The existing transport fallback supplies full
 resolution thereafter, with rendering checks and model-input dimension logging
 still active. Exclude this deliberate fault trial from normal size comparisons.
+
+## Quarter-size rendering probes
+
+`decisions-25-fastgate` keeps quarter-size model images and replaces the stock
+full-size rendering probes with direct quarter-size probes from the same persistent
+helper session. A recognized probe is followed by a separate selected capture and
+its own title check. Probe images are not sent to the model or reused as selected
+images. This isolates the probe path against `decisions-25`, whose model images
+are also quarter size.
+
+If the small probe cannot verify the expected title, preserve it and take a fresh
+stock full-size probe inside the same deadline. The full probe must independently
+pass the title check before the selected capture is acquired. If it still shows
+the old page, continue only within the three-attempt/remaining-time bound. A rejected
+selected image still switches selected captures and probes to full resolution.
+Known helper transport failures retain the existing full-size fallback and disable
+the direct helper for the rest of the trial. Protected/locked/rotated and unknown
+capture failures do not gain a new fallback route.
+
+The render ledger records requested probe scale and each `probe-full-fallback`
+result. Requested scale is not proof of delivered dimensions: a transport fallback
+may deliver a full-size probe, so inspect retained PNG dimensions and the capture
+attempt ledger. All probe, fallback and OCR costs remain in task time.
+
+Run a pilot, then three alternating pairs of `decisions-25` and
+`decisions-25-fastgate`, preserving failures without replacing them. Follow with
+separate recovery trials:
+
+- `decisions-25-fastgate-ocr-fault` deliberately returns no recognized rows for
+  the first probe whose original OCR recognizes About phone. Original pixels and
+  OCR are retained with an explicit injected-failure marker. This simulates an
+  unreadable probe to test full-size fallback; it is not evidence of a natural
+  low-resolution OCR failure.
+- `decisions-25-fastgate-fault` closes the helper before its second capture. With
+  small probes enabled that is the first selected image, after the first probe.
+  Subsequent captures use the stock full-size path; actual model-input dimensions
+  must reflect that recovery.
+
+Keep those deliberate failures outside normal timing medians. A small probe can
+arrive before destination rendering; rejection is a successful safety check, not
+a reason to accept old pixels. Title verification remains specific to this route
+and does not prove that all scroll animation has settled.

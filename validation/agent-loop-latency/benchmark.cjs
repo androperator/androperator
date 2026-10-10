@@ -14,13 +14,13 @@ function options(argv) {
     const name = argv[i];
     const value = argv[i + 1];
     if (!['--device', '--out', '--backend'].includes(name) || !value?.trim() || value.startsWith('--') || result[name]) {
-      throw Error('Usage: node validation/agent-loop-latency/benchmark.cjs --device <serial> --out <new-absolute-directory> [--backend cli|persistent|control|quarter|quarter-fault|quarter-transition|decisions-100|decisions-50|decisions-25]');
+      throw Error('Usage: node validation/agent-loop-latency/benchmark.cjs --device <serial> --out <new-absolute-directory> [--backend cli|persistent|control|quarter|quarter-fault|quarter-transition|decisions-100|decisions-50|decisions-25|decisions-25-fastgate]');
     }
     result[name] = value;
   }
   if (!result['--device'] || !path.isAbsolute(result['--out'] ?? '')) throw Error('Explicit device and absolute output directory required');
   result['--backend'] ??= 'cli';
-  if (!['cli', 'persistent', 'control', 'quarter', 'quarter-fault', 'quarter-transition', 'decisions-100', 'decisions-50', 'decisions-25', 'decisions-25-fault'].includes(result['--backend'])) throw Error('Unsupported benchmark backend');
+  if (!['cli', 'persistent', 'control', 'quarter', 'quarter-fault', 'quarter-transition', 'decisions-100', 'decisions-50', 'decisions-25', 'decisions-25-fault', 'decisions-25-fastgate', 'decisions-25-fastgate-fault', 'decisions-25-fastgate-ocr-fault'].includes(result['--backend'])) throw Error('Unsupported benchmark backend');
   return result;
 }
 
@@ -44,7 +44,7 @@ function run(argv) {
   delete env.VERSION_SCREENSHOTS;
   delete env.VERSION_DECISIONS;
   if (decisions) env.VERSION_DECISIONS = '1';
-  if (['control', 'quarter', 'quarter-fault', 'quarter-transition', 'decisions-100', 'decisions-50', 'decisions-25', 'decisions-25-fault'].includes(args['--backend'])) env.VERSION_SCREENSHOTS = args['--backend'];
+  if (['control', 'quarter', 'quarter-fault', 'quarter-transition', 'decisions-100', 'decisions-50', 'decisions-25', 'decisions-25-fault', 'decisions-25-fastgate', 'decisions-25-fastgate-fault', 'decisions-25-fastgate-ocr-fault'].includes(args['--backend'])) env.VERSION_SCREENSHOTS = args['--backend'];
   const operations = [];
   function execute(operation, program, parameters, timeout) {
     const started = performance.now();

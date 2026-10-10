@@ -72,3 +72,31 @@ test('unsupported destinations are rejected before navigation', async () => {
   await assert.rejects(execute(['click','--text','Other page'],{timeout:20000}),/Unsupported destination/);
   assert.equal(calls,0);
 });
+test('reduced probe falls back to independently verified full pixels before selecting', async () => {
+  const calls=[],records=[],frames=[[],row('About phone'),row('About phone')];
+  const execute=createGate({reducedProbe:true,
+    capture:async args=>{calls.push(['direct',...args]);return {status:0};},
+    fullCapture:async args=>{calls.push(['full',...args]);return {status:0};},
+    recognize:()=>frames.shift(),record:r=>records.push(r)});
+  await execute(['click','--text','About phone'],{timeout:20000});
+  await execute(['screenshot','--path','/unused.png'],{timeout:20000});
+  assert.deepEqual(records.map(r=>[r.kind,r.passed]),[['probe',false],['probe-full-fallback',true],['selected',true]]);
+  assert.deepEqual(calls.map(c=>c[0]),['direct','direct','full','direct']);
+  assert.equal(calls.filter(c=>c[1]==='click').length,1);
+});
+test('a full fallback showing the old page cannot rescue a rejected reduced probe', async () => {
+  let selected=0,full=0;
+  const execute=createGate({reducedProbe:true,
+    capture:async args=>{if(args[0]==='screenshot'&&!args[2].includes('render-probe'))selected++;return {status:0};},
+    fullCapture:async()=>{full++;return {status:0};},recognize:()=>row('Search Settings'),record(){}});
+  await execute(['click','--text','About phone'],{timeout:20000});
+  await assert.rejects(execute(['screenshot','--path','/unused.png'],{timeout:20000}),/not verified/);
+  assert.equal(full,3);assert.equal(selected,0);
+});
+test('recognized quarter probes do not capture full resolution', async () => {
+  const calls=[];
+  const execute=createGate({reducedProbe:true,capture:async args=>{calls.push(args);return {status:0};},
+    fullCapture:async()=>{throw Error('Unexpected full probe');},recognize:()=>row('Search Settings'),record(){}});
+  await execute(['screenshot','--path','/unused.png'],{timeout:20000});
+  assert.equal(calls.length,2);
+});

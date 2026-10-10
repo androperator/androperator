@@ -441,8 +441,8 @@ an acquisition adapter and a trusted semantic/pixel verifier. It does not add
 CLI flags or change what an existing `click`, `snapshot` or `screenshot` reports.
 It does not include OCR, a model, or an accelerated screenshot backend.
 
-This is an adapter-authoring interface. The following is a wiring sketch, not a
-standalone runnable program: the caller supplies both functions, the completed
+A [runnable full-resolution acquisition example](#full-resolution-starting-point)
+is provided below. The following is the integration shape: the caller supplies both functions, the completed
 action receipt, selected device and abort controller. Start with full-resolution
 acquisition (`reducedAttempts: 0`) unless your adapter supports reduced captures.
 
@@ -460,7 +460,6 @@ const observation = await verifyRendering({
   timeoutMs: 30000,
   reducedAttempts: 0, // Canonical full-resolution acquisition first.
   fullAttempts: 2,
-  fallbackReserveMs: 3000,
   signal: abortController.signal,
 });
 if (observation.status === 'verified') {
@@ -482,11 +481,10 @@ only canonical full-resolution acquisition and their own verifier.
 
 ### Adapter contracts
 
-`acquire({captureId, scale, timeoutMs, signal})` returns a fresh `RenderFrame`.
-The callback currently receives neither `deviceId` nor `conditionId`. Bind the
-selected device and any condition-specific acquisition context in your adapter,
-and pass the same values to `verifyRendering`. Do not assume fields omitted from
-the callback signature are forwarded. Its returned frame must satisfy:
+`acquire({captureId, deviceId, conditionId, scale, timeoutMs, signal})` returns a
+fresh `RenderFrame`. The explicit device and condition belong to this invocation;
+use them directly instead of duplicating request context in mutable variables.
+Its returned frame must satisfy:
 
 - Echo `captureId` and the explicit `deviceId`; provide PNG bytes as a `Buffer`,
   a nonblank `backend`, and independently observed native `source` geometry:
@@ -530,16 +528,18 @@ strategy and acceptance conditions outside the runtime.
 
 ### Budgets, fallback and results
 
-`timeoutMs` is a required integer `1..120000`. Defaults are three reduced attempts,
-two full attempts and a 3000 ms fallback reserve. Reduced attempts accept `0..3`,
-full attempts `1..3`; the reserve must be an integer `1..timeoutMs`. The reserve
-is shared by fallback acquisition and verification, not a guarantee they can finish.
-The reserve is validated even when `reducedAttempts: 0`. If `timeoutMs` is below
-3000, explicitly set `fallbackReserveMs` to a positive integer no greater than
-that timeout; otherwise the default reserve makes the request invalid. For
-example, a full-only one-second request needs `timeoutMs: 1000`,
-`reducedAttempts: 0` and `fallbackReserveMs: 1`. The reserve is not subtracted
-from full-only callback budgets.
+`timeoutMs` is a required integer `1..120000`. Defaults are three reduced attempts
+and two full attempts. Reduced attempts accept `0..3`; full attempts accept `1..3`.
+An omitted reserve in reduced mode is `min(3000, max(1, floor(timeoutMs / 2)))`
+milliseconds. For example, a 1000 ms timeout reserves 500 ms; a 30000 ms timeout
+reserves 3000 ms. This allows short timeouts without an additional option.
+
+With `reducedAttempts: 0`, there is no fallback reserve: the whole remaining
+budget is available to full-resolution acquisition and verification. An explicitly
+supplied `fallbackReserveMs` must still be an integer `1..timeoutMs`, even in
+full-only mode, where it is unused. Invalid explicit values are never silently
+normalized. A reserve is not a guarantee that fallback finishes; a one-millisecond
+budget may expire without acquiring an image.
 
 There is no fixed sleep. Each rejected observation consumes one bounded attempt.
 Full-resolution fallback is fresh and must independently pass both checks.
@@ -571,13 +571,113 @@ The result keeps `action` unchanged and reports rendering separately:
 | `ACTION_NOT_SUCCESSFUL` | The supplied action or one of its steps failed; no observation started. |
 
 Only `RENDER_VERIFIED` has `status: "verified"`; other results use `"not_verified"`.
-Invalid request options throw `TypeError` before acquisition. Attempts retain IDs,
+Invalid request options throw `TypeError` before acquisition. Messages name the
+field, accepted values and an example without echoing the supplied value.
+For example, `fullAttempts: 0` reports `fullAttempts: must be an integer in 1..3.
+Example: fullAttempts: 2`. Attempts retain IDs,
 requested scale, actual source/backend, PNG bytes, dimensions, SHA-256, decisions
 and rejection/failure reasons when available. Persist these privately; omit Buffer
 payloads when serializing a JSON manifest and save images separately. `startedAt`
 is host UTC time and `elapsedMs` uses the host monotonic clock. Neither is a device
 frame timestamp. This API does not claim atomic screenshot/tree capture or general
 visual settling. Rendering failure does not undo action success or authorize replay.
+
+
+### Failure diagnostics and safe recovery
+
+A terminal failure inside an attempt includes `failure` on the result and that
+attempt. Earlier recoverable failures remain only on their own attempts. Checks
+that stop before an attempt, such as an already-busy verifier, have no attempt
+failure details. `failure.stage` is `acquire`, `verify` or `validate`; `field`,
+when present, is a contract field name. Branch on codes/reasons, not error prose.
+
+| Failure reason | Meaning and next step |
+| --- | --- |
+| `invalid_field` | Inspect `field` and correct the adapter output against its contract. |
+| `not_cloneable` | Return structured-cloneable frame evidence. |
+| `correlation_mismatch` | Capture/device ID differs from the request; repair routing, do not relabel old evidence. |
+| `geometry_changed` | Native display geometry changed across attempts; obtain fresh context before a new observation. |
+| `png_decode_failed` / `resolution_mismatch` | The PNG is invalid or has the wrong dimensions for the requested scale. |
+| `verifier_mutation` | The verifier changed the PNG or source geometry; keep it read-only. |
+| `callback_threw` | An unclassified callback exception occurred; inspect privately retained adapter diagnostics for the indicated stage. |
+| `device_not_ready` / `capture_unavailable` / `verification_unavailable` / `unsafe_observation` | Explicit safe adapter classification; resolve readiness, acquisition, verifier availability or unsafe context before observing again. |
+| `deadline_exceeded` / `cancelled` | Stop using this attempt; wait for outstanding callbacks to settle before another observation. |
+| `reduced_capture_unavailable` / `reduced_budget_exhausted` | Recorded on a reduced attempt when the helper advances to full resolution. |
+
+Adapters can supply an allowlisted cause without leaking exception contents:
+
+```javascript
+import { RenderAdapterError } from '@androperator/cli/dist/renderVerification.js';
+// In your verifier, if its provider cannot be reached:
+throw new RenderAdapterError('verification_unavailable');
+```
+
+Only those four adapter classifications are accepted. Unknown exceptions become
+`callback_threw`; arbitrary messages, stacks, causes and custom properties are
+not copied into diagnostics. Keep private logs in the adapter if more detail is
+needed. Classification does not make an error eligible for fallback: only
+`ReducedCaptureUnavailable` during reduced acquisition does that.
+
+### Full-resolution starting point
+
+The repository provides `examples/skills/utils/render_full_resolution.mjs`.
+It implements acquisition using the branch-local CLI for doctor, snapshot and
+full-resolution screenshot, plus the existing active-display parser over an ADB
+read. It requires neither a DEX helper nor OCR. It checks readiness around the
+observation, rejects overlays/incomplete snapshots or unknown/changing geometry,
+and saves the actual PNG. It never navigates.
+
+Supply a trusted local module exporting `async verify(frame, conditionId, budget)`.
+That module must examine **both** `frame.png` and `frame.evidence.before/after`,
+return the documented semantic/visual decision, and honor the timeout and signal.
+Use your existing visual model or recognizer there; no always-true pixel verifier
+is supplied. Do not treat the snapshot as a substitute for pixel inspection.
+
+After your normal CLI action has completed, save its actual JSON response to the
+action file. Use the same device and development Operator for this example. Run
+from the repository root; the output directory must be new and absolute:
+
+```sh
+npm --prefix apps/node run build
+node examples/skills/utils/render_full_resolution.mjs \
+  <device_serial> /absolute/action.json /absolute/verify.mjs \
+  /absolute/new-private-observations destination-heading-and-content
+```
+
+The example uses a 60-second deadline, full-only capture and two attempts. Its
+process exits 0 only for verified evidence; other outcomes exit 1. It saves a
+`result.json` manifest and capture-ID-named PNGs. Use the PNG identified by
+`acceptedCaptureId` rather than taking another screenshot. Whole-node context
+keys are deliberately conservative: changing unrelated text can reject a frame.
+For dynamic apps, adapt the keys explicitly to the condition-relevant evidence.
+The active-display parser must recognize the device; unknown display layouts
+fail closed. This is an example adapter, not a portability guarantee.
+
+Illustrative result excerpts (the full result also retains the original action
+and attempt ledger):
+
+```json
+{"status":"verified","code":"RENDER_VERIFIED","acceptedCaptureId":"<capture_id>"}
+```
+
+```json
+{"status":"not_verified","code":"RENDER_NOT_VERIFIED"}
+```
+
+```json
+{"status":"not_verified","code":"RENDER_CALLBACK_FAILED","failure":{"stage":"verify","reason":"verification_unavailable"}}
+```
+
+```json
+{"status":"not_verified","code":"RENDER_CANCELLED"}
+```
+
+Unverified, failed and cancelled results publish no accepted capture ID. They
+do not request another click. Fix the reported observation problem, respect any
+outstanding callback, and decide whether a fresh read-only observation is useful.
+Quarter-size acquisition remains a separate experimental integration in
+`validation/render-verification/live.mjs`; the full-resolution example does not
+use or install it.
 
 
 ### Evidence and adoption limits

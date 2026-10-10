@@ -50,17 +50,21 @@ and validation. Those findings justify bounded independent verification; they
 do not establish portable hidden-API support, natural failure rates, or reduced
 image accuracy for Jev/OpenAI Decisions.
 
-## API and documentation tightening still outstanding
+## API and documentation integration
 
-These are review findings, not implemented behavior. Keep the public reference
-accurate until corresponding code and regression coverage change.
+The public reference owns exact omission semantics and failure codes. The helper
+forwards device/condition context into acquisition, fits the default reserve to
+short reduced-mode budgets, and leaves full-only calls without a reserve.
+Explicit options remain strict. Argument errors name the field and valid form;
+observation diagnostics use safe stage/reason/field data rather than arbitrary
+exception contents. Adapter classifications never authorize action replay.
 
-| Gap | Next change and acceptance |
-| --- | --- |
-| Short timeout with omitted reserve fails, including full-only mode | Make reserve semantics appropriate for full-only and short-budget calls. Preserve strict explicit-value validation; cover default and explicit budgets and document exact omission semantics. Current workaround: explicitly provide a valid reserve. |
-| Acquisition does not receive the request's device or condition | Pass explicit context into the acquisition contract, or deliberately bind it in the factory. Test multiple calls with different devices/conditions without mutable external context. Until then, adapters must bind matching context themselves. |
-| Generic argument and observation errors do not teach recovery | Add field-specific argument errors and safe structured failure stage/reason details. Distinguish acquisition, verification and evidence validation without exposing arbitrary exception contents or weakening fail-closed behavior. |
-| The public example is an adapter-wiring sketch | Add a concrete canonical full-resolution acquisition example with an explicitly supplied visual verifier and worked outcomes. Keep experimental reduced capture separate; do not imply a portable built-in recognizer exists. |
+`examples/skills/utils/render_full_resolution.mjs` provides concrete full-resolution
+acquisition and accepts the caller's visual verifier module. Its conservative
+whole-node context keys may need explicit narrowing for dynamic applications.
+It fails closed when the existing active-display parser cannot establish native
+geometry. It is separate from the experimental reduced backend and does not
+claim general device compatibility or replace a real visual verifier.
 
 ## Subsequent capture-backend work
 

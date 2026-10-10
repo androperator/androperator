@@ -159,3 +159,36 @@ An initial sandboxed Node suite could not inspect host processes or bind require
 sockets; the authorized process/socket run passed. These are host permission
 failures, not physical verification failures. No Android code changed, so an APK
 rebuild and unrelated Android suite were not required for this Node-only change.
+
+## API UX follow-up validation
+
+The follow-up adds per-call device/condition context to acquisition, short-timeout
+reserve defaults, field-specific argument errors, safe stage/reason/field failure
+diagnostics, and the full-resolution acquisition example. The maintained reduced
+backend remains separate work. Public contracts and the implemented design live
+in `docs/api/evidence.md` and `docs/internal/design/post-action-rendering.md`.
+
+A physical smoke test used the new example with a real completed Settings-open
+receipt and an independently supplied local pixel verifier. Its first predicate
+incorrectly expected a standalone Settings heading; both full frames were
+correctly rejected (21.140 s total). The device layout instead shows Search
+Settings and category rows. After correcting only that private test predicate to
+require actual Network and internet / Connected devices pixels, a fresh read-only
+observation passed in one full capture (11.881 s). Both snapshots independently
+required Settings foreground and visible Search Settings. The original action
+receipt was preserved; navigation was not replayed. These are functional smoke
+timings with readiness checks, not a new performance comparison.
+
+The example's readiness gate was checked against actual doctor output before
+capture: `checks[]` contains the `readiness.device.interactive` check. The example,
+its fixture and the overview now use that actual structure rather than an assumed
+nested readiness object. The completed example never uses a DEX helper, reduced
+capture, or bundled OCR; the smoke verifier was explicitly supplied by the caller.
+
+The updated Node suite passed 1,503 tests. New regression coverage checks default
+short budgets, invalid option teaching errors, device/condition changes between
+calls, specific validation failures and exception redaction. Example coverage
+checks canonical read-only capture, readiness, overlays, rotation and transport
+failure. The existing quarter/fallback, deadline, cancellation and no-replay
+coverage remains. Original physical comparisons above apply to the earlier
+measured implementation; no new speedup is inferred from this follow-up.

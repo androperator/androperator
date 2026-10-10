@@ -7,6 +7,12 @@ The maintained Node helper is `apps/node/src/renderVerification.ts`. Its tests
 run in the Node suite. `policy.test.cjs` tests the example-owned Settings predicate
 and runs in validation CI. No physical device or OCR is needed for either suite.
 
+For a full-resolution starting point without experimental capture or OCR setup,
+use `examples/skills/utils/render_full_resolution.mjs` with your own visual verifier.
+Its contract and worked outcomes are in the [public reference](../../docs/api/evidence.md#full-resolution-starting-point).
+`full-resolution-example.test.mjs` covers its read-only command wiring and unsafe
+acquisition failures and runs in validation CI.
+
 `live.mjs` is an opt-in laboratory consumer of that helper. It does not ship a
 production capture backend, OCR dependency or automatic CLI rendering check.
 Build Node and the existing experimental direct-buffer DEX using

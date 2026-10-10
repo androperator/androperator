@@ -57,7 +57,7 @@ Before treating a target as ready for interactive automation, use
 
 - exit code `0`
 - `criticalOk == true`
-- `readiness.device.interactive.status == "pass"`
+- the `checks[]` entry with `id: "readiness.device.interactive"` has `status: "pass"`
 
 That doctor check exposes structured evidence:
 

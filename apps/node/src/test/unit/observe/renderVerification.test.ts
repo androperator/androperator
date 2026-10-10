@@ -134,3 +134,61 @@ test("a settled callback that overruns its small budget cannot consume fallback 
   assert.equal(result.status, "verified"); assert.deepEqual(scales, [0.25, 1]);
   assert.equal(result.attempts[0].reason, "reduced_budget_exhausted");
 });
+
+test("short timeouts need no reserve override in full-only or reduced mode", async () => {
+  for (const reducedAttempts of [0, 3]) {
+    const seen: RenderCaptureRequest[] = [];
+    const run = createRenderVerifier({ acquire: async r => { seen.push(r); return frame(r); }, verify: async () => decision() });
+    const result = await run({ action, deviceId: "test-device", conditionId: "destination", timeoutMs: 1000, reducedAttempts });
+    assert.equal(result.code, "RENDER_VERIFIED");
+    assert.equal(seen[0].scale, reducedAttempts ? 0.25 : 1);
+    assert.ok(seen[0].timeoutMs <= (reducedAttempts ? 500 : 1000));
+    assert.ok(seen[0].timeoutMs > 0);
+  }
+});
+
+test("argument errors name the invalid field, valid range and example without echoing values", async () => {
+  const run = createRenderVerifier({ acquire: async r => frame(r), verify: async () => decision() });
+  for (const [options, field] of [
+    [{ deviceId: "" }, "deviceId"], [{ conditionId: " " }, "conditionId"], [{ timeoutMs: undefined }, "timeoutMs"],
+    [{ timeoutMs: 0 }, "timeoutMs"], [{ reducedAttempts: null }, "reducedAttempts"],
+    [{ fullAttempts: 4 }, "fullAttempts"], [{ fallbackReserveMs: 0 }, "fallbackReserveMs"],
+    [{ reducedAttempts: 0, fallbackReserveMs: 501 }, "fallbackReserveMs"],
+  ] as const) {
+    await assert.rejects(run(request(options as Partial<RenderRequest>)), error => {
+      assert.ok(error instanceof TypeError); assert.ok(error.message.startsWith(field + ":"));
+      assert.match(error.message, /Example:/); return true;
+    });
+  }
+});
+
+test("acquisition receives each call's device and condition without shared mutable context", async () => {
+  const seen: string[] = [];
+  const run = createRenderVerifier({ acquire: async r => {
+    seen.push(`${r.deviceId}/${r.conditionId}`); return { ...frame(r), deviceId: r.deviceId };
+  }, verify: async (_f, condition) => decision(condition.startsWith("destination-")) });
+  for (const id of ["one", "two"]) assert.equal((await run(request({ deviceId: id, conditionId: `destination-${id}` }))).status, "verified");
+  assert.deepEqual(seen, ["one/destination-one", "two/destination-two"]);
+});
+
+test("failures identify acquisition, verification or the invalid evidence field without leaking exceptions", async () => {
+  const { RenderAdapterError } = await import("../../../renderVerification.js");
+  for (const stage of ["acquire", "verify"] as const) {
+    const run = createRenderVerifier({
+      acquire: async r => { if (stage === "acquire") throw Error("private-token"); return frame(r); },
+      verify: async () => { throw new RenderAdapterError("verification_unavailable"); },
+    });
+    const result = await run(request());
+    assert.deepEqual(result.failure, { stage, reason: stage === "acquire" ? "callback_threw" : "verification_unavailable" });
+    assert.deepEqual(result.failure, result.attempts[0].failure);
+    assert.ok(!JSON.stringify(result).includes("private-token"));
+  }
+  const badDevice = createRenderVerifier({ acquire: async r => ({ ...frame(r), deviceId: "other" }), verify: async () => decision() });
+  assert.deepEqual((await badDevice(request())).failure, { stage: "validate", reason: "correlation_mismatch", field: "deviceId" });
+  const badPng = createRenderVerifier({ acquire: async r => ({ ...frame(r), png: Buffer.from("private-token") }), verify: async () => decision() });
+  assert.deepEqual((await badPng(request())).failure, { stage: "validate", reason: "png_decode_failed", field: "png" });
+  const classified = new RenderAdapterError("device_not_ready");
+  Object.assign(classified, { reason: "private-token" });
+  const tampered = createRenderVerifier({ acquire: async () => { throw classified; }, verify: async () => decision() });
+  assert.equal((await tampered(request())).failure?.reason, "callback_threw");
+});

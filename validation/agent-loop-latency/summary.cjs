@@ -16,7 +16,7 @@ function summarize(directory, trial) {
   const read = (name, fallback) => fs.existsSync(path.join(directory, name))
     ? JSON.parse(fs.readFileSync(path.join(directory, name), 'utf8')) : fallback;
   const events = read('events.json', []);
-  const provider = read('jev.json', []);
+  const provider = read('decisions.json', read('jev.json', []));
   const timingPath = path.join(directory, 'timings.ndjson');
   const spans = fs.existsSync(timingPath) ? fs.readFileSync(timingPath, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse) : [];
   const commandNames = ['open', 'click', 'scroll', 'screenshot', 'snapshot', 'read-value'];

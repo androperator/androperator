@@ -14,19 +14,22 @@ function options(argv) {
     const name = argv[i];
     const value = argv[i + 1];
     if (!['--device', '--out', '--backend'].includes(name) || !value?.trim() || value.startsWith('--') || result[name]) {
-      throw Error('Usage: node validation/agent-loop-latency/benchmark.cjs --device <serial> --out <new-absolute-directory> [--backend cli|persistent|control|quarter|quarter-fault|quarter-transition]');
+      throw Error('Usage: node validation/agent-loop-latency/benchmark.cjs --device <serial> --out <new-absolute-directory> [--backend cli|persistent|control|quarter|quarter-fault|quarter-transition|decisions-100|decisions-50|decisions-25]');
     }
     result[name] = value;
   }
   if (!result['--device'] || !path.isAbsolute(result['--out'] ?? '')) throw Error('Explicit device and absolute output directory required');
   result['--backend'] ??= 'cli';
-  if (!['cli', 'persistent', 'control', 'quarter', 'quarter-fault', 'quarter-transition'].includes(result['--backend'])) throw Error('Backend must be cli, persistent, control, quarter, quarter-fault or quarter-transition');
+  if (!['cli', 'persistent', 'control', 'quarter', 'quarter-fault', 'quarter-transition', 'decisions-100', 'decisions-50', 'decisions-25', 'decisions-25-fault'].includes(result['--backend'])) throw Error('Unsupported benchmark backend');
   return result;
 }
 
 function run(argv) {
   const args = options(argv);
-  if (!process.env.JEV_API_KEY?.trim()) throw Error('JEV_API_KEY is not configured');
+  const decisions = args['--backend'].startsWith('decisions-');
+  const credential = decisions ? 'OPENAI_API_KEY' : 'JEV_API_KEY';
+  if (!process.env[credential]?.trim()) throw Error(`${credential} is not configured`);
+  if (decisions && !fs.existsSync(process.env.VERSION_SCREEN_TEXT ?? '')) throw Error('VERSION_SCREEN_TEXT executable is required');
   if (!fs.existsSync(cli)) throw Error('Build the branch-local Node CLI first');
   const directory = args['--out'];
   fs.mkdirSync(directory, {mode: 0o700}); // Refuse to overwrite or resume a trial.
@@ -39,7 +42,9 @@ function run(argv) {
     ANDROPERATOR_LOG_DIR: path.join(directory, 'logs'),
   };
   delete env.VERSION_SCREENSHOTS;
-  if (['control', 'quarter', 'quarter-fault', 'quarter-transition'].includes(args['--backend'])) env.VERSION_SCREENSHOTS = args['--backend'];
+  delete env.VERSION_DECISIONS;
+  if (decisions) env.VERSION_DECISIONS = '1';
+  if (['control', 'quarter', 'quarter-fault', 'quarter-transition', 'decisions-100', 'decisions-50', 'decisions-25', 'decisions-25-fault'].includes(args['--backend'])) env.VERSION_SCREENSHOTS = args['--backend'];
   const operations = [];
   function execute(operation, program, parameters, timeout) {
     const started = performance.now();

@@ -48,11 +48,12 @@ async function decide(state, deadline = Infinity) {
 function observationRecoveries() {
   return fs.existsSync(runtime.file('recoveries.json')) ? runtime.read('recoveries.json') : [];
 }
-async function loop() {
+async function loop({decider = decide, budgetMs = 30000} = {}) {
+  if (typeof decider !== 'function' || !Number.isSafeInteger(budgetMs) || budgetMs < 1 || budgetMs > 120000) throw Error('Invalid controller options');
   const start=performance.now();
   let state, failure, recovery;
   const budgetFile='delegation.json';
-  const budget=fs.existsSync(runtime.file(budgetFile)) ? runtime.read(budgetFile) : {deadline:Math.min(Date.now()+30000,runtime.runDeadline()),actions:0};
+  const budget=fs.existsSync(runtime.file(budgetFile)) ? runtime.read(budgetFile) : {deadline:Math.min(Date.now()+budgetMs,runtime.runDeadline()),actions:0};
   runtime.save(budgetFile,budget);
   const execute=operation=>{
     try {return runtime.withDeadline(budget.deadline,operation);}
@@ -69,8 +70,8 @@ async function loop() {
       const key=digest([state.signature,Object.keys(state.collected)]);
       if(seen.has(key)) {reason='no_progress';break;}
       seen.add(key);
-      const choice=await decide(state,budget.deadline);
-      if(choice==='escalate') {reason='jev_escalate';break;}
+      const choice=await decider(state,budget.deadline);
+      if(choice==='escalate') {reason=decider===decide?'jev_escalate':'provider_escalate';break;}
       if(Date.now()>=budget.deadline) break;
       budget.actions++;runtime.save(budgetFile,budget);
       state=execute(()=>runtime.act(choice,state.captureId));

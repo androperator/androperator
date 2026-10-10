@@ -12,8 +12,9 @@ function mayFallback(error) {
   return /^(Capture session closed|Capture session timed out|Invalid capture signature|Missing PNG signature|Missing or unexpected capture trailer|Truncated PNG packet|Missing PNG terminator|Direct buffer geometry or request sequence mismatch)$/.test(error.message);
 }
 
-function createRunner({mode, device, directory, startSession = startScaleSession, runCli, selectDisplay}) {
+function createRunner({mode, device, directory, startSession = startScaleSession, runCli, selectDisplay, percent = 25}) {
   if (!['control', 'quarter', 'quarter-fault', 'quarter-transition'].includes(mode)) throw Error('Unknown screenshot mode');
+  if (![100, 50, 25].includes(percent)) throw Error('Unsupported capture percentage');
   let session, display, sequence = 0, count = 0, disabled = false, transition = false;
   const record = row => fs.appendFileSync(path.join(directory, 'screenshot-attempts.ndjson'), JSON.stringify(row) + '\n', {mode: 0o600});
   async function close() { if (session) await session.close(); session = undefined; }
@@ -45,9 +46,9 @@ function createRunner({mode, device, directory, startSession = startScaleSession
       }
       if (mode === 'quarter-fault' && count === 2) await close();
       if (!session) throw Error('Capture session closed');
-      const packet = splitPacket((await session.capture(25, Math.min(5000, remaining()))).buffer);
+      const packet = splitPacket((await session.capture(percent, Math.min(5000, remaining()))).buffer);
       const image = verifyScreenshot(packet.png);
-      const size = expectedSize(display, 25);
+      const size = expectedSize(display, percent);
       if (image.captureWidthPx !== size.width || image.captureHeightPx !== size.height
         || packet.metrics.sourceWidth !== display.width || packet.metrics.sourceHeight !== display.height) throw Error('Capture source/output mismatch');
       validateDirectMetrics(packet.metrics, size.width, size.height, display.rotation, ++sequence);
@@ -59,7 +60,7 @@ function createRunner({mode, device, directory, startSession = startScaleSession
       const commandId = `experimental-capture-${randomUUID()}`;
       const data = {...image, sourceWidthPx: display.width, sourceHeightPx: display.height,
         rotation: display.rotation, backend: 'experimental-direct-buffer', path: output, sequence,
-        requestedScale: 0.25, captureSource: 'experimental-shell', persistedAt: new Date().toISOString()};
+        requestedScale: percent / 100, captureSource: 'experimental-shell', persistedAt: new Date().toISOString()};
       record({attempt: count, backend: data.backend, success: true, bytes: packet.png.length,
         elapsedMs: performance.now() - started, ...packet.metrics});
       // This is explicitly experimental capture evidence, not an Operator result.

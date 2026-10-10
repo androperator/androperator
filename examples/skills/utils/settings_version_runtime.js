@@ -75,8 +75,8 @@ function viewportFromCapture(png, response) {
   if(data?.backend!=='experimental-direct-buffer') return {width,height,sourceKind:'image-dimensions'};
   const sourceWidth=data.sourceWidthPx, sourceHeight=data.sourceHeightPx;
   if(!Number.isSafeInteger(sourceWidth) || !Number.isSafeInteger(sourceHeight) || sourceWidth<1 || sourceHeight<1
-    || sourceWidth*sourceHeight>32000000 || data.requestedScale!==0.25
-    || Math.max(1,Math.floor(sourceWidth/4))!==width || Math.max(1,Math.floor(sourceHeight/4))!==height
+    || sourceWidth*sourceHeight>32000000 || ![1,0.5,0.25].includes(data.requestedScale)
+    || Math.max(1,Math.floor(sourceWidth*data.requestedScale))!==width || Math.max(1,Math.floor(sourceHeight*data.requestedScale))!==height
     || data.captureWidthPx!==width || data.captureHeightPx!==height) throw Error('Invalid experimental screenshot geometry');
   return {width:sourceWidth,height:sourceHeight,sourceKind:'verified-capture-source-dimensions'};
 }

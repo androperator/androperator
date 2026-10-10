@@ -6,7 +6,7 @@ const fs = require('node:fs');
 
 async function main() {
   const screenshots = process.env.VERSION_SCREENSHOTS;
-  const bridge = createBridge(screenshots ? require('node:path').join(__dirname, 'jev-screenshots.cjs') : undefined);
+  const bridge = createBridge(screenshots ? require('node:path').join(__dirname, process.env.VERSION_DECISIONS ? 'decisions-screenshots.cjs' : 'jev-screenshots.cjs') : undefined);
   runtime.setCommandRunner(bridge.execute);
   const operations = [];
   let status = 'failed';
@@ -19,7 +19,9 @@ async function main() {
       let exitCode = 0;
       let stderr = '';
       try {
-        result = await measureAsync(`operation.${operation}`, () => performOperation(operation));
+        result = await measureAsync(`operation.${operation}`, () => operation === 'jev' && process.env.VERSION_DECISIONS
+          ? require('../../examples/skills/utils/settings_version_jev').loop({decider: require('./decisions.cjs').decide, budgetMs: 90000})
+          : performOperation(operation));
       } catch (error) {
         exitCode = 1;
         const failure = {reason: error.message, failure: error.failure, recovery: error.recovery};

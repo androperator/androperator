@@ -88,7 +88,7 @@ This is a bounded, task-specific candidate-selection benchmark. The helper
 already knows supported About/Software routes; it is not proof of general
 unfamiliar-app navigation or human parity. Keep debug/release build, device,
 starting state, policy, and cold/warm conditions explicit in reports. A human
-baseline and an OpenAI Decisions adapter are separate follow-up experiments.
+baseline remains follow-up work; the Decisions comparison is documented below.
 
 Offline checks (no device or provider calls):
 
@@ -148,3 +148,73 @@ is not a formal rendering barrier; a reliable production solution still needs
 explicit visual-settling evidence. Do not equate successful extraction with fresh
 intermediate screenshots. This observed failure and the fallback choice have
 regression coverage in `jev-screenshots.test.cjs`.
+
+## Decisions with screenshots and rendered-page checks
+
+`decisions-100`, `decisions-50` and `decisions-25` run the same Settings candidate
+policy through OpenAI Decisions (`gpt-6-luna`). They require `OPENAI_API_KEY` and
+an executable supplied as `VERSION_SCREEN_TEXT`. Build the local pixel recognizer
+on macOS using its built-in Vision framework:
+
+```sh
+swiftc -module-cache-path /tmp/androperator-swift-cache validation/agent-loop-latency/ScreenText.swift -o /tmp/androperator-screen-text
+VERSION_SCREEN_TEXT=/tmp/androperator-screen-text node validation/agent-loop-latency/benchmark.cjs --device <device_serial> --out /absolute/path/to/new-trial --backend decisions-25
+```
+
+Deploy the experimental DEX first, as for the quarter-size experiment. Apple
+Vision may require execution outside an agent filesystem sandbox. It processes
+pixels locally; no extra OCR provider or third-party package is used. This gate
+is specific to the English Settings and About phone titles on the tested phone.
+Unsupported click destinations stop the experiment.
+
+Before every accepted screenshot, the harness captures a separate full-resolution
+image through the canonical CLI and recognizes the expected title in its upper
+region. It then captures at the assigned size through the persistent helper and
+checks the title in that actual image too. The probe, OCR, selected capture,
+retries, cold helper startup and cleanup all count toward task time. The canonical
+probe is intentionally conservative and expensive. It prevents the known old-page
+failure; it does not synchronize every animated row or make screenshot and snapshot
+atomic. Scrolls retain the page-title check, then the existing snapshot freshness,
+progress and terminal field verification. Title recognition alone does not prove
+all scrolling content is settled.
+
+At most three probe attempts fit inside the existing screenshot deadline. Failed
+probes are retained with attempt-specific names. An unreadable selected image is
+retained as rejected, and subsequent attempts use a fresh full-resolution canonical
+image. That fallback still has to pass the title check. Eligible capture transport
+failures retain the existing stock fallback; rotation, lock, protected content and
+unknown capture errors fail closed. No navigation action is replayed. Provider
+failure, refusal or uncertain choice stops the loop; there is no automatic
+provider retry with a larger image in this experiment.
+
+Each model request includes the accepted PNG inline plus projected snapshot node
+text, bounds, flags, headings, offered candidates and collected field names. Unlike
+the narrower Jev input, these screenshots and nodes disclose visible device data
+to the authorized provider. Local provenance paths/device IDs are omitted from the
+model input, but raw evidence and private provider logs retain local references.
+The model selects an offered action or escalates. Named answer type, model,
+confidence (experimental threshold 0.6), allowed choice and probability distribution
+are validated. A confidence value is not an accuracy guarantee.
+
+Decisions uses an explicit 90-second delegation budget, eight-action limit and
+15-second request deadline with no HTTP retries; the overall 275-second run budget
+is unchanged. The wider delegation allowance accommodates rendering checks and is
+identical across sizes. Default Jev behavior remains at 30 seconds. `decisions.json`
+records request context, image reference/size, answer, usage and provider timing
+without saving credentials or duplicating the base64 payload. `render-checks.ndjson`
+records each probe and accepted/rejected image result. Summary provider timing reads
+Decisions when present. Probe subprocesses are inside screenshot command spans,
+not additional entries in the canonical task command ledger.
+
+Run pilots, then at least three rounds in rotating resolution order. Compare actual
+image dimensions, paths, outcomes, provider time, task time, capture time and gate
+fallbacks. Inspect post-click and terminal pixels independently and compare extracted
+values locally. Keep failed pilots separate and visible. Prior Jev timings use a
+different observation policy and input disclosure, so they are not a matched
+provider comparison. Passing this known route does not demonstrate unfamiliar-app
+accuracy or human-speed control.
+
+`decisions-25-fault` is a separate recovery trial. It closes the direct helper
+before the second selected capture. The existing transport fallback supplies full
+resolution thereafter, with rendering checks and model-input dimension logging
+still active. Exclude this deliberate fault trial from normal size comparisons.

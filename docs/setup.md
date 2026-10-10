@@ -457,7 +457,11 @@ SDK is required on the host. The normal screenshot command remains full size.
 The maintained backend is verified on Android 17/API 37.1 physical hardware and
 an Android 17/API 37.2 emulator. The tested API 35/36 builds lack the required
 newer interfaces; emulation itself is not a restriction. Compatibility is probed
-at runtime rather than inferred solely from the OS version.
+at runtime rather than inferred solely from the OS version. Android 16 QPR2
+source also has the new interfaces, but has not received local runtime validation.
+Doctor checks API presence, not enforcement of protected-content policy; the
+[screenshot contract](api/actions.md#action-take-screenshot) records the unresolved
+hardware-protected DRM safety limitation.
 
 Run `androperator doctor --device <device_serial> --operator-package com.androperator.operator.dev`
 to see `capture.reduced`. Doctor temporarily deploys and probes the helper but

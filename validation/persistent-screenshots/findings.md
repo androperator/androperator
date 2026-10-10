@@ -231,3 +231,21 @@ these live emulator runs are explicit opt-in and were not run on remote CI.
 The fixture was uninstalled, the one known owned directory left by transport
 interruption was removed, and no helper directories remained. Rotation/overlay
 state was restored and the test-owned daemon and API 37 emulator were stopped.
+
+
+## Source-audit correction (2026-10-11)
+
+The follow-up Android source audit found the new class/policy surface already
+in Android 16 QPR2, absent in the inspected QPR1/initial Android 16 sources.
+The tested older emulator was API 36.0, so its failure cannot establish that all
+Android 16 builds fail. Android 16 QPR2 runtime compatibility remains untested.
+
+More importantly, AOSP's inspected WindowManager-to-layer-capture path does not
+preserve the throw policy as a distinct rejection condition when creating the
+compositor screenshot arguments. Our independent secure-layer result check can
+explain the passing FLAG_SECURE test. Protected DRM rejection is not established
+by that test or by policy constant presence. Earlier statements that the newer
+policies guarantee rejection must be read with this correction. The existing
+implementation still has an unresolved fail-closed requirement for protected
+buffers; no live DRM fixture has demonstrated enforcement. See the durable
+source audit for exact symbols, source links and the required follow-up.

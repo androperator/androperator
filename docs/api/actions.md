@@ -1551,10 +1551,17 @@ tested Android 15 (API 35) and Android 16 (API 36) emulators have an older scali
 interface but lack the newer capture class and policy parameters. This is an
 Android-build capability restriction, not a general emulator restriction.
 API 37.0, other manufacturers and other builds are not guaranteed compatible.
-Use a supported Android 17 build, run `doctor` to check capability, then verify
-an actual screenshot. The screen must be unlocked, interactive and stable.
-Explicit scaled captures fail closed if these guarantees are unavailable; Node
-does not silently substitute a redacted full-size image. Omit `scale`/`--scale`
+Run `doctor` to check capability, then verify an actual screenshot. Android 16
+QPR2 source also contains the newer interface, but that build has not been tested
+locally. The screen must be unlocked, interactive and stable.
+Explicit scaled captures fail closed if required APIs are unavailable; Node
+does not automatically substitute a full-size image. **Protected-content limit:**
+API presence and the secure-window fixture do not prove rejection of hardware-
+protected DRM buffers. Source inspection found a gap in throw-policy propagation
+on the layer-capture path. Successful reduced capture is not certification that
+no protected regions were redacted. This safety requirement remains unresolved;
+see the source repository's `docs/internal/design/persistent-screenshots.md`
+source audit. Omit `scale`/`--scale`
 for the existing ordinary full-resolution capture, which retains Android's
 standard redaction behavior. This is an explicit caller choice, not automatic
 recovery after a locked, protected or uncertain capture.

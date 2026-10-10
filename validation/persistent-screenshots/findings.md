@@ -354,3 +354,92 @@ and the API 37 emulator stopped. Two exact directories left by cancellation and
 transport interruption were removed using their recorded owned session IDs;
 no helper directories remained on the four targets. Existing API 35/36 emulators
 were left running. No model calls, third-party imports, merge, push or release.
+
+
+## Usability correction: scaled capture across available targets (2026-10-11)
+
+The user explicitly revised the protection requirement: unknown protection is
+acceptable evidence, not a reason to block ordinary screenshots. This supersedes
+the blanket protected-composition gate and the emulator rejection conclusions
+above. The earlier source research and buffer rejection guard remain useful;
+ordinary emulator acquisition now proceeds with truthful unknown metadata.
+
+Direct helper capture and stock/resize fallback both passed 100/50/25 on every
+available target, using Settings screens and the development Operator:
+
+| Target | 100% | 50% | 25% | Direct protectedContent |
+| --- | --- | --- | --- | --- |
+| API 37.1 physical phone | 1080 x 2410 | 540 x 1205 | 270 x 602 | absent |
+| API 35 emulator | 1080 x 2400 | 540 x 1200 | 270 x 600 | unknown |
+| API 36.0 emulator | 1280 x 2856 | 640 x 1428 | 320 x 714 | unknown |
+| API 37.2 emulator | 2076 x 2152 | 1038 x 1076 | 519 x 538 | unknown |
+
+The new compatibility harness acquired 40 verified images: two rounds of direct
+CLI captures at every scale, one complete Node fallback at every scale, and one
+omitted-scale stock capture per target. Every PNG decoded, had the required
+actual dimensions/method/protection state, and contained its exact current FRAME
+marker. Direct and fallback quarter-size images on all four targets were also
+visually inspected. Settings reopened its existing About page on API 37.2;
+other targets showed the Settings list. No claim depends on identical layouts.
+
+Fallback was induced by rejecting only the helper DEX push in a local runner.
+Actual screencap, read-only interactivity probes, geometry checks, PNG decoding,
+host resizing and destination publication all ran through the maintained Node
+path. No installed files were damaged and no public force-backend flag was added.
+All fallback images reported adb_screencap_resize, the actual requested scale,
+fallbackAttempted true and protectedContent unknown. Omitted scale still returned
+full-size adb_screencap with unknown protection. Direct phone captures reported
+absent; emulator captures reported unknown rather than implying no redaction.
+
+Illustrative complete-call timings, in milliseconds (one warm direct observation
+per size and one forced fallback per size, not controlled benchmark medians):
+
+| Target | Direct 100/50/25 | Fallback 100/50/25 |
+| --- | --- | --- |
+| Physical phone | 1049 / 947 / 662 | 3257 / 3046 / 3316 |
+| API 35 emulator | 2408 / 528 / 451 | 8098 / 3452 / 2397 |
+| API 36 emulator | 1209 / 765 / 451 | 2718 / 7934 / 3655 |
+| API 37 emulator | 505 / 418 / 273 | 1166 / 1110 / 1148 |
+
+A 500 ms marker-presentation delay was outside each timing; production has no
+such added wait. Host validation and another device's fixture testing overlapped
+parts of this run, and readiness/deployment costs vary. These data establish
+working paths, not comparative throughput or full-agent gains. The fallback
+provides smaller returned images without the direct path's acquisition advantage.
+Only the first direct image per target necessarily starts a cold helper.
+
+The physical protected-buffer fixture still rejected all three sizes before
+readback, now reporting protectedContent present, no fallback and no PNG.
+Independent secure-window rejection and ordinary recovery also passed. Five
+host checks retain the production buffer readback boundary; removing two tests
+for the obsolete blanket gate is intentional. The phone's rotation/death/
+cancellation/reconnect/stale-response checks passed again without action replay.
+
+Retained pilot failures: API 35's initial image was valid and visibly contained
+FRAME 10, but the lab OCR locator selected its black status bar. The verifier
+now requires an inset overlay border. Cleanup then tried to reopen the launcher
+as an ordinary app and failed; launcher restoration now uses Home, and the
+harness logs the original capture failure before cleanup. The complete new API
+35 batch passed all ten images. No failed capture was silently retried in a batch.
+
+Remaining limits: other OEM/build combinations, Android 16 QPR2 runtime,
+commercial DRM workflows, HDR, fold/multi-display transitions and physical cable/
+reboot behavior. Unknown protection is intentional and documented. A helper
+setup failure may use stock/resize; uncertain acquisition, detected protected
+content, cancellation and protocol/transport failure never trigger another capture.
+
+
+Final checks passed: 1526 Node tests, 35 focused helper/resize/package/CLI checks,
+five Java readback checks and fixture compilation/signature verification. The
+full docs build passed with no organization warnings. The Android Operator
+source was unchanged; the matching existing debug APK was used on all devices.
+
+Cleanup revealed that the full Node suite's MCP integration tests can select a
+connected phone and send actions. It must not overlap live measurement or final
+state restoration. The final cleanup Home command returned nonzero after its
+action had reached API 35; a read-only window check confirmed Home, so it was not
+replayed. After the suite ended, the phone's prior app was restored. The fixture
+was uninstalled, overlays/rotation restored, exact fault-owned leftovers removed,
+and test-owned daemons/API 37 emulator stopped. No helper directories remained;
+API 35/36 emulators were left running. Making those unrelated integration tests
+explicitly opt-in or fully isolated remains separate follow-up work.

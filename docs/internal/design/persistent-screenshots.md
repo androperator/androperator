@@ -33,8 +33,7 @@ Consumers need only the packaged Node CLI and ADB.
 ## Protocol and acquisition invariants
 
 Protocol 1 uses a bounded JSON line followed by exactly the declared PNG byte
-length. Startup confirms the session UUID, selected capture API and protected GPU
-composition capability. Each
+length. Startup confirms the session UUID and capture API availability. Each
 request has a new UUID and scale. Each response echoes that UUID/session and
 supplies a strictly increasing sequence and device monotonic capture time.
 Unsolicited bytes, unknown framing, wrong IDs and mismatched geometry poison the
@@ -62,91 +61,80 @@ capture attempt is automatically replayed after uncertain output. A scaled
 screenshot is restricted to one final screenshot action to avoid implying
 intermediate capture timing from execution post-processing.
 
-## Compatibility and safe full-resolution choice
+## Compatibility and resize fallback
 
 The helper selects `android.window.ScreenCaptureInternal` when available,
-otherwise `android.window.ScreenCapture`. It never falls back to another API
-following failed/uncertain acquisition. Both variants use the same owned
-session, correlation, geometry, image validation and cleanup rules.
+otherwise `android.window.ScreenCapture`. Both share ownership, correlation,
+geometry, pixel validation and cleanup. Older builders use
+`setCaptureSecureLayers(false)` and `setAllowProtected(true)`; newer builders use
+`SECURE_CONTENT_POLICY_REDACT`, `PROTECTED_CONTENT_POLICY_CAPTURE`, capture mode
+NONE and explicit system overlays. Scaling/crop/listener/result methods are
+resolved before the helper advertises readiness.
 
-| Requirement | Older API | Newer API |
-| --- | --- | --- |
-| Builder/listener/result | `ScreenCapture` nested classes | `ScreenCaptureInternal` nested classes |
-| Secure pixels | `setCaptureSecureLayers(false)` | `SECURE_CONTENT_POLICY_REDACT` |
-| Protected composition | `setAllowProtected(true)` | `PROTECTED_CONTENT_POLICY_CAPTURE` |
-| Pixel rejection | Secure result flag and protected buffer usage | Same |
-| Display readback optimization | Not requested | Capture mode NONE; window layer-capture path |
+Protected GPU composition is an information source, not a prerequisite for
+ordinary capture. Direct capture at 100/50/25 is verified on the API 37.1 phone
+and API 35/36.0/37.2 emulators. The phone can establish absence of protected
+buffers; these emulators report unknown. Android 16 QPR2 source has the newer
+interface but that runtime and older physical/OEM hardware remain untested.
 
-Both require `SurfaceControl.getProtectedContentSupport()` to return true. A
-false result is an actionable `incompatible` capability, not a temporary failure
-to hide with stock capture. The capability is checked at setup, before capture,
-before readback and before publishing. Service/query uncertainty fails closed.
-The helper runs as shell UID 2000; Operator APK identity is not a replacement.
+`scaledScreenshot.ts` calls the direct helper first. Only initialization failures
+classified as unavailable/incompatible permit one stock capture and host resize.
+The setup-only eligibility is set before any capture request is written. A
+capture rejection, stale frame, transport interruption, cancellation, timeout or
+busy session never triggers fallback. No action is replayed. There is no public
+force-backend flag or extra host daemon.
 
-The required methods include crop, two-axis frame scale, pixel format,
-`IWindowManager.captureDisplay` accepting the selected argument/listener types,
-and result accessors. Newer builders also include system overlays explicitly;
-the older window-layer path captures them without that setter. Every image
-requires an unlocked, interactive primary logical display 0 with `local:<digits>`
-identity and stable logical dimensions/rotation/physical identity.
+The fallback uses the existing targeted screencap, independently decodes its PNG,
+checks display identity/rotation/extent before and after, and checks interactivity
+through the existing read-only Operator probe. On older display dumps with no
+viewport activity field, returned PNG dimensions are available but rotation and
+physical identity are omitted rather than invented. The original deadline and
+cancellation govern acquisition and publication. Invalid output never replaces
+the requested destination.
 
-Verified compatibility is specific to builds and graphics capabilities:
+A first-party area-average resize uses the existing PNG library, with no new
+dependency. It floors dimensions per axis (minimum one pixel), validates the
+result, and reports `adb_screencap_resize`, applied/requested scale, native and
+returned dimensions, `fallbackAttempted: "true"` and the setup failure reason.
+Explicit 100% fallback preserves the full-size PNG but keeps that method label.
+Stock acquisition followed by resize saves output size, not acquisition work.
+Omitted scale remains ordinary full-resolution `adb_screencap`.
 
-- Android 17/API 37.1 physical phone: ordinary images and independent secure and
-  protected-buffer rejection passed at 100/50/25 percent.
-- Android 15/API 35 and Android 16/API 36 emulators: older adapter initialization
-  passed, then protected GPU composition correctly blocked capture.
-- Android 17/API 37.2 emulator: newer adapter initialization passed, then the same
-  safety capability blocked capture. Earlier successful emulator images used
-  the old insufficient guard and do not establish current safe support.
-- Android 16 QPR2 source has the newer interface, but runtime support is untested.
-  Other older physical hardware, API 37.0, OEMs and future builds need evidence.
+Doctor tests direct-helper APIs, not image contents or fallback success. It warns
+when that helper cannot initialize and explains the resize path. It must not
+recommend another device merely because protection state is unknown.
 
-Doctor probes APIs and compositor capability without taking an image. It cannot
-prove current screen state or visual contents. Graphics capability, not an OS
-allowlist or a blanket emulator rule, decides whether capture can proceed.
+## Protected-content evidence
 
-Omitted scale preserves ordinary full-resolution screencap with standard
-Android redaction behavior. There is no automatic stock fallback. A safe future
-fallback must establish the same properties for the actual returned image.
+The earlier blanket composition gate prevented ordinary emulator use and has
+been removed. `protectedContent` is now evidence with three values:
 
-## Protected-buffer safety mechanism
+- `absent`: direct capture had protected-composition support before acquisition
+  and after encoding, and the returned buffer was not protected.
+- `unknown`: composition support is missing/uncertain, or capture used stock
+  screencap. Android may redact protected regions. Ordinary capture still succeeds.
+- `present`: the helper received a protected buffer and rejected it before any
+  pixel readback. This is failure metadata, never an exported protected image.
 
-The source audit found that throw-policy API presence was insufficient. On the
-inspected Android 16 QPR2 and Android 17 paths, WindowManager's `captureDisplay`
-turns into internal layer capture. JNI forwards policy integers, but
-`SurfaceFlinger::captureLayers` reduces them to capture/not-capture booleans.
-The Error enum value does not survive as a distinct rejection condition.
+The source audit remains relevant: newer throw-policy constants do not preserve
+a distinct rejection mode on the inspected WindowManager layer-capture path.
+The helper requests protected composition and examines HardwareBuffer usage.
+Where supported, SurfaceFlinger derives protected output allocation from the
+same layer snapshots used to compose. Any output marked USAGE_PROTECTED_CONTENT
+is rejected before asBitmap, software copy or PNG encoding, regardless of whether
+composition support could be queried. The buffer is closed in all cases.
 
-The maintained helper instead uses the compositor's protected-output invariant.
-For the layer snapshots used to render the screenshot, SurfaceFlinger checks
-for visible protected buffers. When protected composition is supported and
-requested, it allocates the screenshot output with `GRALLOC_USAGE_PROTECTED`.
-The helper rejects that output using `HardwareBuffer.USAGE_PROTECTED_CONTENT`
-**before** `asBitmap`, software copy or PNG encoding. A protected GPU output may
-be allocated and delivered to the shell helper, but it is closed without pixel
-readback or publication. Ordinary outputs use the existing PNG pipeline.
+Secure-layer metadata is independently rejected; the helper never requests secure
+pixels. Stock capture retains Android's normal secure/protected redaction. It
+cannot certify absence, so it always reports unknown. This does not circumvent
+Android protection or equate black pixels with a detected protected region.
 
-Protected and secure are separate properties. The helper never requests secure
-pixels and still rejects `containsSecureLayers()`, even when those regions
-would otherwise be redacted. This result describes the captured layer snapshots;
-a separate window scan would be racy and is not a substitute.
-
-The compositor-capability prerequisite is essential. When protected composition
-is unsupported, Android may silently redact a protected layer into an ordinary
-output, so testing only the returned usage bit would be insufficient. The source
-explicitly allows hardware display/codec protection without GPU protection.
-Do not special-case emulators or infer safety from the absence of a secure flag.
-
-`validation/persistent-screenshots/protection.mjs` drives a first-party EGL
-protected-buffer fixture, independent of FLAG_SECURE, and tests every scale plus
-ordinary recovery. The physical test confirmed actual protected buffer usage in
-SurfaceFlinger, a non-secure fixture window, and rejection before readback.
-`CaptureSafetyTest.java` exercises the production readback callback boundary,
-including combined usage flags and failure propagation, without Android pixel
-access. Java fixtures and those checks run in the shared Android CI suite;
-physical fixtures require explicit opt-in. These tests cover protected buffers,
-not the behavior of every commercial DRM service or every OEM compositor.
+The first-party EGL fixture tests actual protected buffers separately from
+FLAG_SECURE. Host tests exercise the production readback callback boundary,
+including combined usage flags and exception propagation. The compatibility
+harness checks fresh Settings images through real direct CLI capture and the
+complete stock/resize Node path after an injected helper deployment failure.
+The injection changes only setup, never captured bytes or reported image metadata.
 
 ## Source history and evidence limits
 

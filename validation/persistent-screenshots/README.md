@@ -21,7 +21,10 @@ No device work runs in CI. These commands deliberately display changing
 on-screen diagnostic labels, capture images, then clear the labels. The fault
 harness changes/restores rotation, kills its exact owned helper process and
 forces an ADB transport reconnect. Do not run another controller concurrently.
-No app navigation is replayed and no model calls are made.
+No app navigation is replayed and no model calls are made. Run live measurements
+separately from the full Node suite: its MCP integration tests can select a
+connected device and send actions. Finish that suite before restoring device
+state or collecting final image evidence.
 
 ```sh
 node validation/persistent-screenshots/live.mjs <device_serial> /tmp/capture-backend <local_ocr_executable> backend
@@ -61,8 +64,8 @@ to a uniquely owned temporary device path, and run
 `CLASSPATH=<remote_dex> app_process /system/bin CaptureApiProbe` through explicit
 `adb -s <device_serial> shell`. Remove only that owned DEX afterward. The probe
 prints UID, OS build, full SDK version, classes, policy constants, signatures and
-protected GPU composition support. Both adapters require that capability; OS
-version or policy constants alone are insufficient.
+protected GPU composition support. That capability informs protected-content
+metadata; its absence does not block ordinary capture.
 It does not replace the maintained doctor probe or a successful live image.
 
 `overlay-ocr.cjs` is an optional verifier for the exact overlay layout used by
@@ -96,7 +99,7 @@ bash validation/persistent-screenshots/secure-fixture/build.sh /tmp/capture-poli
 ```
 
 The fixture requires JDK, SDK platform 35 and build-tools 35.0.0, and uses an
-ephemeral test signing key. `check-fixtures.sh` compiles the API probe, runs seven
+ephemeral test signing key. `check-fixtures.sh` compiles the API probe, runs five
 checks against the production helper's readback boundary, and builds/verifies
 the APK in the shared Android CI suite without contacting a device.
 
@@ -124,15 +127,35 @@ fixture's buffer has the protected bit, and window state to confirm its window
 is not FLAG_SECURE. This distinguishes the two guards. An unsupported fixture
 reports an error; it must not count as a passing rejection test.
 
-Both capture adapters also require protected GPU composition. The tested API
-35, 36 and 37 emulators report it unavailable and reject explicit scales even
-on ordinary screens. This is intentional: without it, a protected layer could
-be redacted into an unprotected screenshot buffer. Do not bypass that check to
-obtain emulator timing results. Stock omitted-scale capture remains separately
-available with ordinary Android redaction semantics.
+The tested API 35, 36 and 37 emulators lack protected GPU composition but now
+support direct capture at every scale with `protectedContent: "unknown"`.
+Android may redact protected areas without reporting them. The phone reports
+`absent` for ordinary direct captures and `present` when a protected buffer is
+rejected. Stock and resize fallback always report `unknown`.
 
 The harness restores ordinary fixture state if it is still foreground, without
 reopening it after an external navigation. After inspection, uninstall only the
 fixture installed by this run, restore the prior foreground app, and stop only
 test-owned daemons/emulators. Protected GPU buffer evidence does not establish
 the behavior of every commercial DRM service or OEM compositor.
+
+## Settings compatibility and live resize fallback
+
+```sh
+node validation/persistent-screenshots/compatibility.mjs <device_serial> /tmp/new-settings-evidence <local_ocr_executable>
+```
+
+This opt-in harness opens Settings, performs two rounds of direct CLI capture at
+100/50/25, exercises the complete Node resize fallback at all three scales, and
+checks omitted-scale full-size capture. It verifies actual PNG dimensions,
+method, protection metadata and current FRAME text in every image. It restores
+the prior foreground app (using Home for launchers) and clears its own overlay.
+Only the first direct image is necessarily cold; the other sizes share the CLI
+daemon's helper. Stop test-owned daemons after validation.
+
+Fallback is exercised by a local ProcessRunner that rejects only helper DEX
+pushes. Real screencap, interactivity checks, decoding, resizing and publication
+still run. This validates actual fallback behavior without damaging installed
+files, adding a product backend flag, or claiming the tested devices lack direct
+capture support. Failure evidence is retained; a 500 ms lab presentation delay
+is excluded from timing, and freshness mismatch fails rather than retries.

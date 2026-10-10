@@ -1506,7 +1506,8 @@ Example:
 ```
 
 <a id="action-close-app"></a>
-Explicit `scale` uses the persistent shell capture helper. Omission preserves the
+Explicit `scale` prefers the persistent shell capture helper, with stock capture
+and resize when helper setup is unavailable. Omission preserves the
 existing ordinary full-resolution ADB capture. The CLI spelling is
 `androperator screenshot --scale 25 --path /tmp/screen.png`. The Node
 `observeScreenshot({ scale: 25 })` helper and HTTP `POST /screenshot` accept the
@@ -1514,8 +1515,8 @@ same numeric values. Numeric strings, arbitrary percentages and empty values are
 invalid. A scaled screenshot must be the only screenshot and the final action
 in its execution; use separate executions for intermediate observations.
 
-All successful captures also report `data.captureMethod` (`adb_screencap` or
-`shell_hardware_buffer`), `data.requestedScale`, and `data.appliedScale` as strings.
+All successful captures also report `data.captureMethod` (`adb_screencap`,
+`shell_hardware_buffer`, or `adb_screencap_resize`), `data.requestedScale`, and `data.appliedScale` as strings.
 A helper capture additionally reports:
 
 - `nativeWidthPx`, `nativeHeightPx`: full display coordinate extent in its current
@@ -1540,49 +1541,57 @@ Sessions expire after 30 seconds idle and are discarded after acquisition
 failure or cancellation. Retry only the screenshot; never repeat preceding
 navigation to recover capture. See [setup](../setup.md#optional-reduced-screenshot-capture) for prerequisites.
 
-`doctor` reports `capture.reduced` as supported, unavailable or incompatible.
+`doctor` reports the direct helper in `capture.reduced` as supported, unavailable
+or incompatible; unavailable/incompatible helper setup can use the resize fallback.
 This probes APIs with a temporary helper deployment, without acquiring an image.
 Supported capability does not prove that the current screen can be captured.
 
-**Compatibility and fallback:** the helper supports the older
-`ScreenCapture` interface found on Android 15/16 and the newer
-`ScreenCaptureInternal` interface found in Android 16 QPR2 source and tested on
-Android 17. Both require **protected GPU composition**. OS version alone is not
-a compatibility test: run `doctor`, then verify an actual screenshot.
+**Compatibility and fallback:** direct scaled capture supports both the older
+Android 15/16 capture interface and the newer interface used by Android 17.
+Missing protected GPU composition does not block screenshots. Direct capture
+has been verified at 100/50/25 on an API 37.1 physical phone and API 35, 36.0 and
+37.2 emulators. Other manufacturers and builds still need live validation.
 
-The helper requests protected composition and checks the returned hardware
-buffer before pixel readback. It rejects secure-layer results and buffers with
-`USAGE_PROTECTED_CONTENT`; protected pixels are never copied or encoded. It does
-not rely on Android's throw-policy constants, which can lose their rejection
-semantics on the layer-capture path. Without protected GPU composition, Android
-can redact instead of marking the output protected, so the helper fails closed
-before capture even on an ordinary screen.
+All successful screenshots report `data.protectedContent`:
 
-An API 37.1 physical device passed ordinary capture and independent secure-window
-and protected-buffer rejection tests at all three sizes. The API 35/36 emulator
-adapters initialize, but all tested API 35/36/37.2 emulators lack protected GPU
-composition and correctly reject explicit scaled capture. Successful reduced
-capture on older physical hardware, Android 16 QPR2 runtime behavior and other
-manufacturers remain unverified. An OS upgrade alone may not fix a missing GPU
-or driver capability. The screen must be unlocked, interactive and stable.
+| Value | Meaning |
+| --- | --- |
+| `absent` | The helper's compositor capability and returned buffer establish that no protected buffer was included. |
+| `unknown` | Protected content may have been redacted by Android; this does not prevent ordinary capture. Always used for stock/resize and omitted-scale stock capture. |
+| `present` | A protected hardware buffer was detected and rejected before pixel readback. This value appears on a failed capture, never an exported protected image. |
 
-Node never automatically substitutes a full-size image. Omit `scale`/`--scale`
-only for an explicit ordinary full-resolution request, which retains Android's
-standard redaction behavior. This is a caller choice, not automatic recovery
-after a locked, protected or uncertain capture.
+This describes protected hardware buffers, not app rendering readiness. Secure
+windows are checked separately: the direct helper rejects Android's secure-layer
+flag. Android's normal redaction remains in force on stock capture. An unknown
+state is not a claim that the screenshot is complete or free of redacted regions.
+No path bypasses Android protection or reads a protected buffer.
 
-Failed helper acquisition returns `EVIDENCE_CAPTURE_FAILED` on the screenshot
-step, with `data.captureFailureReason` and `data.fallbackAttempted: "false"`.
-Reasons are `incompatible`, `unavailable`, `rejected`, `protocol`, `transport`,
-`cancelled`, `timeout`, or `busy`. Incompatible means check the reported API or
-protected-composition limitation and use a supported device; unavailable means
-check ADB/deployment. Rejected messages distinguish protected buffers, secure
-windows, lost protected-composition capability and other acquisition uncertainty.
-Use an ordinary unprotected screen for content rejection; unlock/stabilize the
-display for state/geometry failures. Protocol/transport failure discards the session; a
-new read-only screenshot request starts a new one. Timeout needs sufficient
-remaining budget; busy means await the prior capture. Never treat a failure or
-an old file still present at the requested path as a new observation.
+If helper initialization fails as `incompatible` or `unavailable`, Node makes one
+ordinary full-resolution capture and resizes its decoded pixels to the requested
+scale. The method is `adb_screencap_resize`, with `fallbackAttempted: "true"` and
+`fallbackReason` identifying the helper setup failure. Even explicit 100% uses
+this method label when selected through fallback, although no resize is needed.
+It reports native and returned dimensions, plus rotation/display identity when
+Android exposes them. The fallback reduces output dimensions; it does not have
+the direct helper's acquisition-speed advantage. It adds no public backend option.
+
+Fallback checks device interactivity and display geometry before and after
+capture and shares the original timeout/cancellation budget. It does not run
+after protected/secure rejection, stale output, transport interruption, timeout,
+cancellation or an uncertain acquired frame. No device action is replayed.
+Omitted scale retains the existing full-resolution behavior and method.
+
+Failed scaled acquisition returns `EVIDENCE_CAPTURE_FAILED` on the screenshot step,
+with `data.captureFailureReason`, `data.protectedContent` and
+`data.fallbackAttempted` (`"true"` or `"false"`). Reasons are `incompatible`,
+`unavailable`, `rejected`, `protocol`, `transport`, `cancelled`, `timeout`, or
+`busy`. If fallback also fails, check the reported stock/resize error and ADB
+readiness. Use an ordinary unprotected screen for direct content rejection;
+unlock/stabilize the display for state/geometry failures. Protocol/transport
+failure discards the session; a new read-only screenshot request starts a new
+one. Timeout needs sufficient remaining budget; busy means await the prior
+capture. Never treat a failure or an old file at the requested path as a new
+observation.
 
 ### `close_app`
 

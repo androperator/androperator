@@ -13,6 +13,10 @@ import { observeScreenshot } from '../../apps/node/dist/domain/observe/screensho
 const run = promisify(execFile);
 const [deviceId, output, ocr, mode = 'backend'] = process.argv.slice(2);
 if (!deviceId || !output || !isAbsolute(output) || !ocr || !['backend','api','cli'].includes(mode)) throw Error('Usage: node live.mjs <device> <absolute-private-output> <OCR executable> [backend|api|cli]');
+// Lab-only presentation delay, outside capture timings. The overlay action can
+// acknowledge a text update before SurfaceFlinger presents its next frame.
+const markerSettleMs = Number(process.env.ANDROPERATOR_CAPTURE_MARKER_SETTLE_MS ?? '0');
+if (!Number.isInteger(markerSettleMs) || markerSettleMs < 0 || markerSettleMs > 5000) throw Error('Marker settle delay must be 0-5000 ms');
 await mkdir(output, { recursive: true });
 const cli = resolve('apps/node/dist/cli/index.js');
 const common = ['--device', deviceId, '--operator-package', 'com.androperator.operator.dev'];
@@ -29,6 +33,7 @@ try {
     for (const scale of [100, 50, 25, undefined]) {
       const marker = `FRAME ${String(rows.length + 10).padStart(2, '0')}`;
       await command(['on-screen-log','set','--text',marker,'--font-size-sp','24','--width-dp','300','--text-color','#FFFFFF','--background-color','#000000']);
+      if (markerSettleMs) await new Promise(resolve => setTimeout(resolve, markerSettleMs));
       const file = `${output}/${mode}-${trial}-${scale ?? 'stock'}.png`;
       if (trial === 0 && scale !== undefined && mode !== "cli") closeCaptureHelpers();
       const started = performance.now();
@@ -51,7 +56,7 @@ try {
       const { stdout: text } = await run(ocr, [file], { timeout: 20000 });
       const fresh = JSON.parse(text).some(row => row.text === marker);
       const row = { trial, scale: scale ?? 'stock', cold: metadata.captureSequence === "1", totalMs, bytes: buffer.length, ...image, ...metadata, marker, fresh,
-        sha256: createHash('sha256').update(buffer).digest('hex') };
+        markerSettleMs, sha256: createHash('sha256').update(buffer).digest('hex') };
       rows.push(row);
       await writeFile(`${output}/${mode}.json`, JSON.stringify(rows, null, 2));
       console.log(JSON.stringify({ trial, scale: scale ?? 'stock', totalMs, fresh }));

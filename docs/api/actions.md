@@ -1544,11 +1544,15 @@ navigation to recover capture. See [setup](../setup.md#optional-reduced-screensh
 This probes APIs with a temporary helper deployment, without acquiring an image.
 Supported capability does not prove that the current screen can be captured.
 
-**Compatibility and fallback:** the tested API 37 phone supports the required
+**Compatibility and fallback:** reduced capture is verified on an Android 17
+phone (API 37.1) and Android 17 emulator (API 37.2). Both support the required
 internal capture interface and strict secure/protected-content policies. The
-tested Android 15 (API 35) and Android 16 (API 36) emulators lack the capture class. Other OS builds,
-including other manufacturers' API 37 builds, are not guaranteed compatible.
-Use a device with a supported newer Android build and run `doctor` to check.
+tested Android 15 (API 35) and Android 16 (API 36) emulators have an older scaling
+interface but lack the newer capture class and policy parameters. This is an
+Android-build capability restriction, not a general emulator restriction.
+API 37.0, other manufacturers and other builds are not guaranteed compatible.
+Use a supported Android 17 build, run `doctor` to check capability, then verify
+an actual screenshot. The screen must be unlocked, interactive and stable.
 Explicit scaled captures fail closed if these guarantees are unavailable; Node
 does not silently substitute a redacted full-size image. Omit `scale`/`--scale`
 for the existing ordinary full-resolution capture, which retains Android's

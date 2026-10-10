@@ -125,3 +125,109 @@ The user chose fail-closed behavior on unverifiable builds. Safe automatic
 stock fallback remains unavailable because stock capture can silently redact
 protected content. Existing full-resolution defaults remain an explicit caller
 choice. Future work must not weaken that boundary or replay navigation.
+
+## API 37 emulator follow-up (2026-10-11)
+
+The earlier phone/emulator contrast confounded OS versions. The installed
+Pixel 10 Pro Fold emulator uses Android 17/API 37.2, 16 KiB pages, Google Play
+arm64 image `CP41.260828.004.A7` (`SDK_INT_FULL=3700002`). The physical phone is
+Android 17/API 37.1, build `CP3A.260905.009` (`SDK_INT_FULL=3700001`). This is a
+same-major-API comparison, not identical firmware. No emulator image downloads,
+root, hidden-API override or Operator APK identity capture were needed.
+
+A first-party shell reflection probe ran with UID 2000 on all four targets:
+
+| Target | Build | Internal capture class | Strict policy parameters | Older scaling builder |
+| --- | --- | --- | --- | --- |
+| Physical API 37.1 | CP3A.260905.009 | Present | Both throw policies = 2 | Absent |
+| Emulator API 37.2 | CP41.260828.004.A7 | Present | Both throw policies = 2 | Absent |
+| Emulator API 36.0 | BE2A.250530.026.D1 | Absent | Absent | Present |
+| Emulator API 35 | AE3A.240806.036 | Absent | Absent | Present |
+
+Both API 37 builds have matching `ScreenCaptureInternal.CaptureArgs.Builder`
+scale/policy setters and the matching `IWindowManager.captureDisplay` signature.
+The older builds have `ScreenCapture.CaptureArgs.Builder.setFrameScale`,
+`setCaptureSecureLayers(boolean)` and `setAllowProtected(boolean)` instead.
+Thus scaling itself is not new or emulator-specific. The current backend's
+newer class layout and explicit exception policies are the compatibility
+boundary. This probe does not prove that another safe backend for older Android
+is impossible. Exact maintained requirements are in the durable design doc.
+
+After canonical branch-local development Operator setup, doctor reported
+`capture.reduced: supported` on API 37.2. Actual captures succeeded at every
+supported size in the stable unfolded display configuration:
+
+| Capture | PNG | Warm backend + decode + save | Warm complete Node | Warm persistent CLI |
+| --- | --- | ---: | ---: | ---: |
+| Explicit 100% | 2076 x 2152 | 259.8 ms | 381.8 ms | 450.7 ms |
+| Explicit 50% | 1038 x 1076 | 86.1 ms | 172.7 ms | 265.7 ms |
+| Explicit 25% | 519 x 538 | 36.7 ms | 185.8 ms | 220.5 ms |
+| Omitted scale | 2076 x 2152 | 283.8 ms | 379.2 ms | 473.2 ms |
+
+Medians use three rounds after one startup round, on the emulated-device
+Settings page. All 48 final images decoded and matched their exact current
+FRAME marker. Quarter-size and rotation frames were also visually inspected.
+The persistent CLI used one session with sequences 1-12. Quarter-size CLI was
+51.1% below its full-size helper median and 53.4% below stock. Emulator timings
+are host/rendering-dependent and are not predictions for physical hardware or
+full agent tasks. The phone used a different screen and image dimensions.
+
+Cold backend times at 100/50/25 were 510.2/284.8/238.3 ms; complete Node times
+were 674.7/389.3/318.8 ms. First persistent CLI helper capture was 677.1 ms;
+subsequent sizes reused it. The daemon was already running. Every final capture
+followed a recorded 500 ms laboratory marker-presentation delay outside the
+measured interval. Production capture has no such added delay.
+
+Retained pilots and their meaning:
+
+- Whole-image OCR skipped clearly visible inverted marker text. The maintained
+  optional verifier isolates and inverts the known overlay rectangle without
+  modifying the saved image or receiving the expected label.
+- A zero-delay backend pilot returned visible FRAME 13 after the overlay update
+  for FRAME 14 had acknowledged. It had fresh capture metadata but the compositor
+  had not presented the new text. The exact-image check failed the batch. This
+  is rendering readiness, not stale protocol output: acquisition correlation
+  cannot promise that an earlier UI change has rendered. No automatic action or
+  capture replay was added. The settled final batch still verifies every image.
+- The first CLI batch could not access the daemon socket from its sandbox and
+  used 12 separate helper sessions. Those successful images are retained but
+  excluded from persistent timings. Running with access to the existing socket
+  produced one session with increasing sequences.
+- The secure fixture initially rejected a mixed-case text selector because the
+  Material button exposes uppercase text. The ordinary captures from that
+  failed preparation are not counted as secure-window evidence. The successful
+  retry used the observed uppercase selector and checked the SECURE window flag.
+
+Fault validation on API 37.2 passed rotation (519 x 538 to 538 x 519 and back),
+helper death, cancellation, transport reconnect and injected stale request UUID.
+The dead helper had already been evicted before the next capture, which started
+one new session and succeeded in 268 ms; there was no in-flight capture replay.
+Cancellation failed in 6 ms, reconnect interrupted capture in 20 ms, and explicit
+recovery succeeded in 249 ms. The stale response failed as `protocol`.
+Rotation metadata and PNG dimensions were correct, but the image caught a system
+rotation animation; stable acquisition geometry does not imply settled UI.
+
+The first-party FLAG_SECURE fixture gave direct safety evidence: ordinary
+quarter capture succeeded, enabling SECURE made quarter capture fail with
+`EVIDENCE_CAPTURE_FAILED`, `rejected`, `fallbackAttempted: "false"` and no PNG at
+the new destination. A separate omitted-scale request returned a decodable stock
+PNG with the entire fixture area blacked out. Disabling SECURE restored a visible
+quarter-size image with `ORDINARY WINDOW RESTORED`. This is not a test of
+hardware-protected DRM buffers, whose throw-policy API is present but whose
+behavior still requires a dedicated fixture.
+
+Remaining boundaries: no general emulator restriction was found. API 37.0,
+other OEMs, identical phone/emulator builds, protected DRM buffers, HDR fidelity,
+fold/unfold transitions, secondary/virtual displays and physical keyguard/cable/
+reboot behavior are not established by these runs. Keep capability probing and
+fail-closed behavior; do not substitute an API-level-only allowlist.
+
+Follow-up validation: branch-local Node build and 18 focused helper/package/CLI
+checks passed; both first-party Java fixtures compiled, the APK signature
+verified, and all seven shared-runner tests passed. The docs build passed route
+and organization checks. The maintained OCR verifier independently rechecked
+all 48 final images. Fixture compilation is wired into the Android CI suite;
+these live emulator runs are explicit opt-in and were not run on remote CI.
+The fixture was uninstalled, the one known owned directory left by transport
+interruption was removed, and no helper directories remained. Rotation/overlay
+state was restored and the test-owned daemon and API 37 emulator were stopped.

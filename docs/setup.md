@@ -454,6 +454,10 @@ helper on first use. It requires authorized ADB, writable `/data/local/tmp`,
 and compatible Android internal capture APIs with strict protected-content
 policies. No additional Operator permission, root, Java installation or Android
 SDK is required on the host. The normal screenshot command remains full size.
+The maintained backend is verified on Android 17/API 37.1 physical hardware and
+an Android 17/API 37.2 emulator. The tested API 35/36 builds lack the required
+newer interfaces; emulation itself is not a restriction. Compatibility is probed
+at runtime rather than inferred solely from the OS version.
 
 Run `androperator doctor --device <device_serial> --operator-package com.androperator.operator.dev`
 to see `capture.reduced`. Doctor temporarily deploys and probes the helper but

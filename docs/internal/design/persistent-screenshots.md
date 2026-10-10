@@ -63,12 +63,42 @@ intermediate capture timing from execution post-processing.
 
 ## Compatibility and safe full-resolution choice
 
-The API 37 physical test build has `android.window.ScreenCaptureInternal` and
-strict secure/protected-content policy constants. The tested API 35 and API 36 emulators
-do not have that class. This is a capability check, not a promise based on an
-SDK number. Reflection success is not proof of a live image; doctor labels that
-distinction explicitly. Capture errors remain failures even if an ordinary
-`screencap` command might exit successfully.
+The tested Android 17 phone (API 37.1) and Android 17 emulator (API 37.2)
+support the maintained backend. Both expose the same required internal capture
+classes, policy constants and method signatures. This is not an emulator versus
+physical-device restriction. The tested Android 15/API 35 and Android 16/API 36
+emulators instead expose the older `ScreenCapture.CaptureArgs` interface.
+They already have `setFrameScale`, but lack `ScreenCaptureInternal` and
+`ScreenCapture.ScreenCaptureParams`, including the strict exception policies.
+The helper intentionally does not adapt to those older interfaces.
+
+The current runtime requirements are:
+
+1. Authorized ADB shell identity (UID 2000), `app_process`, writable owned
+   deployment storage and checksum verification. Operator APK identity is not
+   a supported replacement for shell identity.
+2. `android.window.ScreenCaptureInternal` and its capture argument builder,
+   listener and hardware-buffer result classes. `IWindowManager.captureDisplay`
+   must accept those exact argument/listener classes. The builder must expose
+   crop, two-axis scale, pixel-format and system-overlay controls.
+3. `ScreenCapture.ScreenCaptureParams.SECURE_CONTENT_POLICY_THROW_EXCEPTION`
+   and `PROTECTED_CONTENT_POLICY_THROW_EXCEPTION`, plus both corresponding
+   builder setters. Older `setCaptureSecureLayers`/`setAllowProtected` booleans
+   do not satisfy this implementation's fail-if-encountered contract.
+4. An unlocked, interactive primary logical display 0 whose identity matches
+   `local:<digits>`. Logical dimensions, rotation and physical identity must
+   remain unchanged during acquisition. Foldables can work in a stable state;
+   this does not establish correctness during fold/unfold or display handover.
+5. Successful capture, hardware-buffer CPU readback and PNG encoding with the
+   expected dimensions, followed by Node correlation/geometry/PNG validation.
+
+Android API level alone does not establish these requirements. API 37.0 and
+other manufacturers' builds remain untested; use `doctor` for the capability
+probe and an actual screenshot for acquisition verification. Reflection success
+is not proof of a live image; doctor labels that distinction explicitly.
+Capture errors remain failures even if ordinary `screencap` succeeds. The
+read-only `validation/persistent-screenshots/CaptureApiProbe.java` records the
+old/new interface distinction without capturing pixels.
 
 The original requirement for automatic full-resolution fallback is constrained
 by safety evidence: ordinary screencap can redact protected pixels without a

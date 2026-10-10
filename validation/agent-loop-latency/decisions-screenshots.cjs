@@ -8,7 +8,8 @@ function rendered(rows, destination) {
   return rows.some(row => row.top > 0.05 && row.top < 0.18 && row.confidence >= 0.5
     && (destination === 'About phone' ? row.text === destination : (row.text === 'Settings' || /(?:^|\s)Search Settings$/.test(row.text))));
 }
-function createGate({capture, fullCapture, recognize, record, reducedProbe = false}) {
+function createGate({capture, fullCapture, recognize, record, reducedProbe = false, smallRetries = 0}) {
+  if (![0, 2].includes(smallRetries)) throw Error('Unsupported small-probe retry count');
   let destination = 'Settings';
   let disabled = false;
   return async function execute(args, options) {
@@ -35,6 +36,15 @@ function createGate({capture, fullCapture, recognize, record, reducedProbe = fal
       const rows = recognize(probe, remaining());
       let passed = rendered(rows, destination);
       record({kind: 'probe', destination, attempt, passed, requestedScale: smallProbe ? 0.25 : 1, elapsedMs: performance.now() - start});
+      for (let retry = 1; !passed && smallProbe && retry <= smallRetries; retry++) {
+        // Leave time for a full-resolution fallback; never reset the outer deadline.
+        if (remaining() < 4000) break;
+        const retryProbe = output + `.render-probe-${attempt}-retry-${retry}.png`;
+        const retried = await capture(['screenshot', '--path', retryProbe], {...options, timeout: remaining() - 3000});
+        if (retried.status !== 0) return retried;
+        passed = rendered(recognize(retryProbe, remaining() - 3000), destination);
+        record({kind: 'probe-retry', destination, attempt, retry, passed, requestedScale: 0.25, elapsedMs: performance.now() - start});
+      }
       if (!passed && smallProbe) {
         if (remaining() < 3000) throw Error('Full-resolution probe deadline exhausted');
         const fullProbe = output + `.render-full-fallback-${attempt}.png`;
@@ -79,13 +89,18 @@ async function execute(args, options) {
         if (result.status !== 0) throw Error('Display selection failed');
         return experimentDisplay(result.stdout);
       }});
-    executeGate = createGate({capture: selected.execute, fullCapture: runCli, reducedProbe: mode.startsWith('decisions-25-fastgate'),
+    executeGate = createGate({capture: selected.execute, fullCapture: runCli, reducedProbe: mode.startsWith('decisions-25-fastgate') || mode.startsWith('decisions-25-retrygate'),
+      smallRetries: mode.startsWith('decisions-25-retrygate') ? 2 : 0,
       recognize(file, timeout) {
         if (timeout <= 0) throw Error('Rendering check deadline exhausted');
         const result = spawnSync(process.env.VERSION_SCREEN_TEXT, [file], {encoding: 'utf8', timeout});
         if (result.status !== 0) throw Error('Local pixel recognition failed');
         const rows = JSON.parse(result.stdout);
         fs.writeFileSync(file + '.ocr.json', JSON.stringify(rows), {mode: 0o600});
+        if (mode === 'decisions-25-retrygate-ocr-fault' && file.includes('.render-probe-')) {
+          fs.writeFileSync(file + '.injected-ocr-failure.json', JSON.stringify({reason: 'Deliberate unreadable small-probe simulation; original OCR retained'}), {mode: 0o600});
+          return [];
+        }
         if (mode === 'decisions-25-fastgate-ocr-fault' && !ocrFaultInjected
           && file.includes('.render-probe-') && rendered(rows, 'About phone')) {
           ocrFaultInjected = true;

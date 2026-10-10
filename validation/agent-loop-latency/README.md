@@ -260,3 +260,30 @@ Keep those deliberate failures outside normal timing medians. A small probe can
 arrive before destination rendering; rejection is a successful safety check, not
 a reason to accept old pixels. Title verification remains specific to this route
 and does not prove that all scroll animation has settled.
+
+## Bounded quarter-size re-probing
+
+`decisions-25-retrygate` compares against `decisions-25-fastgate`. It retains the
+same quarter-size selected/model images, snapshot context and visual condition.
+After a rejected small probe, it permits two additional fresh quarter-size probes
+before stock full-resolution fallback. No fixed sleep is added. Each retry's PNG,
+OCR and `probe-retry` ledger entry are retained; a probe passing never replaces the
+separate selected-image check.
+
+The existing three outer verification attempts and common screenshot deadline
+remain in force. A small retry starts only with at least four seconds remaining;
+its capture and OCR budgets reserve three seconds for subsequent work. This is a
+budget reservation, not a guarantee that stock capture will finish. If a full-size
+fallback also shows the wrong page, another outer attempt is permitted within the
+same deadline: at most nine small probes and three full probes per observation.
+Capture/recognizer execution errors still fail through the existing error handling;
+no expired request is restarted. Unknown policy/geometry failures do not become
+eligible for fallback.
+
+Run one pilot, then three alternating pairs against immediate full fallback.
+`decisions-25-retrygate-ocr-fault` is a separate exhaustion test: every small probe's
+recognition result is deliberately replaced with an empty list, while retaining
+its original pixels, OCR and explicit injection marker. Full-size probe recognition
+and selected-image recognition remain real. This tests that exhausted small retries
+still reach independently verified full-size fallback without replaying actions.
+Exclude it from normal timing medians and do not call it a natural OCR failure.

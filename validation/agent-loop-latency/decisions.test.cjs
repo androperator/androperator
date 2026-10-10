@@ -100,3 +100,36 @@ test('recognized quarter probes do not capture full resolution', async () => {
   await execute(['screenshot','--path','/unused.png'],{timeout:20000});
   assert.equal(calls.length,2);
 });
+test('a fresh quarter retry can verify arrival without full capture or action replay', async () => {
+  const frames=[row('Search Settings'),row('About phone'),row('About phone')],records=[],calls=[];
+  const execute=createGate({reducedProbe:true,smallRetries:2,capture:async args=>{calls.push(args);return {status:0};},
+    fullCapture:async()=>{throw Error('Unexpected full capture');},recognize:()=>frames.shift(),record:r=>records.push(r)});
+  await execute(['click','--text','About phone'],{timeout:20000});
+  await execute(['screenshot','--path','/unused.png'],{timeout:20000});
+  assert.deepEqual(records.map(r=>[r.kind,r.passed]),[['probe',false],['probe-retry',true],['selected',true]]);
+  assert.equal(calls.filter(c=>c[0]==='click').length,1);
+});
+test('small retries are bounded before independently verified full fallback', async () => {
+  const frames=[[],[],[],row('About phone'),row('About phone')],records=[];
+  const execute=createGate({reducedProbe:true,smallRetries:2,capture:async()=>({status:0}),fullCapture:async()=>({status:0}),
+    recognize:()=>frames.shift(),record:r=>records.push(r)});
+  await execute(['click','--text','About phone'],{timeout:20000});
+  await execute(['screenshot','--path','/unused.png'],{timeout:20000});
+  assert.deepEqual(records.map(r=>r.kind),['probe','probe-retry','probe-retry','probe-full-fallback','selected']);
+});
+test('persistent wrong-page pixels exhaust retry bounds without selected capture', async () => {
+  let small=0,full=0;
+  const execute=createGate({reducedProbe:true,smallRetries:2,capture:async args=>{if(args[0]==='screenshot')small++;return {status:0};},
+    fullCapture:async()=>{full++;return {status:0};},recognize:()=>row('Search Settings'),record(){}});
+  await execute(['click','--text','About phone'],{timeout:20000});
+  await assert.rejects(execute(['screenshot','--path','/unused.png'],{timeout:20000}),/not verified/);
+  assert.equal(small,9);assert.equal(full,3);
+});
+test('remaining fallback budget takes precedence over optional small retries', async () => {
+  const records=[],frames=[[],row('About phone'),row('About phone')];
+  const execute=createGate({reducedProbe:true,smallRetries:2,capture:async()=>({status:0}),fullCapture:async()=>({status:0}),
+    recognize:()=>frames.shift(),record:r=>records.push(r)});
+  await execute(['click','--text','About phone'],{timeout:3500});
+  await execute(['screenshot','--path','/unused.png'],{timeout:3500});
+  assert.deepEqual(records.map(r=>r.kind),['probe','probe-full-fallback','selected']);
+});

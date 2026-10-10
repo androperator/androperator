@@ -1,4 +1,0 @@
-interface:
-  display_name: "Task Cleanup"
-  short_description: "Retire task packs and preserve follow-up"
-  default_prompt: "Use $task-cleanup to retire this completed task pack after preserving durable knowledge and actionable follow-up."

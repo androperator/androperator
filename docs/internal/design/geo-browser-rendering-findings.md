@@ -1,5 +1,10 @@
 # GEO Audit Findings
 
+Historical research migrated from the former planning area. Observations and
+proposals below apply to the recorded revision/date, not a claim of current
+behavior. Reconcile against current code before acting. Task plans and unresolved
+work live in the project notebook; durable evidence remains here.
+
 Created: 2026-03-12
 
 ## Summary

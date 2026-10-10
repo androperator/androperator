@@ -1,11 +1,11 @@
 ---
 name: dev-take-task-to-completion-review-loop
-description: Finish an implemented task through task cleanup, code simplification, local Astra reviews until clean, and GitHub PR creation.
+description: Finish an implemented task through documentation cleanup, code simplification, local Astra reviews until clean, and GitHub PR creation.
 ---
 
 # Dev Take Task to Completion - Review Loop
 
-Take the current implemented task to an up-to-date GitHub PR. Run task cleanup,
+Take the current implemented task to an up-to-date GitHub PR. Run documentation cleanup,
 code simplification, local review, and PR creation in that order. Run the review loop until clean. This workflow is written for GPT-6 Astra.
 It takes no arguments; infer the task from the current conversation and
 repository. The review workflow is fixed.
@@ -16,10 +16,11 @@ branch HEAD. Report a concrete blocker if any required stage cannot finish.
 
 ## Scope and Dependencies
 
-Infer the task pack, implementation branch, acceptance criteria, and full change
-scope from the current task and repository. Preserve unfinished phases of a
-multi-PR pack. If implementation or required validation is incomplete, finish
-the authorized scope before cleanup; do not expand into later phases.
+Infer the notebook plan, implementation branch, acceptance criteria, and full
+change scope from the current conversation, notebook, and repository. Preserve
+unfinished phases and dependencies in the notebook. If implementation or required
+validation is incomplete, finish the authorized scope before cleanup; do not
+expand into later phases.
 
 Use the skills below, reading each when its stage is reached. Resolve shared
 skills through the available skill catalog; the personal installation is
@@ -34,10 +35,17 @@ the PR, publish a release, force-push, or push directly to `main` or `prod`.
 
 ## Workflow
 
-1. **Clean up the task.** Run [task-cleanup](../task-cleanup/SKILL.md).
-   Preserve durable knowledge and actionable follow-up before retiring the
-   completed pack or phases. If there is no task pack, record this stage as
-   not applicable. Resolve an ambiguous pack before deleting anything.
+1. **Clean up documentation and planning context.** Read
+   `~/.codex/skills/notebook-plan/SKILL.md` (`notebook-plan`)
+   when recording or updating the task plan and follow its destination and
+   commit rules. The notebook holds plans and working context. Move still-useful
+   engineering knowledge, decisions, sanitized evidence, and rationale into the
+   appropriate repository docs, skills, or code before retiring obsolete guidance.
+   Verify claims against implementation and use docs-author and docs-build for
+   affected docs. Preserve actionable unfinished work and dependencies in the
+   notebook, then mark completed scope accurately. This step applies even when
+   there is no saved plan; do not invent one merely to report cleanup. Remove
+   obsolete material only after its useful content has an appropriate home.
 
 2. **Simplify the implementation.** Run `$simplify-code` on the full task change,
    including cleanup changes, rather than only the latest commit. Preserve

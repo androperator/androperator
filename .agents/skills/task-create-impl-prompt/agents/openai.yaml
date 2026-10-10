@@ -1,4 +1,0 @@
-interface:
-  display_name: "Task Impl Prompt"
-  short_description: "Draft one-PR implementation prompts"
-  default_prompt: "Use $task-create-impl-prompt to draft a complete implementation prompt for the requested PR, ending at its scope boundary."

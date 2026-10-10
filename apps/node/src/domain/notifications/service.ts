@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { ActionParams, Execution } from "../../contracts/execution.js";
 import type { NotificationMediaAction } from "../../contracts/notifications.js";
-import { runExecution, type RunExecutionOptions } from "../executions/runExecution.js";
+import { runExecution, type RunExecutionOptions } from "../executions/lazyExecution.js";
 import { validateExecution } from "../executions/validateExecution.js";
 
 export function buildNotificationMediaExecution(type: NotificationMediaAction, params: ActionParams = {}, timeoutMs = type === "observe_media" ? (params.durationMs ?? 0) + 10000 : 30000): Execution {

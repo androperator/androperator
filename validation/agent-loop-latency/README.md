@@ -362,10 +362,19 @@ The following are intentionally outside this tooling PR:
 - Rendering-verification contract: distinct action and observation outcomes,
   shared deadlines, skill-owned expected conditions, truthful failure and no replay.
   Title checks must not be advertised as scroll/content settling or atomic capture.
-- Finer phase profiling after the completed [no-daemon](persistent-node-findings.md)
-  and [normal-daemon](daemon-node-findings.md) execution comparisons: isolate client
-  startup/imports, daemon checks, transport, readiness and device work before choosing
-  a production API. The results do not justify introducing a second daemon.
+- Further client optimization beyond the completed [no-daemon](persistent-node-findings.md),
+  [normal-daemon](daemon-node-findings.md) and [transparent CLI](transparent-cli-findings.md)
+  comparisons. Keep the existing CLI interface; a new production session API and
+  changes to daemon checks require separate justification. The measurements do not
+  justify introducing a second daemon.
 - A supported Decisions example skill and portable visual-verifier boundary.
 - Broader image-dependent tasks, device/build coverage, secure/HDR and transition
   cases, matched provider comparisons and a human baseline before default changes.
+
+## Transparent CLI startup follow-up
+
+[Transparent CLI findings](transparent-cli-findings.md) records the first production
+loading optimization after client profiling. Five physical pairs measured median
+27.86 s versus 26.72 s with all tasks verified; two pairs were slower. A separate
+fresh-process loading check measured 97.08 ms versus 83.86 ms. Existing commands
+and daemon contracts are unchanged. These small samples are not speed guarantees.

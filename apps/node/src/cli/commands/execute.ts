@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { runExecution } from "../../domain/executions/runExecution.js";
+import { runExecution } from "../../domain/executions/lazyExecution.js";
 import { validateExecution, validatePayloadSize } from "../../domain/executions/validateExecution.js";
 import { LIMITS } from "../../contracts/limits.js";
 import type { OutputOptions } from "../output.js";

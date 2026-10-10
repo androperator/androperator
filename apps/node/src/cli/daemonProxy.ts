@@ -1,3 +1,4 @@
+import { persistentCliContext } from "../domain/executions/persistentCliContext.js";
 import http from "node:http";
 import { rm } from "node:fs/promises";
 import { isAbsolute } from "node:path";
@@ -372,7 +373,7 @@ export async function tryDaemonExecution(
   options: DaemonProxyOptions,
   deps: DaemonProxyDeps = {}
 ): Promise<RunExecutionResult | null> {
-  if (process.env.ANDROPERATOR_NO_DAEMON === "1" || options.noDaemon || process.platform === "win32") {
+  if (persistentCliContext.getStore() || process.env.ANDROPERATOR_NO_DAEMON === "1" || options.noDaemon || process.platform === "win32") {
     return null;
   }
   if (hasCallerRelativeScreenshotPath(execution)) {

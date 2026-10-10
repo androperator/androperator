@@ -33,12 +33,12 @@ function normalizeLogLevel(level?: string): LogLevel {
   return lowered === "debug" || lowered === "warn" || lowered === "error" ? lowered : "info";
 }
 
-function warnOnce(state: { warned: boolean }, message: string): void {
+function warnOnce(state: { warned: boolean }, message: string, write: (text: string) => void): void {
   if (state.warned) {
     return;
   }
   state.warned = true;
-  process.stderr.write(message);
+  write(message);
 }
 
 function mergeDefinedContext(
@@ -65,6 +65,7 @@ export interface CreateAndroperatorLoggerOptions {
   outputFormat?: "json" | "pretty";
   inheritRunId?: boolean;
   fileLogging?: boolean;
+  writeStderr?: (text: string) => void;
 }
 
 const loggerDirectories = new WeakMap<AndroperatorLogger, string>();
@@ -114,13 +115,13 @@ export function createAndroperatorLogger(options?: CreateAndroperatorLoggerOptio
         error instanceof Error
           ? `[androperator] WARN: logging disabled after write failure for ${path}: ${error.message}\n`
           : `[androperator] WARN: logging disabled after write failure for ${path}\n`;
-      warnOnce(state, message);
+      warnOnce(state, message, options?.writeStderr ?? (text => { process.stderr.write(text); }));
       state.fileDisabled = true;
     }
   }
 
   function writeToTerminal(event: LogEvent): void {
-    process.stderr.write(`${event.message}\n`);
+    (options?.writeStderr ?? (text => { process.stderr.write(text); }))(`${event.message}\n`);
   }
 
   function buildLogger(defaultContext?: Partial<LogEvent>): AndroperatorLogger {

@@ -17,6 +17,8 @@ import { getCliBuildIdentity, getCliVersion } from "../../domain/version/compati
 
 export interface ServeAppOptions {
   verbose: boolean;
+  daemonCli?: boolean;
+  daemonDeviceId?: string;
   operatorPackage?: string;
   logger?: Logger;
 }
@@ -168,8 +170,20 @@ export function createServeApp(options: ServeAppOptions): express.Application {
   });
 
   app.get("/version", (_req, res) => {
-    res.json({ version: getCliVersion(), buildIdentity: getCliBuildIdentity() });
+    res.json({ version: getCliVersion(), buildIdentity: getCliBuildIdentity(), ...(options.daemonCli ? { persistentCli: 1 } : {}) });
   });
+
+  if (options.daemonCli) {
+    app.post("/cli", async (req, res) => {
+      try {
+        const { handlePersistentCli } = await import("../persistentCliServer.js");
+        res.json(await handlePersistentCli(req.body, options.daemonDeviceId, options.logger));
+      } catch {
+        // Never return a pre-dispatch decline after entering command handling.
+        res.status(500).json({ error: "CLI request failed; outcome may be unknown" });
+      }
+    });
+  }
 
   // REST: List devices
   app.get("/devices", async (_req, res) => {

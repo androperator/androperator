@@ -323,3 +323,24 @@ after uncertain dispatch. `--no-daemon`, unsupported-daemon paths and eligible
 pre-dispatch fallback continue through the same canonical runtime. Test import
 boundaries in a fresh process so another test's module cache cannot hide eager
 loading regressions.
+
+### Persistent CLI requests
+
+`cli/runner.ts` owns the existing parser and registry dispatch. The executable is
+an opportunistic client of the existing daemon, retaining the local runner when
+optimization is ineligible. Keep classification conservative: changing route must
+not broaden validation or silently reinterpret a flag value. Default-timeout JSON
+commands are the initial scope; unsupported contexts decline before execution.
+
+The daemon uses explicit output sinks and async-local warning context. Never
+capture or mutate process-global argv, environment, cwd, exit status or streams
+for requests. Preserve existing device readiness and execution conflict handling.
+A request ID correlates the private transport response; canonical commandId/taskId
+still correlate the actual device execution envelope. Ownership, package version,
+build identity and caller context are checked before accepting a request. Caller
+run IDs and log destinations belong to that request, not the daemon lifetime.
+
+Only a correlated pre-dispatch decline or a known failure to connect permits local
+fallback. Any accepted/ambiguous dispatch must fail honestly without replay, even
+when its response is malformed or missing. The internal endpoint is enabled only
+for the managed Unix-socket daemon, not the public TCP serve surface.

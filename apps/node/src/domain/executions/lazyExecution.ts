@@ -1,3 +1,4 @@
+import { persistentCliContext } from "./persistentCliContext.js";
 import type { RunExecutionOptions, RunExecutionResult } from "./runExecution.js";
 
 export type { RunExecutionOptions } from "./runExecution.js";
@@ -8,5 +9,6 @@ export async function runExecution(
   options?: RunExecutionOptions,
 ): Promise<RunExecutionResult> {
   const execution = await import("./runExecution.js");
-  return execution.runExecution(executionInput, options);
+  const context = persistentCliContext.getStore();
+  return execution.runExecution(executionInput, context ? { ...options, warn: context.warn } : options);
 }

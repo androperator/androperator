@@ -2,7 +2,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { chmodSync, closeSync, mkdirSync, openSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import { ANDROPERATOR_RUN_ID_ENV_VAR } from "../../contracts/logging.js";
+import { ANDROPERATOR_RUN_ID_ENV_VAR } from "../../contracts/loggingEnv.cjs";
 
 export interface DaemonPathsOptions {
   baseDir?: string;

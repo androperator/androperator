@@ -1,4 +1,4 @@
-import { PERSISTENT_CLI_COMMANDS } from "./persistentCliProtocol.js";
+import { PERSISTENT_CLI_COMMANDS } from "./persistentCliProtocol.cjs";
 
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);

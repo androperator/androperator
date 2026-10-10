@@ -1,7 +1,7 @@
 // Opt-in physical experiment. Never changes the installed CLI or starts an unowned daemon.
 const fs=require('node:fs'),path=require('node:path'),{spawn}=require('node:child_process');
 const {start}=require('./host.cjs');
-const root=path.resolve(__dirname,'../..'),cli=path.join(root,'apps/node/dist/cli/index.js');
+const root=path.resolve(__dirname,'../..'),cli=path.join(root,'apps/node',require('../../apps/node/package.json').bin.androperator);
 async function main(){
  const [device,out]=process.argv.slice(2);
  if(!device?.trim()||!path.isAbsolute(out??'')||process.argv.length!==4)throw Error('Usage: node compare.cjs <device_serial> <new_absolute_output_directory>');

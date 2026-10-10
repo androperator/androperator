@@ -1,6 +1,6 @@
 // Host-only lower-cost command: invalid snapshot limit, rejected before device access.
 const {start}=require('./host.cjs'),{spawn}=require('node:child_process'),path=require('node:path');
-const entry=path.resolve(__dirname,'../../apps/node/dist/cli/index.js');
+const entry=path.resolve(__dirname,'../../apps/node',require('../../apps/node/package.json').bin.androperator);
 async function main(){
  const host=await start(entry);const samples=[];let reference;
  try{for(let i=0;i<21;i++)for(const arm of i%2?['persistent','baseline']:['baseline','persistent']){

@@ -14,7 +14,7 @@ import {
   type DaemonHttpSuccess,
 } from "../../../cli/daemonProxy.js";
 import { formatRunExecutionResultForCli } from "../../../cli/output.js";
-import { getDaemonLockPath, getDaemonSocketPath } from "../../../domain/daemon/lifecycle.js";
+import { getDaemonLockPath, getDaemonSocketPath } from "../../../domain/daemon/lifecycle.cjs";
 import { DEFAULT_OPERATOR_PACKAGE } from "../../../domain/config/resolveOperatorPackage.js";
 import { getCliBuildIdentity, getCliVersion } from "../../../domain/version/compatibility.js";
 import { ERROR_CODES } from "../../../contracts/errors.js";

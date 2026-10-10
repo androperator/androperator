@@ -1,8 +1,8 @@
 import http from "node:http";
 import { randomUUID } from "node:crypto";
-import { getDaemonSocketPath, isDaemonRunning } from "../domain/daemon/lifecycle.js";
-import { getCliBuildIdentity, getCliVersion } from "../domain/version/cliIdentity.js";
-import { canTryPersistentCli, cliEnvironmentIdentity, type PersistentCliReply } from "./persistentCliProtocol.js";
+import { getDaemonSocketPath, isDaemonRunning } from "../domain/daemon/lifecycle.cjs";
+import { getCliBuildIdentity, getCliVersion } from "../domain/version/cliIdentity.cjs";
+import { canTryPersistentCli, cliEnvironmentIdentity, type PersistentCliReply } from "./persistentCliProtocol.cjs";
 
 interface WireReply { body: string; status: number; }
 export interface PersistentCliClientDeps {

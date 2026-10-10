@@ -19,7 +19,7 @@ import {
   type DaemonPathsOptions,
   withDaemonLock,
   writeDaemonPidMetadata,
-} from "../../../domain/daemon/lifecycle.js";
+} from "../../../domain/daemon/lifecycle.cjs";
 import { ANDROPERATOR_RUN_ID_ENV_VAR } from "../../../contracts/logging.js";
 import {
   cmdDaemonStart,

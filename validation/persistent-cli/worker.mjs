@@ -5,15 +5,28 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 const [entry, socketPath] = process.argv.slice(2);
 if (!path.isAbsolute(entry ?? '') || !path.isAbsolute(socketPath ?? '')) throw Error('Absolute built entry and private socket required');
-const original = await fs.readFile(entry, 'utf8');
-const marker = '\nmain().catch((e) => {';
-if (original.split(marker).length !== 2 || !original.includes('async function main()')) throw Error('Unsupported CLI build');
-const temporary = path.join(path.dirname(entry), `.persistent-probe-${process.pid}.mjs`);
-const program = original.slice(0, original.indexOf(marker)).replace(/^#![^\n]*\n/, '').replace('async function main()', 'export async function main()').replaceAll('process.exit(', 'finishProbe(');
-await fs.writeFile(temporary, `function finishProbe(code) { throw Object.assign(new Error('CLI exit'), {probeExit: code}); }\n${program}`, {flag: 'wx', mode: 0o600});
+// Keep legacy builds measurable while using the explicit runner in newer builds.
+const runnerPath = path.join(path.dirname(entry), 'runner.js');
 let main;
-try { ({main} = await import(pathToFileURL(temporary).href)); }
-finally { await fs.unlink(temporary); }
+const startupArgv = process.argv;
+process.argv = [process.execPath, entry];
+try {
+  let hasRunner = true;
+  try { await fs.access(runnerPath); } catch { hasRunner = false; }
+  if (hasRunner) {
+    const {runLocalCli} = await import(pathToFileURL(runnerPath).href);
+    main = async () => { process.exitCode = await runLocalCli(process.argv.slice(2)); };
+  } else {
+    const original = await fs.readFile(entry, 'utf8');
+    const marker = '\nmain().catch((e) => {';
+    if (original.split(marker).length !== 2 || !original.includes('async function main()')) throw Error('Unsupported CLI build');
+    const temporary = path.join(path.dirname(entry), `.persistent-probe-${process.pid}.mjs`);
+    const program = original.slice(0, original.indexOf(marker)).replace(/^#![^\n]*\n/, '').replace('async function main()', 'export async function main()').replaceAll('process.exit(', 'finishProbe(');
+    await fs.writeFile(temporary, `function finishProbe(code) { throw Object.assign(new Error('CLI exit'), {probeExit: code}); }\n${program}`, {flag: 'wx', mode: 0o600});
+    try { ({main} = await import(pathToFileURL(temporary).href)); }
+    finally { await fs.unlink(temporary); }
+  }
+} finally { process.argv = startupArgv; }
 let busy = false;
 const server = net.createServer(socket => {
   let input = '', accepted = false;

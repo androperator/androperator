@@ -1,10 +1,10 @@
-import { getCliVersion } from "./cliIdentity.js";
+import { getCliVersion } from "./cliIdentity.cjs";
 import { runAdb } from "../../adapters/android-bridge/adbClient.js";
 import { type RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 import { ERROR_CODES, type AndroperatorError } from "../../contracts/errors.js";
 import { hasListedPackage } from "../device/grantPermissions.js";
 
-export { getCliVersion, getCliBuildIdentity, type CliBuildIdentity } from "./cliIdentity.js";
+export { getCliVersion, getCliBuildIdentity, type CliBuildIdentity } from "./cliIdentity.cjs";
 
 export { hasListedPackage } from "../device/grantPermissions.js";
 

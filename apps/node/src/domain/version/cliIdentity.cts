@@ -34,7 +34,7 @@ export function getCliBuildIdentity(): CliBuildIdentity {
 
 
 export function getCliVersion(): string {
-  const pkg = createRequire(import.meta.url)("../../../package.json") as { version?: string };
+  const pkg = createRequire(__filename)("../../../package.json") as { version?: string };
   if (!pkg.version || pkg.version.trim().length === 0) throw new Error("package.json version is missing");
   return pkg.version;
 }

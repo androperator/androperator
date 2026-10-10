@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {spawn}=require('node:child_process'),path=require('node:path'),net=require('node:net'),fs=require('node:fs'),os=require('node:os');
 const {start}=require('./host.cjs');
-const entry=path.resolve(__dirname,'../../apps/node/dist/cli/index.js'),relay=path.join(__dirname,'relay.cjs');
+const entry=path.resolve(__dirname,'../../apps/node',require('../../apps/node/package.json').bin.androperator),relay=path.join(__dirname,'relay.cjs');
 function run(file,args,env={}){return new Promise(resolve=>{const c=spawn(process.execPath,[file,...args],{env:{...process.env,...env}});let stdout='',stderr='';c.stdout.on('data',b=>stdout+=b);c.stderr.on('data',b=>stderr+=b);c.on('exit',status=>resolve({stdout,stderr,status}));});}
 test('persistent CLI preserves exact help, errors, exit isolation and aliases',async()=>{
  const host=await start(entry);

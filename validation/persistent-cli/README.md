@@ -29,9 +29,10 @@ batch and is retained. Existing daemons are never stopped or replaced by setup.
 The relay still starts Node on every command. Its only job is forwarding arguments
 and returning captured stdout, stderr and exit status. The sequential worker calls
 the existing built CLI parser and handlers, preserving normal daemon requests and
-checks. It creates a temporary adjacent module that exposes the CLI main function
-and replaces parser process exits with caught exits. It deletes that module after
-import. This transformation is intentionally a laboratory technique, not a
+checks. It uses the explicit CLI runner when available. For legacy builds it
+creates a temporary adjacent module that exposes the CLI main function and
+replaces parser process exits with caught exits, deleting it after import.
+The benchmark resolves the installed entry from package metadata. This transformation is intentionally a laboratory technique, not a
 production refactor. Do not build concurrently with a run.
 
 Only the command-first forms used by the Settings route and help/version are

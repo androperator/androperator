@@ -12,7 +12,7 @@
   "homepage": "https://androperator.com",
   "bugs": "https://github.com/androperator/androperator/issues",
   "bin": {
-    "androperator": "dist/cli/index.js"
+    "androperator": "dist/cli/index.cjs"
   },
   "publishConfig": {
     "access": "public",

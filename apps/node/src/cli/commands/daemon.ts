@@ -15,7 +15,7 @@ import {
   type DaemonPathsOptions,
   withDaemonLock,
   writeDaemonPidMetadata,
-} from "../../domain/daemon/lifecycle.js";
+} from "../../domain/daemon/lifecycle.cjs";
 import type { CliBuildIdentity } from "../../domain/version/compatibility.js";
 
 interface DaemonRunOptions extends DaemonPathsOptions {

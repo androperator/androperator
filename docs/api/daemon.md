@@ -331,7 +331,8 @@ Success condition: no matches.
 ## Persistent CLI handling
 
 Repeated eligible commands can reuse the CLI parser and command modules already
-loaded in the owned daemon. Continue using the same CLI commands and flags; no
+loaded in the owned daemon. The installed executable uses a lightweight launcher;
+the existing direct Node entry remains supported. Continue using the same CLI commands and flags; no
 session setup or new agent API is required. The first call can still start the
 daemon through the existing execution proxy.
 

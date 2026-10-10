@@ -54,7 +54,7 @@ export interface AndroperatorLogger {
   logPath(): string | undefined;
 }
 
-export const ANDROPERATOR_RUN_ID_ENV_VAR = "ANDROPERATOR_RUN_ID";
+export { ANDROPERATOR_RUN_ID_ENV_VAR } from "./loggingEnv.cjs";
 export const RUN_ID_PATTERN = /^[A-Za-z0-9._:-]+$/;
 export const RUN_ID_MAX_LENGTH = 240;
 

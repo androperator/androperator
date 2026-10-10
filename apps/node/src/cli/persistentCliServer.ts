@@ -1,9 +1,9 @@
 import type { Logger } from "../adapters/logger.js";
 import { createAndroperatorLogger } from "../adapters/logger.js";
-import { getCliBuildIdentity } from "../domain/version/cliIdentity.js";
+import { getCliBuildIdentity } from "../domain/version/cliIdentity.cjs";
 import { normalizeRunId } from "../contracts/logging.js";
 import { persistentCliContext } from "../domain/executions/persistentCliContext.js";
-import { canTryPersistentCli, cliEnvironmentIdentity } from "./persistentCliProtocol.js";
+import { canTryPersistentCli, cliEnvironmentIdentity } from "./persistentCliProtocol.cjs";
 import { runCli, isPersistentCliRequestEligible } from "./runner.js";
 
 export async function handlePersistentCli(body: unknown, deviceId: string | undefined, serverLogger?: Logger): Promise<object> {

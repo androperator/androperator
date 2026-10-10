@@ -344,3 +344,22 @@ Only a correlated pre-dispatch decline or a known failure to connect permits loc
 fallback. Any accepted/ambiguous dispatch must fail honestly without replay, even
 when its response is malformed or missing. The internal endpoint is enabled only
 for the managed Unix-socket daemon, not the public TCP serve surface.
+
+
+### Keep the per-command launcher small
+
+The installed executable starts through `dist/cli/index.cjs`. Its short path uses
+only CommonJS modules and Node built-ins; the full ES-module command runner loads
+when local execution is needed. The existing `dist/cli/index.js` entry remains a
+compatibility wrapper. Both invoke the same runner and daemon protocol.
+
+Keep per-request build/version and process-ownership verification, caller-context
+matching, canonical validation, and no-replay handling intact. Startup savings
+come from avoiding repeated module-loader work, not bypassing these checks.
+Environment digests sort variable names by explicit string order; locale-aware
+collation is unnecessary for equality and adds cold-process initialization cost.
+
+Test the executable named by package metadata as well as the compatibility entry.
+Benchmarking only the wrapper can miss installed-launcher behavior. Preserve the
+experimental forwarding harness's ability to use the explicit runner and to
+measure legacy builds without deploying its process-global capture technique.

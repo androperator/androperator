@@ -11,7 +11,7 @@ export interface PersistentCliReply {
 export function cliEnvironmentIdentity(env: NodeJS.ProcessEnv = process.env): string {
   const entries = Object.entries(env)
     .filter(([key, value]) => value !== undefined && key !== "ANDROPERATOR_RUN_ID" && key !== "ANDROPERATOR_LOG_DIR")
-    .sort(([left], [right]) => left.localeCompare(right));
+    .sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
   return createHash("sha256").update(JSON.stringify(entries)).digest("hex");
 }
 

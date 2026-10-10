@@ -7,7 +7,7 @@ import type { RunExecutionResult } from "../domain/executions/runExecution.js";
 import type { ResultEnvelope } from "../contracts/result.js";
 import { ANDROPERATOR_RUN_ID_ENV_VAR, normalizeRunId } from "../contracts/logging.js";
 import { resolveOperatorPackageForRequest } from "../domain/config/resolveOperatorPackage.js";
-import { getDaemonSocketPath, isDaemonRunning, spawnDaemonRun, stopDaemon, withDaemonLock } from "../domain/daemon/lifecycle.js";
+import { getDaemonSocketPath, isDaemonRunning, spawnDaemonRun, stopDaemon, withDaemonLock } from "../domain/daemon/lifecycle.cjs";
 import { getCliBuildIdentity, getCliVersion, type CliBuildIdentity } from "../domain/version/compatibility.js";
 
 export interface DaemonProxyOptions {

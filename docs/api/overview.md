@@ -15,6 +15,7 @@ This page is intentionally narrow:
 - Use [Errors](errors.md) for exact error codes and recovery
 - Use [Devices](devices.md) for target selection rules
 - Use [Daemon](daemon.md) for background daemon lifecycle commands
+- Use [Rendering verification](evidence.md#optional-post-action-rendering-verification-node) for opt-in Node checks of semantic evidence and screenshot pixels after an action
 
 ## Surface Terminology
 

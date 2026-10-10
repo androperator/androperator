@@ -441,6 +441,11 @@ an acquisition adapter and a trusted semantic/pixel verifier. It does not add
 CLI flags or change what an existing `click`, `snapshot` or `screenshot` reports.
 It does not include OCR, a model, or an accelerated screenshot backend.
 
+This is an adapter-authoring interface. The following is a wiring sketch, not a
+standalone runnable program: the caller supplies both functions, the completed
+action receipt, selected device and abort controller. Start with full-resolution
+acquisition (`reducedAttempts: 0`) unless your adapter supports reduced captures.
+
 ```javascript
 import { createRenderVerifier } from '@androperator/cli/dist/renderVerification.js';
 
@@ -453,7 +458,7 @@ const observation = await verifyRendering({
   deviceId: selectedDevice,
   conditionId: 'destination-heading-and-required-content',
   timeoutMs: 30000,
-  reducedAttempts: 3,
+  reducedAttempts: 0, // Canonical full-resolution acquisition first.
   fullAttempts: 2,
   fallbackReserveMs: 3000,
   signal: abortController.signal,
@@ -477,7 +482,11 @@ only canonical full-resolution acquisition and their own verifier.
 
 ### Adapter contracts
 
-`acquire({captureId, scale, timeoutMs, signal})` returns a fresh `RenderFrame`:
+`acquire({captureId, scale, timeoutMs, signal})` returns a fresh `RenderFrame`.
+The callback currently receives neither `deviceId` nor `conditionId`. Bind the
+selected device and any condition-specific acquisition context in your adapter,
+and pass the same values to `verifyRendering`. Do not assume fields omitted from
+the callback signature are forwarded. Its returned frame must satisfy:
 
 - Echo `captureId` and the explicit `deviceId`; provide PNG bytes as a `Buffer`,
   a nonblank `backend`, and independently observed native `source` geometry:
@@ -525,6 +534,13 @@ strategy and acceptance conditions outside the runtime.
 two full attempts and a 3000 ms fallback reserve. Reduced attempts accept `0..3`,
 full attempts `1..3`; the reserve must be an integer `1..timeoutMs`. The reserve
 is shared by fallback acquisition and verification, not a guarantee they can finish.
+The reserve is validated even when `reducedAttempts: 0`. If `timeoutMs` is below
+3000, explicitly set `fallbackReserveMs` to a positive integer no greater than
+that timeout; otherwise the default reserve makes the request invalid. For
+example, a full-only one-second request needs `timeoutMs: 1000`,
+`reducedAttempts: 0` and `fallbackReserveMs: 1`. The reserve is not subtracted
+from full-only callback budgets.
+
 There is no fixed sleep. Each rejected observation consumes one bounded attempt.
 Full-resolution fallback is fresh and must independently pass both checks.
 
@@ -562,3 +578,27 @@ payloads when serializing a JSON manifest and save images separately. `startedAt
 is host UTC time and `elapsedMs` uses the host monotonic clock. Neither is a device
 frame timestamp. This API does not claim atomic screenshot/tree capture or general
 visual settling. Rendering failure does not undo action success or authorize replay.
+
+
+### Evidence and adoption limits
+
+On one Pixel 10 Pro/API 37, three alternating full/quarter-size pairs passed all
+12 ordinary checks. Mean settled-content observation was 5.303 seconds full-size
+versus 3.487 seconds quarter-size; arrival was 9.567 versus 3.648 seconds, with
+different retry counts. These include capture, snapshots, display checks and
+local OCR. They are not full agent-task timings or a general reliability rate.
+The reduced backend was an experimental shell helper, not a shipped capability
+of `createRenderVerifier`.
+
+The tests rejected old-page pixels despite matching semantic evidence, verified
+fresh full-size fallback independently, and failed closed for an impossible
+condition, unreadable images at both sizes, and cancellation. A painted Settings
+heading was reported as invisible by accessibility; the predicate therefore used
+other visible page content for its semantic check. Tree and pixel evidence are
+complementary, not interchangeable.
+
+The committed `validation/render-verification/findings.md` contains the full
+measurement method, timing table, fault results and failed pilots. Engineering
+invariants and outstanding adapter/API work are maintained in
+`docs/internal/design/post-action-rendering.md`. Broader device compatibility and
+actual model accuracy at reduced resolution still require validation.

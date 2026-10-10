@@ -1,7 +1,7 @@
 # Post-action rendering verification validation
 
 See the [physical findings](findings.md) for timings, retained pilot failures and
-reliability limits.
+reliability limits. The [engineering design and follow-up](../../docs/internal/design/post-action-rendering.md) records adapter responsibilities and unfinished work.
 
 The maintained Node helper is `apps/node/src/renderVerification.ts`. Its tests
 run in the Node suite. `policy.test.cjs` tests the example-owned Settings predicate

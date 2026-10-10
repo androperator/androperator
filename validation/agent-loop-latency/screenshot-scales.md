@@ -11,8 +11,9 @@ Android bitmap, downsizes with filtered platform scaling, and encodes PNG before
 transferring it to the host. It saves encoding/transfer work, not the original
 full-size capture. No third-party code or dependencies are added. The raw format
 is intentionally limited to API 26 or API 36+, RGBA/RGBX pixels, and recognized
-color spaces. Only API 26 has been exercised so far; other devices must pass a
-pilot and visual comparison before measurement. The API 26 raw format does not
+color spaces. API 26 on an emulator and API 37 on a physical phone have been
+exercised; other devices must pass a pilot and visual comparison before measurement.
+The API 26 raw format does not
 report a color space; this experiment assumes sRGB for that legacy emulator.
 
 ## Build and run

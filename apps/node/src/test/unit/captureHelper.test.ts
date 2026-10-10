@@ -39,8 +39,10 @@ async function fixture(mode = "valid") {
         if (mode === "sequence") header.sequence = 0;
         if (mode === "timestamp") header.captureNanos = "0";
         if (mode === "corrupt") buffer[buffer.length - 1] ^= 1;
-        if (mode === "rejected") { header.status = "capture_rejected"; header.length = 0; }
-        const bytes = Buffer.concat([Buffer.from(JSON.stringify(header) + "\n"), mode === "rejected" ? Buffer.alloc(0) : buffer]);
+        if (["rejected", "protected_content", "secure_content"].includes(mode)) {
+          header.status = "capture_rejected"; header.length = 0; header.reason = mode;
+        }
+        const bytes = Buffer.concat([Buffer.from(JSON.stringify(header) + "\n"), header.status === "ok" ? buffer : Buffer.alloc(0)]);
         setImmediate(() => {
           if (mode === "death") { child.emit("close", 1); return; }
           if (mode === "silent") return;
@@ -51,7 +53,8 @@ async function fixture(mode = "valid") {
         callback();
       }});
       children.push(child);
-      setImmediate(() => child.stdout.write(JSON.stringify({ protocol: 1, session, status: mode === "incompatible" ? "incompatible" : "ready" }) + "\n"));
+      setImmediate(() => child.stdout.write(JSON.stringify({ protocol: 1, session, status: ["incompatible", "protected_composition"].includes(mode) ? "incompatible" : "ready", androidApi: 36,
+        ...(mode === "protected_composition" ? { missingCapability: "protected_composition" } : {}) }) + "\n"));
       return child;
     },
   };
@@ -107,3 +110,28 @@ test("scale contract preserves omission, rejects invalid types and ambiguous exe
   execution.actions.push({ id: "later", type: "press_key", params: { key: "home" } });
   assert.throws(() => validateExecution(execution), (error: any) => /single final/.test(error.message));
 });
+
+test("missing protected composition gives a hardware-aware failure and doctor diagnostic", async () => {
+  const { config, commands } = await fixture("protected_composition");
+  await assert.rejects(captureWithHelper(config, { scale: 25, timeoutMs: 1000 }), (error: any) => {
+    assert.equal(error.reason, "incompatible");
+    assert.match(error.message, /protected GPU composition/);
+    assert.match(error.message, /OS upgrade alone may not/);
+    return true;
+  });
+  const probe = await probeCaptureHelper(config);
+  assert.equal(probe.status, "incompatible");
+  assert.match(probe.detail, /protected GPU composition/);
+  assert.ok(commands.every(args => !args.includes("screencap")));
+});
+for (const reason of ["protected_content", "secure_content"]) {
+  test(`${reason} rejects pixels with actionable diagnostics and no stock fallback`, async () => {
+    const { config, commands } = await fixture(reason);
+    await assert.rejects(captureWithHelper(config, { scale: 25, timeoutMs: 1000 }), (error: any) => {
+      assert.equal(error.reason, "rejected");
+      assert.match(error.message, /before pixel readback/);
+      return true;
+    });
+    assert.ok(commands.every(args => !args.includes("screencap") && !args.includes("input")));
+  });
+}

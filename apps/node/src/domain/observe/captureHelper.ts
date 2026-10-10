@@ -131,7 +131,13 @@ class Session {
       child.stdin.on("error", () => this.close());
       child.on("close", () => this.close());
       const { header } = await handshake;
-      if (header.status === "incompatible") throw fail("incompatible", `Android API ${Number.isInteger(header.androidApi) ? header.androidApi : "unknown"}: ${["capture_class", "strict_policy_constant", "capture_method", "capture_initialization"].includes(header.missingCapability) ? header.missingCapability : "required capability"} unavailable. Reduced screenshot capture is unsupported: Android lacks the required capture interface or strict secure/protected-content policies. Use a device with a newer supported Android build and run androperator doctor to verify capability. Omit --scale (or Node scale) for ordinary full-resolution capture with Android's standard redaction behavior. No automatic fallback was attempted.`);
+      if (header.status === "incompatible") {
+        const api = Number.isInteger(header.androidApi) ? header.androidApi : "unknown";
+        const cause = header.missingCapability === "protected_composition"
+          ? "The device compositor lacks protected GPU composition. Reduced capture cannot reliably distinguish protected buffers from redacted output. Use another device with protected composition support and run androperator doctor; an OS upgrade alone may not resolve this hardware/driver capability."
+          : "The Android build lacks a required capture API or buffer-safety check. Use a compatible device/build and run androperator doctor to verify capability.";
+        throw fail("incompatible", `Android API ${api}: ${cause} Omit --scale (or Node scale) only for an explicit ordinary full-resolution capture with Android's standard redaction behavior. No automatic fallback was attempted.`);
+      }
       if (header.status === "unavailable") throw fail("unavailable", "Android capture service could not initialize. Check device readiness and retry screenshot; no automatic fallback was attempted.");
       if (header.status !== "ready") throw fail("protocol", "Invalid capture handshake.");
     } catch (error) {
@@ -154,7 +160,13 @@ class Session {
     const { header, buffer } = await received;
     if (this.dead) throw this.dead;
     if (header.request !== request) throw fail("protocol", "Stale screenshot request ID rejected.");
-    if (header.status !== "ok") throw fail("rejected", "Capture rejected: display locked/off, protected content, geometry changed, or capture uncertain. Unlock or stabilize the display and retry screenshot; no fallback was attempted.");
+    if (header.status !== "ok") {
+      const detail = header.reason === "protected_content" ? "Protected buffer rejected before pixel readback. Capture an ordinary unprotected screen."
+        : header.reason === "secure_content" ? "Secure window rejected before pixel readback. Capture an ordinary unprotected screen."
+        : header.reason === "protected_composition" ? "Protected composition capability became unavailable. Use a device with protected GPU composition support and rerun doctor."
+        : "Display locked/off, geometry changed, or capture uncertain. Unlock or stabilize the display and retry screenshot.";
+      throw fail("rejected", `Capture rejected: ${detail} No fallback was attempted.`);
+    }
     const { sourceWidth, sourceHeight, rotation, physicalId, captureNanos } = header;
     if (!Number.isSafeInteger(sourceWidth) || sourceWidth < 2 || !Number.isSafeInteger(sourceHeight) || sourceHeight < 2
       || sourceWidth * sourceHeight > 32_000_000 || ![0, 1, 2, 3].includes(rotation)
@@ -211,7 +223,7 @@ export async function probeCaptureHelper(config: RuntimeConfig): Promise<{ statu
   const session = new Session(config);
   try {
     await session.start(performance.now() + 5000);
-    return { status: "supported", detail: "Strict-policy shell capture APIs available. Live capture and image contents are unverified until screenshot succeeds." };
+    return { status: "supported", detail: "Shell capture APIs and protected GPU composition available. The helper rejects secure layers and protected output buffers before readback. Live capture and image contents are unverified until screenshot succeeds." };
   } catch (error) {
     return { status: error instanceof CaptureHelperError && error.reason === "incompatible" ? "incompatible" : "unavailable",
       detail: error instanceof Error ? error.message : "Capture helper probe failed; check ADB and reinstall Node package." };

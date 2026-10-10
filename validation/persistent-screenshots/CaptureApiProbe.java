@@ -10,6 +10,12 @@ public final class CaptureApiProbe {
         System.out.println("api=" + android.os.Build.VERSION.SDK_INT);
         System.out.println("release=" + android.os.Build.VERSION.RELEASE);
         System.out.println("build=" + android.os.Build.ID);
+        try {
+            System.out.println("protectedComposition=" + Class.forName("android.view.SurfaceControl")
+                .getMethod("getProtectedContentSupport").invoke(null));
+        } catch (ReflectiveOperationException unavailable) {
+            System.out.println("protectedComposition=unavailable");
+        }
         for (String name : new String[] {"SDK_INT_FULL", "INCREMENTAL"}) {
             try {
                 System.out.println(name + "=" + android.os.Build.VERSION.class.getField(name).get(null));

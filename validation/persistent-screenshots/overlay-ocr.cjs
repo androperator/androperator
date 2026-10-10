@@ -14,7 +14,14 @@ for (let y = 0; y < png.height * 0.3; y++) {
     const i = (y * png.width + x) * 4;
     if (png.data[i] < 15 && png.data[i + 1] < 15 && png.data[i + 2] < 15) dark.push(x);
   }
-  if (dark.length > png.width * 0.2) {
+  let longestRun = 0, run = 0, previous = -2;
+  for (const x of dark) {
+    run = x === previous + 1 ? run + 1 : 1;
+    longestRun = Math.max(longestRun, run);
+    previous = x;
+  }
+  // Start only on a solid rectangle border, not a large dark text heading.
+  if ((top < 0 ? longestRun > png.width * 0.3 : dark.length > png.width * 0.2)) {
     if (top < 0) { top = y; left = dark[0]; right = dark.at(-1); }
     bottom = y;
   } else if (top >= 0) break;

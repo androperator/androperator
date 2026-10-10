@@ -8,11 +8,18 @@ import java.lang.reflect.Method;
 
 /** Shell-identity capture backend. No Operator permissions or platform signing required. */
 public final class CaptureHelper {
-    private final Class<?> captureType = Class.forName("android.window.ScreenCaptureInternal");
-    private final Class<?> builderType = Class.forName("android.window.ScreenCaptureInternal$CaptureArgs$Builder");
-    private final Class<?> argsType = Class.forName("android.window.ScreenCaptureInternal$CaptureArgs");
-    private final Class<?> listenerType = Class.forName("android.window.ScreenCaptureInternal$ScreenCaptureListener");
-    private final Class<?> resultType = Class.forName("android.window.ScreenCaptureInternal$ScreenshotHardwareBuffer");
+    private static Class<?> captureClass() throws ClassNotFoundException {
+        try { return Class.forName("android.window.ScreenCaptureInternal"); }
+        catch (ClassNotFoundException olderAndroid) { return Class.forName("android.window.ScreenCapture"); }
+    }
+    private final Class<?> captureType = captureClass();
+    private final boolean modern = captureType.getName().endsWith("Internal");
+    private final Class<?> builderType = Class.forName(captureType.getName() + "$CaptureArgs$Builder");
+    private final Class<?> argsType = Class.forName(captureType.getName() + "$CaptureArgs");
+    private final Class<?> listenerType = Class.forName(captureType.getName() + "$ScreenCaptureListener");
+    private final Class<?> resultType = Class.forName(captureType.getName() + "$ScreenshotHardwareBuffer");
+    private final Method protectedComposition = Class.forName("android.view.SurfaceControl")
+        .getMethod("getProtectedContentSupport");
     private final Object manager = Class.forName("android.view.IWindowManager$Stub")
         .getMethod("asInterface", IBinder.class).invoke(null,
             Class.forName("android.os.ServiceManager").getMethod("getService", String.class).invoke(null, "window"));
@@ -31,17 +38,14 @@ public final class CaptureHelper {
 
     private CaptureHelper(String session) throws Exception {
         this.session = session;
-        // Resolve strict policy support before advertising compatibility.
-        Class<?> policies = Class.forName("android.window.ScreenCapture$ScreenCaptureParams");
-        policies.getField("SECURE_CONTENT_POLICY_THROW_EXCEPTION");
-        policies.getField("PROTECTED_CONTENT_POLICY_THROW_EXCEPTION");
-        builderType.getMethod("setSecureContentPolicy", int.class);
-        builderType.getMethod("setProtectedContentPolicy", int.class);
+        // Resolve the selected adapter, then the safety capability. A policy named
+        // THROW_EXCEPTION is insufficient: Android's layer path can discard it.
+        configureProtection(builderType.getConstructor().newInstance());
         builderType.getConstructor();
         builderType.getMethod("setSourceCrop", Rect.class);
         builderType.getMethod("setFrameScale", float.class, float.class);
         builderType.getMethod("setPixelFormat", int.class);
-        builderType.getMethod("setIncludeSystemOverlays", boolean.class);
+        if (modern) builderType.getMethod("setIncludeSystemOverlays", boolean.class);
         builderType.getMethod("build");
         captureType.getMethod("createSyncCaptureListener").getReturnType().getMethod("getBuffer");
         resultType.getMethod("getHardwareBuffer");
@@ -49,6 +53,44 @@ public final class CaptureHelper {
         resultType.getMethod("containsHdrLayers");
         resultType.getMethod("asBitmap");
         Class.forName("android.view.IWindowManager").getMethod("isKeyguardLocked");
+        if (!supportsProtectedComposition()) throw new IncompatibleProtection();
+    }
+
+    private static final class IncompatibleProtection extends Exception {}
+
+    static final class UnsafeCapture extends Exception {
+        final String reason;
+        UnsafeCapture(String reason) { super(reason); this.reason = reason; }
+    }
+
+    /** The callback is the first operation allowed to inspect pixel contents. */
+    static <T> T readUnprotected(boolean compositionSupported, boolean secure, long usage,
+            java.util.concurrent.Callable<T> readPixels) throws Exception {
+        if (!compositionSupported) throw new UnsafeCapture("protected_composition");
+        if (secure) throw new UnsafeCapture("secure_content");
+        if ((usage & HardwareBuffer.USAGE_PROTECTED_CONTENT) != 0) {
+            throw new UnsafeCapture("protected_content");
+        }
+        return readPixels.call();
+    }
+
+    private boolean supportsProtectedComposition() throws Exception {
+        return Boolean.TRUE.equals(protectedComposition.invoke(null));
+    }
+
+    private void configureProtection(Object builder) throws Exception {
+        if (modern) {
+            Class<?> policies = Class.forName("android.window.ScreenCapture$ScreenCaptureParams");
+            builderType.getMethod("setSecureContentPolicy", int.class).invoke(builder,
+                policies.getField("SECURE_CONTENT_POLICY_REDACT").getInt(null));
+            builderType.getMethod("setProtectedContentPolicy", int.class).invoke(builder,
+                policies.getField("PROTECTED_CONTENT_POLICY_CAPTURE").getInt(null));
+            // Use composition, not optional display readback, for the buffer-usage invariant.
+            builderType.getMethod("setCaptureMode", int.class).invoke(builder, 0);
+        } else {
+            builderType.getMethod("setCaptureSecureLayers", boolean.class).invoke(builder, false);
+            builderType.getMethod("setAllowProtected", boolean.class).invoke(builder, true);
+        }
     }
 
     private static void reply(String json) {
@@ -85,8 +127,9 @@ public final class CaptureHelper {
         try {
             helper = new CaptureHelper(session);
         } catch (Throwable unavailable) {
-            String missing = unavailable instanceof ClassNotFoundException ? "capture_class"
-                : unavailable instanceof NoSuchFieldException ? "strict_policy_constant"
+            String missing = unavailable instanceof IncompatibleProtection ? "protected_composition"
+                : unavailable instanceof ClassNotFoundException ? "capture_class"
+                : unavailable instanceof NoSuchFieldException ? "capture_policy_constant"
                 : unavailable instanceof NoSuchMethodException ? "capture_method" : "capture_initialization";
             String status = missing.equals("capture_initialization") ? "unavailable" : "incompatible";
             reply("{\"protocol\":1,\"session\":\"" + session + "\",\"status\":\"" + status + "\",\"missingCapability\":\""
@@ -105,7 +148,8 @@ public final class CaptureHelper {
             } catch (Throwable unsafe) {
                 // Never classify capture/policy/geometry uncertainty as compatibility failure.
                 reply("{\"protocol\":1,\"session\":\"" + session
-                    + "\",\"request\":\"" + fields[0] + "\",\"status\":\"capture_rejected\"}");
+                    + "\",\"request\":\"" + fields[0] + "\",\"status\":\"capture_rejected\",\"reason\":\""
+                    + (unsafe instanceof UnsafeCapture ? ((UnsafeCapture) unsafe).reason : "acquisition_uncertain") + "\"}");
                 return;
             }
         }
@@ -142,59 +186,63 @@ public final class CaptureHelper {
         readGeometry();
         int width = Math.max(1, sourceWidth * percent / 100);
         int height = Math.max(1, sourceHeight * percent / 100);
-        long started = System.nanoTime();
         verifyDisplay();
+        if (!supportsProtectedComposition()) throw new UnsafeCapture("protected_composition");
         Object builder = builderType.getConstructor().newInstance();
         builderType.getMethod("setSourceCrop", Rect.class).invoke(builder, new Rect(0, 0, sourceWidth, sourceHeight));
         builderType.getMethod("setFrameScale", float.class, float.class)
             .invoke(builder, (float) width / sourceWidth, (float) height / sourceHeight);
         builderType.getMethod("setPixelFormat", int.class).invoke(builder, 1);
-        Class<?> policies = Class.forName("android.window.ScreenCapture$ScreenCaptureParams");
-        builderType.getMethod("setSecureContentPolicy", int.class).invoke(builder,
-            policies.getField("SECURE_CONTENT_POLICY_THROW_EXCEPTION").getInt(null));
-        builderType.getMethod("setProtectedContentPolicy", int.class).invoke(builder,
-            policies.getField("PROTECTED_CONTENT_POLICY_THROW_EXCEPTION").getInt(null));
-        builderType.getMethod("setIncludeSystemOverlays", boolean.class).invoke(builder, true);
+        configureProtection(builder);
+        if (modern) builderType.getMethod("setIncludeSystemOverlays", boolean.class).invoke(builder, true);
         Object listener = captureType.getMethod("createSyncCaptureListener").invoke(null);
         capture.invoke(manager, 0, builderType.getMethod("build").invoke(builder), listener);
         Object result = listener.getClass().getMethod("getBuffer").invoke(listener);
         if (result == null) throw new IllegalStateException("Display capture returned no buffer");
         HardwareBuffer buffer = (HardwareBuffer) resultType.getMethod("getHardwareBuffer").invoke(result);
         if (buffer == null) throw new IllegalStateException("Display capture returned a null hardware buffer");
-        Bitmap hardware = null, software = null;
         try {
             boolean secure = (boolean) resultType.getMethod("containsSecureLayers").invoke(result);
-            boolean hdr = (boolean) resultType.getMethod("containsHdrLayers").invoke(result);
-            if (secure) throw new IllegalStateException("Secure capture cannot be published");
-            if (buffer.getWidth() != width || buffer.getHeight() != height) {
-                throw new IllegalStateException("Returned hardware buffer does not match requested dimensions");
-            }
+            // When protected composition is supported and requested, SurfaceFlinger
+            // allocates a PROTECTED output if its captured snapshots contain protected
+            // layers. Reject that output before asBitmap/copy/encoding, not by guessing
+            // from black pixels or by a separate, racy window scan.
+            byte[] png = readUnprotected(supportsProtectedComposition(), secure, buffer.getUsage(), () -> {
+                if (buffer.getWidth() != width || buffer.getHeight() != height) {
+                    throw new IllegalStateException("Returned hardware buffer dimensions mismatch");
+                }
+                Bitmap hardware = null, software = null;
+                try {
+                    hardware = (Bitmap) resultType.getMethod("asBitmap").invoke(result);
+                    if (hardware == null) throw new IllegalStateException("Cannot wrap hardware buffer");
+                    software = hardware.copy(Bitmap.Config.ARGB_8888, false);
+                    if (software == null || software.getWidth() != width || software.getHeight() != height) {
+                        throw new IllegalStateException("Readback geometry mismatch");
+                    }
+                    verifyDisplay();
+                    java.io.ByteArrayOutputStream encoded = new java.io.ByteArrayOutputStream();
+                    if (!software.compress(Bitmap.CompressFormat.PNG, 100, encoded)) {
+                        throw new IllegalStateException("PNG encoding failed");
+                    }
+                    if (encoded.size() > 64 * 1024 * 1024) throw new IllegalStateException("PNG too large");
+                    return encoded.toByteArray();
+                } finally {
+                    if (software != null) software.recycle();
+                    if (hardware != null) hardware.recycle();
+                }
+            });
+            verifyDisplay();
+            if (!supportsProtectedComposition()) throw new UnsafeCapture("protected_composition");
             long captured = System.nanoTime();
-            hardware = (Bitmap) resultType.getMethod("asBitmap").invoke(result);
-            if (hardware == null) throw new IllegalStateException("Cannot wrap hardware buffer");
-            software = hardware.copy(Bitmap.Config.ARGB_8888, false);
-            if (software == null || software.getWidth() != width || software.getHeight() != height) {
-                throw new IllegalStateException("Readback geometry mismatch");
-            }
-            verifyDisplay();
-            long copied = System.nanoTime();
-            java.io.ByteArrayOutputStream png = new java.io.ByteArrayOutputStream();
-            if (!software.compress(Bitmap.CompressFormat.PNG, 100, png)) {
-                throw new IllegalStateException("PNG encoding failed");
-            }
-            verifyDisplay();
-            if (png.size() > 64 * 1024 * 1024) throw new IllegalStateException("PNG too large");
             reply("{\"protocol\":1,\"session\":\"" + session
-                + "\",\"request\":\"" + request + "\",\"status\":\"ok\",\"length\":" + png.size()
+                + "\",\"request\":\"" + request + "\",\"status\":\"ok\",\"length\":" + png.length
                 + ",\"sourceWidth\":" + sourceWidth + ",\"sourceHeight\":" + sourceHeight
                 + ",\"physicalId\":\"" + sourceUniqueId.substring(6) + "\",\"rotation\":" + sourceRotation
                 + ",\"scale\":" + percent + ",\"sequence\":" + (++sequence)
                 + ",\"captureNanos\":\"" + captured + "\"}");
-            png.writeTo(System.out);
+            System.out.write(png);
             System.out.flush();
         } finally {
-            if (software != null) software.recycle();
-            if (hardware != null) hardware.recycle();
             buffer.close();
         }
     }

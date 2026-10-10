@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { measureSync } = require('./settings_version_timing');
 const { resolveAndroperatorBin, resolveOperatorPackage } = require('./common');
 const {failureFrom,failureError,localFailure} = require('./settings_version_failure');
 const {invalidate,publicObservation} = require('./settings_version_state');
@@ -15,6 +16,9 @@ const file = name => path.join(directory(),name);
 const read = name => JSON.parse(fs.readFileSync(file(name),'utf8'));
 const save = (name,value) => fs.writeFileSync(file(name),JSON.stringify(value,null,2));
 let commandDeadline = Infinity;
+let commandRunner;
+// Experimental hosts may reuse the Node API while preserving this helper's policy.
+function setCommandRunner(runner) { commandRunner = runner; }
 function withDeadline(deadline, operation) {
   const previous=commandDeadline;commandDeadline=Math.min(previous,deadline);
   try {return operation();} finally {commandDeadline=previous;}
@@ -24,6 +28,9 @@ function runDeadline() {
   return read('budget.json').deadline;
 }
 function command(args) {
+  return measureSync('command', () => executeCommand(args));
+}
+function executeCommand(args) {
   if (!process.env.ANDROPERATOR_BIN?.trim() || !process.env.ANDROPERATOR_DEVICE_ID?.trim()) throw Error('Explicit ANDROPERATOR_BIN and device required');
   const remaining=Math.floor(Math.min(commandDeadline,runDeadline())-Date.now());
   if(remaining<=0) throw failureError(localFailure('RUN_BUDGET_EXHAUSTED','command_execution','No time remains for a device command.'));
@@ -35,7 +42,10 @@ function command(args) {
   const started=performance.now();
   const argv=[...bin.args,...args,'--device',process.env.ANDROPERATOR_DEVICE_ID,'--operator-package',resolveOperatorPackage(),'--no-daemon','--output','json'];
   if(['open','click','scroll'].includes(args[0]) && fs.existsSync(file('state.json'))) save('state.json',invalidate(read('state.json'),'action_dispatch'));
-  const child=spawnSync(bin.cmd,argv,{encoding:'utf8',timeout:Math.max(1,Math.min(20000,remaining)),killSignal:'SIGKILL',maxBuffer:8*1024*1024,env:{...process.env,ANDROPERATOR_LOG_DIR:logging.destination}});
+  const timeout=Math.max(1,Math.min(20000,remaining));
+  const child=commandRunner
+    ? commandRunner(args,{timeout,logDir:logging.destination})
+    : spawnSync(bin.cmd,argv,{encoding:'utf8',timeout,killSignal:'SIGKILL',maxBuffer:8*1024*1024,env:{...process.env,ANDROPERATOR_LOG_DIR:logging.destination}});
   const elapsedMs=performance.now()-started;
   fs.writeFileSync(file(`command-${index}.stdout`),child.stdout ?? '');
   fs.writeFileSync(file(`command-${index}.stderr`),child.stderr ?? '');
@@ -52,12 +62,25 @@ function command(args) {
   return {response,index};
 }
 function observe() {
-  try {return acquireObservation();}
+  try {return measureSync('observation', acquireObservation);}
   catch(error) {
     if(fs.existsSync(file('state.json'))) save('state.json',invalidate(read('state.json'),'observation_failed'));
     throw error;
   }
 }
+
+function viewportFromCapture(png, response) {
+  const width=png.readUInt32BE(16), height=png.readUInt32BE(20);
+  const data=response?.envelope?.stepResults?.find(s=>s.actionType==='take_screenshot')?.data;
+  if(data?.backend!=='experimental-direct-buffer') return {width,height,sourceKind:'image-dimensions'};
+  const sourceWidth=data.sourceWidthPx, sourceHeight=data.sourceHeightPx;
+  if(!Number.isSafeInteger(sourceWidth) || !Number.isSafeInteger(sourceHeight) || sourceWidth<1 || sourceHeight<1
+    || sourceWidth*sourceHeight>32000000 || ![1,0.5,0.25].includes(data.requestedScale)
+    || Math.max(1,Math.floor(sourceWidth*data.requestedScale))!==width || Math.max(1,Math.floor(sourceHeight*data.requestedScale))!==height
+    || data.captureWidthPx!==width || data.captureHeightPx!==height) throw Error('Invalid experimental screenshot geometry');
+  return {width:sourceWidth,height:sourceHeight,sourceKind:'verified-capture-source-dimensions'};
+}
+
 function acquireObservation() {
   // Invalidate the previous candidate menu even if this refresh fails.
   if(fs.existsSync(file('state.json'))) {
@@ -69,10 +92,11 @@ function acquireObservation() {
   const png=fs.readFileSync(viewportPath);
   if(png.length<24 || png.subarray(0,8).toString('hex')!=='89504e470d0a1a0a' || !png.readUInt32BE(16) || !png.readUInt32BE(20)) throw Error('Invalid viewport screenshot');
   const viewportEvent=read('events.json')[viewportCapture.index];
+  const viewport=viewportFromCapture(png, viewportCapture.response);
   const {response,index}=command(['snapshot','--compact','--max-nodes','200','--max-text-chars','1024','--raw-path',file(`snapshot-${sequence}.xml`)]);
   const context={receivedAt:read('events.json')[index].completedAt,device:process.env.ANDROPERATOR_DEVICE_ID,
     operatorPackage:resolveOperatorPackage(),sourceReference:`command-${index}.json`,
-    viewport:{bounds:{left:0,top:0,right:png.readUInt32BE(16),bottom:png.readUInt32BE(20)},reference:`viewport-${sequence}.png`,observedAt:viewportEvent.completedAt,sourceKind:'image-dimensions',atomicWithTree:false}};
+    viewport:{bounds:{left:0,top:0,right:viewport.width,bottom:viewport.height},reference:`viewport-${sequence}.png`,observedAt:viewportEvent.completedAt,sourceKind:viewport.sourceKind,atomicWithTree:false}};
   save(`context-${index}.json`,context);
   const state=fs.existsSync(file('state.json')) ? read('state.json') : {fields:{},actions:0};
   const metadata=response.envelope.stepResults.find(s=>s.actionType==='snapshot').data;
@@ -189,4 +213,4 @@ function finish() {
 function fallbackState() {
   return fs.existsSync(file('state.json')) ? publicState(read('state.json')) : {candidates:[],collected:{},freshness:{status:'stale',reason:'no_observation'}};
 }
-module.exports={withDeadline,runDeadline,fallbackState,command,observe,approveOverlay,act,finish,verifyEvidence,file,read,save,publicState};
+module.exports={viewportFromCapture,setCommandRunner,withDeadline,runDeadline,fallbackState,command,observe,approveOverlay,act,finish,verifyEvidence,file,read,save,publicState};

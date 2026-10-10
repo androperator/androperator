@@ -1,5 +1,5 @@
 import type { Execution } from "../../contracts/execution.js";
-import { runExecution } from "../executions/runExecution.js";
+import { runExecution } from "../executions/lazyExecution.js";
 import type { RunExecutionOptions } from "../executions/runExecution.js";
 
 /**

@@ -1,7 +1,6 @@
 import { ERROR_CODES } from "../contracts/errors.js";
 import { LIMITS } from "../contracts/limits.js";
 import { SYSTEM_KEYS } from "../contracts/keys.js";
-import { normalizeEmulatorDataPartitionSize } from "../domain/android-emulators/lifecycle.js";
 import { formatError } from "./output.js";
 import type { Logger } from "../adapters/logger.js";
 import type { NodeMatcher } from "../contracts/selectors.js";
@@ -73,7 +72,7 @@ export function getStringOptStrict(
   return value;
 }
 
-function getEmulatorStorageSizeOpt(rest: string[], knownFlags: readonly string[]): string | undefined {
+async function getEmulatorStorageSizeOpt(rest: string[], knownFlags: readonly string[]): Promise<string | undefined> {
   const flagAliases = ["--storage-size", "--size", "--disk-size", "--data-partition-size"];
   const provided = flagAliases
     .map((flag) => ({ flag, value: getStringOptStrict(rest, flag, knownFlags) }))
@@ -86,6 +85,7 @@ function getEmulatorStorageSizeOpt(rest: string[], knownFlags: readonly string[]
     return undefined;
   }
   try {
+    const { normalizeEmulatorDataPartitionSize } = await import("../domain/android-emulators/lifecycle.js");
     return normalizeEmulatorDataPartitionSize(value);
   } catch {
     throw new UsageError("--storage-size must be a positive integer followed by G or GB, for example 12G");
@@ -1174,7 +1174,7 @@ COMMANDS["emulator"] = {
       return (await import("./commands/emulator.js")).cmdEmulatorCreate({
         ...out,
         name: getOpt(rest, "--name"),
-        dataPartitionSize: getEmulatorStorageSizeOpt(rest, ["--name", "--storage-size", "--size", "--disk-size", "--data-partition-size"]),
+        dataPartitionSize: await getEmulatorStorageSizeOpt(rest, ["--name", "--storage-size", "--size", "--disk-size", "--data-partition-size"]),
       });
     } else if (sub === "start") {
       return rest[1]
@@ -1193,7 +1193,7 @@ COMMANDS["emulator"] = {
     } else if (sub === "provision") {
       return (await import("./commands/emulator.js")).cmdProvisionEmulator({
         ...out,
-        dataPartitionSize: getEmulatorStorageSizeOpt(rest, ["--storage-size", "--size", "--disk-size", "--data-partition-size"]),
+        dataPartitionSize: await getEmulatorStorageSizeOpt(rest, ["--storage-size", "--size", "--disk-size", "--data-partition-size"]),
       });
     } else {
       return JSON.stringify({ code: "USAGE", message: "emulator list|inspect|create|start|stop|delete|status|provision" });
@@ -1220,7 +1220,7 @@ COMMANDS["provision"] = {
     if (rest[0] === "emulator") {
       return (await import("./commands/emulator.js")).cmdProvisionEmulator({
         ...out,
-        dataPartitionSize: getEmulatorStorageSizeOpt(rest, ["--storage-size", "--size", "--disk-size", "--data-partition-size"]),
+        dataPartitionSize: await getEmulatorStorageSizeOpt(rest, ["--storage-size", "--size", "--disk-size", "--data-partition-size"]),
       });
     } else {
       return JSON.stringify({ code: "USAGE", message: "provision emulator" });

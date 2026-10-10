@@ -109,8 +109,9 @@ startup remain separate from the eight measured samples per variant.
   Settings loop never consumes PNGs, so its success would not validate visual
   accuracy. Model preprocessing is outside this experiment.
 - A production scaled screenshot must expose original dimensions, actual output
-  dimensions, rotation/crop transforms and freshness. Existing helper code assumes
-  PNG dimensions equal the device viewport; do not feed scaled images to it.
+  dimensions, rotation/crop transforms and freshness. The experimental Settings adapter validates explicit source geometry before
+  using reduced images. Other consumers must not assume PNG dimensions equal the
+  native device viewport.
 
 Tests: `node --test validation/agent-loop-latency/screenshot-scales.test.cjs`.
 The suite is included in `validation/test_runner.py` after the Node build.

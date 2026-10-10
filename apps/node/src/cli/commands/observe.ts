@@ -1,7 +1,7 @@
 import { presentSnapshot, validateSnapshotPresentationOptions, type SnapshotPresentationOptions } from "../../domain/observe/compactSnapshot.js";
 import { buildSnapshotExecution } from "../../domain/observe/snapshot.js";
 import { buildScreenshotExecution } from "../../domain/observe/screenshot.js";
-import { runExecution } from "../../domain/executions/runExecution.js";
+import { runExecution } from "../../domain/executions/lazyExecution.js";
 import type { OutputOptions } from "../output.js";
 import { formatError, formatSuccess, formatRunExecutionResultForCli } from "../output.js";
 import type { Logger } from "../../adapters/logger.js";

@@ -7,6 +7,12 @@ const {summarize} = require('./summary.cjs');
 const root = path.resolve(__dirname, '../..');
 const cli = path.join(root, 'apps/node/dist/cli/index.js');
 const helper = path.join(root, 'examples/skills/utils/settings_version_tool.js');
+const screenshotBackends = [
+  'control', 'quarter', 'quarter-fault', 'quarter-transition',
+  'decisions-100', 'decisions-50', 'decisions-25', 'decisions-25-fault',
+  'decisions-25-fastgate', 'decisions-25-fastgate-fault', 'decisions-25-fastgate-ocr-fault',
+  'decisions-25-retrygate', 'decisions-25-retrygate-ocr-fault',
+];
 
 function options(argv) {
   const result = {};
@@ -20,7 +26,7 @@ function options(argv) {
   }
   if (!result['--device'] || !path.isAbsolute(result['--out'] ?? '')) throw Error('Explicit device and absolute output directory required');
   result['--backend'] ??= 'cli';
-  if (!['cli', 'persistent', 'control', 'quarter', 'quarter-fault', 'quarter-transition', 'decisions-100', 'decisions-50', 'decisions-25', 'decisions-25-fault', 'decisions-25-fastgate', 'decisions-25-fastgate-fault', 'decisions-25-fastgate-ocr-fault', 'decisions-25-retrygate', 'decisions-25-retrygate-ocr-fault'].includes(result['--backend'])) throw Error('Unsupported benchmark backend');
+  if (!['cli', 'persistent', ...screenshotBackends].includes(result['--backend'])) throw Error('Unsupported benchmark backend');
   return result;
 }
 
@@ -44,7 +50,7 @@ function run(argv) {
   delete env.VERSION_SCREENSHOTS;
   delete env.VERSION_DECISIONS;
   if (decisions) env.VERSION_DECISIONS = '1';
-  if (['control', 'quarter', 'quarter-fault', 'quarter-transition', 'decisions-100', 'decisions-50', 'decisions-25', 'decisions-25-fault', 'decisions-25-fastgate', 'decisions-25-fastgate-fault', 'decisions-25-fastgate-ocr-fault', 'decisions-25-retrygate', 'decisions-25-retrygate-ocr-fault'].includes(args['--backend'])) env.VERSION_SCREENSHOTS = args['--backend'];
+  if (screenshotBackends.includes(args['--backend'])) env.VERSION_SCREENSHOTS = args['--backend'];
   const operations = [];
   function execute(operation, program, parameters, timeout) {
     const started = performance.now();

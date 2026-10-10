@@ -1,7 +1,43 @@
-# Settings agent-loop latency experiment
+# Experimental Settings agent-loop benchmarks
 
-Measure the existing Jev Settings helper without changing its navigation,
-observation, verification, or retry policy. Requires authorized external Jev use,
+This is opt-in research tooling in `validation/`, not a supported screenshot API,
+production capture backend, or bundled Decisions skill. Its purpose is to reproduce
+latency comparisons and catch evidence regressions before production work begins.
+Default example-skill behavior remains unchanged unless the harness installs its
+experimental hooks. CI runs offline tests only; live benchmarks require an explicitly
+selected device and separately authorized provider use.
+
+The direct-buffer helper uses reflected Android internal APIs under the ADB shell
+identity, validated on one physical API 37 build. It is not an Operator APK service.
+The Decisions rendering gate requires macOS Vision and the tested English Settings
+layout. Neither is a portable product dependency. Read the limits and cleanup steps
+below before running a live experiment. Keep one controller on the device: the
+prototype uses a fixed temporary DEX path and has no production session manager.
+
+| Comparison | Modes | What changes |
+| --- | --- | --- |
+| Canonical execution lifetime | `cli`, `persistent` | Fresh CLI versus a retained worker calling existing Node handlers |
+| Screenshot acquisition | `control`, `quarter`, `quarter-transition` | Stock versus direct quarter buffers, optionally stock after clicks |
+| Decisions image size | `decisions-100`, `decisions-50`, `decisions-25` | Selected image size with full-size title probes |
+| Rendering probe size | `decisions-25`, `decisions-25-fastgate` | Full-size versus quarter-size probes with verified full fallback |
+| Rendering retries | `decisions-25-fastgate`, `decisions-25-retrygate` | Immediate full fallback versus up to two extra quarter probes |
+
+Fault modes are separate recovery tests, excluded from normal timing comparisons.
+Two physical comparisons are complete, each with 5/5 verified tasks per arm:
+
+- [Fresh no-daemon CLI versus persistent Node](persistent-node-findings.md):
+  30.78 s versus 22.08 s median, a 28.3% reduction.
+- [Normal daemon-backed CLI versus persistent Node](daemon-node-findings.md):
+  25.42 s versus 21.65 s median, a 14.8% reduction. This uses a documented
+  experimental helper copy; the stock `cli` harness still disables the daemon.
+
+These are separate paired batches. A persistent screenshot helper is a different optimization. Do not infer broad vision accuracy or human
+parity from successful extraction on this known, text-rich route.
+
+## Baseline setup
+
+The default `cli` baseline measures the existing Jev Settings helper without
+changing its navigation, observation, verification, or retry policy. Requires authorized external Jev use,
 `JEV_API_KEY`, an explicitly selected device, and a matching development Operator.
 Use one controller on the device. This changes only navigation in Settings; it
 does not tap Build number or change system configuration.
@@ -93,7 +129,7 @@ baseline remains follow-up work; the Decisions comparison is documented below.
 Offline checks (no device or provider calls):
 
 ```sh
-node --test validation/agent-loop-latency/benchmark.test.cjs examples/skills/tests/*.test.js
+node --test validation/agent-loop-latency/*.test.cjs examples/skills/tests/*.test.js
 ```
 
 ## Quarter-size screenshots in the complete Jev loop
@@ -287,3 +323,58 @@ its original pixels, OCR and explicit injection marker. Full-size probe recognit
 and selected-image recognition remain real. This tests that exhausted small retries
 still reach independently verified full-size fallback without replaying actions.
 Exclude it from normal timing medians and do not call it a natural OCR failure.
+
+
+## Evidence motivating this harness
+
+Physical-device measurements on 2026-10-10 used a Pixel 10 Pro, API 37, native
+1080 x 2410 display and development Operator. These are small experimental samples,
+not product performance guarantees. Retain the methods above when reproducing them.
+
+- The original Jev baseline had a 34.98 s task median over five measured trials;
+  CLI commands consumed 96.0% of mean task time, provider calls 3.4%.
+- Five paired stock/direct-quarter Jev runs measured 33.64 s versus 21.19 s.
+  All extracted values verified, but every quarter post-click image showed the old
+  page. A valid new PNG and successful action do not prove destination rendering.
+- Decisions with full-size probes measured completed-run medians of 44.94 / 42.56 /
+  40.29 s at 100/50/25%. Completion was 2/3, 3/3 and 3/3: one full-size attempt
+  stopped safely on low confidence, and was not replaced. This is not a controlled
+  Jev-versus-Decisions comparison because input and verification policies differ.
+- Three paired full-probe/quarter-probe runs measured 41.53 s versus 27.82 s, with
+  3/3 completion in each arm. Each quarter-probe run rejected one old-page image
+  and required a verified full-size probe.
+- Three subsequent immediate-fallback/bounded-quarter-retry pairs measured 27.18 s
+  versus 25.68 s, with 3/3 completion in each arm. One extra quarter probe was enough
+  in each retry run. A separate forced-recognition-failure trial exhausted the small
+  retries and verified all eight full-size fallbacks, completing in 48.34 s.
+
+The last two comparisons have different contemporaneous controls. Do not combine
+percentage gains across batches. Raw private trial evidence is deliberately absent
+from Git; the harness records new evidence for each reproduction.
+
+## Separate production work
+
+The following are intentionally outside this tooling PR:
+
+- Maintained Node capture backend: packaged helper, capability/version checks,
+  setup/doctor/repair, owned sessions, bounded recovery, explicit stock fallback,
+  actual resolution/coordinate metadata and cleanup/watchdog behavior.
+- Rendering-verification contract: distinct action and observation outcomes,
+  shared deadlines, skill-owned expected conditions, truthful failure and no replay.
+  Title checks must not be advertised as scroll/content settling or atomic capture.
+- Further client optimization beyond the completed [no-daemon](persistent-node-findings.md),
+  [normal-daemon](daemon-node-findings.md) and [transparent CLI](transparent-cli-findings.md)
+  comparisons. Keep the existing CLI interface; a new production session API and
+  changes to daemon checks require separate justification. The measurements do not
+  justify introducing a second daemon.
+- A supported Decisions example skill and portable visual-verifier boundary.
+- Broader image-dependent tasks, device/build coverage, secure/HDR and transition
+  cases, matched provider comparisons and a human baseline before default changes.
+
+## Transparent CLI startup follow-up
+
+[Transparent CLI findings](transparent-cli-findings.md) records the first production
+loading optimization after client profiling. Five physical pairs measured median
+27.86 s versus 26.72 s with all tasks verified; two pairs were slower. A separate
+fresh-process loading check measured 97.08 ms versus 83.86 ms. Existing commands
+and daemon contracts are unchanged. These small samples are not speed guarantees.

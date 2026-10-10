@@ -46,6 +46,7 @@ def main(argv=None):
         'evals': [['uv', 'run', '--project', 'evals', '--extra', 'dev', 'pytest', 'evals/harness', '-v']],
         'validation': [
             ['node', '--test', 'validation/agent-loop-latency/benchmark.test.cjs'],
+            ['node', '--test', 'validation/persistent-cli/test.cjs'],
             ['node', '--test', 'validation/agent-loop-latency/screenshot-scales.test.cjs'],
             ['node', '--test', 'validation/agent-loop-latency/jev-screenshots.test.cjs'],
             ['node', '--test', 'validation/agent-loop-latency/decisions.test.cjs'],

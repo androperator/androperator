@@ -23,7 +23,8 @@ prototype uses a fixed temporary DEX path and has no production session manager.
 | Rendering retries | `decisions-25-fastgate`, `decisions-25-retrygate` | Immediate full fallback versus up to two extra quarter probes |
 
 Fault modes are separate recovery tests, excluded from normal timing comparisons.
-The persistent canonical Node comparison remains unmeasured; a persistent screenshot
+The [physical persistent Node comparison](persistent-node-findings.md) is complete:
+30.78 s versus 22.08 s median, with 5/5 verified tasks per arm. A persistent screenshot
 helper is a different optimization. Do not infer broad vision accuracy or human
 parity from successful extraction on this known, text-rich route.
 
@@ -355,8 +356,9 @@ The following are intentionally outside this tooling PR:
 - Rendering-verification contract: distinct action and observation outcomes,
   shared deadlines, skill-owned expected conditions, truthful failure and no replay.
   Title checks must not be advertised as scroll/content settling or atomic capture.
-- Persistent canonical execution measurements and phase profiling, followed by
-  transport or snapshot changes only when equivalent-work measurements justify them.
+- Daemon-aware execution comparison and finer phase profiling after the completed
+  [persistent canonical execution measurements](persistent-node-findings.md), followed
+  by transport or snapshot changes only when equivalent-work measurements justify them.
 - A supported Decisions example skill and portable visual-verifier boundary.
 - Broader image-dependent tasks, device/build coverage, secure/HDR and transition
   cases, matched provider comparisons and a human baseline before default changes.

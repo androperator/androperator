@@ -5,7 +5,8 @@ const {measureAsync} = require('../../examples/skills/utils/settings_version_tim
 const fs = require('node:fs');
 
 async function main() {
-  const bridge = createBridge();
+  const screenshots = process.env.VERSION_SCREENSHOTS;
+  const bridge = createBridge(screenshots ? require('node:path').join(__dirname, 'jev-screenshots.cjs') : undefined);
   runtime.setCommandRunner(bridge.execute);
   const operations = [];
   let status = 'failed';
@@ -34,7 +35,11 @@ async function main() {
           (operation === 'finish' && result?.status !== 'success')) break;
       if (operation === 'finish') status = 'verified';
     }
-  } finally { runtime.setCommandRunner(undefined); await bridge.close(); }
+  } finally {
+    runtime.setCommandRunner(undefined);
+    try { if (screenshots) bridge.execute(['__close'], {timeout: 5000}); }
+    finally { await bridge.close(); }
+  }
   console.log(JSON.stringify({status, stoppedAt, operations}));
   process.exitCode = status === 'verified' ? 0 : 1;
 }

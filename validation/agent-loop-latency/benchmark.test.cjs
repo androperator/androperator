@@ -62,6 +62,9 @@ test('statistics and arguments reject missing, malformed and non-finite inputs',
     ['--device', 'x', '--out', '/tmp/test', '--extra', 'x']]) assert.throws(() => options(args));
   assert.equal(options(['--device', 'test-device', '--out', '/tmp/test'])['--device'], 'test-device');
   assert.equal(options(['--device', 'test-device', '--out', '/tmp/test', '--backend', 'persistent'])['--backend'], 'persistent');
+  for (const backend of ['control', 'quarter', 'quarter-fault', 'quarter-transition']) {
+    assert.equal(options(['--device', 'test-device', '--out', '/tmp/test', '--backend', backend])['--backend'], backend);
+  }
   assert.throws(() => options(['--device', 'test-device', '--out', '/tmp/test', '--backend', 'unknown']));
 });
 

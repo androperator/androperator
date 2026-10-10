@@ -95,3 +95,56 @@ Offline checks (no device or provider calls):
 ```sh
 node --test validation/agent-loop-latency/benchmark.test.cjs examples/skills/tests/*.test.js
 ```
+
+## Quarter-size screenshots in the complete Jev loop
+
+After building/deploying `DirectCapture.java` as described in
+[screenshot-scales.md](screenshot-scales.md), use `--backend control` or
+`--backend quarter`. Both run one controller/worker per trial and keep every
+non-screenshot operation as a fresh canonical CLI invocation. Control also uses
+fresh canonical CLI screenshots. Quarter replaces screenshot acquisition with
+the persistent experimental shell helper, including its cold first start and
+cleanup in task time. This bypasses the canonical screenshot command's Operator
+round trip and CLI overhead as well as reducing capture size. It is a whole
+screenshot-path comparison, not an isolated resolution or production API test.
+
+Quarter captures are fully PNG-decoded and checked against returned buffer/source
+geometry, rotation and sequence. Viewport filtering uses verified source dimensions,
+not the reduced image dimensions. Screenshot envelopes from this adapter are marked
+`experimental-direct-buffer` and `experimental-shell`; they are harness evidence,
+not Operator-produced command results. All actions, snapshots, provider choices,
+read-value checks and terminal verification retain their existing behavior.
+
+Run one pilot per backend, followed by five paired trials with alternating order.
+Each trial now embeds doctor readiness before resetting Settings; readiness and
+reset are excluded from task time. Use fresh output directories, retain failures,
+and stop the sequence if readiness or a task fails. The existing Jev helper does
+not send screenshots to the model; this tests task latency and evidence integrity,
+not reduced-resolution vision accuracy.
+
+An eligible session/protocol failure closes the helper and falls back to a fresh
+full-resolution canonical screenshot, then uses full resolution for the remainder
+of the trial. Both the original failure and fallback are retained in
+`screenshot-attempts.ndjson`. Unknown Android errors, locked/rotated state,
+secure-content rejection and unvalidated HDR fail closed. Overlay review always
+uses full resolution. `--backend quarter-fault` deliberately closes the helper
+before the second screenshot to exercise full-resolution fallback in a complete
+trial. Report this separately from measured normal runs. Fallback never replays
+a navigation action. Capture gets at most five seconds inside the original
+command deadline, leaving time for fallback and cleanup.
+
+No automatic low-detail model policy or general recovery service is implemented.
+The prototype's pre/post geometry checks are not atomic with the snapshot. It
+has no production watchdog, and forced worker termination can leave remote cleanup
+uncertain; check owned processes and remove the temporary DEX after experiments.
+
+Live review found that direct capture immediately after a successful click could
+precede the destination's first rendered frame, even though the following snapshot
+already represented that destination. `--backend quarter-transition` is a separate
+conservative experiment: it uses the existing full-resolution screenshot path for
+the observation immediately after each successful click, and direct quarter-size
+captures elsewhere. Record it separately from the matched pairs. The slower path
+is not a formal rendering barrier; a reliable production solution still needs
+explicit visual-settling evidence. Do not equate successful extraction with fresh
+intermediate screenshots. This observed failure and the fallback choice have
+regression coverage in `jev-screenshots.test.cjs`.

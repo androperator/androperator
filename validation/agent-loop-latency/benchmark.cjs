@@ -14,13 +14,13 @@ function options(argv) {
     const name = argv[i];
     const value = argv[i + 1];
     if (!['--device', '--out', '--backend'].includes(name) || !value?.trim() || value.startsWith('--') || result[name]) {
-      throw Error('Usage: node validation/agent-loop-latency/benchmark.cjs --device <serial> --out <new-absolute-directory> [--backend cli|persistent]');
+      throw Error('Usage: node validation/agent-loop-latency/benchmark.cjs --device <serial> --out <new-absolute-directory> [--backend cli|persistent|control|quarter|quarter-fault|quarter-transition]');
     }
     result[name] = value;
   }
   if (!result['--device'] || !path.isAbsolute(result['--out'] ?? '')) throw Error('Explicit device and absolute output directory required');
   result['--backend'] ??= 'cli';
-  if (!['cli', 'persistent'].includes(result['--backend'])) throw Error('Backend must be cli or persistent');
+  if (!['cli', 'persistent', 'control', 'quarter', 'quarter-fault', 'quarter-transition'].includes(result['--backend'])) throw Error('Backend must be cli, persistent, control, quarter, quarter-fault or quarter-transition');
   return result;
 }
 
@@ -38,6 +38,8 @@ function run(argv) {
     VERSION_RUN_DIR: directory, VERSION_TIMING: '1',
     ANDROPERATOR_LOG_DIR: path.join(directory, 'logs'),
   };
+  delete env.VERSION_SCREENSHOTS;
+  if (['control', 'quarter', 'quarter-fault', 'quarter-transition'].includes(args['--backend'])) env.VERSION_SCREENSHOTS = args['--backend'];
   const operations = [];
   function execute(operation, program, parameters, timeout) {
     const started = performance.now();
@@ -53,6 +55,12 @@ function run(argv) {
       status: response?.status, reason: response?.reason});
     return {ok: child.status === 0, response};
   }
+  const readiness = execute('readiness', cli, ['doctor', '--device', args['--device'],
+    '--operator-package', env.ANDROPERATOR_OPERATOR_PACKAGE, '--output', 'json'], 30000);
+  if (!readiness.ok || readiness.response?.criticalOk !== true) {
+    fs.writeFileSync(path.join(directory, 'trial.json'), JSON.stringify({status: 'failed', stoppedAt: 'readiness', operations}, null, 2));
+    throw Error('Physical-device readiness failed; no trial started');
+  }
   // Reset is reported separately and excluded from the task clock.
   const reset = execute('reset', cli, ['close', 'com.android.settings', '--device', args['--device'],
     '--operator-package', env.ANDROPERATOR_OPERATOR_PACKAGE, '--no-daemon', '--output', 'json'], 30000);
@@ -60,7 +68,7 @@ function run(argv) {
   const started = performance.now();
   let status = 'failed';
   let stoppedAt = 'reset';
-  if (resetVerified && args['--backend'] === 'persistent') {
+  if (resetVerified && args['--backend'] !== 'cli') {
     const result = execute('controller', path.join(__dirname, 'persistent-controller.cjs'), [], 280000);
     if (Array.isArray(result.response?.operations)) operations.push(...result.response.operations);
     stoppedAt = result.response?.stoppedAt ?? 'controller';

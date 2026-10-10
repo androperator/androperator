@@ -48,14 +48,15 @@ function startScaleSession(device, display, remoteDex, directSize) {
     }
   });
   return {
-    capture(percent) {
+    capture(percent, timeoutMs = 20000) {
+      if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) return Promise.reject(Error('Capture budget exhausted'));
       if (fatal) return Promise.reject(fatal);
       if (pending) return Promise.reject(Error('Concurrent capture request'));
       return new Promise((resolve, reject) => {
         const start = first ? started : performance.now();
         first = false;
         pending = {resolve, reject, start, firstByteMs:null,
-          timer:setTimeout(() => fail(Error('Capture session timed out')), 20000)};
+          timer:setTimeout(() => fail(Error('Capture session timed out')), timeoutMs)};
         child.stdin.write(`${percent}\n`);
       });
     },

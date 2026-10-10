@@ -1,5 +1,10 @@
 # Snapshot I/O Optimization Future Work
 
+Historical research migrated from the former planning area. Observations and
+proposals below apply to the recorded revision/date, not a claim of current
+behavior. Reconcile against current code before acting. Task plans and unresolved
+work live in the project notebook; durable evidence remains here.
+
 Date: 2026-04-26
 Status: future-work handoff with daemon online
 
@@ -43,8 +48,9 @@ Interpretation:
   envelope.
 - Keep snapshot capture scoped to the active command's dispatch-to-envelope
   interval.
-- Treat snapshot log lines as uncorrelated by `commandId`; current safety comes
-  from timing boundaries, execution locking, and replay quarantine.
+- Historical snapshot correlation guidance is superseded: preserve command-id-tagged
+  snapshot blocks and strict transport integrity. See
+  [result transport reliability](result-transport-reliability.md).
 - Keep auto-resolve device selection sequential unless a future design proves a
   safe equivalent.
 - Keep daemon proxy behavior compatible with commands that have host-side file
@@ -84,7 +90,7 @@ Start from these source files:
 - `apps/node/src/contracts/execution.ts`
 - `docs/api/snapshot.md`
 
-Acceptance shape for a future task pack:
+Acceptance shape for a future notebook plan:
 
 - unfiltered `snapshot_ui` remains unchanged by default
 - new filters are opt-in and documented
@@ -153,7 +159,7 @@ Durable guidance already lives in:
 
 ## Suggested Next Task Prompt
 
-Author a task pack for Android-side snapshot traversal and serialization
+Author a notebook plan for Android-side snapshot traversal and serialization
 reduction.
 
 Scope the first PR to one opt-in `snapshot_ui` filtering mode, preferably

@@ -80,7 +80,7 @@ the canonical redirect Worker and require published downloads metadata.
 Remove stale guidance after migrating any still-useful content. Keep historical
 material only where release/version management requires it.
 
-## Skills and Task Packs
+## Skills and Planning
 
 - Agents follow and author reusable instructions. Optional bundled examples will live in
   `examples/skills/`; no companion skills catalog is required.
@@ -89,14 +89,18 @@ material only where release/version management requires it.
   scoped and load conditional references only when needed.
 - For execution changes affecting agent instructions, update bundled guidance
   and fixtures in lockstep and run relevant execution and helper checks.
-- `tasks/` holds temporary handoffs. Separate active tasks may have separate
-  packs, including small tasks. Before retiring a pack, move durable knowledge
-  to docs, skills, or code and preserve actionable follow-up.
-- Task cleanup can run on an implementation branch once its work is complete
-  and validated; it does not require a PR, merge, or release. For a sequence of
-  PRs, retain concise `[DONE]` entries and actionable unfinished phases. Delete
-  the pack once all planned work is complete, including before the final PR
-  merges. Cleanup does not assert a merge or satisfy a merged-code prerequisite.
+- Use `~/.codex/skills/notebook-plan/SKILL.md` (`notebook-plan`)
+  for task plans, handoffs, working context, and actionable unfinished work.
+  Follow its live project mappings and shared-checkout rules. Do not create
+  repository-local task packs or duplicate notebook plans here.
+- Documentation cleanup is an explicit completion step. Before closing a task
+  or retiring obsolete guidance, move still-useful engineering knowledge,
+  decisions, sanitized evidence, and code rationale into the appropriate docs,
+  skills, or code in this repository. The notebook is not their canonical home.
+  Verify behavioral claims against implementation and regenerate affected docs.
+- Preserve unfinished scope and dependencies in the notebook before removing
+  obsolete planning material. Mark completed work accurately; local completion
+  does not assert merge, publication, or satisfaction of a release gate.
 
 ## Validation
 

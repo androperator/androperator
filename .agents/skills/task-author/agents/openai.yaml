@@ -1,4 +1,0 @@
-interface:
-  display_name: "Task Author"
-  short_description: "Author scoped repository task handoffs"
-  default_prompt: "Use $task-author to create a task pack with a clear outcome, dependencies, and completion criteria."

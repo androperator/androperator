@@ -1,12 +1,10 @@
-import { createRequire } from "node:module";
-import { realpathSync, statSync } from "node:fs";
+import { getCliVersion } from "./cliIdentity.js";
 import { runAdb } from "../../adapters/android-bridge/adbClient.js";
 import { type RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 import { ERROR_CODES, type AndroperatorError } from "../../contracts/errors.js";
 import { hasListedPackage } from "../device/grantPermissions.js";
 
-const require = createRequire(import.meta.url);
-const CLI_BUILD_IDENTITY = readCliBuildIdentity();
+export { getCliVersion, getCliBuildIdentity, type CliBuildIdentity } from "./cliIdentity.js";
 
 export { hasListedPackage } from "../device/grantPermissions.js";
 
@@ -35,11 +33,6 @@ export interface VersionCompatibilityProbe {
   remediation?: string[];
 }
 
-export interface CliBuildIdentity {
-  entryPath: string;
-  mtimeMs: number | null;
-  size: number | null;
-}
 
 interface CliPackageMetadata {
   version?: string;
@@ -116,33 +109,8 @@ async function getInstalledOperatorVariant(
   return { installed: false };
 }
 
-export function getCliVersion(): string {
-  const pkg = require("../../../package.json") as CliPackageMetadata;
-  return readCliVersion(pkg);
-}
 
-function readCliBuildIdentity(): CliBuildIdentity {
-  const entryPath = process.argv[1] ?? "unknown";
-  try {
-    const resolvedEntryPath = realpathSync(entryPath);
-    const stats = statSync(resolvedEntryPath);
-    return {
-      entryPath: resolvedEntryPath,
-      mtimeMs: stats.mtimeMs,
-      size: stats.size,
-    };
-  } catch {
-    return {
-      entryPath,
-      mtimeMs: null,
-      size: null,
-    };
-  }
-}
 
-export function getCliBuildIdentity(): CliBuildIdentity {
-  return CLI_BUILD_IDENTITY;
-}
 
 export function normalizeCompatibilityVersion(versionName: string): string {
   return versionName.trim().replace(/-d$/, "");

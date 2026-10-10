@@ -8,7 +8,7 @@ The daemon also handles transparent proxying for `exec`, `snapshot`, `screenshot
 
 ## Sources
 
-- CLI registration and global flag parsing: `apps/node/src/cli/registry.ts`, `apps/node/src/cli/index.ts`
+- CLI registration and global flag parsing: `apps/node/src/cli/registry.ts`, `apps/node/src/cli/runner.ts`
 - Daemon command implementation: `apps/node/src/cli/commands/daemon.ts`
 - Daemon proxy implementation: `apps/node/src/cli/daemonProxy.ts`
 - Proxied CLI commands: `apps/node/src/cli/commands/execute.ts`, `apps/node/src/cli/commands/observe.ts`, `apps/node/src/cli/commands/action.ts`
@@ -327,3 +327,35 @@ androperator --help | grep "daemon run"
 ```
 
 Success condition: no matches.
+
+## Persistent CLI handling
+
+Repeated eligible commands can reuse the CLI parser and command modules already
+loaded in the owned daemon. Continue using the same CLI commands and flags; no
+session setup or new agent API is required. The first call can still start the
+daemon through the existing execution proxy.
+
+The initial fast path covers command-first `open`, `close`, `click`, `scroll`,
+`snapshot`, `screenshot`, `read-value` and `press` calls with default timeouts and
+JSON output. Other forms, including aliases, global flags before the command,
+help, pretty output, explicit timeouts and `--no-daemon`, retain their existing
+execution path. Windows also retains its existing direct path. These routing
+choices do not change which commands or flags are accepted.
+
+The fast path requires a live owned daemon with matching CLI version/build,
+working directory and environment. Environment values are compared by digest,
+not forwarded; run IDs and log destinations are supplied separately per request.
+A context mismatch declines the optimization before executing anything. Relative
+paths therefore keep the same caller-directory meaning. Separate requests have
+their own output, exit status, warning sink and log correlation; the daemon does
+not change its global arguments, working directory, environment or streams.
+
+Once accepted, a request executes through the canonical device runtime and its
+readiness and execution-conflict checks. A lost, truncated or mismatched response
+returns `DAEMON_PROXY_ERROR` with `dispatchState: "unknown"`; the CLI does not
+retry the action. Inspect device state before deciding what to do next. A verified
+pre-dispatch decline or connection failure can use the normal CLI path safely.
+
+The daemon-only `/cli` transport is an internal implementation detail and is not
+exposed by TCP `androperator serve`. It is not a supported replacement for the
+public execution API.

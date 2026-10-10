@@ -179,6 +179,8 @@ export async function cmdDaemonRun(options: DaemonRunOptions): Promise<void> {
       const startServerImpl = options.startServerImpl ?? startServer;
       server = await startServerImpl({
         socketPath,
+        daemonCli: true,
+        daemonDeviceId: options.deviceId,
         operatorPackage: options.operatorPackage,
         verbose: options.verbose ?? false,
         logger: options.logger,

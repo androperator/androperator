@@ -40,7 +40,9 @@ JSON privately; they may contain personal screen content. Never commit them.
 A capture passes freshness only when its current marker is present in pixels.
 The scripts decode PNGs independently and keep timing outside OCR verification.
 
-Four rounds run at explicit 100/50/25 and omitted scale (default 25%). Round zero is
+Four rounds run at explicit 100/50/25 and one comparison capture. For API/CLI,
+omitted scale is default 25% and is labeled `default`. Backend mode deliberately
+uses full-resolution stock capture for that comparison, labeled `stock`. Round zero is
 excluded from warm aggregates. Backend/API round zero deliberately closes the
 helper before each explicit scale; subsequent rounds reuse one session. CLI
 round zero is a first-use pass through the existing daemon; only its first

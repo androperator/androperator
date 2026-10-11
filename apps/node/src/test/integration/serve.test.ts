@@ -83,7 +83,7 @@ describe("serve API integration", () => {
       body: JSON.stringify({ storageSize: "12000M" }),
     });
     assert.strictEqual(res.status, 400);
-    const body = await res.json() as { ok: boolean; error: { code: string } };
+    const body = await res.json() as { ok: boolean; error: { code: string; message: string } };
     assert.strictEqual(body.ok, false);
     assert.strictEqual(body.error.code, "INVALID_BODY");
     assert.match(body.error.message, /positive integer followed by G or GB/);
@@ -96,7 +96,7 @@ describe("serve API integration", () => {
       body: JSON.stringify({ storageSize: "12G", diskSize: "16G" }),
     });
     assert.strictEqual(res.status, 400);
-    const body = await res.json() as { ok: boolean; error: { code: string } };
+    const body = await res.json() as { ok: boolean; error: { code: string; message: string } };
     assert.strictEqual(body.ok, false);
     assert.strictEqual(body.error.code, "INVALID_BODY");
     assert.match(body.error.message, /Use only one emulator storage size field/);
@@ -322,7 +322,7 @@ describe("serve API integration", () => {
     });
 
     assert.strictEqual(res.status, 400);
-    const body = await res.json() as { ok: boolean; error: { code: string } };
+    const body = await res.json() as { ok: boolean; error: { code: string; message: string } };
     assert.strictEqual(body.ok, false);
     assert.strictEqual(body.error.code, "INVALID_PATH");
     assert.strictEqual(body.error.message, "'path' must be a non-empty string");

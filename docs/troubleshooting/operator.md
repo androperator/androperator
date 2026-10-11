@@ -18,7 +18,7 @@ Diagnose installation, permission, handshake, and crash-recovery problems involv
 
 1. install APK
 2. grant accessibility and notification permissions
-3. verify the package is installed
+3. verify package presence and a live Operator handshake
 
 Failures are surfaced with distinct structured codes:
 
@@ -29,7 +29,8 @@ Failures are surfaced with distinct structured codes:
 | permission grant failed | `OPERATOR_GRANT_FAILED` |
 | post-install verification failed | `OPERATOR_VERIFY_FAILED` |
 
-Successful setup returns all three phase objects plus a follow-up message:
+Successful setup returns all three phase objects plus a follow-up message
+(abridged example):
 
 ```json
 {
@@ -51,9 +52,13 @@ Successful setup returns all three phase objects plus a follow-up message:
   },
   "verification": {
     "ok": true,
-    "packageInstalled": true
+    "packageInstalled": true,
+    "readiness": {
+      "ok": true,
+      "attempts": [{"ok": true, "state": {"screenOn": true, "deviceLocked": false, "userUnlocked": true}}]
+    }
   },
-  "message": "Operator installed and ready. Run androperator doctor to verify."
+  "message": "Operator installed and handshake verified. Run androperator doctor to check device readiness."
 }
 ```
 
@@ -132,12 +137,18 @@ Exact failure shape:
 
 Meaning:
 
-- install completed, but `pm list packages` could not confirm the expected package afterward
+- install completed, but package presence or the live Operator handshake could not be verified
 
 Typical causes:
 
 - multiple variants installed and package selection ambiguous
 - wrong package expected after install
+- accessibility service remains unavailable after up to two permission-repair retries
+- handshake transport failed or returned malformed evidence
+
+Inspect `verification.readiness.attempts` for probe errors and correlation evidence.
+Setup retries only unavailable-service responses; it does not reinstall the APK,
+wake/unlock the device, or replay app actions. Run doctor for the next repair step.
 
 Exact failure shape:
 

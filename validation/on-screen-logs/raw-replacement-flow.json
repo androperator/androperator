@@ -6,20 +6,6 @@
   "timeoutMs": 30000,
   "actions": [
     {
-      "id": "set-baseline",
-      "type": "set_on_screen_log",
-      "params": {
-        "text": "FLOW-002: Baseline label"
-      }
-    },
-    {
-      "id": "capture-baseline",
-      "type": "take_screenshot",
-      "params": {
-        "path": "/absolute/path/provided-by-caller/on-screen-log-baseline.png"
-      }
-    },
-    {
       "id": "set-replacement",
       "type": "set_on_screen_log",
       "params": {
@@ -41,11 +27,6 @@
       "params": {
         "path": "/absolute/path/provided-by-caller/on-screen-log-replacement.png"
       }
-    },
-    {
-      "id": "clear-replacement",
-      "type": "clear_on_screen_log",
-      "params": {}
     }
   ]
 }

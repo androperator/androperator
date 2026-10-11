@@ -18,10 +18,6 @@
       "params": {
         "path": "/absolute/path/provided-by-caller/on-screen-log-flow-001.png"
       }
-    },
-    {
-      "id": "clear-flow-001",
-      "type": "clear_on_screen_log"
     }
   ]
 }

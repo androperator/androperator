@@ -9,7 +9,7 @@ Androperator inspects and controls Android apps on physical devices and emulator
 Its Android companion app, the Operator, performs device-side actions. Agents
 normally use the canonical Node API/CLI, or the documented HTTP/MCP surfaces.
 
-For an execution request, select and verify the CLI, device and Operator, then
+For an execution request, select and verify the interface, device and Operator, then
 continue into the task. For an introduction or evaluation, explain capabilities
 and prerequisites without requiring a device or changing its state.
 
@@ -82,7 +82,9 @@ prerequisites without claiming readiness.
 
 Before interpreting notification or media results, read the corresponding result
 contract linked above. The canonical step's `data.payload` is JSON encoded inside
-a string. Check list and text truncation before treating an observation as complete.
+a string; use the [media control result example](https://docs.androperator.com/api/media/#media-control-result-example)
+when decoding control receipts and confirmation. Check list and text truncation
+before treating an observation as complete.
 Discover media sessions before targeting one; an app package selects a session
 only when it identifies exactly one active session.
 

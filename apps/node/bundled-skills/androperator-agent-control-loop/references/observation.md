@@ -41,9 +41,10 @@ Map proposed actions back to supported current targets. Image interpretation doe
 not invent accessibility selectors. Overlay metadata, geometry and platform
 visibility do not guarantee lack of occlusion. Verify the resulting screen.
 
-Screenshots default to 25% per dimension. Open `data.path` with an image-reading
-tool; JSON success is not visual inspection. Request a fresh `--scale 50` or
-`--scale 100` image when fine detail is unclear, without replaying the prior action.
+Screenshots default to 25% per dimension. Open `step.data.path` from the screenshot
+step with an image-reading tool; JSON success is not visual inspection. Request a
+fresh `--scale 50` or `--scale 100` image when fine detail is unclear, without
+replaying the prior action.
 The file belongs to the capture host; remote clients need separate file access.
 
 Step metadata uses strings. Convert image pixels to native coordinates with

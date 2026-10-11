@@ -290,12 +290,14 @@ Output-path rule:
 - if `--out` is omitted and the input is a file without a trailing `.ndjson`, the output path is `<input>.export.json`
 - if `--out` is omitted and the input is a directory, the command first resolves the newest `*.ndjson` file in that directory and then applies the same default-path rule to that resolved file
 - if `--out` is provided, that path is used as-is
+- `resolvedInputFile` reports the actual NDJSON path read, including the selected file for directory input. It preserves relative paths; it is not necessarily absolute. This field is returned by the Node helper and CLI success wrapper, not added to the exported artifact.
 
 Success wrapper shape:
 
 ```json
 {
   "ok": true,
+  "resolvedInputFile": "./recordings/demo-session.ndjson",
   "outputFile": "./recordings/demo-session.export.json",
   "sessionId": "demo-session",
   "eventCount": 5,

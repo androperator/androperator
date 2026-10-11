@@ -66,6 +66,9 @@ delivery can precede the fractional-clock deadline check. A timed-out setup
 never enables fallback, even if that check still shows remaining time. Explicit
 caller cancellation takes precedence. Ordinary deployment failures remain
 eligible for the documented setup fallback.
+Fallback likewise treats its aborted deadline signal as authoritative, even if
+the clock still shows remaining time. It reports timeout and stops further work
+whether the interrupted probe throws or returns; caller cancellation still wins.
 Failed setup launches best-effort removal of only its owned directory with a
 250 ms process bound; that cleanup does not delay the failed request.
 A unique sibling temporary file is renamed into the destination only after

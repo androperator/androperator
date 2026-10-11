@@ -50,10 +50,11 @@ const defaults = {
 export async function captureScaledScreenshot(config: RuntimeConfig,
   options: { scale: CaptureScale; timeoutMs: number; signal?: AbortSignal }, dependencies = defaults): Promise<HelperImage> {
   const deadline = performance.now() + options.timeoutMs;
+  const deadlineAbort = new AbortController();
   const remaining = () => {
     if (options.signal?.aborted) throw new CaptureHelperError("cancelled", "Screenshot cancelled.");
     const ms = deadline - performance.now();
-    if (!Number.isFinite(ms) || ms <= 0) throw new CaptureHelperError("timeout", "Screenshot deadline exhausted.");
+    if (deadlineAbort.signal.aborted || !Number.isFinite(ms) || ms <= 0) throw new CaptureHelperError("timeout", "Screenshot deadline exhausted.");
     return ms;
   };
   remaining();
@@ -65,7 +66,6 @@ export async function captureScaledScreenshot(config: RuntimeConfig,
   }
   // The result reader starts its own timeout after attaching/broadcasting. An
   // absolute deadline signal also bounds that startup and its ADB broadcast.
-  const deadlineAbort = new AbortController();
   const signal = options.signal ? AbortSignal.any([options.signal, deadlineAbort.signal]) : deadlineAbort.signal;
   const timer = setTimeout(() => deadlineAbort.abort(new CaptureHelperError("timeout", "Screenshot deadline exhausted.")), Math.max(0, Math.ceil(deadline - performance.now())));
   try {
@@ -91,7 +91,8 @@ export async function captureScaledScreenshot(config: RuntimeConfig,
       ...(before ? { rotation: String(before.rotation), physicalDisplayId: before.physicalId, logicalDisplayId: "0" } : {}) } };
   } catch (cause) {
     const message = typeof cause === "object" && cause !== null && "message" in cause ? String(cause.message) : String(cause);
-    const reason = options.signal?.aborted ? "cancelled" : performance.now() >= deadline ? "timeout" : "unavailable";
+    // Preserve the deadline signal even if timer delivery precedes the clock boundary.
+    const reason = options.signal?.aborted ? "cancelled" : deadlineAbort.signal.aborted || performance.now() >= deadline ? "timeout" : "unavailable";
     const error = cause instanceof CaptureHelperError && reason === "unavailable" ? cause : new CaptureHelperError(reason, `Stock capture/resize failed: ${message}`);
     error.fallbackAttempted = true;
     throw error;

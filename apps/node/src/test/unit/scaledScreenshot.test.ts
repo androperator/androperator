@@ -109,3 +109,30 @@ for (const stage of ["reader", "broadcast", "before-display", "capture-display",
     });
   }
 }
+
+for (const outcome of ["probe-error", "probe-return", "caller-cancelled"] as const) {
+  test(`fallback deadline signal wins over a pre-deadline clock: ${outcome}`, async (t) => {
+    t.mock.method(performance, "now", () => 0);
+    t.mock.timers.enable({ apis: ["setTimeout"] });
+    const f = fixture();
+    const controller = new AbortController();
+    let displayReads = 0;
+    const deps = {
+      ...f.deps,
+      display: async () => { displayReads++; return f.deps.display(); },
+      interactive: async (_config: unknown, _remaining: () => number, signal?: AbortSignal) => {
+        t.mock.timers.tick(1000);
+        assert.equal(signal?.aborted, true);
+        if (outcome === "caller-cancelled") controller.abort();
+        if (outcome !== "probe-return") throw new CaptureHelperError("unavailable", "probe interrupted");
+      },
+    };
+    await assert.rejects(captureScaledScreenshot(config, { scale: 25, timeoutMs: 1000, signal: controller.signal }, deps), (error: any) => {
+      assert.equal(error.reason, outcome === "caller-cancelled" ? "cancelled" : "timeout");
+      assert.equal(error.fallbackAttempted, true);
+      return true;
+    });
+    assert.equal(displayReads, 0);
+    assert.equal(f.captures(), 0);
+  });
+}

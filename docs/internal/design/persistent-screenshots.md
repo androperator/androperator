@@ -94,7 +94,14 @@ geometry, pixel validation and cleanup. Older builders use
 `setCaptureSecureLayers(false)` and `setAllowProtected(true)`; newer builders use
 `SECURE_CONTENT_POLICY_REDACT`, `PROTECTED_CONTENT_POLICY_CAPTURE`, capture mode
 NONE and explicit system overlays. Scaling/crop/listener/result methods are
-resolved before the helper advertises readiness.
+resolved before the helper advertises readiness. Startup also allocates and closes
+an empty 1 x 1 hardware buffer, without requesting display pixels. On the tested
+API 35 Automotive image, Java buffer construction reads a DeviceConfig flag
+through an absent application context in `app_process`. The allocation probe
+reports `hardware_buffer_initialization` as unavailable before acquisition,
+allowing the existing stock/resize path. It neither changes OS flags nor creates
+a synthetic application identity. A null buffer after a screen request remains
+an uncertain acquisition and cannot trigger fallback.
 
 Protected GPU composition is an information source, not a prerequisite for
 ordinary capture. Direct capture at 100/50/25 is verified on the API 37.1 phone
@@ -108,6 +115,17 @@ The setup-only eligibility is set before any capture request is written. A
 capture rejection, stale frame, transport interruption, cancellation, timeout or
 busy session never triggers fallback. No action is replayed. There is no public
 force-backend flag or extra host daemon.
+
+Stock acquisition uses `adb shell -T screencap -p` with the selected physical
+display ID. The non-PTY shell protocol separates remote stderr from PNG stdout
+and propagates the remote exit status. Unlike `exec-out`, diagnostic text cannot
+become trailing image bytes. A `screenshot.diagnostic` warning records only the
+stderr byte count, with command/task correlation; device diagnostics are not
+retained or logged. A zero exit status and a strictly valid complete PNG may
+succeed even when stderr is nonempty. This proves usable image output, not that
+the device's native process was diagnostic-free. Nonzero exits, timeouts, empty
+output and malformed PNGs still fail; stdout is never trimmed. The same stock
+transport serves evidence bundles and compatibility resize fallback.
 
 The fallback uses the existing targeted screencap, independently decodes its PNG,
 checks display identity/rotation/extent before and after, and checks interactivity

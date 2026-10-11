@@ -144,6 +144,9 @@ class Session {
         const api = Number.isInteger(header.androidApi) ? header.androidApi : "unknown";
         throw fail("incompatible", `Android API ${api}: direct scaled capture API unavailable. Stock capture and resize can provide the requested size.`);
       }
+      if (header.status === "unavailable" && header.missingCapability === "hardware_buffer_initialization") {
+        throw fail("unavailable", "Android cannot initialize a hardware buffer in the shell helper. Stock capture and resize can provide the requested size; no screen capture was attempted by the helper.");
+      }
       if (header.status === "unavailable") throw fail("unavailable", "Android capture service could not initialize. Stock capture and resize can provide the requested size; check device readiness if that also fails.");
       if (header.status !== "ready") throw fail("protocol", "Invalid capture handshake.");
     } catch (error) {

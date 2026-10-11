@@ -432,3 +432,12 @@ stop use `{session: absoluteManifestPath}` with optional matching target fields.
 The injectable video `baseDir` overrides the evidence root containing `bundles/`;
 it cannot move the device lock. Still capture's existing `baseDir` dependency
 continues to mean its bundle root.
+
+### Stock screenshot diagnostics
+
+Still evidence screenshots use a non-PTY ADB shell stream that keeps PNG bytes
+separate from device diagnostics. Success requires a zero remote exit status and
+strict PNG validation. Diagnostic output alone does not invalidate a complete
+image; its redacted byte count is recorded as `screenshot.diagnostic` when a
+logger is configured. Nonzero exits or invalid images remain failed/partial
+artifacts. No diagnostic text is trimmed from image data to manufacture success.

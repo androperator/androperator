@@ -1617,6 +1617,10 @@ Supported capability does not prove that the current screen can be captured.
 
 **Compatibility and fallback:** direct scaled capture supports both the older
 Android 15/16 capture interface and the newer interface used by Android 17.
+On some Automotive builds, direct Java hardware-buffer initialization is
+unavailable to the shell helper. This is detected before screen acquisition;
+the existing stock-and-resize fallback returns the requested dimensions without
+changing CLI usage. It saves image size, not full-size acquisition work.
 Missing protected GPU composition does not block screenshots. Direct capture
 has been verified at 100/50/25 on an API 37.1 physical phone and API 35, 36.0 and
 37.2 emulators. Other manufacturers and builds still need live validation.

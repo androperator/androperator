@@ -41,11 +41,17 @@ Map proposed actions back to supported current targets. Image interpretation doe
 not invent accessibility selectors. Overlay metadata, geometry and platform
 visibility do not guarantee lack of occlusion. Verify the resulting screen.
 
-Screenshots default to 25% per dimension. Open `step.data.path` from the screenshot
-step with an image-reading tool; JSON success is not visual inspection. Request a
-fresh `--scale 50` or `--scale 100` image when fine detail is unclear, without
-replaying the prior action.
-The file belongs to the capture host; remote clients need separate file access.
+Screenshots default to 25% per dimension. CLI/HTTP results expose the screenshot
+location in `step.data.path`; open it with an image-reading tool that can access
+the capture host. Remote clients need separate file access. MCP `execute` strips
+local paths and does not return screenshot pixels. For visual inspection, use an
+authorized host-accessible capture route; do not repeat captures expecting MCP
+to return a path. If no such route is available, report the visual evidence as
+unavailable. JSON success is not visual inspection.
+
+When fine detail is unclear, request a fresh image with CLI `--scale 50` or
+`--scale 100`, or HTTP `scale: 50` or `scale: 100`, without replaying the prior
+action.
 
 Step metadata uses strings. Convert image pixels to native coordinates with
 `floor(imageX * nativeWidthPx / captureWidthPx)` and the corresponding height

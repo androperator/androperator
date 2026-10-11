@@ -32,6 +32,18 @@ async function makeTempHome(): Promise<string> {
 }
 
 describe("setupHost", () => {
+  it("persists the supplied observed APK version", async () => {
+    const homeDir = await makeTempHome();
+    try {
+      await setupHost({ env: { HOME: homeDir }, apkVersion: "1.2.3", lastDeviceSerial: "test-device" });
+      const state = JSON.parse(await readFile(join(homeDir, ".androperator", "install-state.json"), "utf8"));
+      assert.strictEqual(state.apkVersion, "1.2.3");
+      assert.strictEqual(state.lastDeviceSerial, "test-device");
+    } finally {
+      await rm(homeDir, { recursive: true, force: true });
+    }
+  });
+
   it("writes install-state JSON with the expected required and nullable fields", async () => {
     const homeDir = await makeTempHome();
 

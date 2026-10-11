@@ -132,6 +132,12 @@ these durable onboarding files under `~/.androperator/`:
 | `~/.androperator/install-state.json` | Durable install metadata written by `androperator host setup` during install | Use when you need the last known install facts without rerunning `doctor` |
 | `~/.androperator/mcp-config-snippet.json` | Paste-ready MCP config for Claude Desktop, Codex, and a generic stdio MCP consumer | Use when the host should connect through `androperator mcp serve` instead of shelling out to the CLI |
 
+During `androperator install`, `apkVersion` comes from the final passing version
+check for the single connected device and selected Operator package. It remains
+`null` when no single device is selected or final version evidence is unavailable.
+It is an observed APK version, not a copy of the CLI version or download target;
+it does not prove that every readiness check passed.
+
 Shell prerequisite failures exit before these files are written. After
 `install.sh` delegates to `androperator install`, later remediation or device
 readiness failures can still leave these files behind because host setup runs

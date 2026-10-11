@@ -117,6 +117,15 @@ function deriveLastDeviceSerial(result: OperatorRemediateResult): string | null 
   return connectedDevice?.deviceId ?? null;
 }
 
+function deriveApkVersion(result: OperatorRemediateResult, deviceId: string | null): string | null {
+  if (deviceId === null) return null;
+  const device = result.devices.find(item => item.deviceId === deviceId);
+  const check = device?.finalReport?.checks.find(item => item.id === "readiness.version.compatibility");
+  if (check?.status !== "pass" || check.evidence?.operatorPackage !== result.operatorPackage) return null;
+  const version = check.evidence.apkVersion;
+  return typeof version === "string" && version.trim() !== "" ? version.trim() : null;
+}
+
 function buildInstallMessage(options: {
   operatorRemediation: OperatorRemediateResult;
   bundledSkillsInstall: InstallBundledSkillsStepResult;
@@ -303,6 +312,7 @@ export async function cmdInstall(
   const lastDeviceSerial = deriveLastDeviceSerial(operatorRemediationResult);
   const hostSetup = await setupHostImpl({
     lastDeviceSerial,
+    apkVersion: deriveApkVersion(operatorRemediationResult, lastDeviceSerial),
     operatorPackage: operatorRemediationResult.operatorPackage,
     env: process.env,
   });

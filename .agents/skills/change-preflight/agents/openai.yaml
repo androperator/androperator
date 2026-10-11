@@ -1,0 +1,4 @@
+interface:
+  display_name: "Change Preflight"
+  short_description: "Check user benefit before substantial implementation"
+  default_prompt: "Use $change-preflight to assess this proposed change, its caller burden, and the smallest experiment that would justify proceeding."

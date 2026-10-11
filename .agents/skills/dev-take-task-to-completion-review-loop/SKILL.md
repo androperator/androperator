@@ -5,12 +5,14 @@ description: Finish an implemented task through documentation cleanup, code simp
 
 # Dev Take Task to Completion - Review Loop
 
-Take the current implemented task to an up-to-date GitHub PR. Run documentation cleanup,
+Take a useful, implemented change to an up-to-date GitHub PR. Assess usefulness
+first, then run documentation cleanup,
 code simplification, local review, and PR creation in that order. Run the review loop until clean. This workflow is written for GPT-6 Astra.
 It takes no arguments; infer the task from the current conversation and
 repository. The review workflow is fixed.
 
-Completion means the requested work and closeout changes are validated and
+For work proceeding to a PR, completion means the requested work and closeout
+changes are validated and
 committed, the review stage has finished, and the PR contains the final
 branch HEAD. Report a concrete blocker if any required stage cannot finish.
 
@@ -35,7 +37,22 @@ the PR, publish a release, force-push, or push directly to `main` or `prod`.
 
 ## Workflow
 
-1. **Clean up documentation and planning context.** Read
+1. **Check usefulness before further hardening.** Compare the delivered result
+   with the intended user benefit, acceptance criteria and caller burden. Reuse
+   existing evidence; do not require a new experiment for routine fixes or docs.
+   For substantial changes with no prior assessment, use
+   [change-preflight](../change-preflight/SKILL.md). Passing tests or review is
+   not sufficient evidence of adoption value or performance benefit.
+
+   If the result does not justify shipping, preserve the findings and recommend
+   stopping or narrowing before simplification and review. A completed experiment
+   may end here; report that outcome, not a completed production feature. If the
+   user must choose a changed scope, report the concrete decision needed. Do not
+   close PRs or discard work without authorization. Honor an explicit decision
+   to proceed despite a documented tradeoff, keeping all validation and review
+   requirements below. Otherwise continue without a new approval checkpoint.
+
+2. **Clean up documentation and planning context.** Read
    `~/.codex/skills/notebook-plan/SKILL.md` (`notebook-plan`)
    when recording or updating the task plan and follow its destination and
    commit rules. The notebook holds plans and working context. Move still-useful
@@ -47,12 +64,12 @@ the PR, publish a release, force-push, or push directly to `main` or `prod`.
    there is no saved plan; do not invent one merely to report cleanup. Remove
    obsolete material only after its useful content has an appropriate home.
 
-2. **Simplify the implementation.** Run `$simplify-code` on the full task change,
+3. **Simplify the implementation.** Run `$simplify-code` on the full task change,
    including cleanup changes, rather than only the latest commit. Preserve
    behavior, run affected checks, and commit justified changes under repository
    policy. No edits are needed when simplification would not improve the code.
 
-3. **Review the completed change.** Prepare the branch for `$pr-create` before
+4. **Review the completed change.** Prepare the branch for `$pr-create` before
    capturing the review target: ensure in-scope changes are committed, fetch
    `origin/main`, and merge it into the implementation branch if needed. Resolve
    conflicts and validate affected behavior. Do not switch away from unrelated
@@ -69,9 +86,9 @@ the PR, publish a release, force-push, or push directly to `main` or `prod`.
    review is not a clean result. Report unfinished work if the loop cannot
    finish.
 
-4. **Create the PR.** Run `$pr-create`, using branch-total context to author its
-   required title/body JSON. Include meaningful validation and the actual
-   review outcome in the PR description. Resolve routine local prerequisites
+5. **Create the PR.** Run `$pr-create`, using branch-total context to author its
+   required title/body JSON. Include the demonstrated benefit and material limits,
+   meaningful validation, and the actual review outcome in the PR description. Resolve routine local prerequisites
    and rerun the skill instead of treating its preflight stop as completion.
 
    If its fresh fetch requires another merge, validate the resulting changes
@@ -87,6 +104,7 @@ the PR, publish a release, force-push, or push directly to `main` or `prod`.
 
 ## Finish
 
-Report cleanup and preserved follow-up, simplifications, validation, review
+Report the usefulness decision, cleanup and preserved follow-up, simplifications,
+validation, review
 outcome, final commit, and PR URL. Include the review pass count. Keep the summary concise and identify any
 unfinished stage without claiming completion.

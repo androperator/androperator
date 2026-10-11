@@ -2,6 +2,13 @@
 
 Public options and result fields are owned by [take_screenshot](../../api/actions.md#action-take-screenshot).
 
+Node adds `data.guidance` only after validating and publishing the PNG. This
+host-authored advice describes file access and exact CLI/Node scale arguments,
+based on the actual applied scale for both direct capture and resize fallback.
+It is advisory, not a machine-parsed contract or an interpretation of screen
+contents. The same result flows through the Node API, CLI and HTTP endpoint;
+none embeds PNG bytes. The full-resolution default remains unchanged.
+
 ## Identity and ownership
 
 `apps/capture-helper/CaptureHelper.java` is a first-party shell-only helper.

@@ -1516,6 +1516,31 @@ in its execution; use separate executions for intermediate observations.
 
 All successful captures also report `data.captureMethod` (`adb_screencap`,
 `shell_hardware_buffer`, or `adb_screencap_resize`), `data.requestedScale`, and `data.appliedScale` as strings.
+
+The Node API, screenshot CLI and HTTP `POST /screenshot` return a JSON result
+containing the saved PNG's `data.path`, not embedded image bytes or base64. Open
+that file with your image-reading tool. The path belongs to the host running
+Androperator; a remote HTTP client needs separate access to that host's files.
+The screenshot endpoint does not transfer the PNG itself.
+
+Successful screenshot steps include a human-readable `data.guidance` string
+explaining how to open the image and request another scale. It reflects the
+actual `appliedScale`, including after resize fallback:
+
+| Saved scale | Guidance for the next capture |
+| --- | --- |
+| `25` | Recommended for routine observation loops. If details are unclear, use `--scale 50` or `--scale 100`; Node: `observeScreenshot({ scale: 50 })` or `observeScreenshot({ scale: 100 })`. |
+| `50` | For more detail, use `--scale 100`; Node: `observeScreenshot({ scale: 100 })`. For routine loops, use `--scale 25`; Node: `observeScreenshot({ scale: 25 })`. |
+| `100` | Already full resolution. For routine loops, use `--scale 25`; Node: `observeScreenshot({ scale: 25 })`. For intermediate detail, use `--scale 50`; Node: `observeScreenshot({ scale: 50 })`. |
+
+This recommendation does not change the omitted-scale full-resolution default.
+Choose a larger image when small text or fine details matter. Resize fallback
+still acquires a full-resolution image, so requesting 25% does not guarantee
+faster acquisition. Guidance is advisory text that may evolve; use the structured
+metadata for programmatic decisions. Failed captures do not receive this
+success guidance or a successful output path. For execution JSON, set
+`params.scale`; HTTP clients set the numeric `scale` field in the request body.
+
 A helper capture additionally reports:
 
 - `nativeWidthPx`, `nativeHeightPx`: full display coordinate extent in its current

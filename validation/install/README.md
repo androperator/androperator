@@ -68,7 +68,8 @@ readiness evidence. Android can remove a newly written accessibility grant
 while processing a fresh install. Setup retries only an unavailable-service
 response, up to two times, by re-reading and restoring the selected service's
 grant. Transport and malformed-response failures stop verification; other
-services and foreground state are preserved. Failed probes remain in
+services are preserved. The existing Android doctor ping may dismiss an open
+notification shade on Android 12+; setup does not promise to preserve that overlay. Failed probes remain in
 `verification.readiness.attempts`.
 
 The focused regression cases are in `apps/node/src/test/unit/operatorSetup.test.ts`.

@@ -25,7 +25,7 @@ export async function cmdOperatorSetup(options: {
   deviceId?: string;
   operatorPackage?: string;
   logger?: Logger;
-}): Promise<string> {
+}, setup = setupOperator): Promise<string> {
   const operatorPackage = resolveOperatorPackageForRequest(options.operatorPackage);
   const config = getDefaultRuntimeConfig({
     deviceId: options.deviceId,
@@ -34,7 +34,7 @@ export async function cmdOperatorSetup(options: {
     logger: options.logger,
   });
 
-  const result = await setupOperator(config, options.apkPath, operatorPackage);
+  const result = await setup(config, options.apkPath, operatorPackage);
 
   // Install phase failure.
   if (!result.install.ok) {
@@ -66,6 +66,7 @@ export async function cmdOperatorSetup(options: {
           message: permFailed.error ?? "Failed to grant required device permissions.",
           operatorPackage: result.operatorPackage,
           install: result.install,
+          verification: result.verification,
           permissions: {
             accessibility,
             notification,

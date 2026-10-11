@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { setupOperator as realSetupOperator } from "../../domain/device/setupOperator.js";
 import { getDefaultRuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
+import { probeInteractiveState } from "../../domain/doctor/checks/deviceInteractivity.js";
 import { FakeProcessRunner } from "./fakes/FakeProcessRunner.js";
 
 const TEST_APK_PATH = join(tmpdir(), "androperator-test-operator.apk");
@@ -319,5 +320,26 @@ describe("setupOperator - domain", () => {
     assert.equal(result.verification?.ok, true);
     assert.equal(runner.calls.length, 6);
   });
+
+  for (const errorCode of ["COMMAND_TIMEOUT", "COMMAND_CANCELLED", "UNKNOWN_RUNTIME_ERROR"]) {
+    it(`does not repair permissions for a real ${errorCode} probe envelope`, async () => {
+      const runner = new FakeProcessRunner(); queueInstalled(runner);
+      const result = await setupOperator(makeConfig(runner), TEST_APK_PATH, "com.androperator.operator", {
+        probe: config => probeInteractiveState(config, async () => ({
+          ok: true, terminalSource: "androperator_result", envelope: {
+            commandId: "probe", taskId: "doctor-handshake", status: "failed", errorCode,
+            error: "Probe runtime failure", stepResults: [],
+          },
+        })),
+        wait: async () => { assert.fail("No retry expected"); },
+      });
+      assert.equal(result.verification?.ok, false);
+      assert.equal(result.verification?.readiness?.attempts.length, 1);
+      const attempt = result.verification?.readiness?.attempts[0];
+      assert.equal(attempt?.ok, false);
+      if (attempt && !attempt.ok) assert.equal(attempt.details?.runtimeErrorCode, errorCode);
+      assert.equal(runner.calls.length, 6);
+    });
+  }
 
 });

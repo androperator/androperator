@@ -231,7 +231,8 @@ Behavior:
 - Verifies package presence and a live, correlated Operator handshake.
 - If the accessibility service is unavailable after installation, retries its grant
   and handshake at most twice while preserving other enabled services.
-- Does not wake or unlock the device.
+- Does not wake or unlock the device. The existing doctor ping can dismiss an
+  open notification shade on Android 12+.
 
 Success condition:
 

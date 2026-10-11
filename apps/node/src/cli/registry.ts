@@ -242,7 +242,9 @@ Notes:
   - Runs three phases in order: install, permission grant, verification.
   - Install phase: copies the APK onto the device via adb.
   - Permission grant phase: enables the accessibility service and notification listener.
-  - Verification phase: confirms the package is visible to the package manager.
+  - Verification phase: confirms package presence and a live Operator handshake.
+  - If the new accessibility service is unavailable, setup retries its grant and handshake at most twice.
+  - Setup does not wake or unlock the device. Run doctor afterward to check interactive readiness.
   - Fails with a structured error if any phase fails. The error code identifies which phase failed.
   - If omitted, setup auto-detects the package only when exactly one known Operator variant is installed.
   - If both release and debug variants are installed, pass --operator-package explicitly.

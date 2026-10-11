@@ -228,12 +228,21 @@ Behavior:
 
 - Installs the APK on the device via adb.
 - Grants accessibility and notification permissions.
-- Verifies that the package is visible to the package manager.
+- Verifies package presence and a live, correlated Operator handshake.
+- If the accessibility service is unavailable after installation, retries its grant
+  and handshake at most twice while preserving other enabled services.
+- Does not wake or unlock the device.
 
 Success condition:
 
-- Command exits without a structured error object.
-- A follow-up `androperator doctor` no longer reports `OPERATOR_NOT_INSTALLED` for `readiness.apk.presence`.
+- `verification.ok` and `verification.readiness.ok` are `true`. The recorded
+  `verification.readiness.attempts` retain any failed probes before recovery.
+- A follow-up `androperator doctor` passes interactive readiness. Setup verifies
+  the service connection; it does not establish that a locked phone is usable.
+
+An unavailable service after bounded recovery returns `OPERATOR_VERIFY_FAILED`;
+a failed permission repair returns `OPERATOR_GRANT_FAILED`. Transport or malformed
+handshake failures stop verification without re-granting permissions.
 
 Do not use raw `adb install` for setup. The CLI setup command is the only path that performs install, permission grant, and verification as one operation.
 

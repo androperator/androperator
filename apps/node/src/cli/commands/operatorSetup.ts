@@ -114,8 +114,8 @@ export async function cmdOperatorSetup(options: {
         : undefined,
       verification: result.verification,
       message: permissionsAlreadyEnabled
-        ? "Operator installed. Required permissions were already enabled."
-        : "Operator installed and ready. Run androperator doctor to verify.",
+        ? "Operator installed and handshake verified. Required permissions were already enabled. Run androperator doctor to check device readiness."
+        : "Operator installed and handshake verified. Run androperator doctor to check device readiness.",
     },
     options
   );

@@ -1,6 +1,6 @@
 {
   "name": "@androperator/cli",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Androperator Node API - reliable Android execution for LLM agents",
   "type": "module",
   "main": "dist/cli/index.js",

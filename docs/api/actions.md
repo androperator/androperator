@@ -1523,7 +1523,7 @@ that file with your image-reading tool. The path belongs to the host running
 Androperator; a remote HTTP client needs separate access to that host's files.
 The screenshot endpoint does not transfer the PNG itself.
 
-Successful screenshot steps include a human-readable `data.guidance` string
+Successful screenshot steps include a human-readable `data.hint` string
 explaining how to open the image and request another scale. It reflects the
 actual `appliedScale`, including after resize fallback:
 
@@ -1540,6 +1540,11 @@ faster acquisition. Guidance is advisory text that may evolve; use the structure
 metadata for programmatic decisions. Failed captures do not receive this
 success guidance or a successful output path. For execution JSON, set
 `params.scale`; HTTP clients set the numeric `scale` field in the request body.
+
+The unreleased screenshot field previously named `data.guidance` is now
+`data.hint`; update branch-preview consumers to read `hint`. No `guidance`
+alias is emitted. This matches the existing `hint` convention for errors and
+execution-wide advice.
 
 A helper capture additionally reports:
 

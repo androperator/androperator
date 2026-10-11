@@ -2,7 +2,7 @@
 
 Public options and result fields are owned by [take_screenshot](../../api/actions.md#action-take-screenshot).
 
-Node adds `data.guidance` only after validating and publishing the PNG. This
+Node adds `data.hint` only after validating and publishing the PNG. This
 host-authored advice describes file access and exact CLI/Node scale arguments,
 based on the actual applied scale for both direct capture and resize fallback.
 It is advisory, not a machine-parsed contract or an interpretation of screen

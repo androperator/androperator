@@ -11,7 +11,7 @@ import { verifyScreenshot } from "../../domain/observe/screenshotMetadata.js";
 
 for (const fallback of [false, true]) {
   for (const scale of [undefined, 25, 50, 100] as const) {
-    test(`${fallback ? "fallback" : "direct"} scale ${scale ?? "omitted"} publishes scale-aware guidance with the PNG`, async () => {
+    test(`${fallback ? "fallback" : "direct"} scale ${scale ?? "omitted"} publishes scale-aware hints with the PNG`, async () => {
       const directory = await fs.mkdtemp(join(tmpdir(), "screenshot-guidance-"));
       const path = join(directory, "screen.png");
       const { runner, captures } = await scaledCaptureRunner(fallback);
@@ -32,15 +32,16 @@ for (const fallback of [false, true]) {
         assert.equal(data.appliedScale, String(scale ?? 100));
         assert.equal(data.captureMethod, scale === undefined ? "adb_screencap" : fallback ? "adb_screencap_resize" : "shell_hardware_buffer");
         assert.equal(verifyScreenshot(await fs.readFile(path)).captureWidthPx, 8 * (scale ?? 100) / 100);
-        assert.ok(typeof data.guidance === "string");
-        assert.match(data.guidance, /Open the PNG at data.path on the capture host/);
-        assert.match(data.guidance, /image bytes are not embedded/);
+        assert.ok(typeof data.hint === "string");
+        assert.equal(data.guidance, undefined);
+        assert.match(data.hint, /Open the PNG at data.path on the capture host/);
+        assert.match(data.hint, /image bytes are not embedded/);
         const suggestedScales = scale === 25 ? [50, 100] : scale === 50 ? [25, 100] : [25, 50];
         for (const suggestion of suggestedScales) {
-          assert.ok(data.guidance.includes(`--scale ${suggestion}`));
-          assert.ok(data.guidance.includes(`observeScreenshot({ scale: ${suggestion} })`));
+          assert.ok(data.hint.includes(`--scale ${suggestion}`));
+          assert.ok(data.hint.includes(`observeScreenshot({ scale: ${suggestion} })`));
         }
-        if (scale === undefined || scale === 100) assert.match(data.guidance, /already at full resolution/);
+        if (scale === undefined || scale === 100) assert.match(data.hint, /already at full resolution/);
         assert.equal(captures(), 1);
       } finally {
         closeCaptureHelpers();
@@ -93,7 +94,7 @@ for (const fallback of [false, true]) {
         assert.equal(step.data.captureMethod, fallback ? "adb_screencap_resize" : "shell_hardware_buffer");
         assert.equal(step.data.fallbackReason, fallback ? "unavailable" : undefined);
         assert.equal(step.data.path, undefined);
-        assert.equal(step.data.guidance, undefined);
+        assert.equal(step.data.hint, undefined);
         assert.equal(step.data.persistedAt, undefined);
         assert.equal(step.data.captureWidthPx, undefined);
         assert.equal(captures(), 1);

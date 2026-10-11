@@ -2,7 +2,7 @@ import { PNG } from "pngjs";
 import type { ScreenshotMetadata } from "../../contracts/screenshot.js";
 
 /** Advice is based on the saved image, independently of the acquisition method. */
-export function screenshotGuidance(appliedScale: string): string {
+export function screenshotHint(appliedScale: string): string {
   const open = "Open the PNG at data.path on the capture host to inspect it; image bytes are not embedded in this result.";
   if (appliedScale === "25") {
     return `${open} This image is at 25% scale, recommended for routine observation loops. If details are unclear, capture again with --scale 50 or --scale 100 (Node: observeScreenshot({ scale: 50 }) or observeScreenshot({ scale: 100 })).`;

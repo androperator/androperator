@@ -2,7 +2,7 @@ import { captureScaledScreenshot } from "../observe/scaledScreenshot.js";
 import { CaptureHelperError } from "../observe/captureHelper.js";
 import { isHostInputAction, runHostInputSequence } from "../actions/hostInput.js";
 import { getLoggingStatus } from "../../adapters/logger.js";
-import { screenshotGuidance, verifyScreenshot } from "../observe/screenshotMetadata.js";
+import { screenshotHint, verifyScreenshot } from "../observe/screenshotMetadata.js";
 import type { ScreenshotMetadata } from "../../contracts/screenshot.js";
 import { probeUserUnlockState } from "../device/userUnlockState.js";
 import { isBackgroundServiceExecution } from "../../contracts/notifications.js";
@@ -904,7 +904,7 @@ async function performExecution(
           if (screenStep) screenStep.data = {
             ...screenStep.data,
             ...(scaled?.metadata ?? { captureMethod: "adb_screencap", protectedContent: "unknown", requestedScale: "100", appliedScale: "100" }),
-            guidance: screenshotGuidance(scaled?.metadata.appliedScale ?? "100"),
+            hint: screenshotHint(scaled?.metadata.appliedScale ?? "100"),
           };
         } catch (e) {
           const screenStep = result.envelope.stepResults.find(step => step.actionType === "take_screenshot");

@@ -283,10 +283,13 @@ Synthetic success response:
 `--third-party` applies Android's `pm list packages -3` filter. This uses targeted
 ADB without an Operator action. Device selection can fail with `NO_DEVICES`,
 `DEVICE_NOT_FOUND` or `MULTIPLE_DEVICES_DEVICE_ID_REQUIRED`.
-Current limitation: the package handler parses stdout without checking the ADB
-process exit code. An empty successful list alone is not reliable proof that no
-packages are installed. Preserve diagnostics and investigate the target/tooling
-before concluding absence; this requires a separate runtime fix.
+The query returns `DEVICE_SHELL_UNAVAILABLE` and exit code 1 if ADB exits
+nonzero, terminates without an exit code, emits stderr, or returns malformed
+package records. Failed queries never return a partial or empty success list.
+Error details include `adbExitCode` (null for termination) and, for process
+failures, `stderr`. Check the connection and package manager before retrying.
+A zero-exit query with no diagnostics and empty stdout returns `{ "packages": [] }`:
+no packages matched the query for Android's selected user and filter.
 
 <a id="emulator-cli"></a>
 ## Emulator CLI routing

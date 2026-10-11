@@ -1,3 +1,4 @@
+import { ERROR_CODES } from "../../contracts/errors.js";
 import { runAdb } from "../../adapters/android-bridge/adbClient.js";
 import { resolveDevice } from "../../domain/devices/resolveDevice.js";
 import { getDefaultRuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
@@ -20,11 +21,27 @@ export async function cmdPackagesList(options: {
     const resolved = await resolveDevice(config);
     config.deviceId = resolved.deviceId;
     const args = options.thirdParty ? ["shell", "pm", "list", "packages", "-3"] : ["shell", "pm", "list", "packages"];
-    const { stdout } = await runAdb(config, args);
-    const packages = stdout
-      .split("\n")
-      .map((l) => l.replace(/^package:/, "").trim())
-      .filter(Boolean);
+    const { stdout, stderr, code } = await runAdb(config, args);
+    if (code !== 0 || stderr.trim() !== "") {
+      throw {
+        code: ERROR_CODES.DEVICE_SHELL_UNAVAILABLE,
+        message: "Package listing failed. Check the device connection and package manager, then retry packages list.",
+        details: { adbExitCode: code, stderr: stderr.trim() },
+      };
+    }
+    const lines = stdout.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+    const packages: string[] = [];
+    for (const line of lines) {
+      const match = /^package:([^\s:]+)$/.exec(line);
+      if (!match) {
+        throw {
+          code: ERROR_CODES.DEVICE_SHELL_UNAVAILABLE,
+          message: "Package listing returned invalid output. Check the package manager, then retry packages list.",
+          details: { adbExitCode: code },
+        };
+      }
+      packages.push(match[1]);
+    }
     return formatSuccess({ packages }, options);
   } catch (e) {
     return formatError(e, options);

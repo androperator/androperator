@@ -1,13 +1,5 @@
 # Known Issues
 
-## Package-list failure can look empty
-
-The package-list handler currently consumes ADB stdout without checking its exit
-code. A failed query with empty stdout can appear as `{ "packages": [] }`.
-Do not use that result alone as proof of absence. Inspect target/tool diagnostics;
-see [package discovery](../api/devices.md#packages). Fixing exit handling requires
-a separate runtime change; documentation does not make this result reliable.
-
 ## Diagnose and report
 
 Use [capability-appropriate doctor](../host-agents.md#choose-readiness),

@@ -92,3 +92,19 @@ test('an injected command runner retains original arguments, evidence and failur
   assert.equal(fs.readFileSync(path.join(f.dir,'command-0.stderr'),'utf8'),'original diagnostics');
  }finally{runtime.setCommandRunner(undefined);if(old===undefined)delete process.env.ANDROPERATOR_BIN;else process.env.ANDROPERATOR_BIN=old;f.cleanup();}
 });
+
+for (const method of ['shell_hardware_buffer','adb_screencap_resize']) {
+ for (const scale of ['25','50','100']) {
+  test(`maintained ${method} ${scale}% capture preserves native viewport`,()=>{
+   const {viewportFromCapture}=require('../utils/settings_version_runtime');
+   const png=Buffer.alloc(24),width=Math.floor(1080*Number(scale)/100),height=Math.floor(2410*Number(scale)/100);
+   png.writeUInt32BE(width,16);png.writeUInt32BE(height,20);
+   const data={captureMethod:method,nativeWidthPx:'1080',nativeHeightPx:'2410',captureWidthPx:String(width),captureHeightPx:String(height),requestedScale:scale,appliedScale:scale};
+   const response={envelope:{stepResults:[{actionType:'take_screenshot',data}]}};
+   assert.deepEqual(viewportFromCapture(png,response),{width:1080,height:2410,sourceKind:'verified-capture-native-dimensions'});
+   for (const patch of [{nativeHeightPx:undefined},{nativeWidthPx:''},{nativeWidthPx:'0'},{nativeWidthPx:1080},{appliedScale:'0.25'},{captureWidthPx:'1'},{nativeHeightPx:'2400'},{requestedScale:'invalid'}]) {
+    assert.throws(()=>viewportFromCapture(png,{envelope:{stepResults:[{actionType:'take_screenshot',data:{...data,...patch}}]}}),/geometry/);
+   }
+  });
+ }
+}

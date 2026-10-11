@@ -72,6 +72,19 @@ function observe() {
 function viewportFromCapture(png, response) {
   const width=png.readUInt32BE(16), height=png.readUInt32BE(20);
   const data=response?.envelope?.stepResults?.find(s=>s.actionType==='take_screenshot')?.data;
+  if (data?.captureMethod === 'shell_hardware_buffer' || data?.captureMethod === 'adb_screencap_resize'
+      || data?.nativeWidthPx !== undefined || data?.nativeHeightPx !== undefined) {
+    const dimension = value => typeof value === 'string' && /^[1-9][0-9]*$/.test(value) ? Number(value) : NaN;
+    const nativeWidth = dimension(data.nativeWidthPx), nativeHeight = dimension(data.nativeHeightPx);
+    const scale = Number(data.appliedScale);
+    if (!Number.isSafeInteger(nativeWidth) || !Number.isSafeInteger(nativeHeight)
+        || nativeWidth * nativeHeight > 32000000 || !['25','50','100'].includes(data.appliedScale)
+        || data.requestedScale !== data.appliedScale
+        || dimension(data.captureWidthPx) !== width || dimension(data.captureHeightPx) !== height
+        || Math.max(1, Math.floor(nativeWidth * scale / 100)) !== width
+        || Math.max(1, Math.floor(nativeHeight * scale / 100)) !== height) throw Error('Invalid maintained screenshot geometry');
+    return {width:nativeWidth,height:nativeHeight,sourceKind:'verified-capture-native-dimensions'};
+  }
   if(data?.backend!=='experimental-direct-buffer') return {width,height,sourceKind:'image-dimensions'};
   const sourceWidth=data.sourceWidthPx, sourceHeight=data.sourceHeightPx;
   if(!Number.isSafeInteger(sourceWidth) || !Number.isSafeInteger(sourceHeight) || sourceWidth<1 || sourceHeight<1

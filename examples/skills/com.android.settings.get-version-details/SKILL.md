@@ -41,7 +41,9 @@ an honest stop. Do not restart a failed run and describe it as one successful ru
 On uncertain dispatch, observe before repeating an action. Retain raw errors.
 
 If an overlay requires review, inspect the actual screenshot with your host's
-image tool. Only approve an observed harmless unobstructive overlay using
+image tool. Follow [screenshot evidence guidance](../README.md#screenshot-evidence)
+for the 25% default and fresh higher-detail recovery. Only approve an observed
+harmless unobstructive overlay using
 `approve-overlay <capture_id>`. Never infer approval from metadata, dismiss
 unknown dialogs, or grant device/account consent on the user's behalf.
 

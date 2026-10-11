@@ -449,6 +449,8 @@ See [background readiness](api/doctor.md#background-observation-readiness).
 
 ## Optional reduced screenshot capture
 
+Screenshots default to 25% per dimension. See [choosing a capture size](api/actions.md#choosing-screenshot-scale) for agent guidance and explicit full-size recovery.
+
 `screenshot --scale 100|50|25` automatically deploys the bundled shell capture
 helper on first use. Direct capture needs authorized ADB, writable
 `/data/local/tmp` and a compatible Android capture interface. If helper setup is

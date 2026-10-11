@@ -491,9 +491,9 @@ const executionSchema = z.object({
         break;
       }
       case "take_screenshot":
-        if (params?.scale !== undefined && (index !== execution.actions.length - 1
-          || execution.actions.filter(item => item.type === "take_screenshot").length !== 1)) {
-          addIssue(index, "Scaled take_screenshot must be the single final screenshot action; capture intermediate observations in separate executions", ["params", "scale"]);
+        if (index !== execution.actions.length - 1
+          || execution.actions.filter(item => item.type === "take_screenshot").length !== 1) {
+          addIssue(index, "take_screenshot must be the single final screenshot action; capture intermediate observations in separate executions", ["type"]);
         }
         if (params?.path !== undefined && params.path.trim() === "") {
           addIssue(index, "take_screenshot params.path must be a non-empty string", ["params", "path"]);

@@ -29,19 +29,23 @@ for (const fallback of [false, true]) {
         const { data, success } = result.envelope.stepResults[0];
         assert.equal(success, true);
         assert.equal(data.path, path);
-        assert.equal(data.appliedScale, String(scale ?? 100));
-        assert.equal(data.captureMethod, scale === undefined ? "adb_screencap" : fallback ? "adb_screencap_resize" : "shell_hardware_buffer");
-        assert.equal(verifyScreenshot(await fs.readFile(path)).captureWidthPx, 8 * (scale ?? 100) / 100);
+        assert.equal(data.appliedScale, String(scale ?? 25));
+        assert.equal(data.captureMethod, fallback ? "adb_screencap_resize" : "shell_hardware_buffer");
+        assert.equal(verifyScreenshot(await fs.readFile(path)).captureWidthPx, 8 * (scale ?? 25) / 100);
         assert.ok(typeof data.hint === "string");
         assert.equal(data.guidance, undefined);
         assert.match(data.hint, /Open the PNG at data.path on the capture host/);
         assert.match(data.hint, /image bytes are not embedded/);
-        const suggestedScales = scale === 25 ? [50, 100] : scale === 50 ? [25, 100] : [25, 50];
+        assert.match(data.hint, /Verify the intended screen has rendered/);
+        assert.match(data.hint, /Retry observation, not the preceding action/);
+        assert.match(data.hint, /map to nativeWidthPx\/nativeHeightPx/);
+        if (scale === undefined || scale === 25) assert.match(data.hint, /default 25% scale per dimension/);
+        const suggestedScales = (scale ?? 25) === 25 ? [50, 100] : scale === 50 ? [25, 100] : [25, 50];
         for (const suggestion of suggestedScales) {
           assert.ok(data.hint.includes(`--scale ${suggestion}`));
           assert.ok(data.hint.includes(`observeScreenshot({ scale: ${suggestion} })`));
         }
-        if (scale === undefined || scale === 100) assert.match(data.hint, /already at full resolution/);
+        if (scale === 100) assert.match(data.hint, /already at full resolution/);
         assert.equal(captures(), 1);
       } finally {
         closeCaptureHelpers();

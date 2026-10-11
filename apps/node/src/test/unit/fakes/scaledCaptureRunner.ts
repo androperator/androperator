@@ -33,7 +33,7 @@ export async function scaledCaptureRunner(fallback = false) {
           stepResults: execution.actions.map((action: any) => ({ id: action.id, actionType: action.type,
             success: action.type !== "take_screenshot",
             data: action.type === "doctor_ping" ? { screen_on: "true", device_locked: "false", user_unlocked: "true" }
-              : action.type === "take_screenshot" ? { error: "UNSUPPORTED_RUNTIME_SCREENSHOT" } : { preserved: "yes" } })) };
+              : action.type === "take_screenshot" ? { error: "UNSUPPORTED_RUNTIME_SCREENSHOT", errorCode: "UNSUPPORTED_RUNTIME_SCREENSHOT", message: "unsupported", provenance: "keep" } : { preserved: "yes" } })) };
         const reader = logcat;
         setImmediate(() => reader.stdout.write(`[Androperator-Result] ${JSON.stringify(envelope)}\n`));
       } else if (args.includes("push") && fallback) return { code: 1, stdout: "", stderr: "injected deployment failure" };

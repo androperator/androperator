@@ -35,6 +35,13 @@ bash validation/on-screen-logs/test_cli_contract_proof.sh
 bash validation/on-screen-logs/run_cli_contract_proof.sh --device <device_serial> --output-dir <absolute_output_dir>
 ```
 
+The raw JSON fixtures use separate executions: `raw-flow-001.json` captures
+the first label; `raw-baseline-flow.json` then `raw-replacement-flow.json`
+capture each replacement state; `raw-clear.json` clears the panel afterward.
+Await each execution before starting the next. Every screenshot is the final
+action in its execution. The offline contract test also verifies rejection of
+the former intermediate-screenshot sequence.
+
 The CLI harness records each command, result, status, expected image label,
 and saved/restored device settings. Offline tests cover failures with settings
 already changed, service deletion, interruption, and service restoration before

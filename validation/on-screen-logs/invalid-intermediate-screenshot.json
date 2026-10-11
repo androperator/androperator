@@ -1,0 +1,27 @@
+{
+  "commandId": "on-screen-log-flow-001",
+  "taskId": "on-screen-log-flow-001",
+  "source": "validation",
+  "expectedFormat": "android-ui-automator",
+  "timeoutMs": 30000,
+  "actions": [
+    {
+      "id": "set-flow-001",
+      "type": "set_on_screen_log",
+      "params": {
+        "text": "FLOW-001: Observe settings"
+      }
+    },
+    {
+      "id": "capture-flow-001",
+      "type": "take_screenshot",
+      "params": {
+        "path": "/absolute/path/provided-by-caller/on-screen-log-flow-001.png"
+      }
+    },
+    {
+      "id": "clear-flow-001",
+      "type": "clear_on_screen_log"
+    }
+  ]
+}

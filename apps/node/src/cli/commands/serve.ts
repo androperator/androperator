@@ -350,7 +350,7 @@ export function createServeApp(options: ServeAppOptions): express.Application {
 
     const { deviceId, operatorPackage, path, scale } = req.body;
     if (scale !== undefined && ![100, 50, 25].includes(scale)) {
-      res.status(400).json({ ok: false, error: { code: "INVALID_SCALE", message: "scale must be 100, 50 or 25 (percentage per dimension); omit for ordinary full-resolution capture" } });
+      res.status(400).json({ ok: false, error: { code: "INVALID_SCALE", message: "scale must be the number 100, 50 or 25 (percentage per dimension); omit for 25% capture or use {\"scale\":100} for full resolution" } });
       return;
     }
 

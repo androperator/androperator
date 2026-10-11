@@ -5,6 +5,10 @@ description: Select an Androperator interface, Android target and readiness chec
 
 # Androperator Agent Orientation
 
+Androperator inspects and controls Android apps on physical devices and emulators.
+Its Android companion app, the Operator, performs device-side actions. Agents
+normally use the canonical Node API/CLI, or the documented HTTP/MCP surfaces.
+
 For an execution request, select and verify the CLI, device and Operator, then
 continue into the task. For an introduction or evaluation, explain capabilities
 and prerequisites without requiring a device or changing its state.
@@ -36,8 +40,11 @@ is optional offline/broad context, not a prerequisite.
 | Inspect visual evidence | `screenshot`; [capture sizes and coordinates](https://docs.androperator.com/api/actions/#action-take-screenshot) |
 | Interact with an app | `open`, `click`, `type`, `press`, `back`, `scroll`, `wait`; command help |
 | Batch actions or interpret envelopes | `exec`; [API overview](https://docs.androperator.com/api/overview/) and [actions](https://docs.androperator.com/api/actions/) |
-| Read notifications or use media controls | `notifications`, `media`; [background readiness](https://docs.androperator.com/api/doctor/#background-observation-readiness) |
-| Retain evidence or demonstrations | `evidence capture`, `evidence video`, `recording`; relevant command help |
+| Read notifications | `notifications list`; [notification results and mutations](https://docs.androperator.com/api/notifications/) |
+| Inspect or control media sessions | `media`; [session selection, controls and playback evidence](https://docs.androperator.com/api/media/) |
+| Retain still evidence | `evidence capture` retains a screenshot, hierarchy and component results; [evidence contract](https://docs.androperator.com/api/evidence/) |
+| Capture screen video | `evidence video` captures managed video evidence; [video lifecycle and verification](https://docs.androperator.com/api/evidence/#managed-video) |
+| Inspect a human demonstration | `recording` captures accessibility events as NDJSON for export and analysis; [recording contract](https://docs.androperator.com/api/recording/). This is not MP4 video or executable replay. |
 | Install or prepare a target | `devices`, `emulator`, `doctor`; [setup](https://docs.androperator.com/setup/) |
 
 CLI names and JSON action types differ: `open` invokes `open_app`. One-shot CLI
@@ -58,6 +65,9 @@ Published installs use `com.androperator.operator`; local debug work uses
   `doctor --device <device_serial> --capability background-observation` with the
   selected package. Require exit `0`, `criticalOk: true` and
   `readiness.background.observation` pass. Do not add an interactive probe.
+  See [background readiness](https://docs.androperator.com/api/doctor/#background-observation-readiness)
+  for service prerequisites. Adding a UI action, notification dismissal or
+  notification button changes the whole execution to interactive readiness.
 - Still evidence capture: use its separate [non-waking preparation and partial-result contract](https://docs.androperator.com/api/evidence/).
   Background doctor success does not prove screenshot or hierarchy availability.
 
@@ -67,6 +77,26 @@ Continue adaptive UI work with `androperator-agent-control-loop`; a background
 read needs only its command, result interpretation and task-specific verification.
 For orientation-only requests, report fit, relevant entry points and unverified
 prerequisites without claiming readiness.
+
+## Interpret background results
+
+Before interpreting notification or media results, read the corresponding result
+contract linked above. The canonical step's `data.payload` is JSON encoded inside
+a string. Check list and text truncation before treating an observation as complete.
+Discover media sessions before targeting one; an app package selects a session
+only when it identifies exactly one active session.
+
+Distinguish `dispatched` from observed control confirmation: inspect
+`targetStateObserved` for play/pause, `targetPositionObserved` for seek, and
+`removalObserved` for notification dismissal. A notification button's dispatch
+does not establish its application side effect. Player reports and extrapolated
+position estimates are different evidence; neither alone proves actual playback.
+Choose task-specific verification. After uncertain control effects, inspect fresh
+state before repeating the command; use the control loop's
+[failure and recovery guidance](../androperator-agent-control-loop/references/recovery.md)
+to retain failures and possible side effects.
+
+## Continue with another workflow
 
 `bundled-skills list` lists installed instructions. Use
 `androperator-skill-author-by-agent-discovery` for requested reusable authoring,

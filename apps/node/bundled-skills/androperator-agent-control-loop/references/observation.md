@@ -23,8 +23,14 @@ clickable ancestry, bounds and known viewport intersection. Unknown facts remain
 unknown. See [selectors](https://docs.androperator.com/api/selectors/) for matching
 and strict-selection contracts.
 
-For offscreen controls, ambiguous rows and consent-sensitive popups, load
-[worked targeting examples](targeting-examples.md). Use [delegation](delegation.md)
+For label/value extraction, follow explicit parent relationships to the smallest
+supported row. A title wrapper may sit beside the summary within that row;
+adjacent unrelated text is not its value. Verify extracted values with a
+successful independent read. Keep Android OS version and build number separate.
+
+For offscreen or moved controls, duplicate labels, nested label/value extraction,
+or consent-sensitive popups, read [worked targeting examples](targeting-examples.md)
+before choosing a target or reporting a value. Use [delegation](delegation.md)
 only when supplying a candidate menu to a helper or provider.
 
 Request a screenshot for a stated unresolved question, such as whether a popup

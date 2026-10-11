@@ -33,7 +33,8 @@ Background-only work does not need a waking interactive probe. Still
 Start with current evidence. Use [snapshot/compact](https://docs.androperator.com/api/snapshot/)
 for discovery, [query](https://docs.androperator.com/api/actions/#action-query-ui)
 for matching nodes/state, read/read-value for exact text, and screenshots for
-visual evidence. Check truncation and scope before concluding absence.
+visual evidence. Screenshots default to 25% per dimension; request `--scale 100`
+when fine detail is needed and [map image coordinates to native geometry](https://docs.androperator.com/api/actions/#action-take-screenshot) before coordinate input. Check truncation and scope before concluding absence.
 Choose observed [selectors](https://docs.androperator.com/api/selectors/); use
 [strict/scoped selection](https://docs.androperator.com/api/scoped-selection/) when ambiguity matters.
 

@@ -1496,7 +1496,7 @@ other metadata. A failed capture or artifact write produces
 
 Common failures:
 
-- `EXECUTION_VALIDATION_FAILED` for blank path
+- `EXECUTION_VALIDATION_FAILED` for blank path, invalid scale, multiple screenshots, or a screenshot before the final action
 - timeout or runtime screenshot capture failures
 
 Example:
@@ -1520,8 +1520,8 @@ same numeric values. Numeric strings, arbitrary percentages and empty values are
 invalid. A screenshot must be the only screenshot and the final action
 in its execution; use separate executions for intermediate observations.
 
-All successful captures also report `data.captureMethod` (`adb_screencap`,
-`shell_hardware_buffer`, or `adb_screencap_resize`), `data.requestedScale`, and `data.appliedScale` as strings.
+Successful `take_screenshot` captures report `data.captureMethod`
+(`shell_hardware_buffer` or `adb_screencap_resize`), `data.requestedScale`, and `data.appliedScale` as strings.
 
 The Node API, screenshot CLI and HTTP `POST /screenshot` return a JSON result
 containing the saved PNG's `data.path`, not embedded image bytes or base64. Open
@@ -1592,7 +1592,10 @@ fresh semantic selectors when available. Reduced capture saves acquisition and
 image-transfer work on the direct helper path, but whole-task savings depend on
 model time and how often another image is needed. No universal speedup is implied.
 
-A helper capture additionally reports:
+Both direct and resize-fallback captures report `nativeWidthPx` and
+`nativeHeightPx` as decimal strings. A direct helper capture additionally reports
+the display and correlation fields below; fallback includes display fields when
+display discovery succeeds, but has no helper session/capture IDs.
 
 - `nativeWidthPx`, `nativeHeightPx`: full display coordinate extent in its current
   rotation, before scaling; these are logical display pixels, not panel hardware

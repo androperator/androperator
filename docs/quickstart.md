@@ -65,7 +65,7 @@ See [navigation semantics](api/navigation.md#wait-for-navigation).
 | Bound returned context | `snapshot --compact --max-nodes 100` | A preorder prefix; inspect truncation, never infer absence from omitted nodes |
 | Inspect matches/state | `query --text <label>` | One capture; paths are not persistent action handles |
 | Read exact text | `read --text <label>` or `read-value --label <label>` | Verify selection and label/value association |
-| Inspect pixels | `screenshot --path <new_file>` | Open the image; capture success alone proves no application outcome |
+| Inspect pixels | `screenshot --path <new_file>` | Open the 25%-per-dimension image; use `--scale 100` for fine detail. Capture success alone proves no application outcome |
 
 Use [Snapshot](api/snapshot.md) for compact/raw artifacts and
 [Actions](api/actions.md) for query/read output serialization. Keep the raw

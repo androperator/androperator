@@ -10,7 +10,6 @@ import { writeFile, rename, rm } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { captureScreenshot } from "../observe/captureScreenshot.js";
 import type { Execution } from "../../contracts/execution.js";
 import { validateExecution, validatePayloadSize } from "./validateExecution.js";
 import { resolveDevice } from "../devices/resolveDevice.js";
@@ -870,20 +869,13 @@ async function performExecution(
           const screenStep = result.envelope.stepResults.find(s => s.actionType === "take_screenshot");
 
           const captureBudget = execution.timeoutMs - (Date.now() - dispatchStart);
-          const scaled = screenAction?.params?.scale !== undefined ? await captureScaledScreenshot(config, {
-            scale: screenAction.params.scale, timeoutMs: captureBudget, signal: options.signal,
-          }) : undefined;
-          if (scaled) {
-            const { captureMethod, requestedScale, protectedContent, fallbackAttempted, fallbackReason } = scaled.metadata;
-            captureMetadata = { captureMethod, requestedScale, protectedContent, fallbackAttempted,
-              ...(fallbackReason !== undefined ? { fallbackReason } : {}) };
-          }
-          const buffer = scaled?.buffer ?? await captureScreenshot(config, {
-            timeoutMs: captureBudget,
-            signal: options.signal,
-            commandId: execution.commandId,
-            taskId: execution.taskId,
+          const scaled = await captureScaledScreenshot(config, {
+            scale: screenAction?.params?.scale ?? 25, timeoutMs: captureBudget, signal: options.signal,
           });
+          const { captureMethod, requestedScale, protectedContent, fallbackAttempted, fallbackReason } = scaled.metadata;
+          captureMetadata = { captureMethod, requestedScale, protectedContent, fallbackAttempted,
+            ...(fallbackReason !== undefined ? { fallbackReason } : {}) };
+          const buffer = scaled.buffer;
 
           const image = verifyScreenshot(buffer);
           const checkPublicationBudget = () => {
@@ -903,8 +895,8 @@ async function performExecution(
           finalizeSuccessfulScreenshotCapture(screenStep, screenshotPath, image);
           if (screenStep) screenStep.data = {
             ...screenStep.data,
-            ...(scaled?.metadata ?? { captureMethod: "adb_screencap", protectedContent: "unknown", requestedScale: "100", appliedScale: "100" }),
-            hint: screenshotHint(scaled?.metadata.appliedScale ?? "100"),
+            ...scaled.metadata,
+            hint: screenshotHint(scaled.metadata.appliedScale),
           };
         } catch (e) {
           const screenStep = result.envelope.stepResults.find(step => step.actionType === "take_screenshot");
@@ -916,12 +908,10 @@ async function performExecution(
             const { path: _path, capturedAt: _capturedAt, persistedAt: _persistedAt, captureWidthPx: _width, captureHeightPx: _height, coordinateSpace: _space, origin: _origin, ...previousData } = screenStep.data;
             screenStep.data = { ...previousData,
               runtimeError: previousData.error ?? "",
-              ...(screenAction?.params?.scale !== undefined ? {
-                captureFailureReason, requestedScale: String(screenAction.params.scale),
-                fallbackAttempted: String(e instanceof CaptureHelperError && e.fallbackAttempted),
-                protectedContent: e instanceof CaptureHelperError ? e.protectedContent : "unknown",
-                ...captureMetadata,
-              } : {}),
+              captureFailureReason, requestedScale: String(screenAction?.params?.scale ?? 25),
+              fallbackAttempted: String(e instanceof CaptureHelperError && e.fallbackAttempted),
+              protectedContent: e instanceof CaptureHelperError ? e.protectedContent : "unknown",
+              ...captureMetadata,
               error: ERROR_CODES.EVIDENCE_CAPTURE_FAILED,
               errorCode: ERROR_CODES.EVIDENCE_CAPTURE_FAILED,
               message: (typeof e === "object" && e !== null && "message" in e ? String(e.message) : String(e)).slice(0, 1024), failurePhase: "post_processing", dispatchState: "dispatched",

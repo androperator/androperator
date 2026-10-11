@@ -107,9 +107,13 @@ test("scale contract preserves omission, rejects invalid types and ambiguous exe
   assert.deepEqual(buildScreenshotExecution().actions[0].params, {});
   for (const scale of [100, 50, 25]) assert.equal(validateExecution(buildScreenshotExecution({ scale: scale as 25 })).actions[0].params?.scale, scale);
   for (const scale of [0, 1, 0.25, "25", "", null, NaN]) assert.throws(() => validateExecution(buildScreenshotExecution({ scale: scale as any })));
-  const execution = buildScreenshotExecution({ scale: 25 });
-  execution.actions.push({ id: "later", type: "press_key", params: { key: "home" } });
-  assert.throws(() => validateExecution(execution), (error: any) => /single final/.test(error.message));
+  for (const scale of [undefined, 25, 50, 100] as const) {
+    const execution = buildScreenshotExecution({ scale });
+    execution.actions.push({ id: "later", type: "press_key", params: { key: "home" } });
+    assert.throws(() => validateExecution(execution), (error: any) => /single final/.test(error.message));
+    execution.actions[1] = { id: "second", type: "take_screenshot", params: {} };
+    assert.throws(() => validateExecution(execution), (error: any) => /single final/.test(error.message));
+  }
 });
 
 test("unknown protection does not block ordinary scaled capture", async () => {

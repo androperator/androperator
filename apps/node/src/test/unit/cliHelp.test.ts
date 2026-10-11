@@ -640,12 +640,24 @@ describe("promoted flat commands - help and missing-arg errors", () => {
     assert.doesNotMatch(stdout, /--file/);
   });
 
+  for (const args of [["--scale"], ["--scale", "17"], ["--scale", ""], ["--scale", "0.25"]]) {
+    it(`screenshot rejects invalid or missing scale ${JSON.stringify(args)} before device access`, async () => {
+      const { stdout, code } = await runCli(["screenshot", ...args]);
+      assert.strictEqual(code, 1);
+      const result = JSON.parse(stdout);
+      assert.strictEqual(result.code, "EXECUTION_VALIDATION_FAILED");
+      assert.match(result.message, /--scale requires 100, 50 or 25/);
+    });
+  }
+
   it("screenshot --help shows screenshot help", async () => {
     const { stdout, code } = await runCli(["screenshot", "--help"]);
     assert.strictEqual(code, 0);
     assert.match(stdout, /androperator screenshot/);
     assert.match(stdout, /--path <file>/);
     assert.match(stdout, /Also accepted as: --device-id, --file/);
+    assert.match(stdout, /default: 25; 50 or 100 for more detail/);
+    assert.match(stdout, /Use --scale 100 for full resolution/);
   });
 
   it("click --help shows click help", async () => {

@@ -7,7 +7,7 @@ host-authored advice describes file access and exact CLI/Node scale arguments,
 based on the actual applied scale for both direct capture and resize fallback.
 It is advisory, not a machine-parsed contract or an interpretation of screen
 contents. The same result flows through the Node API, CLI and HTTP endpoint;
-none embeds PNG bytes. The full-resolution default remains unchanged.
+none embeds PNG bytes. Omitted scale defaults to 25%; explicit 50 and 100 remain available.
 
 ## Identity and ownership
 
@@ -123,7 +123,8 @@ result, and reports `adb_screencap_resize`, applied/requested scale, native and
 returned dimensions, `fallbackAttempted: "true"` and the setup failure reason.
 Explicit 100% fallback preserves the full-size PNG but keeps that method label.
 Stock acquisition followed by resize saves output size, not acquisition work.
-Omitted scale remains ordinary full-resolution `adb_screencap`.
+Omitted scale uses the same maintained 25% path as explicit scale 25. All screenshot
+actions must be the single final screenshot in an execution.
 
 Doctor tests direct-helper APIs, not image contents or fallback success. It warns
 when that helper cannot initialize and explains the resize path. It must not
@@ -182,3 +183,20 @@ Primary sources (read for analysis, not incorporated into the implementation):
 - [Android 16 QPR2 capture API](https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android16-qpr2-release/core/java/android/window/ScreenCapture.java)
 - [Android 17 WindowManager capture route](https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android17-release/services/core/java/com/android/server/wm/WindowManagerService.java)
 - [Android 17 compositor capability and protected output allocation](https://android.googlesource.com/platform/frameworks/native/+/refs/heads/android17-release/services/surfaceflinger/SurfaceFlinger.cpp)
+
+
+## Agent adoption
+
+The public [capture-size guide](../../api/actions.md#choosing-screenshot-scale)
+owns agent usage advice. The 25% default avoids requiring agents to discover a
+performance flag; explicit 50/100 and the successful result's `hint` provide a
+clear route to more detail. The hint explains file access, rendered-content
+verification, fresh-observation recovery and coordinate interpretation. It does
+not assert task success or perform visual judgment.
+
+Do not turn experimental OCR checks into runtime readiness gates. Reduced images
+can be useful even when one verifier rejects them; higher resolution cannot
+ensure that verifier is correct. Evaluate total task time including additional
+captures, keep failed trials, and preserve no-action-replay behavior. Evidence
+bundles and video have their own contracts; this screenshot default does not
+change those acquisition paths.

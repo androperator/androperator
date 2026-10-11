@@ -4,6 +4,66 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims to follow Semantic Versioning.
 
+## [1.2.0] - 2026-10-11
+
+**Breaking:** Screenshots now default to 25% per native dimension and each execution allows only one final screenshot action. Request `--scale 100` (Node/HTTP: `scale: 100`) for full-size images and use separate executions for intermediate observations. Car rotary keys now use explicit `aaos_` and `android_auto_` prefixes; update callers using the old spellings.
+
+This release added automotive and Wear OS controls, reduced screenshot capture sizes, and improved installation readiness and package-list failure reporting.
+
+### 🤖 Node API & CLI
+
+- **Added:** AAOS rotary rotation, directional nudges, and center input through CLI, API, and MCP.
+- **Added:** Managed Android Auto DHU start, status, and stop commands, with rotary, directional, center, Back, and Home inputs.
+- **Added:** Wear OS rotary and primary/multifunction stem controls with capability checks before execution.
+- **Added:** Persistent scaled screenshot capture at 25%, 50%, or 100%, with a stock-capture-and-resize fallback when helper initialization is unavailable.
+- **Added:** Recording exports returned `resolvedInputFile` so callers could identify the selected NDJSON input.
+- **Changed:** Homebrew-owned installations retained their ownership during upgrades; an unlinked formula did not replace an active npm CLI.
+- **Changed:** Daemon clients deferred direct-execution imports on action, execution, snapshot, and screenshot paths.
+- **Breaking:** **Changed:** Screenshots defaulted to 25% per dimension. Full-resolution callers must request scale 100; intermediate screenshots require separate executions.
+- **Breaking:** **Changed:** AAOS `rotary_*` keys became `aaos_rotary_*`; Android Auto nudge and center keys became `android_auto_rotary_nudge_*` and `android_auto_rotary_center`. Old spellings were rejected without aliases.
+- **Fixed:** Installation state recorded the APK version from the final passing device version check rather than assuming a download or CLI version.
+- **Fixed:** Fresh Operator setup required a correlated live handshake and attempted up to two accessibility-grant repairs for unavailable-service responses.
+- **Fixed:** AAOS screenshot capture used a verified initialization fallback and separated remote diagnostics from PNG output while preserving exit status.
+- **Fixed:** Failed or malformed package listings returned `DEVICE_SHELL_UNAVAILABLE` and CLI exit 1 instead of empty or partial success.
+
+### 📚 Documentation & Website
+
+- **Added:** Homebrew installation and upgrade guidance and accessible code-copy buttons on the landing page.
+- **Added:** AAOS, Android Auto DHU, and Wear OS input documentation with platform-specific key names.
+- **Added:** Scaled screenshot guidance, including explicit full-resolution recovery and the final-screenshot execution requirement.
+- **Changed:** Recording documentation explained the resolved export input path.
+- **Changed:** Setup guidance documented verified APK-version provenance and live Operator readiness checks and recovery.
+- **Changed:** Screenshot and evidence documentation explained AAOS compatibility fallback and capture limitations.
+- **Changed:** Agent guidance clarified navigation, timeouts, readiness, and output contracts; generated references included dynamic CLI commands and complete machine-facing documentation indexes.
+- **Fixed:** Package-list documentation described failed-query behavior and removed the obsolete empty-success known issue.
+
+### 📱 Android Operator APK
+
+- **Added:** AAOS rotary, Android Auto, and Wear OS input keys were accepted across the Operator action contracts.
+
+Pull requests:
+- [feat(homebrew): preserve installer ownership and automate release updates](https://github.com/androperator/androperator/pull/389)
+- [feat(site): add Homebrew installation and code copy buttons](https://github.com/androperator/androperator/pull/390)
+- [feat(automotive): add AAOS rotary controller inputs](https://github.com/androperator/androperator/pull/391)
+- [feat(inputs): add Android Auto DHU controls and explicit car prefixes](https://github.com/androperator/androperator/pull/392)
+- [feat(input): add Wear OS rotary and stem controls](https://github.com/androperator/androperator/pull/393)
+- [test(benchmarks): preserve experimental Android agent-loop comparisons](https://github.com/androperator/androperator/pull/394)
+- [docs(benchmarks): measure persistent Node execution overhead](https://github.com/androperator/androperator/pull/395)
+- [perf(cli): defer direct-execution imports for daemon clients](https://github.com/androperator/androperator/pull/396)
+- [test(cli): measure experimental persistent command forwarding](https://github.com/androperator/androperator/pull/397)
+- [docs(planning): replace task packs with notebook plans](https://github.com/androperator/androperator/pull/402)
+- [docs: establish change preflight and usefulness checks](https://github.com/androperator/androperator/pull/403)
+- [feat(screenshot): add persistent scaled capture with safe fallback](https://github.com/androperator/androperator/pull/404)
+- [feat(screenshot): default captures to quarter resolution](https://github.com/androperator/androperator/pull/405)
+- [feat(recording): report resolved export input path](https://github.com/androperator/androperator/pull/406)
+- [fix(install): persist verified APK version metadata](https://github.com/androperator/androperator/pull/407)
+- [fix(examples): preserve native geometry for reduced screenshots](https://github.com/androperator/androperator/pull/408)
+- [fix(setup): verify and repair fresh Operator service readiness](https://github.com/androperator/androperator/pull/409)
+- [fix(screenshot): restore AAOS capture with verified compatibility fallback](https://github.com/androperator/androperator/pull/410)
+- [docs(agents): align guidance and generate complete references](https://github.com/androperator/androperator/pull/411)
+- [chore(build): set code version to 1.2.0](https://github.com/androperator/androperator/pull/412)
+- [fix(packages): reject failed or malformed package listings](https://github.com/androperator/androperator/pull/413)
+
 ## [1.1.0] - Unreleased
 
 The npm package moves to **`@androperator/cli`**. Install it with

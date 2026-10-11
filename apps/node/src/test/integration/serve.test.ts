@@ -83,7 +83,7 @@ describe("serve API integration", () => {
       body: JSON.stringify({ storageSize: "12000M" }),
     });
     assert.strictEqual(res.status, 400);
-    const body = await res.json() as { ok: boolean; error: { code: string; message: string } };
+    const body = await res.json() as { ok: boolean; error: { code: string } };
     assert.strictEqual(body.ok, false);
     assert.strictEqual(body.error.code, "INVALID_BODY");
     assert.match(body.error.message, /positive integer followed by G or GB/);
@@ -96,7 +96,7 @@ describe("serve API integration", () => {
       body: JSON.stringify({ storageSize: "12G", diskSize: "16G" }),
     });
     assert.strictEqual(res.status, 400);
-    const body = await res.json() as { ok: boolean; error: { code: string; message: string } };
+    const body = await res.json() as { ok: boolean; error: { code: string } };
     assert.strictEqual(body.ok, false);
     assert.strictEqual(body.error.code, "INVALID_BODY");
     assert.match(body.error.message, /Use only one emulator storage size field/);
@@ -288,7 +288,7 @@ describe("serve API integration", () => {
     assert.ok(body.error.code !== undefined);
   });
 
-  for (const scale of ["25", 1, 75, null, ""]) {
+  for (const scale of ["25", "100", 1, 75, null, ""]) {
     test(`POST /screenshot rejects invalid scale ${JSON.stringify(scale)}`, async () => {
       const res = await fetch(`http://localhost:${port}/screenshot`, {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scale }),
@@ -296,6 +296,8 @@ describe("serve API integration", () => {
       assert.strictEqual(res.status, 400);
       const body = await res.json() as any;
       assert.strictEqual(body.error.code, "INVALID_SCALE");
+      assert.match(body.error.message, /omit for 25% capture/);
+      assert.match(body.error.message, /use \{"scale":100\} for full resolution/);
     });
   }
 
@@ -320,7 +322,7 @@ describe("serve API integration", () => {
     });
 
     assert.strictEqual(res.status, 400);
-    const body = await res.json() as { ok: boolean; error: { code: string; message: string } };
+    const body = await res.json() as { ok: boolean; error: { code: string } };
     assert.strictEqual(body.ok, false);
     assert.strictEqual(body.error.code, "INVALID_PATH");
     assert.strictEqual(body.error.message, "'path' must be a non-empty string");

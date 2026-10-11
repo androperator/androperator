@@ -40,7 +40,7 @@ JSON privately; they may contain personal screen content. Never commit them.
 A capture passes freshness only when its current marker is present in pixels.
 The scripts decode PNGs independently and keep timing outside OCR verification.
 
-Four rounds run at explicit 100/50/25 and omitted scale (stock). Round zero is
+Four rounds run at explicit 100/50/25 and omitted scale (default 25%). Round zero is
 excluded from warm aggregates. Backend/API round zero deliberately closes the
 helper before each explicit scale; subsequent rounds reuse one session. CLI
 round zero is a first-use pass through the existing daemon; only its first
@@ -147,7 +147,7 @@ node validation/persistent-screenshots/compatibility.mjs <device_serial> /tmp/ne
 
 This opt-in harness opens Settings, performs two rounds of direct CLI capture at
 100/50/25, exercises the complete Node resize fallback at all three scales, and
-checks omitted-scale full-size capture. It verifies actual PNG dimensions,
+checks omitted-scale 25% capture. It verifies actual PNG dimensions,
 method, protection metadata and current FRAME text in every image. It restores
 the prior foreground app (using Home for launchers) and clears its own overlay.
 Only the first direct image is necessarily cold; the other sizes share the CLI

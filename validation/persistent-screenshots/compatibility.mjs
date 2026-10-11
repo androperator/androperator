@@ -32,26 +32,26 @@ const prior = (await command(['snapshot'])).envelope.stepResults[0].data.foregro
 const rows = [];
 try {
   await command(['open', 'com.android.settings']);
-  for (const mode of ['direct-cold', 'direct-warm', 'fallback', 'stock']) {
-    for (const scale of mode === 'stock' ? [100] : [100, 50, 25]) {
+  for (const mode of ['direct-cold', 'direct-warm', 'fallback', 'default']) {
+    for (const scale of mode === 'default' ? [25] : [100, 50, 25]) {
       const marker = `FRAME ${10 + rows.length}`;
       await command(['on-screen-log', 'set', '--text', marker, '--font-size-sp', '24', '--width-dp', '300', '--text-color', '#FFFFFF', '--background-color', '#000000']);
       await new Promise(resolve => setTimeout(resolve, 500)); // Lab presentation, not capture latency.
       const path = `${output}/${mode}-${scale}.png`, started = performance.now();
       const result = mode === 'fallback'
         ? await observeScreenshot({ deviceId, operatorPackage: 'com.androperator.operator.dev', runner, scale, path })
-        : await command(['screenshot', '--path', path, ...(mode === 'stock' ? [] : ['--scale', String(scale)])]);
+        : await command(['screenshot', '--path', path, ...(mode === 'default' ? [] : ['--scale', String(scale)])]);
       const totalMs = performance.now() - started;
       await writeFile(`${output}/${mode}-${scale}.json`, JSON.stringify(result, null, 2));
       assert.equal(result.envelope.status, 'success', JSON.stringify(result));
       const data = result.envelope.stepResults[0].data, image = verifyScreenshot(await readFile(path));
-      assert.equal(data.captureMethod, mode === 'fallback' ? 'adb_screencap_resize' : mode === 'stock' ? 'adb_screencap' : 'shell_hardware_buffer');
+      assert.equal(data.captureMethod, mode === 'fallback' ? 'adb_screencap_resize' : 'shell_hardware_buffer');
       assert.ok(['absent', 'unknown'].includes(data.protectedContent));
-      if (mode === 'fallback' || mode === 'stock') assert.equal(data.protectedContent, 'unknown');
-      if (mode !== 'stock') {
-        assert.equal(image.captureWidthPx, Math.floor(Number(data.nativeWidthPx) * scale / 100));
-        assert.equal(image.captureHeightPx, Math.floor(Number(data.nativeHeightPx) * scale / 100));
-      }
+      if (mode === 'fallback') assert.equal(data.protectedContent, 'unknown');
+      assert.equal(image.captureWidthPx, Math.floor(Number(data.nativeWidthPx) * scale / 100));
+      assert.equal(image.captureHeightPx, Math.floor(Number(data.nativeHeightPx) * scale / 100));
+      assert.equal(data.requestedScale, String(scale));
+      assert.equal(data.appliedScale, String(scale));
       const { stdout } = await run(ocr, [path], { timeout: 20000 });
       assert.ok(JSON.parse(stdout).some(row => row.text === marker), `Current marker missing: ${marker}`);
       rows.push({ mode, scale, totalMs, marker, fresh: true, markerSettleMs: 500, ...data });

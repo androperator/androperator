@@ -266,6 +266,39 @@ Execute a payload on one target:
 androperator exec payload.json --device <device_serial>
 ```
 
+<a id="packages"></a>
+## Discover installed application IDs
+
+```bash
+androperator packages list --device <device_serial>
+androperator packages list --third-party --device <device_serial>
+```
+
+Synthetic success response:
+
+```json
+{"packages":["com.example.app"]}
+```
+
+`--third-party` applies Android's `pm list packages -3` filter. This uses targeted
+ADB without an Operator action. Device selection can fail with `NO_DEVICES`,
+`DEVICE_NOT_FOUND` or `MULTIPLE_DEVICES_DEVICE_ID_REQUIRED`.
+Current limitation: the package handler parses stdout without checking the ADB
+process exit code. An empty successful list alone is not reliable proof that no
+packages are installed. Preserve diagnostics and investigate the target/tooling
+before concluding absence; this requires a separate runtime fix.
+
+<a id="emulator-cli"></a>
+## Emulator CLI routing
+
+Use `androperator emulator --help` for lifecycle commands and
+`androperator emulator provision --help` for a create-or-reuse workflow. Use `androperator emulator list` for configured AVDs and
+`androperator emulator status` for running emulators and boot state. Provisioning is a mutation, not a prerequisite to listing an already
+connected device. CLI output is structured JSON; preserve error codes instead of
+parsing display labels. The [CLI reference](cli.md#command-emulator) lists primary
+syntax; [provisioning](serve.md#endpoint-post-android-provision-emulator) explains
+the shared backend inputs and HTTP wrapper, which is not the CLI wrapper.
+
 ## Related Pages
 
 - [Setup](../setup.md)

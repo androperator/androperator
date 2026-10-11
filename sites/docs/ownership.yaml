@@ -38,13 +38,13 @@ command_details:
       - href: serve.md#endpoint-get-devices
         label: Serve GET /devices
   emulator:
-    href: serve.md#endpoint-post-android-provision-emulator
+    href: devices.md#emulator-cli
     label: Emulator provisioning
     see_also:
       - href: devices.md
         label: Devices
   packages:
-    href: devices.md
+    href: devices.md#packages
     label: Devices
   exec:
     href: overview.md#execution-payload

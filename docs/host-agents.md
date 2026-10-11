@@ -18,6 +18,20 @@ matching Operator. In a development checkout, build `apps/node` and invoke
 `node apps/node/dist/cli/index.js` with
 `--operator-package com.androperator.operator.dev`. See [setup](setup.md).
 
+<a id="choose-readiness"></a>
+## Choose readiness for the requested capability
+
+| Work | Gate and constraints |
+| --- | --- |
+| Interactive UI actions and ordinary snapshot | Interactive `doctor`: exit 0, `criticalOk: true`, `readiness.device.interactive.status: "pass"`. Ordinary execution preparation may attempt wake/Home; it does not unlock the device. |
+| Notification reads and media reads/controls only | `doctor --capability background-observation`; no wake, accessibility requirement or keyguard dismissal. Required service permissions and first unlock after reboot still apply. |
+| Still evidence capture | Use [evidence readiness](api/evidence.md); its hierarchy preparation is non-waking and component failures remain in the bundle. |
+
+Mixing UI actions or notification mutations into a background list restores
+whole-execution interactive readiness. Interactive doctor failure alone does not
+veto supported background-only work. A passing doctor establishes readiness,
+not app responsiveness or task success. See [background doctor](api/doctor.md#background-observation-readiness).
+
 ## Adaptive execution and goal coverage
 
 Define the requested outcome and budgets. Observe current state, choose one

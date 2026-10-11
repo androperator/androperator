@@ -203,7 +203,15 @@ or promise that retrying will expose a restricted screen. Named MCP returns the
 same error code and envelope.
 
 Zero, one, or multiple matches all succeed. `data.query` is a serialized JSON
-string with this shape:
+string. For example, this synthetic failed-to-find-any-match observation is still
+a successful query (outer result excerpt):
+
+```json
+{"envelope":{"status":"success","stepResults":[{"id":"query","actionType":"query_ui","success":true,"data":{"query":"{\"schemaVersion\":1,\"snapshotId\":\"observation-local-id\",\"capturedAt\":\"2026-01-01T00:00:00Z\",\"totalMatches\":0,\"returnedCount\":0,\"truncated\":false,\"nodes\":[]}"}}]}}
+```
+
+Parse the outer response first, then `JSON.parse(step.data.query)`. A decoded
+nested payload with one match has this shape (not an object stored in step data):
 
 ```json
 {
@@ -356,14 +364,6 @@ exclusive with simple selector flags (`--text`, `--text-contains`, `--id`, `--de
       }
     },
     {
-      "id": "wait-1",
-      "type": "wait_for_navigation",
-      "params": {
-        "expectedPackage": "com.android.settings",
-        "timeoutMs": 5000
-      }
-    },
-    {
       "id": "snap-1",
       "type": "snapshot"
     }
@@ -376,8 +376,8 @@ Success condition for that payload:
 
 - `envelope.status == "success"`
 - every `envelope.stepResults[i].success == true`
-- `envelope.stepResults[2].actionType == "snapshot"`
-- `"text" in envelope.stepResults[2].data`
+- `envelope.stepResults[1].actionType == "snapshot"`
+- `"text" in envelope.stepResults[1].data`
 
 ## Action Reference
 
@@ -1222,6 +1222,12 @@ Example:
 Semantics:
 
 - at least one navigation target must be present
+- a package-only wait requires evidence of a package transition after the wait
+  begins; an already-foreground package alone does not satisfy it
+- `expectedNode` can independently satisfy the wait: package and node use OR,
+  not AND. For content readiness use `wait_for_node` and verify the destination
+- `open_app` already waits for its package, including an already-foreground app;
+  do not append a redundant package-only navigation wait
 - the CLI builder inflates execution timeout to `max(timeoutMs + 5000, 30000)`
 
 Success data:
@@ -1868,7 +1874,13 @@ Example:
 | `clear_on_screen_log` | `visible` with value `"false"` |
 | `show_toast` | `submitted` with value `"true"`, and `duration` with value `"short"` or `"long"` |
 | `cancel_toast` | `submitted` with value `"true"` |
-| all others | no fixed success keys guaranteed by Node |
+| `query_ui` | JSON string `data.query`; see [query output](#action-query-ui) |
+| `read_text`, `read_key_value_pair` | See [read text](#action-read-text) and [label/value reads](#action-read-key-value-pair) for scalar/list and association semantics |
+| `open_app`, `wait_for_navigation` | Runtime package/timing facts; see [navigation](navigation.md); these do not prove content readiness |
+| notification/media actions | See [notifications](notifications.md) and [media](media.md) for serialized payloads and confirmation |
+
+Other action-specific fields are documented with their action above. Distinguish
+runtime data from host-added fields; optional metadata is not a universal Node guarantee.
 
 Concrete success example for `take_screenshot`:
 
@@ -1901,8 +1913,10 @@ For failures, inspect:
 
 - `envelope.status`
 - first failed `stepResults[i].success == false`
-- `stepResults[i].data.error`
-- `stepResults[i].data.message`
+- `envelope.errorCode`, then failed-step `data.errorCode`
+- documented legacy `data.error` codes when typed codes are absent
+- `data.message` for explanation, not string-matched control flow
+- [failure evidence](errors.md#execution-failure-evidence) before retrying a mutation
 
 ## Related Pages
 

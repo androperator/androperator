@@ -8,7 +8,7 @@ metadata:
   docs: https://docs.androperator.com
   repository: https://github.com/androperator/androperator
   installer: https://androperator.com/install.sh
-  package: androperator
+  package: "@androperator/cli"
 ---
 
 # Androperator setup
@@ -131,12 +131,12 @@ Keep private device evidence and credentials out of shared documents.
 
 ## Routes after setup
 
-Read [agent guidance](https://androperator.com/agents.md),
-[host-agent orientation](https://docs.androperator.com/host-agents/), the
-[CLI reference](https://docs.androperator.com/api/cli/), and the
-[documentation index](https://androperator.com/llms.txt).
-The [full agent corpus](https://androperator.com/llms-full.txt) provides the
-technical documentation in one file.
+Start with [agent guidance](https://androperator.com/agents.md). Use
+[host orientation](https://docs.androperator.com/host-agents/) for an unfamiliar
+host, the [CLI reference](https://docs.androperator.com/api/cli/) to choose syntax,
+or the [index](https://androperator.com/llms.txt) for a specific capability.
+The [full corpus](https://androperator.com/llms-full.txt) is an optional all-reference
+download, not a prerequisite for each task.
 
 If the host supports stdio MCP, configure it using the local snippet and
 [MCP documentation](https://docs.androperator.com/api/mcp/) after CLI setup works:

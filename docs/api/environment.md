@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define every environment variable the Node CLI reads, its exact default, where it takes effect, and how to verify it is working. Use environment variables for workspace-wide defaults in headless, CI, or agent environments where repeating CLI flags on every command is impractical.
+Use this index for supported host settings and their owning contracts. Internal/test overrides are not an exhaustive public configuration contract. Use environment variables for workspace-wide defaults in headless, CI, or agent environments where repeating CLI flags on every command is impractical.
 
 ## Sources
 
@@ -24,7 +24,7 @@ Resolution order for a typical setting:
 
 There is no configuration file layer between the environment variable and the default.
 
-## Complete Reference
+## Common host settings
 
 | Variable | Default if unset | CLI flag override |
 | --- | --- | --- |
@@ -34,6 +34,27 @@ There is no configuration file layer between the environment variable and the de
 | `ADB_PATH` | `adb` (from `PATH`) | none |
 | `ANDROID_HOME` | unset | none |
 | `ANDROID_SDK_ROOT` | unset (fallback for `ANDROID_HOME`) | none |
+
+## Additional operational settings
+
+| Variable | Scope and default | Verification / owner |
+| --- | --- | --- |
+| `ANDROPERATOR_NO_DAEMON` | Exactly `1` bypasses daemon routing; unset/other values do not force bypass. Per-command `--no-daemon` also bypasses. | Inspect direct execution diagnostics; [daemon](daemon.md) |
+| `ANDROPERATOR_EVIDENCE_DIR` | Evidence storage root; default `~/.androperator/evidence`. Blank/whitespace or NUL is rejected. An explicit caller base directory takes precedence. | Inspect returned bundle/session paths and storage errors; [evidence](evidence.md) |
+| `ANDROPERATOR_RUN_ID` | Optional caller log correlation; explicit caller run ID takes precedence. Values are trimmed; invalid/blank values are omitted. Valid IDs are 1..240 characters from letters, digits, dot, underscore, colon and hyphen. | Inspect `runId` in [structured logs](logging.md) |
+
+Emulator tooling also accepts `EMULATOR_PATH`, `SDKMANAGER_PATH` and
+`AVDMANAGER_PATH`, passed to the emulator backend alongside `ADB_PATH`.
+Use [emulator CLI help](devices.md#emulator-cli) and its tool diagnostics rather
+than assuming every setting shares the Operator variable's blank-value fallback.
+
+Development-only source selection: `ANDROPERATOR_EMULATOR_SOURCE` accepts `auto`
+(default), `local`, `published`, or an absolute package directory. Blank and other
+relative values are invalid. `auto` uses a detected sibling source package when
+present, otherwise the published dependency; `local` requires source discovery.
+A selected package must be built. Inspect emulator command errors when working on the backend. Download metadata overrides such as
+`ANDROPERATOR_APK_METADATA_URL` are deployment/development controls, not a reason
+to replace the canonical published installer or infer release availability.
 
 ## `ANDROPERATOR_OPERATOR_PACKAGE`
 
@@ -84,7 +105,7 @@ If `operatorPackage` shows the value you set, the env var is active.
 Error case:
 
 - if the env var names a package that is not installed, device-targeting commands fail with `OPERATOR_NOT_INSTALLED`
-- if only the alternate known Operator variant is installed, `androperator doctor` reports `OPERATOR_VARIANT_MISMATCH` as a readiness warning
+- if only the alternate known Operator variant is installed, `androperator doctor` reports `OPERATOR_VARIANT_MISMATCH` as a readiness failure
 
 Note: the CLI also accepts `--receiver-package` as a legacy alias for `--operator-package`. Both override the same env var. Do not use `--receiver-package` in new code.
 

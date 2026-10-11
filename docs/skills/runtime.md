@@ -5,9 +5,11 @@ For local development, build `apps/node`, install the matching debug APK and pas
 `--operator-package com.androperator.operator.dev`. Published installations use
 `com.androperator.operator`.
 
-Run doctor for the selected pair. Device readiness includes APK presence,
+Choose the [capability-specific readiness gate](../host-agents.md#choose-readiness)
+for the selected pair. Interactive device readiness includes APK presence,
 version compatibility, accessibility, handshake and interactive state. A locked
-or unavailable target must produce a truthful blocked outcome. Do not bypass
+interactive target must produce a truthful blocked outcome; supported background
+notification/media operations do not require waking or dismissing keyguard. Do not bypass
 readiness, infer an action happened from a process exit, or silently replace
 failed evidence with a later success.
 

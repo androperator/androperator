@@ -75,6 +75,18 @@ prevents manifest persistence, the command returns `EVIDENCE_CAPTURE_FAILED`;
 files already written remain in the chosen directory, but no finalized manifest
 is promised.
 
+Synthetic partial response (CLI exit 1):
+
+```json
+{"ok":false,"status":"partial","manifestPath":"/absolute/new/bundle/manifest.json","evidenceId":"generated-uuid","code":"EVIDENCE_CAPTURE_FAILED"}
+```
+
+This can mean the screenshot is usable while hierarchy capture failed. Read the
+manifest's component status/errors and `captures.json`; retain the original
+failure verdict in caller context. The response is not an Operator envelope and
+does not put component errors at its top level. Do not discard usable artifacts
+or infer that the app action failed from incomplete capture.
+
 A complete capture can contain `context.originalVerdict: "failed"`. These are
 independent facts. Never replace the caller's original verdict with capture status.
 

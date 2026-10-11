@@ -282,6 +282,7 @@ Valid body rules enforced by the route:
 Operator package resolution:
 
 - if `operatorPackage` is present in the request, the server uses it verbatim
+- otherwise it uses the server startup `--operator-package` option when supplied
 - otherwise it falls back to `process.env.ANDROPERATOR_OPERATOR_PACKAGE` when that env var is non-blank
 - otherwise it uses `com.androperator.operator`
 
@@ -787,6 +788,8 @@ When a handler returns an enum-backed error from `errors.ts`, `serve.ts` maps it
 | `PAYLOAD_TOO_LARGE` | `413` |
 | `RESULT_ENVELOPE_TIMEOUT` | `504` |
 | `DEVICE_NOT_INTERACTIVE` | `409` |
+| `DEVICE_ACCESSIBILITY_NOT_RUNNING` | `409` |
+| `DEVICE_SHELL_UNAVAILABLE` | `503` |
 | `EMULATOR_NOT_FOUND` | `404` |
 | `EMULATOR_NOT_RUNNING` | `404` |
 | `EMULATOR_UNSUPPORTED` | `409` |

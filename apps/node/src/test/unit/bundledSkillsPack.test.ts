@@ -20,6 +20,7 @@ describe("bundled skill packaging", () => {
       "README.md",
       "LICENSE",
       "bundled-skills/",
+      "capture-helper/",
     ]);
     assert.equal(packageJson.scripts?.prepack, undefined);
     assert.equal(packageJson.scripts?.postpack, undefined);

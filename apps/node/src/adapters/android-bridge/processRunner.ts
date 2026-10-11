@@ -5,10 +5,12 @@ export interface ProcessResult {
   stderr: string;
   code: number | null;
   error?: Error;
+  /** Set when the runner's own timeout terminated the process; do not infer from stderr or exit code. */
+  timedOut?: boolean;
 }
 
 export interface ProcessRunner {
-  run(command: string, args: string[], options?: { timeoutMs?: number; cwd?: string; input?: string }): Promise<ProcessResult>;
+  run(command: string, args: string[], options?: { timeoutMs?: number; cwd?: string; input?: string; signal?: AbortSignal }): Promise<ProcessResult>;
   runShell(command: string, options?: { timeoutMs?: number; cwd?: string }): Promise<ProcessResult>;
   // For logcat/streaming
   spawn(command: string, args: string[], options?: { detached?: boolean; stdio?: any; shell?: boolean; env?: NodeJS.ProcessEnv }): any;
@@ -57,7 +59,8 @@ function trackGroup(pid: number): () => void {
 }
 
 export class NodeProcessRunner implements ProcessRunner {
-  async run(command: string, args: string[], options?: { timeoutMs?: number; cwd?: string; input?: string }): Promise<ProcessResult> {
+  async run(command: string, args: string[], options?: { timeoutMs?: number; cwd?: string; input?: string; signal?: AbortSignal }): Promise<ProcessResult> {
+    if (options?.signal?.aborted) return { stdout: "", stderr: "Process cancelled", code: null };
     return new Promise((resolve) => {
       const stdin = options?.input !== undefined ? "pipe" : "ignore";
       const proc = spawn(command, args, {
@@ -81,7 +84,7 @@ export class NodeProcessRunner implements ProcessRunner {
       }
 
       const timeoutMs = options?.timeoutMs ?? 30_000;
-      const t = setTimeout(() => {
+      const stop = (message: string, timedOut = false) => {
         // Kill the owned group: SDK and shell children may keep output pipes open.
         if (process.platform !== "win32" && proc.pid !== undefined) {
           try {
@@ -92,25 +95,32 @@ export class NodeProcessRunner implements ProcessRunner {
         } else {
           proc.kill("SIGKILL");
         }
-        untrack();
+        cleanup();
         proc.stdin?.destroy();
         proc.stdout?.destroy();
         proc.stderr?.destroy();
         // Settle here rather than waiting for close or accepting a later zero exit.
-        resolve({ stdout, stderr: `${stderr}\nProcess timed out after ${timeoutMs}ms`, code: null });
-      }, timeoutMs);
+        resolve({ stdout, stderr: `${stderr}\n${message}`, code: null, ...(timedOut ? { timedOut: true } : {}) });
+      };
+      const onAbort = () => stop("Process cancelled");
+      const t = setTimeout(() => stop(`Process timed out after ${timeoutMs}ms`, true), timeoutMs);
+      const cleanup = () => {
+        clearTimeout(t);
+        options?.signal?.removeEventListener("abort", onAbort);
+        untrack();
+      };
 
       proc.on("error", (err) => {
-        clearTimeout(t);
-        untrack();
+        cleanup();
         resolve({ stdout, stderr, code: (err as any).code === "ENOENT" ? 127 : 1, error: err });
       });
 
       proc.on("close", (code) => {
-        clearTimeout(t);
-        untrack();
+        cleanup();
         resolve({ stdout, stderr, code: code ?? null });
       });
+      options?.signal?.addEventListener("abort", onAbort, { once: true });
+      if (options?.signal?.aborted) onAbort();
     });
   }
 

@@ -32,6 +32,7 @@ test("timeout is bounded even when the child ignores SIGTERM and would later exi
   `], { timeoutMs: 1000 });
   assert.equal(result.stdout, "ready\n");
   assert.equal(result.code, null);
+  assert.equal(result.timedOut, true);
   assert.match(result.stderr, /before timeout\n\nProcess timed out after 1000ms/);
   assert.ok(Date.now() - started < 4000, "must settle before the child's successful exit");
 });
@@ -43,6 +44,7 @@ test("shell timeout kills descendants holding inherited output pipes", { skip: p
   assert.ok(Number.isInteger(pid) && pid > 0, "shell must report its child PID");
   try {
     assert.equal(result.code, null);
+    assert.equal(result.timedOut, true);
     assert.match(result.stderr, /Process timed out after 1000ms/);
     assert.ok(Date.now() - started < 4000, "inherited pipes must not keep runShell pending");
     await delay(100);
@@ -103,3 +105,54 @@ for (const customHandler of [false, true]) {
     }
   });
 }
+
+test("cancellation terminates an owned process and releases its pipes before its timeout", async () => {
+  const root = await mkdtemp(join(tmpdir(), "runner-cancellation-"));
+  const pidFile = join(root, "pid");
+  const controller = new AbortController();
+  const pending = runner.run(process.execPath, ["-e", `
+    require('node:fs').writeFileSync(${JSON.stringify(pidFile)}, String(process.pid));
+    process.on('SIGTERM', () => {});
+    setInterval(() => {}, 1000);
+  `], { timeoutMs: 10000, signal: controller.signal });
+  try {
+    const deadline = Date.now() + 5000;
+    let pid: number | undefined;
+    while (Date.now() < deadline) {
+      try { pid = Number(await readFile(pidFile, "utf8")); break; }
+      catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+      await delay(20);
+    }
+    assert.ok(pid, "fixture must start before cancellation");
+    const started = Date.now();
+    controller.abort();
+    const result = await pending;
+    assert.equal(result.code, null);
+    assert.match(result.stderr, /cancelled/);
+    assert.equal(result.timedOut, undefined);
+    assert.ok(Date.now() - started < 1000, "cancellation must not await the command timeout");
+    await delay(100);
+    assert.throws(() => process.kill(pid!, 0), (error: any) => error.code === "ESRCH");
+  } finally {
+    controller.abort();
+    await pending;
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("an already-cancelled process does not spawn", async () => {
+  const result = await runner.run("androperator-test-missing-executable", [], { signal: AbortSignal.abort() });
+  assert.equal(result.code, null);
+  assert.equal(result.error, undefined);
+  assert.match(result.stderr, /cancelled/);
+  assert.equal(result.timedOut, undefined);
+});
+
+test("process timeout reports its cause independently of elapsed wall time", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const pending = runner.run(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { timeoutMs: 30000 });
+  t.mock.timers.tick(30000);
+  const result = await pending;
+  assert.equal(result.code, null);
+  assert.equal(result.timedOut, true);
+});

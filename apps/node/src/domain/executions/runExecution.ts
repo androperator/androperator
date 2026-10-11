@@ -1,10 +1,13 @@
+import { captureScaledScreenshot } from "../observe/scaledScreenshot.js";
+import { CaptureHelperError } from "../observe/captureHelper.js";
 import { isHostInputAction, runHostInputSequence } from "../actions/hostInput.js";
 import { getLoggingStatus } from "../../adapters/logger.js";
-import { verifyScreenshot } from "../observe/screenshotMetadata.js";
+import { screenshotHint, verifyScreenshot } from "../observe/screenshotMetadata.js";
 import type { ScreenshotMetadata } from "../../contracts/screenshot.js";
 import { probeUserUnlockState } from "../device/userUnlockState.js";
 import { isBackgroundServiceExecution } from "../../contracts/notifications.js";
-import { writeFile } from "node:fs/promises";
+import { writeFile, rename, rm } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { captureScreenshot } from "../observe/captureScreenshot.js";
@@ -861,26 +864,64 @@ async function performExecution(
       const hasScreenshot = result.envelope.stepResults.some(s => s.actionType === "take_screenshot");
       const screenAction = execution.actions.find(a => a.type === "take_screenshot");
       if (hasScreenshot) {
+        let captureMetadata: Record<string, string> | undefined;
         try {
           const screenshotPath = screenAction?.params?.path ?? join(tmpdir(), `androperator-screenshot-${execution.commandId}-${Date.now()}.png`);
           const screenStep = result.envelope.stepResults.find(s => s.actionType === "take_screenshot");
 
-          const buffer = await captureScreenshot(config, {
-            timeoutMs: execution.timeoutMs,
+          const captureBudget = execution.timeoutMs - (Date.now() - dispatchStart);
+          const scaled = screenAction?.params?.scale !== undefined ? await captureScaledScreenshot(config, {
+            scale: screenAction.params.scale, timeoutMs: captureBudget, signal: options.signal,
+          }) : undefined;
+          if (scaled) {
+            const { captureMethod, requestedScale, protectedContent, fallbackAttempted, fallbackReason } = scaled.metadata;
+            captureMetadata = { captureMethod, requestedScale, protectedContent, fallbackAttempted,
+              ...(fallbackReason !== undefined ? { fallbackReason } : {}) };
+          }
+          const buffer = scaled?.buffer ?? await captureScreenshot(config, {
+            timeoutMs: captureBudget,
+            signal: options.signal,
             commandId: execution.commandId,
             taskId: execution.taskId,
           });
 
           const image = verifyScreenshot(buffer);
-          await writeFile(screenshotPath, buffer);
+          const checkPublicationBudget = () => {
+            if (options.signal?.aborted) throw new CaptureHelperError("cancelled", "Screenshot cancelled before publication");
+            if (Date.now() - dispatchStart >= execution.timeoutMs) throw new CaptureHelperError("timeout", "Screenshot deadline exhausted before publication");
+          };
+          checkPublicationBudget();
+          const temporaryPath = `${screenshotPath}.${randomUUID()}.tmp`;
+          const publicationDeadline = new AbortController();
+          const publicationSignal = options.signal ? AbortSignal.any([options.signal, publicationDeadline.signal]) : publicationDeadline.signal;
+          const publicationTimer = setTimeout(() => publicationDeadline.abort(), Math.max(1, execution.timeoutMs - (Date.now() - dispatchStart)));
+          try {
+            await writeFile(temporaryPath, buffer, { flag: "wx", mode: 0o600, signal: publicationSignal });
+            checkPublicationBudget();
+            await rename(temporaryPath, screenshotPath);
+          } finally { clearTimeout(publicationTimer); await rm(temporaryPath, { force: true }); }
           finalizeSuccessfulScreenshotCapture(screenStep, screenshotPath, image);
+          if (screenStep) screenStep.data = {
+            ...screenStep.data,
+            ...(scaled?.metadata ?? { captureMethod: "adb_screencap", protectedContent: "unknown", requestedScale: "100", appliedScale: "100" }),
+            hint: screenshotHint(scaled?.metadata.appliedScale ?? "100"),
+          };
         } catch (e) {
           const screenStep = result.envelope.stepResults.find(step => step.actionType === "take_screenshot");
           if (screenStep !== undefined) {
             screenStep.success = false;
+            const captureFailureReason = options.signal?.aborted ? "cancelled"
+              : Date.now() - dispatchStart >= execution.timeoutMs ? "timeout"
+              : e instanceof CaptureHelperError ? e.reason : "publication";
             const { path: _path, capturedAt: _capturedAt, persistedAt: _persistedAt, captureWidthPx: _width, captureHeightPx: _height, coordinateSpace: _space, origin: _origin, ...previousData } = screenStep.data;
             screenStep.data = { ...previousData,
               runtimeError: previousData.error ?? "",
+              ...(screenAction?.params?.scale !== undefined ? {
+                captureFailureReason, requestedScale: String(screenAction.params.scale),
+                fallbackAttempted: String(e instanceof CaptureHelperError && e.fallbackAttempted),
+                protectedContent: e instanceof CaptureHelperError ? e.protectedContent : "unknown",
+                ...captureMetadata,
+              } : {}),
               error: ERROR_CODES.EVIDENCE_CAPTURE_FAILED,
               errorCode: ERROR_CODES.EVIDENCE_CAPTURE_FAILED,
               message: (typeof e === "object" && e !== null && "message" in e ? String(e.message) : String(e)).slice(0, 1024), failurePhase: "post_processing", dispatchState: "dispatched",

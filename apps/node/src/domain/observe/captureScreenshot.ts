@@ -11,7 +11,7 @@ export async function captureScreenshot(
   if (options.timeoutMs <= 0) throw { code: "COMMAND_TIMEOUT", message: "Screenshot budget exhausted" };
   if (options.signal?.aborted) throw options.signal.reason;
   const selectionStarted = performance.now();
-  const display = await readActiveDisplay(config, Math.min(options.timeoutMs, 2000));
+  const display = await readActiveDisplay(config, Math.min(options.timeoutMs, 2000), options.signal);
   const remainingMs = options.timeoutMs - (performance.now() - selectionStarted);
   if (remainingMs <= 0) throw { code: "COMMAND_TIMEOUT", message: "Screenshot budget exhausted during display selection" };
   if (options.signal?.aborted) throw options.signal.reason;

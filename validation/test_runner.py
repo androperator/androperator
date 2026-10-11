@@ -41,10 +41,11 @@ def main(argv=None):
         env['ANDROID_SERIAL'] = args.device
         env['ANDROPERATOR_SMOKE_DEVICE'] = args.device
     suites = {
-        'android': [['./gradlew', 'unitTest']],
+        'android': [['./gradlew', 'unitTest'], ['bash', 'validation/persistent-screenshots/check-fixtures.sh']],
         'node': [['npm', '--prefix', 'apps/node', 'test']],
         'evals': [['uv', 'run', '--project', 'evals', '--extra', 'dev', 'pytest', 'evals/harness', '-v']],
         'validation': [
+            ['node', '--test', 'validation/persistent-screenshots/package.test.mjs'],
             ['node', '--test', 'validation/agent-loop-latency/benchmark.test.cjs'],
             ['node', '--test', 'validation/persistent-cli/test.cjs'],
             ['node', '--test', 'validation/agent-loop-latency/screenshot-scales.test.cjs'],

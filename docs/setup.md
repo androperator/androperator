@@ -446,3 +446,27 @@ For screen-off notification/media observation, use
 `androperator doctor --capability background-observation` after setup. The default
 interactive doctor can fail on a locked screen while these reads remain available.
 See [background readiness](api/doctor.md#background-observation-readiness).
+
+## Optional reduced screenshot capture
+
+`screenshot --scale 100|50|25` automatically deploys the bundled shell capture
+helper on first use. Direct capture needs authorized ADB, writable
+`/data/local/tmp` and a compatible Android capture interface. If helper setup is
+unavailable, Node captures normally and resizes to the requested dimensions.
+No extra Operator permission, root, Java installation or Android SDK is required
+on the host. The normal screenshot command remains full size.
+
+Direct capture at all three sizes is verified on an Android 17 phone and the
+available Android 15, 16 and 17 emulators. Missing protected GPU composition does
+not prevent screenshots: the result reports `protectedContent: "unknown"` when
+Android cannot establish whether content was redacted. The fallback always
+reports that unknown state and `captureMethod: "adb_screencap_resize"`. It reduces
+image size, without promising faster acquisition. Protected buffers are never
+read, and Android's normal content protections remain in force.
+
+Run `androperator doctor --device <device_serial> --operator-package com.androperator.operator.dev`
+to see direct-helper capability in `capture.reduced`. Doctor temporarily deploys
+and probes the helper without capturing pixels. A helper warning does not fail
+core readiness or rule out stock/resize capture. See the
+[screenshot contract](api/actions.md#action-take-screenshot) for exact fields,
+compatibility, fallback boundaries and failure recovery.

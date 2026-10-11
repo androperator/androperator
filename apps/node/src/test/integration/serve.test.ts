@@ -288,6 +288,17 @@ describe("serve API integration", () => {
     assert.ok(body.error.code !== undefined);
   });
 
+  for (const scale of ["25", 1, 75, null, ""]) {
+    test(`POST /screenshot rejects invalid scale ${JSON.stringify(scale)}`, async () => {
+      const res = await fetch(`http://localhost:${port}/screenshot`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scale }),
+      });
+      assert.strictEqual(res.status, 400);
+      const body = await res.json() as any;
+      assert.strictEqual(body.error.code, "INVALID_SCALE");
+    });
+  }
+
   test("POST /screenshot rejects non-string path", async () => {
     const res = await fetch(`http://localhost:${port}/screenshot`, {
       method: "POST",

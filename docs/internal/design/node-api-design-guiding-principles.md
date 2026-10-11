@@ -226,6 +226,25 @@ command, suggest the correct one. When an agent uses a wrong flag name, suggest
 the closest match. This is not optional polish - it is a core requirement for
 agent recovery.
 
+#### Advisory result hints
+
+Use the optional string field `hint` for human-readable advice about interpreting
+a result or choosing the next call. Use this same name for successful results
+and error recovery; do not introduce `guidance`, `agentHint` or `agent-hint`
+variants. Existing error and result-envelope contracts already use `hint`.
+
+Place a hint beside the result it explains: action-specific advice belongs in
+`stepResults[].data.hint`, error-specific advice in the error object's `hint`,
+and execution-wide advice in the envelope's `hint`. Preserve existing envelope
+shapes rather than copying a hint into every level.
+
+Include exact valid arguments or a concrete next call when useful. Keep advice
+relevant to the actual outcome, omit repetitive generic instructions, and never
+imply a failed operation succeeded. Hint wording may change; callers must use
+structured status, error codes and metadata for programmatic decisions. Hints
+are advisory and do not automatically trigger retries or actions. App-specific
+judgment remains with the agent or skill.
+
 ### 8. Deterministic Behavior Over Convenience Heuristics
 
 Androperator is an actuator, not an assistant. Commands must behave identically

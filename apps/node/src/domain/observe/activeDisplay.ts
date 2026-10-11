@@ -26,9 +26,11 @@ export function parseActiveDisplay(dump: string): ActiveDisplay | null {
   return { physicalId, width, height, rotation: Number(rotation) };
 }
 
-export async function readActiveDisplay(config: { runner: ProcessRunner; adbPath: string; deviceId?: string }, timeoutMs: number): Promise<ActiveDisplay | null> {
+export async function readActiveDisplay(config: { runner: ProcessRunner; adbPath: string; deviceId?: string }, timeoutMs: number, signal?: AbortSignal): Promise<ActiveDisplay | null> {
+  signal?.throwIfAborted();
   if (!config.deviceId) throw new Error("Display selection requires a resolved device");
-  const result = await config.runner.run(config.adbPath, ["-s", config.deviceId, "shell", "dumpsys", "display"], { timeoutMs });
+  const result = await config.runner.run(config.adbPath, ["-s", config.deviceId, "shell", "dumpsys", "display"], { timeoutMs, signal });
+  signal?.throwIfAborted();
   if (result.code !== 0 || result.error) throw { code: "EVIDENCE_CAPTURE_FAILED", message: "Could not query the active Android display" };
   return parseActiveDisplay(result.stdout);
 }

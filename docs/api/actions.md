@@ -1441,6 +1441,7 @@ Example:
 | --- | --- |
 | Required | none |
 | `path` | optional non-empty string |
+| `scale` | optional number: `100`, `50`, or `25`, percentage per dimension |
 | `retry` | optional retry object in raw `exec` JSON; Android defaults to `None` |
 
 Semantics:
@@ -1503,6 +1504,131 @@ Example:
   }
 }
 ```
+
+Explicit `scale` prefers the persistent shell capture helper, with stock capture
+and resize when helper setup is unavailable. Omission preserves the
+existing ordinary full-resolution ADB capture. The CLI spelling is
+`androperator screenshot --scale 25 --path /tmp/screen.png`. The Node
+`observeScreenshot({ scale: 25 })` helper and HTTP `POST /screenshot` accept the
+same numeric values. Numeric strings, arbitrary percentages and empty values are
+invalid. A scaled screenshot must be the only screenshot and the final action
+in its execution; use separate executions for intermediate observations.
+
+All successful captures also report `data.captureMethod` (`adb_screencap`,
+`shell_hardware_buffer`, or `adb_screencap_resize`), `data.requestedScale`, and `data.appliedScale` as strings.
+
+The Node API, screenshot CLI and HTTP `POST /screenshot` return a JSON result
+containing the saved PNG's `data.path`, not embedded image bytes or base64. Open
+that file with your image-reading tool. The path belongs to the host running
+Androperator; a remote HTTP client needs separate access to that host's files.
+The screenshot endpoint does not transfer the PNG itself.
+
+Successful screenshot steps include a human-readable `data.hint` string
+explaining how to open the image and request another scale. It reflects the
+actual `appliedScale`, including after resize fallback:
+
+| Saved scale | Guidance for the next capture |
+| --- | --- |
+| `25` | Recommended for routine observation loops. If details are unclear, use `--scale 50` or `--scale 100`; Node: `observeScreenshot({ scale: 50 })` or `observeScreenshot({ scale: 100 })`. |
+| `50` | For more detail, use `--scale 100`; Node: `observeScreenshot({ scale: 100 })`. For routine loops, use `--scale 25`; Node: `observeScreenshot({ scale: 25 })`. |
+| `100` | Already full resolution. For routine loops, use `--scale 25`; Node: `observeScreenshot({ scale: 25 })`. For intermediate detail, use `--scale 50`; Node: `observeScreenshot({ scale: 50 })`. |
+
+This recommendation does not change the omitted-scale full-resolution default.
+Choose a larger image when small text or fine details matter. Resize fallback
+still acquires a full-resolution image, so requesting 25% does not guarantee
+faster acquisition. Guidance is advisory text that may evolve; use the structured
+metadata for programmatic decisions. Failed captures do not receive this
+success guidance or a successful output path. For execution JSON, set
+`params.scale`; HTTP clients set the numeric `scale` field in the request body.
+
+The unreleased screenshot field previously named `data.guidance` is now
+`data.hint`; update branch-preview consumers to read `hint`. No `guidance`
+alias is emitted. This matches the existing `hint` convention for errors and
+execution-wide advice.
+
+A helper capture additionally reports:
+
+- `nativeWidthPx`, `nativeHeightPx`: full display coordinate extent in its current
+  rotation, before scaling; these are logical display pixels, not panel hardware
+  mode dimensions or Android dp.
+- `rotation`: Android quarter-turn rotation, `0` through `3`; `logicalDisplayId`
+  is `0`, and `physicalDisplayId` remains a decimal string without numeric rounding.
+- `captureId`, `captureSessionId`, `captureSequence`: request and session
+  correlation, independent of the unchanged command/task IDs in the envelope.
+- `deviceCaptureNanos`: a monotonic device timestamp, never a host UTC timestamp.
+
+Dimensions are floored per axis: 1080 x 2410 at 25% produces 270 x 602. Convert
+image coordinates to the current full display using each actual ratio, for
+example `floor(imageX * nativeWidthPx / captureWidthPx)`. Verify that display
+geometry and content still match before acting. Image capture does not establish
+that an app destination has finished rendering.
+
+The helper is deployed automatically from the Node package; consumers need ADB,
+not Java or an Android SDK. A long-lived Node process or the existing CLI daemon
+reuses its session. Direct one-shot CLI invocations pay setup/startup costs.
+Sessions expire after 30 seconds idle and are discarded after acquisition
+failure or cancellation. Retry only the screenshot; never repeat preceding
+navigation to recover capture. See [setup](../setup.md#optional-reduced-screenshot-capture) for prerequisites.
+
+`doctor` reports the direct helper in `capture.reduced` as supported, unavailable
+or incompatible; unavailable/incompatible helper setup can use the resize fallback.
+This probes APIs with a temporary helper deployment, without acquiring an image.
+Supported capability does not prove that the current screen can be captured.
+
+**Compatibility and fallback:** direct scaled capture supports both the older
+Android 15/16 capture interface and the newer interface used by Android 17.
+Missing protected GPU composition does not block screenshots. Direct capture
+has been verified at 100/50/25 on an API 37.1 physical phone and API 35, 36.0 and
+37.2 emulators. Other manufacturers and builds still need live validation.
+
+All successful screenshots report `data.protectedContent`:
+
+| Value | Meaning |
+| --- | --- |
+| `absent` | The helper's compositor capability and returned buffer establish that no protected buffer was included. |
+| `unknown` | Protected content may have been redacted by Android; this does not prevent ordinary capture. Always used for stock/resize and omitted-scale stock capture. |
+| `present` | A protected hardware buffer was detected and rejected before pixel readback. This value appears on a failed capture, never an exported protected image. |
+
+This describes protected hardware buffers, not app rendering readiness. Secure
+windows are checked separately: the direct helper rejects Android's secure-layer
+flag. Android's normal redaction remains in force on stock capture. An unknown
+state is not a claim that the screenshot is complete or free of redacted regions.
+No path bypasses Android protection or reads a protected buffer.
+
+If helper initialization fails as `incompatible` or `unavailable`, Node makes one
+ordinary full-resolution capture and resizes its decoded pixels to the requested
+scale. The method is `adb_screencap_resize`, with `fallbackAttempted: "true"` and
+`fallbackReason` identifying the helper setup failure. Even explicit 100% uses
+this method label when selected through fallback, although no resize is needed.
+It reports native and returned dimensions, plus rotation/display identity when
+Android exposes them. The fallback reduces output dimensions; it does not have
+the direct helper's acquisition-speed advantage. It adds no public backend option.
+
+Fallback checks device interactivity and display geometry before and after
+capture and shares the original timeout/cancellation budget. It does not run
+after protected/secure rejection, stale output, transport interruption, timeout,
+cancellation or an uncertain acquired frame. No device action is replayed.
+Omitted scale retains the existing full-resolution behavior and method.
+
+Failed scaled acquisition returns `EVIDENCE_CAPTURE_FAILED` on the screenshot step,
+with `data.captureFailureReason`, `data.protectedContent` and
+`data.fallbackAttempted` (`"true"` or `"false"`). Reasons are `incompatible`,
+`unavailable`, `rejected`, `protocol`, `transport`, `cancelled`, `timeout`,
+`busy`, or `publication`. Publication means image acquisition succeeded but the
+host could not save the image. Publication failures retain `requestedScale`,
+`protectedContent`, `captureMethod`, `fallbackAttempted` and, when applicable,
+`fallbackReason`. Cancellation and deadline exhaustion during publication retain
+their `cancelled` or `timeout` reason. No successful path or persisted timestamp
+is returned, and a pre-existing destination is preserved when publication is
+interrupted before its atomic rename.
+
+If fallback also fails, check the reported stock/resize error and ADB
+readiness. Use an ordinary unprotected screen for direct content rejection;
+unlock/stabilize the display for state/geometry failures. Protocol/transport
+failure discards the session; a new read-only screenshot request starts a new
+one. Timeout needs sufficient remaining budget; busy means await the prior
+capture. Never treat a failure or an old file at the requested path as a new
+observation.
 
 <a id="action-close-app"></a>
 ### `close_app`

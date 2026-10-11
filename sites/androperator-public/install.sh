@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# install.sh (v1.0.0)
+# install.sh (v1.2.0)
 # One-command installation for Androperator CLI and environment.
 # Target: macOS and Linux (Ubuntu/Debian/Arch).
 

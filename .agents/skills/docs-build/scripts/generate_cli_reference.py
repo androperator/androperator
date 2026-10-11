@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import re
 import sys
-import warnings
+import json
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -54,109 +55,44 @@ def ownership_path() -> Path:
     return repo_root() / "sites" / "docs" / "ownership.yaml"
 
 
-def read_text(path: Path) -> str:
-    if not path.exists():
-        raise FileNotFoundError(f"Missing source file: {path}")
-    return path.read_text(encoding="utf-8")
-
-
 def read_yaml(path: Path) -> object:
     if not path.exists():
         raise FileNotFoundError(f"Missing ownership file: {path}")
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
-def extract_command_bodies(text: str) -> list[tuple[str, str]]:
-    bodies: list[tuple[str, str]] = []
-    matches = list(re.finditer(r'COMMANDS\["([^"]+)"\]\s*=\s*{', text))
-    if not matches:
-        raise ValueError("Could not find any command definitions in registry.ts")
-    for match in matches:
-        name = match.group(1)
-        # The registry keeps each command definition as a top-level object that ends with
-        # a standalone `};` line. The smoke test exercises that contract so adjacent helper
-        # code does not bleed into the parsed body.
-        body_start = match.end()
-        close_match = re.search(r"(?m)^};\s*$", text[body_start:])
-        if not close_match:
-            raise ValueError(f"Could not find the end of command definition for {name}")
-        body = text[body_start:body_start + close_match.start()]
-        bodies.append((name, body))
-    return bodies
-
-
-def parse_string_list(raw: str) -> list[str]:
-    return re.findall(r'"([^"]+)"', raw)
-
-
-def parse_documented_flags(name: str, body: str) -> list[str]:
-    documented_flags_match = re.search(r"documentedFlags:\s*\[([^\]]*)\]", body, re.S)
-    if documented_flags_match:
-        return parse_string_list(documented_flags_match.group(1))
-
-    warnings.warn(
-        f"Command {name} has no documentedFlags metadata; public CLI reference will omit flags",
-        stacklevel=2,
-    )
-    return []
-
-
-def parse_top_level_block(name: str, body: str) -> list[str]:
-    match = re.search(r"topLevelBlock:\s*`(.*?)`", body, re.S)
-    if not match:
-        return []
-
-    syntax: list[str] = []
-    for raw_line in match.group(1).splitlines():
+def command_from_metadata(metadata: dict) -> CommandInfo:
+    name = metadata["name"]
+    syntax = []
+    for raw_line in metadata.get("topLevelBlock", "").splitlines():
         line = raw_line.strip()
-        if not line:
-            continue
-        if not line.startswith(name):
-            continue
-        syntax_text = re.split(r"\s{2,}", line, maxsplit=1)[0].strip()
-        if syntax_text and syntax_text not in syntax:
-            syntax.append(syntax_text)
-    return syntax
-
-
-def parse_subcommands(body: str) -> list[str]:
-    match = re.search(r"subtopics:\s*{([^}]*)}", body, re.S)
-    if not match:
-        return []
-    subcommands: list[str] = []
-    for quoted, bare in re.findall(r'^\s*(?:"([^"]+)"|([A-Za-z0-9_.-]+)):', match.group(1), re.M):
-        subcommand = quoted or bare
-        if subcommand and subcommand not in subcommands:
-            subcommands.append(subcommand)
-    return subcommands
-
-
-def parse_optional_string_field(body: str, field: str) -> str | None:
-    match = re.search(rf'{field}:\s*"([^"]+)"', body)
-    return match.group(1) if match else None
-
-
-def parse_command_info(name: str, body: str) -> CommandInfo:
-    aliases_match = re.search(r"synonyms:\s*\[([^\]]*)\]", body, re.S)
-    group_match = re.search(r'group:\s*"([^"]+)"', body)
-    summary_match = re.search(r'summary:\s*"([^"]+)"', body)
-    if not group_match or not summary_match:
-        raise ValueError(f"Failed to parse required metadata for command {name}")
-    aliases = parse_string_list(aliases_match.group(1)) if aliases_match else []
-    syntax = parse_top_level_block(name, body)
-    flags = parse_documented_flags(name, body)
-    subcommands = parse_subcommands(body)
+        if line.startswith(name):
+            primary = re.split(r"\s{2,}", line, maxsplit=1)[0].strip()
+            if primary not in syntax:
+                syntax.append(primary)
+    visibility = metadata.get("docsVisibility", "normal")
+    if visibility == "normal" and not syntax:
+        raise ValueError(f"Public command {name} has no primary syntax")
+    if "documentedFlags" not in metadata:
+        raise ValueError(f"Command {name} has no documentedFlags metadata")
     return CommandInfo(
-        name=name,
-        aliases=aliases,
-        group=group_match.group(1),
-        summary=summary_match.group(1),
-        syntax=syntax,
-        flags=flags,
-        subcommands=subcommands,
-        docs_visibility=parse_optional_string_field(body, "docsVisibility") or "normal",
-        docs_alias_of=parse_optional_string_field(body, "docsAliasOf"),
+        name=name, aliases=metadata.get("synonyms", []), group=metadata["group"],
+        summary=metadata["summary"], syntax=syntax, flags=metadata["documentedFlags"],
+        subcommands=list(metadata.get("subtopics", {})),
+        docs_visibility=visibility, docs_alias_of=metadata.get("docsAliasOf"),
     )
+
+
+def load_commands() -> list[CommandInfo]:
+    # Evaluate registry metadata so loops, constants and quoted strings are all
+    # covered. Importing this module does not invoke command handlers.
+    script = Path(__file__).with_name("list_cli_commands.mjs")
+    result = subprocess.run(["node", str(script)], cwd=repo_root(), check=True,
+                            capture_output=True, text=True)
+    metadata = json.loads(result.stdout)
+    if not metadata:
+        raise ValueError("CLI registry is empty; build apps/node first")
+    return [command_from_metadata(item) for item in metadata]
 
 
 def parse_detail_link(command_name: str, raw: object) -> DetailLink:
@@ -296,21 +232,16 @@ def public_commands(commands: list[CommandInfo]) -> list[CommandInfo]:
 
 def render_index(commands: list[CommandInfo], command_details: dict[str, DetailLink]) -> str:
     lines = [
-        "| Command | Group | Primary syntax | Primary flags | Details | Summary |",
-        "| --- | --- | --- | --- | --- | --- |",
+        "| Command | Details | Summary |",
+        "| --- | --- | --- |",
     ]
     for command in commands:
-        syntax_text = f"`{command.syntax[0]}`" if command.syntax else "-"
-        flag_text = format_code_list(command.flags)
         detail = command_details.get(command.name)
         lines.append(
             "| "
             + " | ".join(
                 [
                     command_ref(command),
-                    markdown_cell(command.group),
-                    markdown_cell(syntax_text),
-                    markdown_cell(flag_text),
                     markdown_cell(format_detail_link(detail)),
                     markdown_cell(command.summary),
                 ]
@@ -394,8 +325,7 @@ def main() -> int:
     if not commands_dir().exists():
         raise FileNotFoundError(f"Missing command directory: {commands_dir()}")
 
-    text = read_text(registry)
-    commands = [parse_command_info(name, body) for name, body in extract_command_bodies(text)]
+    commands = load_commands()
     command_details = load_command_details()
 
     sys.stdout.write(render_reference(commands, command_details))

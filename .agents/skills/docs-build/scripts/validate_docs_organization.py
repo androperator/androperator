@@ -185,10 +185,10 @@ def check_generated_cli_details(cli_reference: Path) -> list[DocsOrganizationWar
         if not line.startswith("| [`"):
             continue
         cells = split_markdown_table_row(line)
-        if len(cells) < 5:
+        if len(cells) not in (3, 6):
             continue
         command = cells[0]
-        details = cells[4]
+        details = cells[1] if len(cells) == 3 else cells[4]
         if details == "-" or details.startswith("Planned:"):
             warnings.append(DocsOrganizationWarning(
                 kind="command-detail",

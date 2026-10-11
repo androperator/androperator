@@ -1,6 +1,6 @@
 # Documentation Drafting North Star
 
-Documentation should let agents and people discover the relevant capability,
+Documentation should let agents discover the relevant capability,
 construct valid inputs, interpret results, and recover from likely failures.
 Judge completeness by those outcomes, not by page length or a fixed template.
 
@@ -107,3 +107,20 @@ The changed scope is complete when its claims match the implementation, its
 examples and links are usable, relevant failure behavior is covered, and the
 docs build passes. Describe any unverified behavior precisely; do not claim that
 a successful build alone proves live device behavior.
+
+## Aggregate publication and example validation
+
+The short `llms.txt` index and landing `agents.md` are separately authored.
+Full docs include only assembled navigation pages. CLI generation evaluates the
+compiled registry so loop-defined commands are included; build Node first.
+The full corpus carries source revision, source package version and assembled
+content digest, with canonical page boundaries and rebased links. These identify
+a source build, not installed release compatibility or deployment success.
+
+The docs build runs generator tests and `validation/docs/` checks for public
+command coverage, navigation index coverage, link transformation, JSON/NDJSON
+syntax, complete execution-input validation and compatibility-example coherence.
+Label complete synthetic responses, partial excerpts and decoded nested payloads
+explicitly. Preserve distinct output shapes and failure/partial evidence when
+consolidating repeated inputs. Device-facing recipes still need outcome checks;
+input validation and a passing site build cannot prove navigation.

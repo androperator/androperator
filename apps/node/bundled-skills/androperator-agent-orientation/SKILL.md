@@ -14,13 +14,15 @@ The agent owns planning, app strategy and outcome verification. A successful
 action does not prove the user's goal; choose subsequent actions from fresh
 observations. One-off execution needs no saved skill, provider or child agent.
 
-## Choose an interface and reference
+## Choose an interface
 
 Use the Node CLI on the device host, stdio MCP for a local MCP consumer, or HTTP
 for a separate device host. For transport coverage, completion and remote artifact
 access, load [host integration](https://docs.androperator.com/host-agents/).
 In a checkout, build `apps/node` and invoke `node apps/node/dist/cli/index.js`;
 prefer local `docs/` for unreleased behavior over a global install or live docs.
+
+## Find the relevant API
 
 Load only the reference needed. Use command-specific `--help` for arguments;
 use top-level `--help` or the [index](https://docs.androperator.com/llms.txt) when

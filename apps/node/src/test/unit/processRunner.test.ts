@@ -32,6 +32,7 @@ test("timeout is bounded even when the child ignores SIGTERM and would later exi
   `], { timeoutMs: 1000 });
   assert.equal(result.stdout, "ready\n");
   assert.equal(result.code, null);
+  assert.equal(result.timedOut, true);
   assert.match(result.stderr, /before timeout\n\nProcess timed out after 1000ms/);
   assert.ok(Date.now() - started < 4000, "must settle before the child's successful exit");
 });
@@ -43,6 +44,7 @@ test("shell timeout kills descendants holding inherited output pipes", { skip: p
   assert.ok(Number.isInteger(pid) && pid > 0, "shell must report its child PID");
   try {
     assert.equal(result.code, null);
+    assert.equal(result.timedOut, true);
     assert.match(result.stderr, /Process timed out after 1000ms/);
     assert.ok(Date.now() - started < 4000, "inherited pipes must not keep runShell pending");
     await delay(100);
@@ -127,6 +129,7 @@ test("cancellation terminates an owned process and releases its pipes before its
     const result = await pending;
     assert.equal(result.code, null);
     assert.match(result.stderr, /cancelled/);
+    assert.equal(result.timedOut, undefined);
     assert.ok(Date.now() - started < 1000, "cancellation must not await the command timeout");
     await delay(100);
     assert.throws(() => process.kill(pid!, 0), (error: any) => error.code === "ESRCH");
@@ -142,4 +145,14 @@ test("an already-cancelled process does not spawn", async () => {
   assert.equal(result.code, null);
   assert.equal(result.error, undefined);
   assert.match(result.stderr, /cancelled/);
+  assert.equal(result.timedOut, undefined);
+});
+
+test("process timeout reports its cause independently of elapsed wall time", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const pending = runner.run(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { timeoutMs: 30000 });
+  t.mock.timers.tick(30000);
+  const result = await pending;
+  assert.equal(result.code, null);
+  assert.equal(result.timedOut, true);
 });

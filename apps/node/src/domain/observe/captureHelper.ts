@@ -115,7 +115,9 @@ class Session {
       if (remaining <= 0) throw fail("timeout", "Capture setup deadline exhausted.");
       const result = await this.config.runner.run(this.config.adbPath, ["-s", this.config.deviceId!, ...args], { timeoutMs: Math.ceil(remaining), signal: this.setupAbort.signal });
       if (this.dead) throw this.dead;
-      if (performance.now() >= deadline) throw fail("timeout", "Capture setup deadline exhausted.");
+      // Timer delivery and the fractional deadline clock can straddle the boundary.
+      // Preserve an explicit process timeout even if the clock is still just before it.
+      if (result.timedOut || performance.now() >= deadline) throw fail("timeout", "Capture setup deadline exhausted.");
       if (result.code !== 0 || result.error) throw fail("unavailable", "Cannot deploy capture helper. Check ADB connection and /data/local/tmp space; retry screenshot.");
       return result.stdout;
     };

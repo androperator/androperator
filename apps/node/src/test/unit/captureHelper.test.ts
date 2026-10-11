@@ -141,9 +141,9 @@ for (const stage of ["mkdir", "push", "sha256sum"]) {
         if (!args.some(arg => arg.includes(stage))) return run(command, args, options);
         assert.ok(options?.signal, "deployment must pass cancellation to its process");
         return new Promise(resolve => {
-          const finish = () => { interrupted = true; clearTimeout(timer); resolve({ code: null, stdout: "", stderr: "interrupted" }); };
-          const timer = setTimeout(finish, Math.ceil(options.timeoutMs!));
-          options.signal!.addEventListener("abort", finish, { once: true });
+          const finish = (timedOut = false) => { interrupted = true; clearTimeout(timer); resolve({ code: null, stdout: "", stderr: "interrupted", ...(timedOut ? { timedOut: true } : {}) }); };
+          const timer = setTimeout(() => finish(true), Math.ceil(options.timeoutMs!));
+          options.signal!.addEventListener("abort", () => finish(), { once: true });
           if (interruption === "cancelled") controller.abort();
         });
       };
@@ -158,4 +158,28 @@ for (const stage of ["mkdir", "push", "sha256sum"]) {
       assert.equal((await captureWithHelper(config, { scale: 25, timeoutMs: 1000 })).metadata.appliedScale, "25");
     });
   }
+}
+
+for (const stage of ["mkdir", "push", "sha256sum"]) {
+  test(`setup ${stage} preserves a process timeout before the clock reaches the deadline`, async (t) => {
+    const { config, children, commands } = await fixture();
+    const run = config.runner.run.bind(config.runner);
+    // A timer can settle before the subsequent fractional-clock deadline check.
+    // Freeze that boundary instead of relying on a real 30 ms scheduling race.
+    t.mock.method(performance, "now", () => 0);
+    config.runner.run = async (command, args, options) => {
+      if (!args.some(arg => arg.includes(stage))) return run(command, args, options);
+      return { code: null, stdout: "", stderr: "", timedOut: true };
+    };
+    await assert.rejects(captureWithHelper(config, { scale: 25, timeoutMs: 30 }), (error: any) => {
+      assert.equal(error.reason, "timeout");
+      assert.equal(error.fallbackAllowed, false);
+      return true;
+    });
+    assert.equal(children.length, 0);
+    assert.ok(commands.every(args => !args.includes("screencap") && !args.includes("input")));
+    t.mock.restoreAll();
+    config.runner.run = run;
+    assert.equal((await captureWithHelper(config, { scale: 25, timeoutMs: 1000 })).metadata.appliedScale, "25");
+  });
 }

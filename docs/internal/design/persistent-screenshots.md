@@ -60,6 +60,12 @@ dimensions. Capture and publication use the remaining execution budget from
 dispatch; cancellation discards the session and interrupts deployment
 subprocesses. Fallback probes, their broadcasts and display queries receive the same cancellation and
 an absolute deadline signal, including time spent attaching the result reader.
+The process runner reports its own timeout with `ProcessResult.timedOut`.
+Helper setup preserves that reason before considering setup unavailable: timer
+delivery can precede the fractional-clock deadline check. A timed-out setup
+never enables fallback, even if that check still shows remaining time. Explicit
+caller cancellation takes precedence. Ordinary deployment failures remain
+eligible for the documented setup fallback.
 Failed setup launches best-effort removal of only its owned directory with a
 250 ms process bound; that cleanup does not delay the failed request.
 A unique sibling temporary file is renamed into the destination only after

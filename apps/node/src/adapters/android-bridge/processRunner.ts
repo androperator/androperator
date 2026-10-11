@@ -5,6 +5,8 @@ export interface ProcessResult {
   stderr: string;
   code: number | null;
   error?: Error;
+  /** Set when the runner's own timeout terminated the process; do not infer from stderr or exit code. */
+  timedOut?: boolean;
 }
 
 export interface ProcessRunner {
@@ -82,7 +84,7 @@ export class NodeProcessRunner implements ProcessRunner {
       }
 
       const timeoutMs = options?.timeoutMs ?? 30_000;
-      const stop = (message: string) => {
+      const stop = (message: string, timedOut = false) => {
         // Kill the owned group: SDK and shell children may keep output pipes open.
         if (process.platform !== "win32" && proc.pid !== undefined) {
           try {
@@ -98,10 +100,10 @@ export class NodeProcessRunner implements ProcessRunner {
         proc.stdout?.destroy();
         proc.stderr?.destroy();
         // Settle here rather than waiting for close or accepting a later zero exit.
-        resolve({ stdout, stderr: `${stderr}\n${message}`, code: null });
+        resolve({ stdout, stderr: `${stderr}\n${message}`, code: null, ...(timedOut ? { timedOut: true } : {}) });
       };
       const onAbort = () => stop("Process cancelled");
-      const t = setTimeout(() => stop(`Process timed out after ${timeoutMs}ms`), timeoutMs);
+      const t = setTimeout(() => stop(`Process timed out after ${timeoutMs}ms`, true), timeoutMs);
       const cleanup = () => {
         clearTimeout(t);
         options?.signal?.removeEventListener("abort", onAbort);

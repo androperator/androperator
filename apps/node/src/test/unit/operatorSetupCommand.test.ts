@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { didAllPermissionsAlreadyExist } from "../../cli/commands/operatorSetup.js";
+import { cmdOperatorSetup, didAllPermissionsAlreadyExist } from "../../cli/commands/operatorSetup.js";
 import type { PermissionGrantResult } from "../../domain/device/setupOperator.js";
 
 describe("operator setup command messaging", () => {
@@ -24,5 +24,24 @@ describe("operator setup command messaging", () => {
     };
 
     assert.strictEqual(didAllPermissionsAlreadyExist(permissions), true);
+  });
+});
+
+
+describe("operator setup repair failure output", () => {
+  it("retains failed probe correlation when permission repair fails", async () => {
+    const verification = { ok: false, packageInstalled: true, readiness: { ok: false, attempts: [{
+      ok: false as const, code: "DEVICE_ACCESSIBILITY_NOT_RUNNING" as const, message: "Unavailable",
+      details: { probeCommandId: "probe-1", probeTaskId: "doctor-handshake" },
+    }] } };
+    const output = await cmdOperatorSetup({ format: "json", apkPath: "/test.apk", operatorPackage: "com.androperator.operator" }, async () => ({
+      operatorPackage: "com.androperator.operator", install: { ok: true }, verification,
+      permissions: { operatorPackage: "com.androperator.operator",
+        accessibility: { ok: false, alreadyEnabled: false, error: "Device disconnected" },
+        notification: { ok: true, skipped: false }, notificationListener: { ok: true, alreadyEnabled: false } },
+    }));
+    const result = JSON.parse(output);
+    assert.equal(result.code, "OPERATOR_GRANT_FAILED");
+    assert.deepEqual(result.verification, verification);
   });
 });

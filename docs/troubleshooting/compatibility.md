@@ -100,7 +100,7 @@ Compatible response:
 }
 ```
 
-Incompatible response:
+Incompatible response (synthetic historical versions; use the URLs returned for your installed CLI, not these literal downloads):
 
 ```json
 {
@@ -115,10 +115,10 @@ Incompatible response:
     "hint": "Androperator requires the exact same version between the CLI and APK, ignoring only the debug suffix."
   },
   "remediation": [
-    "Download the matching APK: https://downloads.androperator.com/operator/v1.0.0/operator-v1.0.0.apk",
-    "Download the checksum: https://downloads.androperator.com/operator/v1.0.0/operator-v1.0.0.apk.sha256",
-    "Verify the checksum: sha256sum -c operator-v1.0.0.apk.sha256",
-    "Install the matching APK: androperator operator setup --apk operator-v1.0.0.apk --device <device_id>",
+    "Download the matching APK: https://downloads.androperator.com/operator/v0.1.1/operator-v0.1.1.apk",
+    "Download the checksum: https://downloads.androperator.com/operator/v0.1.1/operator-v0.1.1.apk.sha256",
+    "Verify the checksum: sha256sum -c operator-v0.1.1.apk.sha256",
+    "Install the matching APK: androperator operator setup --apk operator-v0.1.1.apk --device <device_id>",
     "If you are using the release package, the versioned download above is the exact APK to install."
   ]
 }

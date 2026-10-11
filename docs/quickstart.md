@@ -3,8 +3,9 @@
 ## Before You Start
 
 This page assumes a working Androperator installation: CLI installed, device
-connected, Operator APK installed, and `androperator doctor` returning
-`"criticalOk": true`.
+connected, Operator APK installed, and interactive doctor exiting zero with
+`criticalOk: true` and `readiness.device.interactive.status: "pass"`. For
+background-only work, choose the [capability-specific gate](host-agents.md#choose-readiness).
 
 If you have not reached that state yet, complete [Setup](setup.md) first.
 
@@ -27,9 +28,9 @@ Observe  ->  Decide  ->  Act
 
 1. **Observe** - take a UI snapshot to read the current device state
 2. **Decide** - parse the XML hierarchy to find the right node to target
-3. **Act** - send an execution payload with the next action, wait for the result
+3. **Act** - use a flat CLI command for one action, or `exec` for an explicit batch; inspect the result and observe the effect
 
-Repeat until the task is done.
+Repeat until the requested outcome is verified, or report a bounded partial/blocked outcome with retained evidence. After uncertain dispatch, inspect state before repeating any mutation.
 
 **Targeting rule:** do not guess selectors. If the next action needs a target,
 take a fresh `snapshot`, derive the selector from the current hierarchy, and
@@ -37,6 +38,39 @@ then act. A guessed label failing is not an Androperator bug - it means the
 target was not proven from the current screen state.
 
 ---
+
+## Choose the smallest useful call
+
+For a ready interactive target, use flat commands for single actions:
+
+```bash
+androperator open com.android.settings --device <device_serial>
+androperator snapshot --device <device_serial>
+# Only after observing a unique current target:
+androperator click --text "About phone" --strict --device <device_serial>
+androperator snapshot --device <device_serial>
+```
+
+Labels and layout vary by device. Substitute selectors from current evidence.
+`open` already waits for its package to be foreground; it does not prove content
+readiness. After a same-package click, observe the destination; if content is
+still loading, use `wait --text <observed_destination_label> --timeout 5000` and
+observe again. A label already present before the action proves no transition.
+Do not add a package-only `wait-for-nav` after a completed launch or in-app click.
+See [navigation semantics](api/navigation.md#wait-for-navigation).
+
+| Need | Observation | Limit |
+| --- | --- | --- |
+| Discover the screen | `snapshot` | Raw XML can be large |
+| Bound returned context | `snapshot --compact --max-nodes 100` | A preorder prefix; inspect truncation, never infer absence from omitted nodes |
+| Inspect matches/state | `query --text <label>` | One capture; paths are not persistent action handles |
+| Read exact text | `read --text <label>` or `read-value --label <label>` | Verify selection and label/value association |
+| Inspect pixels | `screenshot --path <new_file>` | Open the 25%-per-dimension image; use `--scale 100` for fine detail. Capture success alone proves no application outcome |
+
+Use [Snapshot](api/snapshot.md) for compact/raw artifacts and
+[Actions](api/actions.md) for query/read output serialization. Keep the raw
+hierarchy when needed for recovery. The examples below retain raw XML and a
+batch payload for callers that need them.
 
 ## Step 1: Observe
 
@@ -86,7 +120,7 @@ targeting are:
 | `text` | Matching visible label text |
 | `resource-id` | Stable structural identifiers like `android:id/title` |
 | `content-desc` | Accessibility labels when text is empty |
-| `clickable` | Only `clickable="true"` nodes can be tapped directly |
+| `clickable` | Native action capability; click can resolve an enabled clickable ancestor or fall back to a gesture at node bounds. Verify the effect. |
 | `scrollable` | Identifies containers to target for scroll actions |
 | `bounds` | Screen coordinates in `[x1,y1][x2,y2]` form |
 
@@ -142,7 +176,7 @@ Send an execution payload via `androperator exec`. The payload lists one
 or more actions in sequence. Androperator dispatches them in order and returns a
 single result envelope.
 
-Example - click the "Connections" row, wait for navigation, then take a snapshot:
+Example - click the "Connections" row, then observe the destination:
 
 ```json
 {
@@ -163,14 +197,6 @@ Example - click the "Connections" row, wait for navigation, then take a snapshot
       }
     },
     {
-      "id": "wait-1",
-      "type": "wait_for_navigation",
-      "params": {
-        "expectedPackage": "com.android.settings",
-        "timeoutMs": 5000
-      }
-    },
-    {
       "id": "snap-2",
       "type": "snapshot"
     }
@@ -188,8 +214,8 @@ androperator exec --device <device_serial> payload.json
 Success conditions:
 
 - `envelope.status == "success"`
-- `envelope.stepResults` has three entries, all with `success: true`
-- `envelope.stepResults[2].data.text` contains the Connections screen hierarchy
+- `envelope.stepResults` has two entries, all with `success: true`
+- `envelope.stepResults[1].data.text` contains the Connections screen hierarchy
 
 **Branch rule:** if any step fails, the envelope still returns but the failed
 step has `success: false`. Check `envelope.stepResults[i].success` individually,
@@ -199,13 +225,16 @@ not just the top-level status. See [Errors](api/errors.md) for recovery by code.
 
 ## Putting It Together
 
-A complete agent sequence for reading the Android version:
+An example route for reading the Android version. Confirm the current labels and
+container IDs before using these payloads; Settings layouts vary. If the final
+row is not yet visible, observe/scroll the current container instead of assuming
+this route completed the task:
 
 ### 1. Pre-flight
 
 ```bash
 androperator doctor --device <device_serial>
-# Require: "criticalOk": true
+# Require exit 0, criticalOk: true, and readiness.device.interactive.status: "pass"
 ```
 
 ### 2. Open Settings and observe
@@ -221,12 +250,9 @@ androperator doctor --device <device_serial>
     {
       "id": "open-1",
       "type": "open_app",
-      "params": { "applicationId": "com.android.settings" }
-    },
-    {
-      "id": "wait-1",
-      "type": "wait_for_navigation",
-      "params": { "expectedPackage": "com.android.settings", "timeoutMs": 5000 }
+      "params": {
+        "applicationId": "com.android.settings"
+      }
     },
     {
       "id": "snap-1",
@@ -239,7 +265,7 @@ androperator doctor --device <device_serial>
 
 ### 3. Read snapshot, find "About phone"
 
-Parse `stepResults[2].data.text`. Search for a node with
+Parse `stepResults[1].data.text`. Search for a node with
 `resource-id="android:id/title"` and `text="About phone"`. If it is not
 visible, scroll down the `recycler_view` and take another snapshot.
 
@@ -258,7 +284,9 @@ Scroll payload (use when the target row is below the visible area):
       "type": "scroll",
       "params": {
         "direction": "down",
-        "container": { "resourceId": "com.android.settings:id/recycler_view" }
+        "container": {
+          "resourceId": "com.android.settings:id/recycler_view"
+        }
       }
     },
     {
@@ -287,13 +315,11 @@ the "Android version" row:
       "id": "click-about",
       "type": "click",
       "params": {
-        "matcher": { "textEquals": "About phone", "resourceId": "android:id/title" }
+        "matcher": {
+          "textEquals": "About phone",
+          "resourceId": "android:id/title"
+        }
       }
-    },
-    {
-      "id": "wait-about",
-      "type": "wait_for_navigation",
-      "params": { "expectedPackage": "com.android.settings", "timeoutMs": 5000 }
     },
     {
       "id": "snap-3",
@@ -304,7 +330,7 @@ the "Android version" row:
 }
 ```
 
-Parse `stepResults[2].data.text` for the "Android version" row. The value
+Parse `stepResults[1].data.text` for the "Android version" row. The value
 appears as the `text` attribute of the summary node adjacent to an `android:id/title`
 node with `text="Android version"`.
 

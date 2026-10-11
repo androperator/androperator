@@ -132,6 +132,12 @@ these durable onboarding files under `~/.androperator/`:
 | `~/.androperator/install-state.json` | Durable install metadata written by `androperator host setup` during install | Use when you need the last known install facts without rerunning `doctor` |
 | `~/.androperator/mcp-config-snippet.json` | Paste-ready MCP config for Claude Desktop, Codex, and a generic stdio MCP consumer | Use when the host should connect through `androperator mcp serve` instead of shelling out to the CLI |
 
+During `androperator install`, `apkVersion` comes from the final passing version
+check for the single connected device and selected Operator package. It remains
+`null` when no single device is selected or final version evidence is unavailable.
+It is an observed APK version, not a copy of the CLI version or download target;
+it does not prove that every readiness check passed.
+
 Shell prerequisite failures exit before these files are written. After
 `install.sh` delegates to `androperator install`, later remediation or device
 readiness failures can still leave these files behind because host setup runs
@@ -222,12 +228,22 @@ Behavior:
 
 - Installs the APK on the device via adb.
 - Grants accessibility and notification permissions.
-- Verifies that the package is visible to the package manager.
+- Verifies package presence and a live, correlated Operator handshake.
+- If the accessibility service is unavailable after installation, retries its grant
+  and handshake at most twice while preserving other enabled services.
+- Does not wake or unlock the device. The existing doctor ping can dismiss an
+  open notification shade on Android 12+.
 
 Success condition:
 
-- Command exits without a structured error object.
-- A follow-up `androperator doctor` no longer reports `OPERATOR_NOT_INSTALLED` for `readiness.apk.presence`.
+- `verification.ok` and `verification.readiness.ok` are `true`. The recorded
+  `verification.readiness.attempts` retain any failed probes before recovery.
+- A follow-up `androperator doctor` passes interactive readiness. Setup verifies
+  the service connection; it does not establish that a locked phone is usable.
+
+An unavailable service after bounded recovery returns `OPERATOR_VERIFY_FAILED`;
+a failed permission repair returns `OPERATOR_GRANT_FAILED`. Transport or malformed
+handshake failures stop verification without re-granting permissions.
 
 Do not use raw `adb install` for setup. The CLI setup command is the only path that performs install, permission grant, and verification as one operation.
 
@@ -447,7 +463,10 @@ For screen-off notification/media observation, use
 interactive doctor can fail on a locked screen while these reads remain available.
 See [background readiness](api/doctor.md#background-observation-readiness).
 
-## Optional reduced screenshot capture
+<a id="optional-reduced-screenshot-capture"></a>
+## Screenshot capture prerequisites
+
+Screenshots default to 25% per dimension. See [choosing a capture size](api/actions.md#choosing-screenshot-scale) for agent guidance and explicit full-size recovery.
 
 `screenshot --scale 100|50|25` automatically deploys the bundled shell capture
 helper on first use. Direct capture needs authorized ADB, writable

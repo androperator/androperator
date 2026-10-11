@@ -208,3 +208,14 @@ Rollback means:
 
 - Releases should use the production Android signing key.
 - Worker deployment for `/operator.apk` can be managed separately from the artifact upload workflow if needed.
+
+## Rename-era publication constraints
+
+Before tagging, verify new npm publishing authorization, the destination domains,
+installer routes, downloads bucket and APK redirect Worker. Cloudflare upload
+secrets use `ANDROPERATOR_CLOUDFLARE_*`. Android signing secrets retain their
+existing stored values and secret names; the workflow maps them to renamed build
+variables. Do not generate a new signing key.
+
+Do not publish a Clawperator 1.0.0 release; the renamed release history belongs
+to Androperator. These are maintainer constraints, not runtime setup gates.

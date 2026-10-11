@@ -3,10 +3,18 @@ import { runAdb } from "../../adapters/android-bridge/adbClient.js";
 import { type RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 import {
   grantDevicePermissions,
+  grantAccessibilityPermission,
   hasListedPackage,
   listInstalledOperatorPackages,
   type PermissionGrantResult,
 } from "./grantPermissions.js";
+import { probeInteractiveState, type InteractiveStateProbeResult } from "../doctor/checks/deviceInteractivity.js";
+import { ERROR_CODES } from "../../contracts/errors.js";
+
+const readinessDependencies = {
+  probe: probeInteractiveState,
+  wait: () => new Promise<void>(resolve => setTimeout(resolve, 500)),
+};
 
 export interface InstallPhaseResult {
   ok: boolean;
@@ -17,6 +25,7 @@ export interface InstallPhaseResult {
 export interface VerifyPhaseResult {
   ok: boolean;
   packageInstalled: boolean;
+  readiness?: { ok: boolean; attempts: InteractiveStateProbeResult[] };
   error?: string;
 }
 
@@ -37,12 +46,13 @@ export type { PermissionGrantResult } from "./grantPermissions.js";
  *   2. Run `adb install -r <apkPath>`.
  *   3. Detect or use the provided receiver package.
  *   4. Grant required device permissions (accessibility, notification listener).
- *   5. Verify the package is installed and accessible via pm list.
+ *   5. Verify package presence and a live, non-waking Operator handshake.
  */
 export async function setupOperator(
   config: RuntimeConfig,
   apkPath: string,
-  operatorPackage?: string
+  operatorPackage?: string,
+  dependencies = readinessDependencies
 ): Promise<OperatorInstallResult> {
   // Step 1: Check that the APK file exists before invoking adb.
   if (!existsSync(apkPath)) {
@@ -115,6 +125,32 @@ export async function setupOperator(
     packageInstalled,
     error: packageInstalled ? undefined : `Package ${pkg} was not found after install.`,
   };
+
+  if (packageInstalled) {
+    const selectedConfig = { ...config, operatorPackage: pkg };
+    const attempts: InteractiveStateProbeResult[] = [];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const result = await dependencies.probe(selectedConfig);
+      attempts.push(result);
+      verification.readiness = { ok: result.ok, attempts };
+      verification.ok = result.ok;
+      if (result.ok) break;
+      verification.error = `Operator handshake failed: ${result.message}. Run doctor for recovery guidance.`;
+      if (result.code !== ERROR_CODES.DEVICE_ACCESSIBILITY_NOT_RUNNING || attempt === 2) break;
+      // Android can remove the new grant while processing package installation.
+      // Re-read and restore only this service; never toggle other services or replay actions.
+      await dependencies.wait();
+      const repair = await grantAccessibilityPermission(selectedConfig, pkg);
+      permissions.accessibility = {
+        ...repair,
+        alreadyEnabled: permissions.accessibility.alreadyEnabled && repair.alreadyEnabled,
+      };
+      if (!repair.ok) {
+        return { operatorPackage: pkg, install, permissions, verification };
+      }
+    }
+    if (verification.ok) delete verification.error;
+  }
 
   return { operatorPackage: pkg, install, permissions, verification };
 }

@@ -52,11 +52,6 @@ Current hard limits:
 - minimum: `1000`
 - maximum: `120000`
 
-Those values come from:
-
-- minimum execution timeout constant: `1000`
-- maximum execution timeout constant: `120000`
-
 If the caller provides a non-finite timeout or a value outside that range, Node returns a top-level validation failure:
 
 ```json
@@ -106,7 +101,8 @@ Error cases for execution-level timeout:
 
 - non-finite timeout: `EXECUTION_VALIDATION_FAILED` with `message: "timeoutMs must be a finite number"`
 - timeout below `1000` or above `120000`: `EXECUTION_VALIDATION_FAILED` with `message: "timeoutMs must be between 1000 and 120000"`
-- live execution that runs too long: top-level `RESULT_ENVELOPE_TIMEOUT`
+- no terminal result by the host deadline: top-level `RESULT_ENVELOPE_TIMEOUT`
+- received Android command deadline: failed envelope with `COMMAND_TIMEOUT`
 - malformed terminal envelope during a live run: top-level `RESULT_ENVELOPE_MALFORMED`
 
 ## Action-Level Timeout
@@ -205,154 +201,32 @@ Expected shape:
 
 ## Builder Inflation Rules
 
-The flat CLI builders intentionally inflate execution timeouts so the wait action has room to finish.
+| Builder | Execution timeout |
+| --- | --- |
+| `wait`, `wait-for-nav` | `max(actionTimeout + 5000, 30000)` when supplied; otherwise `30000` |
+| `sleep` | `max(durationMs + 5000, globalTimeoutMs ?? 0, 30000)` |
+| `snapshot` | `30000` unless overridden; no action-specific wait timeout |
 
-### `wait_for_node`
+The action rules still apply: `wait-for-nav` requires `--timeout` and caps it at
+30000; `wait --timeout 45000` builds a 50000 execution budget. Raw multi-action
+payloads must budget for all actions, not just the longest wait. Generated
+command IDs are opaque; retain them for correlation instead of constructing
+strings from the builder's current naming pattern.
 
-`buildWaitExecution()` uses:
+## Supported execution mode
 
-- default execution timeout: `30000`
-- if `waitTimeoutMs` is provided: `max(waitTimeoutMs + 5000, 30000)`
-
-So:
-
-- `androperator wait --text "Done" --timeout 5000` becomes execution timeout `30000`
-- `androperator wait --text "Done" --timeout 45000` becomes execution timeout `50000`
-
-Exact builder literals:
-
-- `source: "androperator-action"`
-- action id: `wait`
-- action type: `wait_for_node`
-
-### `wait_for_navigation`
-
-`buildWaitForNavExecution()` uses the same pattern:
-
-- default execution timeout: `30000`
-- if `navTimeoutMs` is provided: `max(navTimeoutMs + 5000, 30000)`
-
-So:
-
-- `androperator wait-for-nav --app com.android.settings --timeout 5000` gets execution timeout `30000`
-- `androperator wait-for-nav --app com.android.settings --timeout 25000` gets execution timeout `30000`
-- `androperator wait-for-nav --app com.android.settings --timeout 30000` gets execution timeout `35000`
-
-Exact builder literals:
-
-- `source: "androperator-action"`
-- action id: `wait-for-nav`
-- action type: `wait_for_navigation`
-
-### `sleep`
-
-`buildSleepExecution()` uses:
-
-- `max(durationMs + 5000, globalTimeoutMs ?? 0, 30000)`
-
-This is the same design principle: the whole execution must last longer than the single action's internal work.
-
-Exact builder literals:
-
-- `source: "androperator-action"`
-- action id: `sleep`
-- action type: `sleep`
-
-### `snapshot`
-
-`buildSnapshotExecution()` defaults to `30000`. It has no separate action-level timeout field.
-
-Exact snapshot builder literals:
-
-- `source: "androperator-observe"`
-- action id: `snap`
-- action type: `snapshot`
-- `mode: "direct"`
-
-## Best-Effort Runtime Ceiling
-
-`LIMITS.MAX_BEST_EFFORT_RUNTIME_MS` is `180000`.
-
-This constant exists in `apps/node/src/contracts/limits.ts`, but the current CLI `exec best-effort` path is still `NOT_IMPLEMENTED` and returns:
+Use direct execution with `timeoutMs` in `1000..120000`. `exec best-effort`
+returns `NOT_IMPLEMENTED`; the internal 180000 ms constant does not extend the
+public execution budget.
 
 ```json
-{
-  "code": "NOT_IMPLEMENTED",
-  "message": "exec best-effort is Stage 1 limited; use snapshot + agent reasoning for now"
-}
+{"code":"NOT_IMPLEMENTED","message":"exec best-effort is Stage 1 limited; use snapshot + agent reasoning for now"}
 ```
 
-What is implemented today:
+## Concrete Budget Example
 
-- normal direct executions validate `execution.timeoutMs` inside `1000..120000`
-- `validateExecution()` accepts an omitted `mode` or `mode: "direct"`
-- `MAX_BEST_EFFORT_RUNTIME_MS` is a defined constant, not an active public execution contract for the current CLI path
+### Multi-step read after click
 
-Agent guidance:
-
-- do not plan around `exec best-effort` yet
-- do not assume `timeoutMs > 120000` becomes valid because the constant exists
-
-## Concrete Budget Examples
-
-### Example 1: Simple snapshot
-
-```json
-{
-  "commandId": "snap-1",
-  "taskId": "snap-1",
-  "source": "androperator-observe",
-  "expectedFormat": "android-ui-automator",
-  "timeoutMs": 30000,
-  "actions": [
-    { "id": "snap", "type": "snapshot" }
-  ]
-}
-```
-
-Good budget because:
-
-- single cheap action
-- no action-level timeout
-- `30000` is the literal default used by `buildSnapshotExecution()`
-- the runtime still gets its separate `+5000` envelope buffer internally
-
-### Example 2: Navigation wait
-
-```json
-{
-  "commandId": "nav-1",
-  "taskId": "nav-1",
-  "source": "androperator-action",
-  "expectedFormat": "android-ui-automator",
-  "timeoutMs": 35000,
-  "actions": [
-    {
-      "id": "open",
-      "type": "open_app",
-      "params": {
-        "applicationId": "com.android.settings"
-      }
-    },
-    {
-      "id": "wait",
-      "type": "wait_for_navigation",
-      "params": {
-        "expectedPackage": "com.android.settings",
-        "timeoutMs": 30000
-      }
-    }
-  ]
-}
-```
-
-Why `35000` is the right budget here:
-
-- the wait action itself is allowed to wait for up to `30000`
-- the builder rule adds a `5000` cushion
-- keeping execution timeout equal to `30000` would be too tight for open-app dispatch plus navigation wait plus envelope return
-
-### Example 3: Multi-step read after click
 
 ```json
 {
@@ -452,9 +326,36 @@ Expected success shape:
 
 If a live run returns `RESULT_ENVELOPE_MALFORMED`, treat it as a transport-contract failure rather than a normal action timeout. Recovery:
 
-- rerun once to rule out transient logcat noise
-- if it repeats, check CLI and APK compatibility with `androperator version --check-compat`
-- rerun the failing command with `--verbose` and inspect Android-side logs
+- preserve the original failure, command/task IDs and dispatch/earlier-effects evidence
+- observe current state before deciding whether a mutation still needs execution
+- check CLI/APK compatibility with `androperator version --check-compat` and inspect logs
+- use a bounded fresh observation for diagnosis; do not replay a preceding mutation to repair missing evidence
+
+<a id="timeout-outcomes"></a>
+## Timeout outcomes
+
+| Outcome | Parse | Next step |
+| --- | --- | --- |
+| Action wait exhausts its window | Failed step, such as `data.error: "NAVIGATION_TIMEOUT"` | Observe state and check the expectation before increasing time |
+| Android command reaches its deadline and returns | Failed envelope with `errorCode: "COMMAND_TIMEOUT"` and collected steps | Preserve earlier effects; inspect state before retrying |
+| Host gets no terminal envelope by its deadline | Host error `code: "RESULT_ENVELOPE_TIMEOUT"` | Completion is uncertain; inspect dispatch evidence and current state |
+| Caller cancels/stops waiting | Caller-owned cancellation may provide no terminal result | Do not infer Android cancellation or absence of effects |
+
+Synthetic received envelope excerpt:
+
+```json
+{"commandId":"timeout-example","taskId":"timeout-example","status":"failed","stepResults":[],"errorCode":"COMMAND_TIMEOUT","error":"Command execution timed out"}
+```
+
+Host error excerpt (diagnostic evidence may also be present):
+
+```json
+{"code":"RESULT_ENVELOPE_TIMEOUT","message":"Timed out waiting for result envelope"}
+```
+
+Branch on codes rather than these illustrative message strings. An empty
+`stepResults` list does not establish that no effect occurred. See
+[execution failure evidence](errors.md#execution-failure-evidence).
 
 ## Common Mistakes
 

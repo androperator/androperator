@@ -117,18 +117,14 @@ No blocking defect was found in the final review, the install validation suite
 passed, and the follow-up live validation passed. The remaining gaps are not
 release blockers, but they are still useful tightening work.
 
-### 1. `apkVersion` remains unthreaded through the canonical install path
+### 1. APK version provenance
 
-The compact task recommendations already called out that the old dead
-`download_operator_apk_via_cli` path was the only place shell ever learned an
-operator version. The current Node-owned `androperator install` path still calls
-`setupHost` without an `apkVersion`, so `install-state.json` keeps
-`apkVersion: null` after normal install.
-
-Docs accurately avoid over-promising this field, so this is not a correctness
-blocker. It is still a useful follow-up because install-state diagnostics would
-be stronger if `operator remediate` exposed the downloaded or verified operator
-version and `cmdInstall` passed it into host setup.
+The canonical install path passes the selected device's final passing version
+check into host setup. It records the installed APK version only when exactly
+one device is connected and the evidence matches the selected Operator package.
+Missing, failed, malformed or ambiguous evidence stays null; initial pre-repair
+reports and the CLI version are not substituted. The public metadata contract
+is documented in `docs/setup.md`.
 
 ### 2. The install validation runner is broad and may become expensive
 

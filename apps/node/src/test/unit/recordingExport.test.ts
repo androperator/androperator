@@ -267,6 +267,7 @@ describe("exportRecording", () => {
     const result = await exportRecordingFile(inputFile, outputFile, "include");
     const written = JSON.parse(await readFile(outputFile, "utf8"));
 
+    assert.strictEqual(result.resolvedInputFile, inputFile);
     assert.strictEqual(result.outputFile, outputFile);
     assert.deepStrictEqual(written, {
       exportVersion: 1,
@@ -352,6 +353,7 @@ describe("exportRecording", () => {
     const result = await exportRecordingFile(pulledDir);
     const written = JSON.parse(await readFile(join(pulledDir, "newer.export.json"), "utf8"));
 
+    assert.strictEqual(result.resolvedInputFile, newerFile);
     assert.strictEqual(result.outputFile, join(pulledDir, "newer.export.json"));
     assert.strictEqual(written.session.sessionId, "newer-session");
     assert.deepStrictEqual(written.counts, {
@@ -430,7 +432,8 @@ describe("recording export CLI", () => {
     const first = await runCli(["recording", "export", "--input", inputFile, "--json"]);
     assert.strictEqual(first.code, 0, first.stdout);
     assert.strictEqual(first.stderr, "");
-    const firstJson = JSON.parse(first.stdout) as { outputFile?: string; sessionId?: string; eventCount?: number; packageTransitionCount?: number; byType?: Record<string, number> };
+    const firstJson = JSON.parse(first.stdout) as { resolvedInputFile?: string; outputFile?: string; sessionId?: string; eventCount?: number; packageTransitionCount?: number; byType?: Record<string, number> };
+    assert.strictEqual(firstJson.resolvedInputFile, inputFile);
     assert.strictEqual(firstJson.outputFile, join(dir, "demo.export.json"));
     assert.strictEqual(firstJson.sessionId, "cli-demo");
     assert.strictEqual(firstJson.eventCount, 1);
@@ -451,7 +454,8 @@ describe("recording export CLI", () => {
     ]);
     assert.strictEqual(second.code, 0, second.stdout);
     assert.strictEqual(second.stderr, "");
-    const secondJson = JSON.parse(second.stdout) as { outputFile?: string };
+    const secondJson = JSON.parse(second.stdout) as { resolvedInputFile?: string; outputFile?: string };
+    assert.strictEqual(secondJson.resolvedInputFile, inputFile);
     assert.strictEqual(secondJson.outputFile, secondOutput);
 
     const written = JSON.parse(await readFile(secondOutput, "utf8"));
@@ -474,7 +478,8 @@ describe("recording export CLI", () => {
     const third = await runCli(["recording", "export", "--input", pulledDir, "--out", directoryOutput, "--json"]);
     assert.strictEqual(third.code, 0, third.stdout);
     assert.strictEqual(third.stderr, "");
-    const thirdJson = JSON.parse(third.stdout) as { outputFile?: string; sessionId?: string };
+    const thirdJson = JSON.parse(third.stdout) as { resolvedInputFile?: string; outputFile?: string; sessionId?: string };
+    assert.strictEqual(thirdJson.resolvedInputFile, join(pulledDir, "export-demo.ndjson"));
     assert.strictEqual(thirdJson.outputFile, directoryOutput);
     assert.strictEqual(thirdJson.sessionId, "pulled-cli-demo");
   });
@@ -499,7 +504,8 @@ describe("recording export CLI", () => {
     assert.strictEqual(result.code, 0, result.stdout);
     assert.strictEqual(result.stderr, "");
 
-    const parsed = JSON.parse(result.stdout) as { outputFile?: string; sessionId?: string };
+    const parsed = JSON.parse(result.stdout) as { resolvedInputFile?: string; outputFile?: string; sessionId?: string };
+    assert.strictEqual(parsed.resolvedInputFile, join(pulledDir, "export-demo.ndjson"));
     assert.strictEqual(parsed.outputFile, join(pulledDir, "export-demo.export.json"));
     assert.strictEqual(parsed.sessionId, "pulled-cli-default");
     await readFile(join(pulledDir, "export-demo.export.json"), "utf8");

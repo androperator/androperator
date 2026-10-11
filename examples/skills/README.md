@@ -56,6 +56,23 @@ captures are separate observations, not proof against occlusion.
 Jev is optional and requires `JEV_API_KEY` only for the advanced example. Review
 its disclosure policy before use. Keep credentials and raw device evidence local.
 
+## Screenshot evidence
+
+Screenshots default to 25% of each native dimension. The helper validates the
+saved PNG dimensions against `captureWidthPx`/`captureHeightPx` and uses
+`nativeWidthPx`/`nativeHeightPx` for snapshot viewport bounds, including after
+stock-and-resize fallback. Missing or inconsistent maintained geometry fails
+observation; reduced image pixels must not be treated as native UI coordinates.
+
+Open the actual PNG with your image tool. If text or fine detail is unclear,
+request a fresh `screenshot --scale 50` or `--scale 100` using the same explicit
+device and Operator package. Verify the intended content has rendered; higher
+resolution does not fix an earlier frame. Retry observation within the remaining
+budget, not the preceding action. Prefer semantic selectors; map image coordinates
+using actual native/capture dimensions if coordinate actions are necessary.
+See [capture-size guidance](../../docs/api/actions.md#choosing-screenshot-scale).
+Jev still receives the documented structured projection, not screenshot bytes.
+
 ## Provenance and validation
 
 Helpers adapt the historical [Settings orchestration PR #52](https://github.com/clawperator/clawperator-skills/pull/52)

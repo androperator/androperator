@@ -18,7 +18,7 @@ export async function exportRecordingFile(
   inputFile: string,
   outputFile?: string,
   snapshotMode: RecordingExportSnapshotMode = "omit",
-): Promise<{ outputFile: string; exportData: RecordingExportArtifact }> {
+): Promise<{ resolvedInputFile: string; outputFile: string; exportData: RecordingExportArtifact }> {
   const resolvedInputFile = await resolveRecordingInputFile(inputFile);
   const content = await readRecordingInputFile(resolvedInputFile);
   const exportData = exportRecording(content, snapshotMode);
@@ -34,7 +34,7 @@ export async function exportRecordingFile(
     };
   }
 
-  return { outputFile: resolvedOutputFile, exportData };
+  return { resolvedInputFile, outputFile: resolvedOutputFile, exportData };
 }
 
 async function resolveRecordingInputFile(inputFile: string): Promise<string> {

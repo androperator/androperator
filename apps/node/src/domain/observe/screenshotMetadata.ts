@@ -3,14 +3,13 @@ import type { ScreenshotMetadata } from "../../contracts/screenshot.js";
 
 /** Advice is based on the saved image, independently of the acquisition method. */
 export function screenshotHint(appliedScale: string): string {
-  const open = "Open the PNG at data.path on the capture host to inspect it; image bytes are not embedded in this result.";
-  if (appliedScale === "25") {
-    return `${open} This image is at 25% scale, recommended for routine observation loops. If details are unclear, capture again with --scale 50 or --scale 100 (Node: observeScreenshot({ scale: 50 }) or observeScreenshot({ scale: 100 })).`;
-  }
-  if (appliedScale === "50") {
-    return `${open} This image is at 50% scale. If details are unclear, capture again with --scale 100 (Node: observeScreenshot({ scale: 100 })). For routine observation loops, use --scale 25 (Node: observeScreenshot({ scale: 25 })).`;
-  }
-  return `${open} This image is already at full resolution (100%). For routine observation loops, use --scale 25 (Node: observeScreenshot({ scale: 25 })); use --scale 50 (Node: observeScreenshot({ scale: 50 })) when more detail is needed.`;
+  const open = "Open the PNG at data.path on the capture host with your image-reading tool; image bytes are not embedded in this result.";
+  const detail = appliedScale === "25"
+    ? "This image is at the default 25% scale per dimension for routine observation. If text or fine details are unclear, request a fresh image with --scale 50 or --scale 100 (Node: observeScreenshot({ scale: 50 }) or observeScreenshot({ scale: 100 }))."
+    : appliedScale === "50"
+      ? "This image is at 50% scale per dimension. If details are unclear, request a fresh image with --scale 100 (Node: observeScreenshot({ scale: 100 })). For routine observation, omit scale or use --scale 25 (Node: observeScreenshot({ scale: 25 }))."
+      : "This image is already at full resolution (100%). For routine observation, omit scale or use --scale 25 (Node: observeScreenshot({ scale: 25 })); use --scale 50 (Node: observeScreenshot({ scale: 50 })) for intermediate detail.";
+  return `${open} ${detail} Verify the intended screen has rendered; capture success does not establish task success. Retry observation, not the preceding action. Image coordinates use captureWidthPx/captureHeightPx; prefer semantic selectors, or map to nativeWidthPx/nativeHeightPx and verify current geometry before tapping.`;
 }
 
 /** Validate bounds before decoding; a PNG header alone is not capture evidence. */

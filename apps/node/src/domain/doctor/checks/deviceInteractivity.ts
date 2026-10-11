@@ -200,10 +200,14 @@ export async function probeInteractiveState(
   }
 
   if (result.envelope.status !== "success") {
+    const runtimeCode = result.envelope.errorCode;
+    const code = runtimeCode === "SERVICE_UNAVAILABLE" ? ERROR_CODES.DEVICE_ACCESSIBILITY_NOT_RUNNING
+      : Object.values(ERROR_CODES).includes(runtimeCode as ErrorCode) ? runtimeCode as ErrorCode
+        : ERROR_CODES.RESULT_ENVELOPE_MALFORMED;
     return {
       ok: false,
-      details: result.probeEvidence,
-      code: ERROR_CODES.DEVICE_ACCESSIBILITY_NOT_RUNNING,
+      details: { ...result.probeEvidence, runtimeErrorCode: runtimeCode },
+      code,
       message: `Operator returned an error: ${result.envelope.error ?? "Unknown error"}`,
     };
   }

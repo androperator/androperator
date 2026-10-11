@@ -91,7 +91,7 @@ describe("still evidence capture", () => {
         assert.equal(captures[i].finishedAt, manifest.artifacts[i].finishedAt);
       }
       assert.ok(manifest.artifacts[0].finishedAt <= manifest.artifacts[1].startedAt);
-      assert.ok(f.runner.calls.some(args => args.join(" ") === "-s test-device exec-out screencap -p"));
+      assert.ok(f.runner.calls.some(args => args.join(" ") === "-s test-device shell -T screencap -p"));
       assert.ok(f.runner.calls.every(args => args[0] === "-s" && args[1] === "test-device"));
     } finally { await f.cleanup(); }
   });

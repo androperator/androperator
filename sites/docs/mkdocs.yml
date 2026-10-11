@@ -49,7 +49,6 @@ plugins:
         'skills/device-prep-and-runtime-tips.md': 'skills/runtime.md'
 
 nav:
-  - Migration to 1.0.0: migration-to-androperator.md
   - Docs Home: index.md
   - Setup: setup.md
   - Host Agent Orientation: host-agents.md
@@ -85,6 +84,8 @@ nav:
       - Jev Integration: skills/jev.md
       - Device Prep and Runtime: skills/runtime.md
       - Personalized Skills: skills/personalized-skills.md
+  - Upgrade history:
+      - Older installations: migration-to-androperator.md
   - Troubleshooting:
       - Androperator Operator App: troubleshooting/operator.md
       - Performance: troubleshooting/performance.md

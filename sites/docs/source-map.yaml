@@ -7,6 +7,7 @@ code_derived:
     generator: scripts/generate_cli_reference.py
     sources:
       - apps/node/src/cli/registry.ts
+      - .agents/skills/docs-build/scripts/list_cli_commands.mjs
       - apps/node/src/cli/commands/
       - sites/docs/ownership.yaml
 

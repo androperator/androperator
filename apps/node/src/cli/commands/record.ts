@@ -161,6 +161,7 @@ export async function cmdRecordExport(options: {
 
     return formatSuccess({
       ok: true,
+      resolvedInputFile: result.resolvedInputFile,
       outputFile: result.outputFile,
       sessionId: result.exportData.session.sessionId,
       eventCount: result.exportData.counts.totalEvents,

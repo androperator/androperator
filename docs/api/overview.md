@@ -35,9 +35,11 @@ you document, call, or parse behavior:
 
 ## CLI Output Format
 
-CLI commands return JSON by default. Agents should parse stdout directly with
-`JSON.parse()` unless they intentionally requested `--output pretty` for a
-human-readable rendering.
+One-shot structured CLI commands return JSON by default; parse their stdout as
+one JSON value unless `--output pretty` was requested. `logs` instead streams
+[NDJSON](logging.md), one JSON object per line. `serve` and `mcp serve` are
+long-running transport processes, not one-shot JSON responses. Use their
+[HTTP](serve.md) and [MCP](mcp.md) contracts rather than a universal wrapper.
 
 Accepted output-format forms:
 
@@ -65,7 +67,9 @@ That doctor check exposes structured evidence:
 - `userUnlocked`
 
 If doctor reports `DEVICE_NOT_INTERACTIVE`, recover the device state first and
-rerun doctor before moving on to execution commands.
+rerun doctor before moving on to interactive execution. For background-only
+notification/media work or non-waking evidence capture, use the
+[capability-specific gate](../host-agents.md#choose-readiness).
 
 <a id="execution-payload"></a>
 
@@ -77,9 +81,9 @@ Top-level execution fields:
 
 | Field | Type | Meaning |
 | --- | --- | --- |
-| `commandId` | `string` | Caller-generated correlation id for the whole run. |
-| `taskId` | `string` | Caller-generated task id. |
-| `source` | `string` | Caller label, such as `serve-api` or `androperator-action`. |
+| `commandId` | `string` | Required, 1..128 characters; caller-generated correlation id for the whole run. |
+| `taskId` | `string` | Required, 1..128 characters; caller-generated task id. |
+| `source` | `string` | Required, 1..64 characters; caller label such as `serve-api`. |
 | `expectedFormat` | `"android-ui-automator"` | Required constant. |
 | `timeoutMs` | `number` | Execution-level timeout for the whole payload. Current Node limits require `1000 <= timeoutMs <= 120000`. |
 | `actions` | `ExecutionAction[]` | Ordered action list. |
@@ -89,7 +93,7 @@ Each action has:
 
 | Field | Type | Meaning |
 | --- | --- | --- |
-| `id` | `string` | Step correlation id. |
+| `id` | `string` | Required, 1..128 characters; step correlation id. |
 | `type` | `string` | Canonical action type such as `click` or `snapshot`. |
 | `params` | `ActionParams` | Optional action-specific parameters. |
 

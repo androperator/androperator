@@ -190,7 +190,7 @@ Notes:
 | Host tooling | `ADB_NOT_FOUND`, `ADB_SERVER_FAILED`, `HOST_DEPENDENCY_MISSING`, `ANDROID_SDK_TOOL_MISSING`, `SCRCPY_NOT_FOUND` | Repair the host environment before retrying |
 | Daemon lifecycle and proxy | `DAEMON_START_FAILED`, `DAEMON_STOP_FAILED`, `DAEMON_PROXY_ERROR` | Inspect the daemon log and metadata files under `~/.androperator/`. For `DAEMON_PROXY_ERROR`, inspect device state before retrying because the action may already have executed |
 | Payload or flag validation | `MISSING_ARGUMENT`, `EXECUTION_VALIDATION_FAILED`, `EXECUTION_ACTION_UNSUPPORTED`, `PAYLOAD_TOO_LARGE` | Change the command or payload. Do not retry unchanged |
-| Dispatch or service availability | `RESULT_ENVELOPE_TIMEOUT`, `RESULT_ENVELOPE_MALFORMED`, `BROADCAST_FAILED`, `DEVICE_ACCESSIBILITY_NOT_RUNNING`, `DEVICE_SHELL_UNAVAILABLE` | Run `androperator doctor`, repair the reported issue, then retry |
+| Dispatch or service availability | `RESULT_ENVELOPE_TIMEOUT`, `RESULT_ENVELOPE_MALFORMED`, `BROADCAST_FAILED`, `DEVICE_ACCESSIBILITY_NOT_RUNNING`, `DEVICE_SHELL_UNAVAILABLE` | Preserve [failure evidence](#execution-failure-evidence), inspect phase/dispatch/earlier effects and observe current state before repeating mutations. Repair readiness where needed; doctor does not establish whether the earlier action happened. |
 | UI lookup or gesture | `NODE_NOT_FOUND`, `NODE_AMBIGUOUS`, `NODE_NOT_CLICKABLE`, `CONTAINER_NOT_FOUND`, `CONTAINER_AMBIGUOUS`, `CONTAINER_NOT_SCROLLABLE`, `GESTURE_FAILED`, `SECURITY_BLOCK_DETECTED` | Refresh state with `snapshot`, wait for UI readiness, or adjust selectors and scroll strategy |
 | Unsupported gesture platform | `GESTURE_UNSUPPORTED` | `drag` requires Android API 26 or newer. Use a supported device; retrying or increasing the timeout cannot enable continued-pointer gestures on an older platform. |
 | On-screen log panel | `ON_SCREEN_LOG_SERVICE_UNAVAILABLE`, `ON_SCREEN_LOG_LAYOUT_INVALID`, `ON_SCREEN_LOG_RENDER_FAILED`, `ON_SCREEN_LOG_RENDER_TIMEOUT` | Repair the Operator service or supplied layout, then issue a replacement `set_on_screen_log` or `clear_on_screen_log` action as appropriate. |
@@ -434,7 +434,7 @@ Recovery:
 
 - run `androperator doctor --device <serial> --operator-package <package>`
 - verify package presence and variant compatibility
-- rerun the failing command only after doctor reports the target ready
+- inspect retained dispatch/earlier-effects evidence and current state before retrying; readiness alone does not establish whether the earlier mutation happened
 
 ### `PAYLOAD_TOO_LARGE`
 
@@ -457,7 +457,6 @@ Current shipped surface:
 
 - the doctor check `readiness.device.interactive`
 - direct execution preflight before dispatch
-- high-level skill-wrapper pre-spawn checks in:
 
 Meaning:
 
@@ -466,9 +465,9 @@ Meaning:
   - `screenOn`
   - `deviceLocked`
   - `userUnlocked`
-- execution and skill-wrapper failures use a generic top-level error message rather
+- execution failures use a generic top-level error message rather
   than exposing lock-state evidence on the public execution surface
-- direct execution and high-level skill wrappers may make a bounded host-side
+- interactive execution preparation may make a bounded host-side
   wake attempt first when the screen is off
 - if the device remains asleep, is still locked, or still requires post-boot
   unlock, the runtime returns this error instead of proceeding
@@ -586,7 +585,7 @@ arrived. It does not by itself establish action success or the desired app state
 `not_dispatched` does not mean safe to retry: host `close_app` preflight may already
 have force-stopped an app, and readiness may have attempted to wake the device.
 After uncertain mutation results, observe and verify state before repeating them.
-CLI JSON, HTTP execution responses, daemon parsing, skill-result envelopes, and
+CLI JSON, HTTP execution responses, daemon parsing, and
 execution events preserve these fields. MCP preserves correlation and evidence while continuing to omit
 local paths, raw stdout/stderr, and other sensitive diagnostic keys. Use command
 and probe IDs to locate logs when a path is omitted.

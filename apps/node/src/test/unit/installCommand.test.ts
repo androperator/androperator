@@ -2,6 +2,7 @@ import { afterEach, describe, it } from "node:test";
 import assert from "node:assert";
 import { cmdInstall } from "../../cli/commands/install.js";
 import type { OperatorRemediateResult } from "../../cli/commands/operatorRemediate.js";
+import type { DoctorReport } from "../../contracts/doctor.js";
 import type { HostSetupResult } from "../../domain/host/hostSetup.js";
 import type { CopyBundledSkillsSuccess } from "../../domain/bundledSkills/copyBundledSkills.js";
 
@@ -98,6 +99,40 @@ describe("cmdInstall", () => {
     assert.strictEqual(setupHostCalls[0].operatorPackage, "com.androperator.operator");
     assert.strictEqual(setupHostCalls[0].cliVersion, undefined);
   });
+
+  const versionReport = (version: unknown, status: "pass" | "fail" = "pass", operatorPackage = "com.androperator.operator"): DoctorReport => ({
+    ok: status === "pass",
+    checks: [{ id: "readiness.version.compatibility", status, summary: "Version check", evidence: { apkVersion: version, operatorPackage } }],
+  });
+
+  for (const scenario of [
+    { name: "verified installed version", finalReport: versionReport("1.2.3"), expected: "1.2.3" },
+    { name: "post-remediation version", finalReport: versionReport("1.2.4"), expected: "1.2.4" },
+    { name: "missing final evidence", finalReport: undefined, expected: null },
+    { name: "failed version check", finalReport: versionReport("1.0.0", "fail"), expected: null },
+    { name: "blank version", finalReport: versionReport("  "), expected: null },
+    { name: "non-string version", finalReport: versionReport(123), expected: null },
+    { name: "different package", finalReport: versionReport("1.2.3", "pass", "com.androperator.operator.dev"), expected: null },
+    { name: "multiple connected devices", finalReport: versionReport("1.2.3"), connectedDevices: 2, expected: null },
+    { name: "no connected device", finalReport: versionReport("1.2.3"), connectedDevices: 0, expected: null },
+  ]) {
+    it(`records APK metadata only from the selected device's final verification: ${scenario.name}`, async () => {
+      const remediation = makeOperatorRemediationResult();
+      remediation.devices[0].initialReport = versionReport("0.9.0");
+      remediation.devices[0].finalReport = scenario.finalReport;
+      remediation.summary.connectedDevices = scenario.connectedDevices ?? 1;
+      let capturedVersion: string | null | undefined;
+      await cmdInstall({ format: "json" }, {
+        runOperatorRemediateImpl: async () => remediation,
+        copyBundledSkillsImpl: async () => makeBundledSkillsResult(),
+        setupHostImpl: async options => {
+          capturedVersion = options?.apkVersion;
+          return makeHostSetupResult();
+        },
+      });
+      assert.strictEqual(capturedVersion, scenario.expected);
+    });
+  }
 
   it("returns a warning when multiple connected devices require explicit selection", async () => {
     const output = await cmdInstall(

@@ -75,6 +75,18 @@ prevents manifest persistence, the command returns `EVIDENCE_CAPTURE_FAILED`;
 files already written remain in the chosen directory, but no finalized manifest
 is promised.
 
+Synthetic partial response (CLI exit 1):
+
+```json
+{"ok":false,"status":"partial","manifestPath":"/absolute/new/bundle/manifest.json","evidenceId":"generated-uuid","code":"EVIDENCE_CAPTURE_FAILED"}
+```
+
+This can mean the screenshot is usable while hierarchy capture failed. Read the
+manifest's component status/errors and `captures.json`; retain the original
+failure verdict in caller context. The response is not an Operator envelope and
+does not put component errors at its top level. Do not discard usable artifacts
+or infer that the app action failed from incomplete capture.
+
 A complete capture can contain `context.originalVerdict: "failed"`. These are
 independent facts. Never replace the caller's original verdict with capture status.
 
@@ -432,3 +444,12 @@ stop use `{session: absoluteManifestPath}` with optional matching target fields.
 The injectable video `baseDir` overrides the evidence root containing `bundles/`;
 it cannot move the device lock. Still capture's existing `baseDir` dependency
 continues to mean its bundle root.
+
+### Stock screenshot diagnostics
+
+Still evidence screenshots use a non-PTY ADB shell stream that keeps PNG bytes
+separate from device diagnostics. Success requires a zero remote exit status and
+strict PNG validation. Diagnostic output alone does not invalidate a complete
+image; its redacted byte count is recorded as `screenshot.diagnostic` when a
+logger is configured. Nonzero exits or invalid images remain failed/partial
+artifacts. No diagnostic text is trimmed from image data to manufacture success.

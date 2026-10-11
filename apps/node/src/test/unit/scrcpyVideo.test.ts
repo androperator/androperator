@@ -44,11 +44,11 @@ describe("active foldable display selection", () => {
     };
     const config = getDefaultRuntimeConfig({ deviceId: "test", runner });
     assert.equal((await captureScreenshot(config, { timeoutMs: 1000 })).toString(), "pixels");
-    assert.deepEqual(captured, ["-s", "test", "exec-out", "screencap", "-p", "-d", "9007199254740995"]);
+    assert.deepEqual(captured, ["-s", "test", "shell", "-T", "screencap", "-p", "-d", "9007199254740995"]);
     // Android 10 viewport records predate activity metadata and retain default capture.
     runner.run = async () => ({ code: 0, stdout: display("1", true).replace("isActive=true, ", ""), stderr: "" });
     assert.equal((await captureScreenshot(config, { timeoutMs: 1000 })).toString(), "pixels");
-    assert.deepEqual(captured, ["-s", "test", "exec-out", "screencap", "-p"]);
+    assert.deepEqual(captured, ["-s", "test", "shell", "-T", "screencap", "-p"]);
     const abort = new AbortController();
     runner.run = async () => { abort.abort(new Error("cancelled during selection")); return { code: 0, stdout: "", stderr: "" }; };
     captured = [];

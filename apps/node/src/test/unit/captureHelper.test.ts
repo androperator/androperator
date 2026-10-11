@@ -15,6 +15,7 @@ async function fixture(mode = "valid") {
   const children: any[] = [];
   const commands: string[][] = [];
   let sequence = 0;
+  let requests = 0;
   const runner: ProcessRunner = {
     run: async (_cmd, args) => { commands.push(args); return { code: 0, stderr: "", stdout: args.includes("sha256sum") ? `${sha256} capture.dex` : "" }; },
     runShell: async () => { throw Error("Unexpected shell"); },
@@ -24,6 +25,7 @@ async function fixture(mode = "valid") {
       child.stdout = new PassThrough(); child.stderr = new PassThrough(); child.ref = () => {}; child.unref = () => {};
       child.kill = () => { child.emit("close", 1); };
       child.stdin = new Writable({ write(chunk, _encoding, callback) {
+        requests++;
         const [request, value] = chunk.toString().trim().split(" ");
         const scale = Number(value);
         const png = new PNG({ width: 8 * scale / 100, height: 8 * scale / 100 });
@@ -54,12 +56,12 @@ async function fixture(mode = "valid") {
         callback();
       }});
       children.push(child);
-      setImmediate(() => child.stdout.write(JSON.stringify({ protocol: 1, session, status: ["incompatible", "protected_composition"].includes(mode) ? "incompatible" : "ready", androidApi: 36,
-        ...(mode === "protected_composition" ? { missingCapability: "protected_composition" } : {}) }) + "\n"));
+      setImmediate(() => child.stdout.write(JSON.stringify({ protocol: 1, session, status: ["incompatible", "protected_composition"].includes(mode) ? "incompatible" : mode === "unavailable" ? "unavailable" : "ready", androidApi: 36,
+        ...(mode === "protected_composition" ? { missingCapability: "protected_composition" } : mode === "unavailable" ? { missingCapability: "hardware_buffer_initialization" } : {}) }) + "\n"));
       return child;
     },
   };
-  return { config: getDefaultRuntimeConfig({ deviceId: "test-device", runner }), children, commands };
+  return { config: getDefaultRuntimeConfig({ deviceId: "test-device", runner }), children, commands, requests: () => requests };
 }
 
 test("captures all scales, reuses only the owned session and reports decoded geometry", async () => {
@@ -187,3 +189,14 @@ for (const stage of ["mkdir", "push", "sha256sum"]) {
     assert.equal((await captureWithHelper(config, { scale: 25, timeoutMs: 1000 })).metadata.appliedScale, "25");
   });
 }
+
+test("buffer initialization failure permits fallback before any capture request", async () => {
+  const { config, requests } = await fixture("unavailable");
+  await assert.rejects(captureWithHelper(config, { scale: 25, timeoutMs: 1000 }), error => {
+    assert.equal((error as any).reason, "unavailable");
+    assert.equal((error as any).fallbackAllowed, true);
+    assert.match((error as Error).message, /hardware buffer.*no screen capture/);
+    return true;
+  });
+  assert.equal(requests(), 0);
+});

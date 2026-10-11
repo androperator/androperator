@@ -443,3 +443,64 @@ was uninstalled, overlays/rotation restored, exact fault-owned leftovers removed
 and test-owned daemons/API 37 emulator stopped. No helper directories remained;
 API 35/36 emulators were left running. Making those unrelated integration tests
 explicitly opt-in or fully isolated remains separate follow-up work.
+
+## AAOS compatibility repair after #408
+
+Verified on 2026-10-11 against main `9d175ded` plus this focused fix, using
+branch-local Node and its matching development APK. No release was prepared.
+
+The API 35 Automotive image (`AAI5.260516.001.A1`) reproduced the two failures:
+Java HardwareBuffer construction read a DeviceConfig flag with no Application
+in the shell process, and stock `exec-out` merged a native FORTIFY shutdown
+diagnostic after the PNG. A diagnostic context-initialization experiment was
+not retained: it introduced application identity/provider-registration failures.
+The production fix instead probes a fresh 1 x 1 buffer before any screen request.
+Failure routes to the existing compatibility resize path; no OS flags or capture
+protection rules are changed. Direct capture on this AAOS image remains unavailable.
+
+Stock transport now uses non-PTY `adb shell -T` to separate stdout/stderr and
+propagate remote exit status. This image still emits a native diagnostic with
+exit zero. Complete PNGs decode correctly when streams are separated. Only a
+redacted diagnostic-byte-count warning is logged. This establishes usable image
+output, not a fix to Android's native shutdown diagnostic. Nonzero exit, timeout
+and invalid stdout remain failures; no trailing bytes are stripped.
+
+| Live AAOS case | Result |
+| --- | --- |
+| Default and explicit 25%, launcher and Car Settings | 4/4, 270 x 150 |
+| Explicit 50%, both screens | 2/2, 540 x 300 |
+| Explicit 100%, both screens | 2/2, 1080 x 600 |
+| Still evidence bundle on Car Settings | Complete, full-size PNG plus hierarchy |
+| First-party FLAG_SECURE fixture at 25/50/100 | 3/3 app interiors redacted black; system bars remain |
+| Ordinary fixture before/after secure state | 2/2 visible ordinary content |
+
+All eight ordinary CLI captures reported `adb_screencap_resize`,
+`fallbackAttempted: "true"`, `protectedContent: "unknown"`, matching native
+geometry and existing helpful hints. PNG dimensions were independently decoded;
+launcher, Settings, secure and recovered fixture pixels were inspected. A pixel
+check verified the secure app interior at every scale. Black pixels are fixture
+verification only, never product protection detection. Protected GPU buffers and
+commercial DRM were not retested here.
+
+Single command wall times (milliseconds, `--no-daemon`, not a benchmark):
+
+| Screen | Default | 25% | 50% | 100% |
+| --- | ---: | ---: | ---: | ---: |
+| Launcher | 1104 | 1000 | 1072 | 992 |
+| Car Settings | 1078 | 998 | 948 | 937 |
+
+The still evidence bundle took 759 ms. These finite samples establish compatibility,
+not speed improvement. Fallback captures full-size before resizing. Direct capture
+was separately confirmed at all three scales on API 35 and API 37.2 phone
+emulators, reusing one helper session per device. The first API 35 attempt timed
+out; it was retained, and a separate explicit retry passed all sizes. No automatic
+action replay was introduced, and no failure-free transport claim is made.
+
+Validation: 1,586 Node tests; 158 focused capture/evidence tests; two packaging
+checks; five Java safety-boundary checks and fixture build/signature verification;
+Android debug build/unit tests; docs build with no organization warnings.
+Initial focused invocations from repository root failed an existing test that
+requires the Node working directory; the correct-directory run passed. No test
+was weakened. The synthetic fixture and temporary diagnostic DEX were removed,
+the launcher restored, and only the task-owned Automotive emulator stopped.
+The existing development Operator was updated through canonical setup.

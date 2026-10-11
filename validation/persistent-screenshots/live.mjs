@@ -31,10 +31,11 @@ const command = async args => {
 try {
   for (let trial = 0; trial < 4; trial++) {
     for (const scale of [100, 50, 25, undefined]) {
+      const scaleLabel = scale ?? (mode === 'backend' ? 'stock' : 'default');
       const marker = `FRAME ${String(rows.length + 10).padStart(2, '0')}`;
       await command(['on-screen-log','set','--text',marker,'--font-size-sp','24','--width-dp','300','--text-color','#FFFFFF','--background-color','#000000']);
       if (markerSettleMs) await new Promise(resolve => setTimeout(resolve, markerSettleMs));
-      const file = `${output}/${mode}-${trial}-${scale ?? 'stock'}.png`;
+      const file = `${output}/${mode}-${trial}-${scaleLabel}.png`;
       if (trial === 0 && scale !== undefined && mode !== "cli") closeCaptureHelpers();
       const started = performance.now();
       let buffer, metadata;
@@ -55,11 +56,11 @@ try {
       const image = verifyScreenshot(buffer);
       const { stdout: text } = await run(ocr, [file], { timeout: 20000 });
       const fresh = JSON.parse(text).some(row => row.text === marker);
-      const row = { trial, scale: scale ?? 'stock', cold: metadata.captureSequence === "1", totalMs, bytes: buffer.length, ...image, ...metadata, marker, fresh,
+      const row = { trial, scale: scaleLabel, cold: metadata.captureSequence === "1", totalMs, bytes: buffer.length, ...image, ...metadata, marker, fresh,
         markerSettleMs, sha256: createHash('sha256').update(buffer).digest('hex') };
       rows.push(row);
       await writeFile(`${output}/${mode}.json`, JSON.stringify(rows, null, 2));
-      console.log(JSON.stringify({ trial, scale: scale ?? 'stock', totalMs, fresh }));
+      console.log(JSON.stringify({ trial, scale: scaleLabel, totalMs, fresh }));
       if (!fresh) throw Error(`Fresh marker not visible: ${marker}. Evidence preserved.`);
     }
   }

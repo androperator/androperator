@@ -15,7 +15,9 @@ export async function captureScreenshot(
   const remainingMs = options.timeoutMs - (performance.now() - selectionStarted);
   if (remainingMs <= 0) throw { code: "COMMAND_TIMEOUT", message: "Screenshot budget exhausted during display selection" };
   if (options.signal?.aborted) throw options.signal.reason;
-  const args = ["-s", config.deviceId, "exec-out", "screencap", "-p", ...(display ? ["-d", display.physicalId] : [])];
+  // The shell protocol separates remote stderr and propagates the remote exit status.
+  // exec-out merges diagnostics into the PNG on some Android builds.
+  const args = ["-s", config.deviceId, "shell", "-T", "screencap", "-p", ...(display ? ["-d", display.physicalId] : [])];
   const command = formatCommandLine(config.adbPath, args);
   const start = performance.now();
   const metadata = { commandId: options.commandId, taskId: options.taskId, deviceId: config.deviceId };
@@ -24,6 +26,7 @@ export async function captureScreenshot(
     const proc = config.runner.spawn(config.adbPath, args, { stdio: ["ignore", "pipe", "pipe"], shell: false });
     const chunks: Buffer[] = [];
     let bytes = 0;
+    let diagnosticBytes = 0;
     let failure: { code: string; message: string } | undefined;
     const onAbort = () => {
       failure ??= options.signal!.reason;
@@ -46,12 +49,16 @@ export async function captureScreenshot(
       } else chunks.push(chunk);
     });
     // Drain stderr without logging potentially private device output.
-    proc.stderr?.on("data", () => undefined);
+    proc.stderr?.on("data", (chunk: Buffer) => { diagnosticBytes += chunk.length; });
     proc.on("error", (error: Error) => { cleanup(); reject(error); });
     proc.on("close", (code: number | null) => {
       cleanup();
       config.logger?.emit({ ts: new Date().toISOString(), level: "debug", event: "adb.complete", ...metadata,
         message: `${command} code=${code ?? "null"} durationMs=${Math.round(performance.now() - start)} stdout=[redacted] stderr=[redacted]` });
+      if (diagnosticBytes > 0) config.logger?.emit({
+        ts: new Date().toISOString(), level: "warn", event: "screenshot.diagnostic", ...metadata,
+        message: `screencap emitted ${diagnosticBytes} diagnostic bytes (redacted); capture still requires a zero exit status and a valid PNG.`,
+      });
       const buffer = Buffer.concat(chunks);
       if (failure) reject({ ...failure, partialBuffer: buffer });
       else if (code !== 0 || buffer.length === 0) reject({ code: "EVIDENCE_CAPTURE_FAILED", message: `screencap failed (exit ${code}, ${buffer.length} bytes)`, partialBuffer: buffer });

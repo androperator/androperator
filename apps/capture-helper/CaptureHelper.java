@@ -51,7 +51,18 @@ public final class CaptureHelper {
         resultType.getMethod("containsHdrLayers");
         resultType.getMethod("asBitmap");
         Class.forName("android.view.IWindowManager").getMethod("isKeyguardLocked");
+        // Some OS builds need an app context merely to wrap a HardwareBuffer.
+        // Detect that before requesting screen pixels so compatibility fallback
+        // remains safe. A failed screen acquisition still cannot fall back.
+        try (HardwareBuffer probe = HardwareBuffer.create(1, 1, HardwareBuffer.RGBA_8888,
+                1, HardwareBuffer.USAGE_CPU_READ_OFTEN | HardwareBuffer.USAGE_GPU_SAMPLED_IMAGE)) {
+            if (probe == null) throw new IllegalStateException("Hardware buffer allocation unavailable");
+        } catch (Throwable unavailable) {
+            throw new BufferInitializationUnavailable();
+        }
     }
+
+    private static final class BufferInitializationUnavailable extends Exception {}
 
     static final class UnsafeCapture extends Exception {
         final String reason;
@@ -124,10 +135,11 @@ public final class CaptureHelper {
         try {
             helper = new CaptureHelper(session);
         } catch (Throwable unavailable) {
-            String missing = unavailable instanceof ClassNotFoundException ? "capture_class"
+            String missing = unavailable instanceof BufferInitializationUnavailable ? "hardware_buffer_initialization"
+                : unavailable instanceof ClassNotFoundException ? "capture_class"
                 : unavailable instanceof NoSuchFieldException ? "capture_policy_constant"
                 : unavailable instanceof NoSuchMethodException ? "capture_method" : "capture_initialization";
-            String status = missing.equals("capture_initialization") ? "unavailable" : "incompatible";
+            String status = (missing.equals("capture_initialization") || missing.equals("hardware_buffer_initialization")) ? "unavailable" : "incompatible";
             reply("{\"protocol\":1,\"session\":\"" + session + "\",\"status\":\"" + status + "\",\"missingCapability\":\""
                 + missing + "\",\"androidApi\":" + android.os.Build.VERSION.SDK_INT + "}");
             return;

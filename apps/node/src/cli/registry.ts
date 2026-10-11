@@ -242,7 +242,9 @@ Notes:
   - Runs three phases in order: install, permission grant, verification.
   - Install phase: copies the APK onto the device via adb.
   - Permission grant phase: enables the accessibility service and notification listener.
-  - Verification phase: confirms the package is visible to the package manager.
+  - Verification phase: confirms package presence and a live Operator handshake.
+  - If the new accessibility service is unavailable, setup retries its grant and handshake at most twice.
+  - Setup does not wake or unlock the device. Run doctor afterward to check interactive readiness.
   - Fails with a structured error if any phase fails. The error code identifies which phase failed.
   - If omitted, setup auto-detects the package only when exactly one known Operator variant is installed.
   - If both release and debug variants are installed, pass --operator-package explicitly.
@@ -496,7 +498,7 @@ Usage:
 
 Options:
   --path <file>          Save PNG to file path (default: generated host temporary path)
-  --scale <100|50|25>     Explicit percentage per dimension; omitted uses stock full size
+  --scale <100|50|25>     Percentage per dimension (default: 25; 50 or 100 for more detail)
   --output <json|pretty> Output format (default: json)
   --timeout <ms>         Max time to wait (default: 30000ms)
   --no-daemon            Force direct execution instead of daemon proxy
@@ -504,8 +506,9 @@ Options:
 Also accepted as: --device-id, --file
 
 Result geometry:
-  captureWidthPx and captureHeightPx describe the original PNG in pixels, with a top-left origin.
-  Resized previews use different coordinates; scale back to the original image first.
+  captureWidthPx and captureHeightPx describe the saved PNG, with a top-left origin.
+  Map image coordinates to nativeWidthPx/nativeHeightPx before coordinate actions.
+  If viewing a resized preview, first map its coordinates back to the saved PNG.
   Verify current display geometry before using image coordinates for clicks.
 
 Examples:
@@ -513,7 +516,7 @@ Examples:
   androperator screenshot --device <device_serial>
 
 --scale selects a percentage per dimension, using direct capture or stock capture plus resize.
-Omitted: ordinary full-resolution capture. Images report actual size and method.
+Omitted: 25% capture. Use --scale 100 for full resolution. Images report actual size and method.
 Protected-content state may be unknown; inspect captureMethod and protectedContent.
 `;
 

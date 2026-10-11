@@ -3,8 +3,9 @@ import assert from "node:assert";
 import { writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { setupOperator } from "../../domain/device/setupOperator.js";
+import { setupOperator as realSetupOperator } from "../../domain/device/setupOperator.js";
 import { getDefaultRuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
+import { probeInteractiveState } from "../../domain/doctor/checks/deviceInteractivity.js";
 import { FakeProcessRunner } from "./fakes/FakeProcessRunner.js";
 
 const TEST_APK_PATH = join(tmpdir(), "androperator-test-operator.apk");
@@ -15,6 +16,10 @@ function makeConfig(runner: FakeProcessRunner) {
     deviceId: "test-device",
   });
 }
+
+const ready = { ok: true as const, state: { screenOn: true, deviceLocked: false, userUnlocked: true } };
+const setupOperator: typeof realSetupOperator = (config, apk, pkg, dependencies) =>
+  realSetupOperator(config, apk, pkg, dependencies ?? { probe: async () => ready, wait: async () => {} });
 
 describe("setupOperator - domain", () => {
   before(() => {
@@ -241,4 +246,100 @@ describe("setupOperator - domain", () => {
     assert.strictEqual(result.verification?.packageInstalled, false);
     assert.match(result.verification?.error ?? "", /not found after install/);
   });
+  function queueInstalled(runner: FakeProcessRunner) {
+    for (const stdout of ["Success", "com.androperator.operator/androperator.operator.accessibilityservice.OperatorAccessibilityService", "", "com.androperator.operator/action.notification.NotificationListenerService", "", "package:com.androperator.operator"]) {
+      runner.queueResult({ code: 0, stdout, stderr: "" });
+    }
+  }
+
+  function queueRepair(runner: FakeProcessRunner) {
+    for (const stdout of ["other.app/other.Service", "", ""]) runner.queueResult({ code: 0, stdout, stderr: "" });
+  }
+
+  it("repairs a lost post-install accessibility grant and proves the selected service responds", async () => {
+    const runner = new FakeProcessRunner(); queueInstalled(runner); queueRepair(runner);
+    let probes = 0, waits = 0;
+    const result = await setupOperator(makeConfig(runner), TEST_APK_PATH, "com.androperator.operator", {
+      probe: async config => {
+        assert.equal(config.operatorPackage, "com.androperator.operator");
+        return ++probes === 1 ? { ok: false, code: "DEVICE_ACCESSIBILITY_NOT_RUNNING", message: "Service unavailable" } : ready;
+      },
+      wait: async () => { waits++; },
+    });
+    assert.equal(result.verification?.ok, true);
+    assert.equal(result.verification?.readiness?.attempts.length, 2);
+    assert.equal(result.verification?.readiness?.attempts[0].ok, false);
+    assert.equal(result.verification?.error, undefined);
+    assert.equal(waits, 1);
+    assert.equal(result.permissions?.accessibility.alreadyEnabled, false);
+    assert.equal(runner.calls.filter(c => c.args.includes("install")).length, 1);
+    assert.ok(runner.calls.some(c => c.args.includes("other.app/other.Service:com.androperator.operator/androperator.operator.accessibilityservice.OperatorAccessibilityService")));
+  });
+
+  it("bounds unavailable-service recovery and never calls package presence ready", async () => {
+    const runner = new FakeProcessRunner(); queueInstalled(runner); queueRepair(runner); queueRepair(runner);
+    const result = await setupOperator(makeConfig(runner), TEST_APK_PATH, "com.androperator.operator", {
+      probe: async () => ({ ok: false, code: "DEVICE_ACCESSIBILITY_NOT_RUNNING", message: "Service unavailable" }),
+      wait: async () => {},
+    });
+    assert.equal(result.verification?.packageInstalled, true);
+    assert.equal(result.verification?.ok, false);
+    assert.equal(result.verification?.readiness?.attempts.length, 3);
+    assert.match(result.verification?.error ?? "", /handshake failed/);
+  });
+
+  it("does not repair permissions after a transport failure", async () => {
+    const runner = new FakeProcessRunner(); queueInstalled(runner);
+    const result = await setupOperator(makeConfig(runner), TEST_APK_PATH, "com.androperator.operator", {
+      probe: async () => ({ ok: false, code: "RESULT_ENVELOPE_TIMEOUT", message: "No correlated response" }),
+      wait: async () => { assert.fail("No retry expected"); },
+    });
+    assert.equal(result.verification?.ok, false);
+    assert.equal(result.verification?.readiness?.attempts.length, 1);
+    assert.equal(runner.calls.length, 6);
+  });
+
+  it("preserves a permission repair failure", async () => {
+    const runner = new FakeProcessRunner(); queueInstalled(runner);
+    runner.queueResult({ code: 1, stdout: "", stderr: "Device disconnected" });
+    const result = await setupOperator(makeConfig(runner), TEST_APK_PATH, "com.androperator.operator", {
+      probe: async () => ({ ok: false, code: "DEVICE_ACCESSIBILITY_NOT_RUNNING", message: "Service unavailable" }),
+      wait: async () => {},
+    });
+    assert.equal(result.permissions?.accessibility.ok, false);
+    assert.equal(result.verification?.ok, false);
+    assert.equal(result.verification?.readiness?.attempts.length, 1);
+  });
+
+  it("verifies a service on a locked phone without claiming interactive readiness", async () => {
+    const runner = new FakeProcessRunner(); queueInstalled(runner);
+    const result = await setupOperator(makeConfig(runner), TEST_APK_PATH, "com.androperator.operator", {
+      probe: async () => ({ ok: true, state: { screenOn: false, deviceLocked: true, userUnlocked: true } }),
+      wait: async () => { assert.fail("No retry expected"); },
+    });
+    assert.equal(result.verification?.ok, true);
+    assert.equal(runner.calls.length, 6);
+  });
+
+  for (const errorCode of ["COMMAND_TIMEOUT", "COMMAND_CANCELLED", "UNKNOWN_RUNTIME_ERROR"]) {
+    it(`does not repair permissions for a real ${errorCode} probe envelope`, async () => {
+      const runner = new FakeProcessRunner(); queueInstalled(runner);
+      const result = await setupOperator(makeConfig(runner), TEST_APK_PATH, "com.androperator.operator", {
+        probe: config => probeInteractiveState(config, async () => ({
+          ok: true, terminalSource: "androperator_result", envelope: {
+            commandId: "probe", taskId: "doctor-handshake", status: "failed", errorCode,
+            error: "Probe runtime failure", stepResults: [],
+          },
+        })),
+        wait: async () => { assert.fail("No retry expected"); },
+      });
+      assert.equal(result.verification?.ok, false);
+      assert.equal(result.verification?.readiness?.attempts.length, 1);
+      const attempt = result.verification?.readiness?.attempts[0];
+      assert.equal(attempt?.ok, false);
+      if (attempt && !attempt.ok) assert.equal(attempt.details?.runtimeErrorCode, errorCode);
+      assert.equal(runner.calls.length, 6);
+    });
+  }
+
 });

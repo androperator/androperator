@@ -1,0 +1,13 @@
+{
+  "commandId": "on-screen-log-clear",
+  "taskId": "on-screen-log-clear",
+  "source": "validation",
+  "expectedFormat": "android-ui-automator",
+  "timeoutMs": 30000,
+  "actions": [
+    {
+      "id": "clear-flow-001",
+      "type": "clear_on_screen_log"
+    }
+  ]
+}

@@ -1447,7 +1447,7 @@ Example:
 | --- | --- |
 | Required | none |
 | `path` | optional non-empty string |
-| `scale` | optional number: `100`, `50`, or `25`, percentage per dimension |
+| `scale` | optional number: `100`, `50`, or `25`, percentage per dimension; default `25` |
 | `retry` | optional retry object in raw `exec` JSON; Android defaults to `None` |
 
 Semantics:
@@ -1511,13 +1511,13 @@ Example:
 }
 ```
 
-Explicit `scale` prefers the persistent shell capture helper, with stock capture
-and resize when helper setup is unavailable. Omission preserves the
-existing ordinary full-resolution ADB capture. The CLI spelling is
+`scale` defaults to `25` (25% of each native dimension). Capture prefers the
+persistent shell helper, with stock capture and resize when helper setup is
+unavailable. Set `scale: 50` for intermediate detail or `scale: 100` for full size. The CLI spelling is
 `androperator screenshot --scale 25 --path /tmp/screen.png`. The Node
 `observeScreenshot({ scale: 25 })` helper and HTTP `POST /screenshot` accept the
 same numeric values. Numeric strings, arbitrary percentages and empty values are
-invalid. A scaled screenshot must be the only screenshot and the final action
+invalid. A screenshot must be the only screenshot and the final action
 in its execution; use separate executions for intermediate observations.
 
 All successful captures also report `data.captureMethod` (`adb_screencap`,
@@ -1535,11 +1535,12 @@ actual `appliedScale`, including after resize fallback:
 
 | Saved scale | Guidance for the next capture |
 | --- | --- |
-| `25` | Recommended for routine observation loops. If details are unclear, use `--scale 50` or `--scale 100`; Node: `observeScreenshot({ scale: 50 })` or `observeScreenshot({ scale: 100 })`. |
+| `25` | Default for routine observation loops. If details are unclear, use `--scale 50` or `--scale 100`; Node: `observeScreenshot({ scale: 50 })` or `observeScreenshot({ scale: 100 })`. |
 | `50` | For more detail, use `--scale 100`; Node: `observeScreenshot({ scale: 100 })`. For routine loops, use `--scale 25`; Node: `observeScreenshot({ scale: 25 })`. |
 | `100` | Already full resolution. For routine loops, use `--scale 25`; Node: `observeScreenshot({ scale: 25 })`. For intermediate detail, use `--scale 50`; Node: `observeScreenshot({ scale: 50 })`. |
 
-This recommendation does not change the omitted-scale full-resolution default.
+Omitting scale now selects 25%; callers requiring full size must explicitly use
+`--scale 100` or `observeScreenshot({ scale: 100 })`.
 Choose a larger image when small text or fine details matter. Resize fallback
 still acquires a full-resolution image, so requesting 25% does not guarantee
 faster acquisition. Guidance is advisory text that may evolve; use the structured
@@ -1551,6 +1552,45 @@ The unreleased screenshot field previously named `data.guidance` is now
 `data.hint`; update branch-preview consumers to read `hint`. No `guidance`
 alias is emitted. This matches the existing `hint` convention for errors and
 execution-wide advice.
+
+<a id="choosing-screenshot-scale"></a>
+#### Choosing a capture size in an agent loop
+
+Start with the default 25% image for routine screen recognition and navigation.
+Open the returned `data.path` using your image-reading tool; a JSON result alone
+is not visual inspection. The saved image has one quarter of each native
+dimension, approximately one sixteenth of the pixels. Use `50` or `100` when
+small text, similar icons or fine details are hard to distinguish. For a task
+known to need fine detail, request the larger image immediately.
+
+```sh
+androperator screenshot --device <device_serial> --path /tmp/screen.png
+# If the image is unclear, obtain a new full-size observation:
+androperator screenshot --device <device_serial> --scale 100 --path /tmp/screen-detail.png
+```
+
+After an action, check that the intended destination and relevant content have
+rendered in the exact image you will use. Combine snapshot context with pixel
+inspection; neither a successful capture nor a matching package proves the task
+completed. When a labeled value is available through `read-value`, prefer that
+structured evidence for exact text and use the image for visual context.
+
+Bound observation retries by attempts and elapsed time. Request a larger fresh
+image when uncertain; do not replay a preceding click or navigation to repair an
+observation. If the full-size image still does not establish the result, report
+uncertainty rather than guessing. Higher resolution cannot repair an unreliable
+OCR or verification method by itself.
+
+The agent chooses this detail recovery. It is separate from the automatic
+**setup fallback**, which captures full size and resizes to the requested size
+when the helper cannot start. Setup fallback does not automatically return a
+100% image for the agent to read. Check `captureMethod` and `appliedScale`.
+
+Use actual image/native dimensions for coordinate conversion as described below,
+not a hardcoded multiplier; rounding and previews can change the ratios. Prefer
+fresh semantic selectors when available. Reduced capture saves acquisition and
+image-transfer work on the direct helper path, but whole-task savings depend on
+model time and how often another image is needed. No universal speedup is implied.
 
 A helper capture additionally reports:
 
@@ -1583,6 +1623,10 @@ Supported capability does not prove that the current screen can be captured.
 
 **Compatibility and fallback:** direct scaled capture supports both the older
 Android 15/16 capture interface and the newer interface used by Android 17.
+On some Automotive builds, direct Java hardware-buffer initialization is
+unavailable to the shell helper. This is detected before screen acquisition;
+the existing stock-and-resize fallback returns the requested dimensions without
+changing CLI usage. It saves image size, not full-size acquisition work.
 Missing protected GPU composition does not block screenshots. Direct capture
 has been verified at 100/50/25 on an API 37.1 physical phone and API 35, 36.0 and
 37.2 emulators. Other manufacturers and builds still need live validation.
@@ -1592,7 +1636,7 @@ All successful screenshots report `data.protectedContent`:
 | Value | Meaning |
 | --- | --- |
 | `absent` | The helper's compositor capability and returned buffer establish that no protected buffer was included. |
-| `unknown` | Protected content may have been redacted by Android; this does not prevent ordinary capture. Always used for stock/resize and omitted-scale stock capture. |
+| `unknown` | Protected content may have been redacted by Android; this does not prevent ordinary capture. Always used for stock/resize capture. |
 | `present` | A protected hardware buffer was detected and rejected before pixel readback. This value appears on a failed capture, never an exported protected image. |
 
 This describes protected hardware buffers, not app rendering readiness. Secure
@@ -1614,7 +1658,7 @@ Fallback checks device interactivity and display geometry before and after
 capture and shares the original timeout/cancellation budget. It does not run
 after protected/secure rejection, stale output, transport interruption, timeout,
 cancellation or an uncertain acquired frame. No device action is replayed.
-Omitted scale retains the existing full-resolution behavior and method.
+Omitted scale follows the same 25% capture and failure rules as explicit `scale: 25`.
 
 Failed scaled acquisition returns `EVIDENCE_CAPTURE_FAILED` on the screenshot step,
 with `data.captureFailureReason`, `data.protectedContent` and

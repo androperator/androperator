@@ -62,3 +62,15 @@ test('System is context only, not a supported version-details navigation candida
  const system=normalize(snapshot([node('0',null,'System',{clickable:true})]));
  assert.deepEqual(system.candidates,[]);
 });
+
+test('quarter-size capture keeps native-coordinate navigation rows eligible',()=>{
+ const {viewportFromCapture}=require('../utils/settings_version_runtime');
+ const png=Buffer.alloc(24);png.writeUInt32BE(270,16);png.writeUInt32BE(602,20);
+ const response={envelope:{stepResults:[{actionType:'take_screenshot',data:{captureMethod:'shell_hardware_buffer',nativeWidthPx:'1080',nativeHeightPx:'2410',captureWidthPx:'270',captureHeightPx:'602',requestedScale:'25',appliedScale:'25'}}]}};
+ const viewport=viewportFromCapture(png,response);
+ const screen=snapshot([node('0',null,'About phone',{clickable:true,bounds:'[50,1800][1000,2000]'})]);
+ const context={viewport:{bounds:{left:0,top:0,right:viewport.width,bottom:viewport.height},reference:'quarter.png',observedAt:'test-time'}};
+ assert.equal(normalizeModel(screen,{context}).candidates[0].description,'Open visible About phone row');
+ context.viewport.bounds={left:0,top:0,right:270,bottom:602};
+ assert.equal(normalizeModel(screen,{context}).candidates.length,0);
+});

@@ -7,17 +7,17 @@ description: Execute Android goals that need adaptive navigation or verified ext
 
 Complete the requested Android goal with independently verified results, or return
 a supported partial or failed outcome when a blocker or budget prevents completion.
-For authorized authoring, save adaptive instructions and verify them live.
 
 The agent owns decisions and verification; Androperator executes. Use
-`androperator-agent-orientation` if the CLI, device and Operator have not already
-been selected and checked. Define actual goal coverage before choosing this loop. No provider credential is required.
+`androperator-agent-orientation` if the interface, device and Operator have not already
+been selected and checked.
 
 ## Execute the goal
 
 1. Define the outcome, separately required fields and independent success evidence.
    Declare action, observation, elapsed-time and recovery budgets appropriate to
-   this goal. Obtain exclusive controller ownership of the selected device.
+   this goal. Ensure no other agent or controller operates the selected device
+   during this workflow.
 2. Observe current state. Check source completeness, projection coverage, freshness,
    foreground and relevant label/value or target/container relationships. Keep the
    original response, capture identity and local evidence. A completed command is
@@ -26,8 +26,10 @@ been selected and checked. Define actual goal coverage before choosing this loop
    scroll an observed container, answer a specific visual question, or recover.
    Known-good routes guide decisions; observe their intermediate screens. Do not
    treat a package match, missing offscreen label or model confidence as proof.
-4. Execute through the selected Androperator CLI with `--device <device_serial>`
-   and `--operator-package <operator_package>`. Check relevant command help.
+4. Execute through the selected Androperator interface, keeping the device and
+   Operator explicit. CLI calls use `--device <device_serial>` and
+   `--operator-package <operator_package>`; HTTP/MCP calls use their documented
+   request fields. Check command help or the selected transport's contract.
    Serialize actions; invalidate candidates after transitions or uncertain effects.
 5. Observe and verify the destination or changed state. Continue only within the
    declared budgets. Never implicitly replay a mutation when its later snapshot

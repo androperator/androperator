@@ -1,4 +1,4 @@
 interface:
   display_name: "Androperator Orientation"
-  short_description: "Learn Android automation capabilities and API usage"
+  short_description: "Select an interface, target and readiness mode"
   default_prompt: "Use $androperator-agent-orientation to learn what Androperator does, identify the API capabilities relevant to my goal, and establish any prerequisites needed to proceed."

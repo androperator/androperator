@@ -70,6 +70,41 @@ MEDIA_POSTCONDITION_TIMEOUT retains dispatched=true. Expired sessions, unsupport
 controls and ambiguity return MEDIA_SESSION_EXPIRED, MEDIA_ACTION_UNSUPPORTED or
 MEDIA_SESSION_AMBIGUOUS. Never replay a mutation after uncertain transport.
 
+<a id="media-control-result-example"></a>
+### Decode a control result
+
+Synthetic successful `media_pause` step excerpt with no confirmation wait.
+Session, timing and device-state fields are omitted from the serialized payload
+to focus on the control receipt:
+
+```json
+{
+  "id": "a1",
+  "actionType": "media_pause",
+  "success": true,
+  "data": {
+    "payload": "{\"dispatched\":true,\"waitTimeoutMs\":0,\"targetStateObserved\":false}"
+  }
+}
+```
+
+Parse the outer response, select the successful media step from
+`envelope.stepResults`, then use `JSON.parse(step.data.payload)`. The decoded
+excerpt is:
+
+```json
+{
+  "dispatched": true,
+  "waitTimeoutMs": 0,
+  "targetStateObserved": false
+}
+```
+
+The request was dispatched, but the paused state was not observed. Inspect fresh
+state before deciding whether to repeat the control. A positive
+`--wait-timeout-ms` requests bounded reported-state confirmation; independent
+task verification is still required.
+
 ## Seeking
 
 ```sh

@@ -282,6 +282,7 @@ Valid body rules enforced by the route:
 Operator package resolution:
 
 - if `operatorPackage` is present in the request, the server uses it verbatim
+- otherwise it uses the server startup `--operator-package` option when supplied
 - otherwise it falls back to `process.env.ANDROPERATOR_OPERATOR_PACKAGE` when that env var is non-blank
 - otherwise it uses `com.androperator.operator`
 
@@ -439,7 +440,7 @@ This route builds a synthetic execution with:
 - `expectedFormat: "android-ui-automator"`
 - `timeoutMs: 30000`
 - one action: `{ "id": "shot", "type": "take_screenshot" }`
-- optional `params.path` when `path` was supplied
+- optional `params.path` and `params.scale` from the supplied `path` and `scale` fields
 
 ### Request body
 
@@ -455,6 +456,8 @@ Route validation:
 
 - request body must be a JSON object
 - `path`, when present, must be a non-empty string
+- `scale`, when present, must be the JSON number `25`, `50`, or `100`; strings are rejected with HTTP `400` and `INVALID_SCALE`
+- omitted `scale` selects 25% per dimension; send `"scale": 100` for full resolution
 - omitted `operatorPackage` follows the same fallback chain as `/execute`
 
 ### Artifact locality
@@ -467,6 +470,10 @@ and capture metadata, not image bytes or a download URL. There is no screenshot
 file-download route. Remote callers must arrange file transfer separately.
 
 ### Success response
+
+Synthetic, abridged resize-fallback example. Step data values are strings; see
+[the screenshot contract](actions.md#action-take-screenshot) for helper-specific
+correlation fields and detail-recovery guidance.
 
 ```json
 {
@@ -483,7 +490,21 @@ file-download route. Remote callers must arrange file transfer separately.
         "actionType": "take_screenshot",
         "success": true,
         "data": {
-          "path": "/tmp/settings.png"
+          "path": "/tmp/settings.png",
+          "captureSource": "host",
+          "persistedAt": "2026-10-11T00:00:00.000Z",
+          "captureWidthPx": "270",
+          "captureHeightPx": "600",
+          "nativeWidthPx": "1080",
+          "nativeHeightPx": "2400",
+          "coordinateSpace": "screenshot_pixels",
+          "origin": "top_left",
+          "captureMethod": "adb_screencap_resize",
+          "requestedScale": "25",
+          "appliedScale": "25",
+          "protectedContent": "unknown",
+          "fallbackAttempted": "true",
+          "fallbackReason": "unavailable"
         }
       }
     ],
@@ -787,6 +808,8 @@ When a handler returns an enum-backed error from `errors.ts`, `serve.ts` maps it
 | `PAYLOAD_TOO_LARGE` | `413` |
 | `RESULT_ENVELOPE_TIMEOUT` | `504` |
 | `DEVICE_NOT_INTERACTIVE` | `409` |
+| `DEVICE_ACCESSIBILITY_NOT_RUNNING` | `409` |
+| `DEVICE_SHELL_UNAVAILABLE` | `503` |
 | `EMULATOR_NOT_FOUND` | `404` |
 | `EMULATOR_NOT_RUNNING` | `404` |
 | `EMULATOR_UNSUPPORTED` | `409` |

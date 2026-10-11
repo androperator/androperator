@@ -5,6 +5,10 @@ from __future__ import annotations
 import sys
 import html
 import re
+import json
+import hashlib
+import subprocess
+from urllib.parse import urljoin, urlsplit, urlunsplit
 from pathlib import Path
 
 try:
@@ -87,14 +91,90 @@ def decode_code_entities(markdown: str) -> str:
     )
 
 
+DOCS_URL = "https://docs.androperator.com/"
+
+
+def canonical_page_url(page_path: str) -> str:
+    route = page_path.removesuffix(".md")
+    if route == "index":
+        route = ""
+    elif route.endswith("/index"):
+        route = route[:-5]
+    else:
+        route += "/"
+    return urljoin(DOCS_URL, route)
+
+
+def canonical_reference(href: str, page_path: str) -> str:
+    if urlsplit(href).scheme or href.startswith("//"):
+        return href
+    # Resolve Markdown against its source filename before converting .md to
+    # MkDocs directory routes. Fragments belong to the original page.
+    resolved = urlsplit(urljoin(DOCS_URL + page_path, href))
+    path = resolved.path
+    if path.endswith(".md"):
+        path = urlsplit(canonical_page_url(path.lstrip("/"))).path
+    return urlunsplit((resolved.scheme, resolved.netloc, path, resolved.query, resolved.fragment))
+
+
+def rebase_links(markdown: str, page_path: str) -> str:
+    lines = []
+    fence = None
+    for line in markdown.splitlines(keepends=True):
+        marker = re.match(r"^\s{0,3}(`{3,}|~{3,})", line)
+        if marker:
+            token = marker.group(1)
+            if fence is None:
+                fence = token
+            elif token[0] == fence[0] and len(token) >= len(fence):
+                fence = None
+            lines.append(line)
+            continue
+        if fence is None:
+            # Inline code and fenced examples are data, never links to rewrite.
+            pieces = re.split(r"(`+[^`]*`+)", line)
+            for index in range(0, len(pieces), 2):
+                pieces[index] = re.sub(
+                    r"(\]\()([^\s)]+)([^)]*\))",
+                    lambda m: m[1] + canonical_reference(m[2], page_path) + m[3],
+                    pieces[index],
+                )
+            line = "".join(pieces)
+        lines.append(line)
+    return "".join(lines)
+
+
+def build_provenance(build_dir: Path, nav_entries) -> str:
+    root = repo_root()
+    revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, check=True,
+                              capture_output=True, text=True).stdout.strip()
+    dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=normal"],
+                           cwd=root, check=True, capture_output=True, text=True).stdout
+    # Content identity remains useful for uncommitted preview builds. Include
+    # the page paths so page moves and reordering affect the digest.
+    digest = hashlib.sha256()
+    for _, pages in nav_entries:
+        for _, path in pages:
+            digest.update(path.encode() + b"\0" + read_page(build_dir, path).encode() + b"\0")
+    version = json.loads((root / "apps/node/package.json").read_text())["version"]
+    state = " with uncommitted changes" if dirty else ""
+    return (f"Source revision: `{revision}`{state}. Source CLI package version: `{version}`.\n"
+            f"Assembled content SHA-256: `{digest.hexdigest()}`.\n"
+            "These docs describe this source build, not proof of the currently published release. "
+            "Check installed CLI/Operator compatibility before relying on version-specific behavior.")
+
+
 def render_llms_full(
     build_dir: Path,
     nav_entries: list[tuple[str, list[tuple[str, str]]]],
+    provenance: str = "",
 ) -> str:
     lines: list[str] = [
         "# Androperator Documentation",
         "",
-        "Compiled from the MkDocs navigation tree and assembled docs staging directory.",
+        "Optional full reference compiled from the public navigation pages; installed skills and internal design notes are separate.",
+        "",
+        provenance,
         "",
     ]
 
@@ -103,7 +183,9 @@ def render_llms_full(
             lines.append(f"# {section_title}")
             lines.append("")
         for page_title, page_path in pages:
-            page_content = decode_code_entities(read_page(build_dir, page_path))
+            page_content = rebase_links(decode_code_entities(read_page(build_dir, page_path)), page_path)
+            lines.append(f"Source: [{page_title}]({canonical_page_url(page_path)}) | `{page_path}`")
+            lines.append("")
             if not page_content.lstrip().startswith("#"):
                 lines.append(f"## {page_title}")
             lines.append(page_content)
@@ -126,7 +208,7 @@ def main() -> int:
     ]
 
     nav_entries = load_nav_entries(mkdocs_path)
-    rendered = render_llms_full(build_dir, nav_entries)
+    rendered = render_llms_full(build_dir, nav_entries, build_provenance(build_dir, nav_entries))
 
     for output_path in output_paths:
         output_path.parent.mkdir(parents=True, exist_ok=True)

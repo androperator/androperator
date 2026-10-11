@@ -397,7 +397,7 @@ The first non-empty line must be a `recording_header`.
 
 Verification pattern - minimum valid file skeleton:
 
-```json
+```ndjson
 {"type":"recording_header","schemaVersion":1,"sessionId":"demo-session","startedAt":1710000000000,"operatorPackage":"com.androperator.operator.dev"}
 {"ts":1710000000001,"seq":0,"type":"window_change","packageName":"com.android.settings","className":"com.android.settings.Settings","title":"Settings","snapshot":"<hierarchy .../>"}
 ```

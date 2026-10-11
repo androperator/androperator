@@ -594,3 +594,12 @@ Before first unlock after reboot, the background query check reports
 `DEVICE_USER_NOT_UNLOCKED` when Android exposes the locked user state. This is
 distinct from an ordinary keyguard lock after the user has unlocked once. No
 automatic unlock or permission repair occurs.
+
+Background-mode output excerpt (other checks omitted):
+
+```json
+{"criticalOk":true,"capability":"background-observation"}
+```
+
+Require the actual process exit and full report. This excerpt demonstrates the
+capability field, not a substitute report or proof that a later query succeeded.

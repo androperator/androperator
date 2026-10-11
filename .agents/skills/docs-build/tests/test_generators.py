@@ -45,61 +45,19 @@ docs_organization = load_module(
 
 
 class GenerateCliReferenceTests(unittest.TestCase):
-    def test_extract_command_bodies_stops_at_block_end(self) -> None:
-        text = """
-COMMANDS["first"] = {
-  summary: "First command",
-  group: "Test",
-  topLevelBlock: `  first`,
-};
+    def test_metadata_preserves_syntax_flags_and_subcommands(self) -> None:
+        command = cli_reference.command_from_metadata({
+            "name": "query", "group": "Observation", "summary": "Inspect nodes",
+            "topLevelBlock": "  query --text <text>  Inspect nodes",
+            "documentedFlags": ["--text"], "subtopics": {"export-evidence": "Export"},
+        })
+        self.assertEqual(command.syntax, ["query --text <text>"])
+        self.assertEqual(command.flags, ["--text"])
+        self.assertEqual(command.subcommands, ["export-evidence"])
 
-const helper = {
-  nested: true,
-};
-
-COMMANDS["second"] = {
-  summary: "Second command",
-  group: "Test",
-  topLevelBlock: `  second`,
-};
-"""
-
-        bodies = cli_reference.extract_command_bodies(text)
-
-        self.assertEqual([name for name, _ in bodies], ["first", "second"])
-        self.assertNotIn("helper", bodies[0][1])
-        self.assertNotIn('COMMANDS["second"]', bodies[0][1])
-        self.assertIn('summary: "Second command"', bodies[1][1])
-
-    def test_parse_subcommands_handles_quoted_keys(self) -> None:
-        body = """
-  subtopics: {
-    start: "Start recording",
-    "export-evidence": "Export evidence",
-    stop: "Stop recording",
-  },
-"""
-
-        self.assertEqual(
-            cli_reference.parse_subcommands(body),
-            ["start", "export-evidence", "stop"],
-        )
-
-    def test_public_reference_uses_docs_metadata_not_regex_flags(self) -> None:
-        body = """
-  summary: "Tap something",
-  group: "Device Interaction",
-  documentedFlags: ["--text", "--id", "--desc", "--role"],
-  help: `Also accepted as: --resource-id, --content-desc`,
-  topLevelBlock: `  click --text <text>
-                                            Tap something`,
-"""
-
-        command = cli_reference.parse_command_info("click", body)
-
-        self.assertEqual(command.flags, ["--text", "--id", "--desc", "--role"])
-        self.assertNotIn("--resource-id", command.flags)
-        self.assertNotIn("--content-desc", command.flags)
+    def test_public_command_requires_syntax(self) -> None:
+        with self.assertRaisesRegex(ValueError, "no primary syntax"):
+            cli_reference.command_from_metadata({"name": "query", "documentedFlags": []})
 
     def test_public_reference_omits_shims_and_peer_alias_commands(self) -> None:
         commands = [
@@ -184,27 +142,6 @@ COMMANDS["second"] = {
         self.assertIn("### `recording`", rendered)
         self.assertIn("`record`", rendered)
         self.assertIn("[Recording workflow](recording.md)", rendered)
-
-    def test_missing_documented_flags_warns_without_regex_fallback(self) -> None:
-        body = """
-  summary: "Read text",
-  group: "Device Interaction",
-  help: `Also accepted as: --resource-id, --content-desc`,
-  topLevelBlock: `  read --text <text>
-                                            Read text`,
-"""
-
-        with warnings.catch_warnings(record=True) as captured:
-            warnings.simplefilter("always")
-            command = cli_reference.parse_command_info("read", body)
-
-        self.assertEqual(command.flags, [])
-        self.assertTrue(
-            any(
-                "Command read has no documentedFlags metadata" in str(warning.message)
-                for warning in captured
-            )
-        )
 
     def test_public_reference_renders_detail_and_action_links(self) -> None:
         commands = [

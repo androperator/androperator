@@ -463,7 +463,8 @@ For screen-off notification/media observation, use
 interactive doctor can fail on a locked screen while these reads remain available.
 See [background readiness](api/doctor.md#background-observation-readiness).
 
-## Optional reduced screenshot capture
+<a id="optional-reduced-screenshot-capture"></a>
+## Screenshot capture prerequisites
 
 Screenshots default to 25% per dimension. See [choosing a capture size](api/actions.md#choosing-screenshot-scale) for agent guidance and explicit full-size recovery.
 

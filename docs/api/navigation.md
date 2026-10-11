@@ -15,25 +15,24 @@ This page focuses on composition. For full per-action parameter rules, use [Acti
 - CLI command surface: `apps/node/src/cli/registry.ts`
 - Selector parsing: `apps/node/src/cli/selectorFlags.ts`
 
-## Why Compose Navigation
+## Choose a readiness condition
 
-Neither `open_app` nor `open_uri` proves that the target screen is ready. In current Androperator, deterministic navigation usually means:
-
-1. trigger navigation
-2. wait for the expected package or expected node
-3. observe the resulting screen
-
-The normal three-step shape is:
-
-- `open_app` or `open_uri`
-- `wait_for_navigation`
-- `snapshot`
-
-Verification pattern - preview a composed navigation payload without dispatching:
+`open_app` waits for its package to be foreground by default, including an
+already-foreground app. It does not prove destination content is loaded.
+`open_uri` dispatches the URI without that content guarantee. Observe the result;
+if a known destination element is still loading, wait for that node and observe
+again. Do not append a package-only `wait_for_navigation` after a completed
+launch or a same-package click.
 
 ```bash
-androperator exec --dry-run --execution '{"commandId":"settings-nav-1","taskId":"settings-nav-1","source":"docs","expectedFormat":"android-ui-automator","timeoutMs":30000,"actions":[{"id":"open","type":"open_app","params":{"applicationId":"com.android.settings"}},{"id":"wait","type":"wait_for_navigation","params":{"expectedPackage":"com.android.settings","timeoutMs":5000}},{"id":"snap","type":"snapshot"}]}'
+androperator open com.android.settings --device <device_serial>
+androperator snapshot --device <device_serial>
+# For a justified destination selector, only when content readiness is needed:
+androperator wait --text "About phone" --timeout 5000 --device <device_serial>
 ```
+
+Labels vary by device; derive selectors from evidence for the workflow. A node
+already present before the action does not prove that navigation occurred.
 
 ## Launcher And Home-Screen Navigation
 
@@ -57,8 +56,7 @@ Why this matters:
   `wait_for_navigation` even when the target package ultimately reaches the
   foreground
 
-If the app is already installed and you know the package ID, `open_app` plus
-`wait_for_navigation` plus `snapshot` is usually a more deterministic route
+If the app is already installed and you know the package ID, `open_app` plus `snapshot` is usually a more deterministic route
 than launcher traversal.
 
 ## `open_app`
@@ -80,34 +78,6 @@ Accepted raw JSON parameter aliases for `open_app`:
 Validation rule:
 
 - blank or missing `applicationId` fails with `EXECUTION_VALIDATION_FAILED`
-
-Builder example:
-
-```json
-{
-  "commandId": "open_app_1700000000000",
-  "taskId": "cli-action-open-app",
-  "source": "androperator-cli",
-  "timeoutMs": 15000,
-  "expectedFormat": "android-ui-automator",
-  "actions": [
-    {
-      "id": "a1",
-      "type": "open_app",
-      "params": {
-        "applicationId": "com.android.settings"
-      }
-    }
-  ]
-}
-```
-
-Exact builder literals from `buildOpenAppExecution()`:
-
-- `taskId: "cli-action-open-app"`
-- `source: "androperator-cli"`
-- `timeoutMs: 15000`
-- action id: `a1`
 
 CLI routing pattern:
 
@@ -134,7 +104,7 @@ Verification:
 androperator open com.android.settings
 ```
 
-Expected live success shape:
+Success excerpt (correlation and other fields omitted):
 
 ```json
 {
@@ -154,12 +124,10 @@ Expected live success shape:
 }
 ```
 
-If you want to verify the builder shape without dispatching, use the example payload above with `androperator exec --validate-only --execution '<json>'`.
-
 What to verify after `open_app`:
 
 - do not rely on the open action alone
-- follow with `wait_for_navigation` using `expectedPackage`
+- use a destination-specific `wait_for_node` only when content readiness needs a wait
 - then confirm the target screen with `snapshot` or another read action
 
 Error cases:
@@ -183,34 +151,6 @@ Validation rules:
 - blank or missing `uri` fails
 - maximum length is `2048` characters (`LIMITS.MAX_URI_LENGTH`)
 
-Builder example:
-
-```json
-{
-  "commandId": "open_uri_1700000000000",
-  "taskId": "cli-action-open-uri",
-  "source": "androperator-cli",
-  "timeoutMs": 15000,
-  "expectedFormat": "android-ui-automator",
-  "actions": [
-    {
-      "id": "a1",
-      "type": "open_uri",
-      "params": {
-        "uri": "https://androperator.com"
-      }
-    }
-  ]
-}
-```
-
-Exact builder literals from `buildOpenUriExecution()`:
-
-- `taskId: "cli-action-open-uri"`
-- `source: "androperator-cli"`
-- `timeoutMs: 15000`
-- action id: `a1`
-
 CLI routing pattern:
 
 ```bash
@@ -230,7 +170,7 @@ Verification:
 androperator open https://androperator.com
 ```
 
-Expected live success shape:
+Success excerpt (correlation and other fields omitted):
 
 ```json
 {
@@ -250,8 +190,6 @@ Expected live success shape:
 }
 ```
 
-If you want to verify the builder shape without dispatching, use the example payload above with `androperator exec --validate-only --execution '<json>'`.
-
 What Node validates versus what it does not:
 
 - Node validates presence and max length
@@ -259,7 +197,7 @@ What Node validates versus what it does not:
 
 What to verify after `open_uri`:
 
-- use `wait_for_navigation` if you expect a package or visible node
+- wait for a justified destination node when needed; package-only waits require transition evidence
 - use `snapshot` to confirm the actual screen reached
 
 Error cases:
@@ -268,9 +206,14 @@ Error cases:
 - URI longer than `2048` characters: `EXECUTION_VALIDATION_FAILED`
 - missing `open` target on the CLI: `MISSING_ARGUMENT`
 
+<a id="wait-for-navigation"></a>
 ## `wait_for_navigation`
 
-`wait_for_navigation` is the navigation-specific confirmation step.
+`wait_for_navigation` is a transition/node wait. A package already foreground
+when the wait begins does not satisfy a package-only wait without an observed
+package change. A matching `expectedNode` independently satisfies the wait;
+package and node are OR conditions, not a combined assertion. For in-app content
+readiness, prefer `wait_for_node`.
 
 CLI aliases accepted for agent-first ergonomics:
 
@@ -282,7 +225,7 @@ Current public parameters:
 
 | Field | Valid values | Meaning |
 | --- | --- | --- |
-| `expectedPackage` | optional non-blank string, `<= 512` characters | wait until that package is foreground |
+| `expectedPackage` | optional non-blank string, `<= 512` characters | wait for evidence of transition to that foreground package |
 | `expectedNode` | optional `NodeMatcher` | wait until a target node is present |
 | `timeoutMs` | required number, `> 0`, `<= 30000` | wait window for navigation confirmation |
 
@@ -303,14 +246,7 @@ Builder inflation rule:
 
 - execution timeout becomes `max(timeoutMs + 5000, 30000)`
 
-Exact builder literals from `buildWaitForNavExecution()`:
-
-- `source: "androperator-action"`
-- action id: `wait-for-nav`
-- action type: `wait_for_navigation`
-- default execution timeout when `navTimeoutMs` is omitted: `30000`
-
-Example:
+Example action fragment (either condition may satisfy it):
 
 ```json
 {
@@ -345,7 +281,7 @@ Verification:
 androperator wait-for-nav --app com.android.settings --timeout 5000 --validate-only
 ```
 
-Expected validated execution shape:
+Validated execution excerpt (no device dispatch):
 
 ```json
 {
@@ -368,13 +304,19 @@ Expected validated execution shape:
 }
 ```
 
+Standalone navigation-wait success excerpt (when its transition or node condition
+was satisfied):
+
+```json
+{"id":"wait-for-nav","actionType":"wait_for_navigation","success":true,"data":{"resolved_package":"com.android.settings","elapsed_ms":"412"}}
+```
+
 ## Common Navigation Sequence
 
 The recommended pattern for deterministic app navigation is:
 
-1. `open_app`
-2. `wait_for_navigation`
-3. `snapshot`
+1. `open_app` (includes package readiness)
+2. `snapshot`, followed by a content wait and another observation only if needed
 
 Example payload:
 
@@ -394,14 +336,6 @@ Example payload:
       }
     },
     {
-      "id": "wait",
-      "type": "wait_for_navigation",
-      "params": {
-        "expectedPackage": "com.android.settings",
-        "timeoutMs": 5000
-      }
-    },
-    {
       "id": "snap",
       "type": "snapshot"
     }
@@ -414,18 +348,18 @@ Machine-checkable success conditions:
 - `envelope.status == "success"`
 - `stepResults[0].actionType == "open_app"` and `stepResults[0].success == true`
 - `stepResults[0].data.application_id == "com.android.settings"`
-- `stepResults[1].actionType == "wait_for_navigation"` and `stepResults[1].success == true`
-- when waiting by `expectedPackage`, `stepResults[1].data.resolved_package == "com.android.settings"`
-- `stepResults[2].actionType == "snapshot"` and `stepResults[2].success == true`
-- `stepResults[2].data.text` exists
+- `stepResults[1].actionType == "snapshot"` and `stepResults[1].success == true`
+- `stepResults[1].data.text` exists
 
 Verification command:
 
 ```bash
-androperator exec --execution '{"commandId":"settings-nav-1","taskId":"settings-nav-1","source":"docs","expectedFormat":"android-ui-automator","timeoutMs":30000,"actions":[{"id":"open","type":"open_app","params":{"applicationId":"com.android.settings"}},{"id":"wait","type":"wait_for_navigation","params":{"expectedPackage":"com.android.settings","timeoutMs":5000}},{"id":"snap","type":"snapshot"}]}' --device <device_serial>
+androperator exec --execution '{"commandId":"settings-nav-1","taskId":"settings-nav-1","source":"docs","expectedFormat":"android-ui-automator","timeoutMs":30000,"actions":[{"id":"open","type":"open_app","params":{"applicationId":"com.android.settings"}},{"id":"snap","type":"snapshot"}]}' --device <device_serial>
 ```
 
-## Complete JSON Example
+## Synthetic response example
+
+The hierarchy below is abbreviated. Package/timing metadata may also be present.
 
 ```json
 {
@@ -440,15 +374,6 @@ androperator exec --execution '{"commandId":"settings-nav-1","taskId":"settings-
         "success": true,
         "data": {
           "application_id": "com.android.settings"
-        }
-      },
-      {
-        "id": "wait",
-        "actionType": "wait_for_navigation",
-        "success": true,
-        "data": {
-          "resolved_package": "com.android.settings",
-          "elapsed_ms": "412"
         }
       },
       {
@@ -477,7 +402,7 @@ There is no dedicated Node validation code for "target app is missing" on `open_
 What to do:
 
 - inspect `stepResults[0]`
-- follow with `snapshot` or `wait_for_navigation` to see where the device actually landed
+- obtain a fresh `snapshot` to see where the device actually landed; do not replay the launch blindly
 - if the Operator package itself is missing instead of the target app, the execution fails earlier with `OPERATOR_NOT_INSTALLED`
 
 ### Navigation timeout
@@ -489,6 +414,7 @@ When `wait_for_navigation` never sees the expected package or node inside its ti
 
 Recovery:
 
+- preserve the failed result and observe current state before repeating any mutation
 - increase the action timeout only if the app truly needs more time
 - verify the expectation is correct
 - use [Snapshot Format](snapshot.md) or [Selectors](selectors.md) to inspect the actual screen
@@ -530,21 +456,17 @@ Recovery:
 
 ### Envelope timeout during navigation
 
-If the entire payload runs too long, the caller gets a top-level `RESULT_ENVELOPE_TIMEOUT` error rather than a failed `wait_for_navigation` step.
+A received Android deadline failure has a failed envelope with `COMMAND_TIMEOUT`.
+When no terminal envelope arrives before the host deadline, the result is a
+host `RESULT_ENVELOPE_TIMEOUT` error. Preserve collected steps and
+[dispatch evidence](errors.md#execution-failure-evidence); observe current state
+before retrying any mutation. See [timeout outcomes](timeouts.md#timeout-outcomes).
 
 Recovery:
 
 - check whether the execution-level timeout was budgeted correctly
 - use the builder rule `max(actionTimeout + 5000, 30000)` as the minimum
 - verify device health with [Doctor](doctor.md) if the timeout is unexpected
-
-## Recommended Pattern
-
-- use `open_app` or `open_uri` only as the trigger
-- use `wait_for_navigation` as the readiness gate
-- use `snapshot` as the final confirmation step
-
-That three-step flow is the most reliable current navigation pattern for agents.
 
 ## Related Pages
 

@@ -20,8 +20,8 @@ Use this playbook after that, when you need deeper context for:
 
 These are runtime components (not debug-only):
 
-- `com.androperator.operator.runtime.OperatorCommandService`
-- `com.androperator.operator.runtime.OperatorCommandReceiver`
+- `androperator.operator.runtime.OperatorCommandService`
+- `androperator.operator.runtime.OperatorCommandReceiver`
 
 They own broadcast ingress for:
 - **Action Namespace:** `com.androperator.operator.ACTION_AGENT_COMMAND` (stable)
@@ -38,41 +38,14 @@ next bounded action in the agent. Reset the app with `close_app` then `open_app`
 only when the task needs a fresh session. Prefer observable readiness checks to
 fixed delays, and verify the effect after navigation or mutation.
 
-### Required fields
-- `commandId: string`
-- `taskId: string`
-- `source: string`
-- **`expectedFormat: "android-ui-automator"`** (required execution format)
-- `actions: []`
+### Execution and result contracts
 
-### Determinism Doctrine
-1. **Validation First:** No side effects if the payload is malformed.
-2. **Exactly One Envelope:** Every command must emit a `[Androperator-Result]`.
-3. **Bounded Execution:** Actions may use their documented retry policies. App-specific recovery and replanning belong to the agent.
-4. **Stable IDs:** Correlate `commandId` and `taskId` end-to-end.
-
----
-
-### Supported action types (current)
-
-| Action type | Key params | Notes |
-| :--- | :--- | :--- |
-| `open_app` | `applicationId: string` | Launches app by package ID |
-| `close_app` | `applicationId: string` | Node runs `adb shell am force-stop` pre-flight, normalizes the step result only when that close succeeds, and otherwise returns a structured execution failure |
-| `enter_text` | `matcher: NodeMatcher`, `text: string`, `submit?: boolean`, `clear?: boolean` | CLI: `type` (synonym: `fill`). Android keeps the public action stable and chooses the text-entry route internally. It prefers `ACTION_SET_TEXT` when available, falls back to the API 33 accessibility input-connection path for custom editors when needed, preserves replace-style behavior on both routes, and treats `submit` as best-effort rather than a new hard-failure condition. |
-| `click` | `matcher: NodeMatcher`, `clickType?: "default"\|"long_click"\|"focus"` | CLI: `click` (synonym: `tap`) |
-| `swipe` | `start: {x, y}`, `end: {x, y}`, `durationMs: integer 1..10000` (all required) | CLI: `swipe --start <x> <y> --end <x> <y> --duration-ms <ms>`. Straight-line movement and release; no hold or automatic retry. Completion does not verify the app effect |
-| `drag` | `start: {x, y}`, `end: {x, y}`, `holdDurationMs` and `moveDurationMs`: integers 1..10000 (all required) | CLI: `drag --start <x> <y> --end <x> <y> --hold-duration-ms <ms> --move-duration-ms <ms>`. API 26+. Start inside the source item; verify the resulting placement with a fresh snapshot. See [drag contract](../../api/actions.md#action-drag) |
-| `read_text` | `matcher: NodeMatcher`, `validator?: "temperature"`, `retry?: object` | CLI: `read`. Result in `data.text`. Other validator values are rejected by the runtime |
-| `wait_for_node` | `matcher: NodeMatcher`, `retry?: object` | CLI: `wait`. Waits with internal retry |
-| `snapshot` | `retry?: object` | CLI: `snapshot`. Snapshot content in `data.text` as `hierarchy_xml`, plus best-effort `foreground_package` / `has_overlay` metadata |
-| `take_screenshot` | `path?: string`, `retry?: object` | Node captures screenshot via ADB and returns local file path |
-| `scroll_and_click` | `target: NodeMatcher`, `container?: NodeMatcher`, `direction?`, `maxSwipes?`, `distanceRatio?`, `settleDelayMs?`, `findFirstScrollableChild?`, `clickAfter?: boolean`, `scrollRetry?: object`, `clickRetry?: object` | Scrolls until target is visible, then clicks by default. Set `clickAfter: false` to reveal the target without tapping it. `scrollRetry` defaults to UiScroll; `clickRetry` defaults to UiReadiness |
-| `scroll` | `container?: NodeMatcher`, `direction?`, `distanceRatio?`, `settleDelayMs?`, `findFirstScrollableChild?`, `retry?: object` | Performs exactly one scroll gesture and reports `scroll_outcome` as `moved`, `no_movement`, `unknown`, `container_lost`, or `gesture_failed` |
-| `scroll_until` | `target?: NodeMatcher`, `container?: NodeMatcher`, `clickType?: "default"\|"long_click"\|"focus"`, `clickAfter?: boolean`, `direction?`, `distanceRatio?`, `settleDelayMs?`, `maxScrolls?`, `maxDurationMs?`, `noPositionChangeThreshold?`, `findFirstScrollableChild?` | Bounded scroll loop that returns `termination_reason`. With `target`, the runtime emits `TARGET_FOUND` when the matcher becomes visible in the on-screen filtered tree. Set `clickAfter: true` to click immediately once visible. Missing or unchanged progress counts toward `NO_POSITION_CHANGE`; disappearing containers report `CONTAINER_LOST`. Without `target`, use it for feed pagination with explicit caps |
-| `sleep` | `durationMs: number` | Pause between steps. Must fit within the execution `timeoutMs` budget |
-
-**`enter_text` vs CLI `type`:** The CLI command is `type` (synonym: `fill`) but the action type field in execution payloads is `enter_text`. These map to the same runtime action. When building execution payloads directly, always use `enter_text`.
+Use [execution inputs and result envelopes](../../api/overview.md),
+[action parameters](../../api/actions.md) and [selectors](../../api/selectors.md)
+as the current contract. The Node boundary validates before dispatch. Correlate
+command/task IDs, preserve failed steps and transport uncertainty, and distinguish
+host preflight effects from requested actions. Android aims to emit one terminal
+envelope; transport loss is not proof that no action executed.
 
 **Android `enter_text` runtime notes:**
 

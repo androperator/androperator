@@ -16,21 +16,18 @@ like, and what parts of the snapshot contract an agent can rely on.
 
 ## What `snapshot` Returns
 
-`snapshot` is the canonical read-only UI observation action. The Android runtime
+`snapshot` is the canonical UI observation action. The action reads UI state,
+but ordinary execution preparation may attempt wake/Home when the device is
+asleep. For non-waking still capture use the separate [evidence](evidence.md)
+readiness contract. The Android runtime
 returns the XML as `data.text` in the canonical result envelope. Large envelopes
 travel over logcat in paced chunks with command/task identity, ordered indices,
 byte length and SHA-256 verification. Node validates the complete XML before
 returning raw or compact output.
 
-The built-in `androperator snapshot` command constructs a one-step execution with these exact defaults:
-
-- `source: "androperator-observe"`
-- `expectedFormat: "android-ui-automator"`
-- `timeoutMs: 30000` when `buildSnapshotExecution()` is called without an override
-- one action with `id: "snap"` and `type: "snapshot"`
-- `mode: "direct"`
-- `commandId` is generated as `snapshot-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-- `taskId` equals the generated `commandId`
+The built-in `snapshot` command creates one snapshot step (`id: "snap"`) with
+a default execution budget of 30000 ms. Command/task IDs are generated and echoed
+for correlation; treat their spelling as opaque.
 
 For default raw CLI `snapshot`, machine-checkable success means:
 
@@ -41,24 +38,7 @@ For default raw CLI `snapshot`, machine-checkable success means:
 - `envelope.stepResults[0].success == true`
 - `envelope.stepResults[0].data.text` is present
 
-Example one-step payload from the `androperator snapshot` builder:
-
-```json
-{
-  "commandId": "snapshot-1700000000000-abcd123",
-  "taskId": "snapshot-1700000000000-abcd123",
-  "source": "androperator-observe",
-  "expectedFormat": "android-ui-automator",
-  "timeoutMs": 30000,
-  "actions": [
-    {
-      "id": "snap",
-      "type": "snapshot"
-    }
-  ],
-  "mode": "direct"
-}
-```
+For raw execution inputs, see the [execution payload](overview.md#execution-payload).
 
 ## Compact Output and Raw Artifacts
 
@@ -127,6 +107,63 @@ file cleanup; copy evidence you need to retain.
 These limits bound nodes and fields, not exact tokens or bytes. Projection does
 not reduce Android capture cost. A full compact projection can exceed raw XML
 size for short or sparse nodes; choose a node limit appropriate to the task.
+
+## Compact result example
+
+Synthetic presentation result generated from a two-node tree with `maxNodes: 1`.
+The omitted child cannot be treated as absent. Transport metadata is omitted.
+
+```json
+{
+  "envelope": {
+    "commandId": "snapshot-example",
+    "taskId": "snapshot-example",
+    "status": "success",
+    "stepResults": [
+      {
+        "id": "snap",
+        "actionType": "snapshot",
+        "success": true,
+        "data": {}
+      }
+    ]
+  },
+  "compact": {
+    "schemaVersion": 1,
+    "commandId": "snapshot-example",
+    "taskId": "snapshot-example",
+    "totalNodes": 2,
+    "returnedNodes": 1,
+    "omittedNodes": 1,
+    "truncated": true,
+    "nodes": [
+      {
+        "nodePath": "0",
+        "parentPath": null,
+        "resourceId": null,
+        "className": null,
+        "text": "Settings",
+        "contentDescription": null,
+        "bounds": null,
+        "textTruncated": false,
+        "contentDescriptionTruncated": false,
+        "checked": null,
+        "checkable": null,
+        "selected": null,
+        "enabled": null,
+        "clickable": false,
+        "scrollable": null,
+        "visibleToUser": null,
+        "accessibilityDataSensitive": null
+      }
+    ]
+  }
+}
+```
+
+With `--raw-path`, compact output additionally places `rawArtifactPath` inside
+`compact`; raw mode places it at the top level. The original envelope is retained
+internally; only the returned presentation copy omits snapshot `data.text`.
 
 ## How Snapshot Data Flows
 
@@ -556,19 +593,18 @@ Any intervening action such as `sleep`, `wait_for_node`, or `read_text` suppress
 
 ## Snapshot Line Limit
 
-`LIMITS.MAX_SNAPSHOT_LINES` is `2000`.
+There is no extraction truncation at 2,000 lines. Use the enforced limits below;
+never truncate XML yourself to make a partial tree appear complete.
 
-This constant is defined in `apps/node/src/contracts/limits.ts`, but the current Node extraction path in `snapshotHelper.ts` does not actively clamp snapshots to 2000 lines. Treat it as a documented size-limit constant, not as a currently enforced truncation rule in extraction.
+| Surface | Enforced limit | Recovery |
+| --- | --- | --- |
+| Execution request | 64,000 serialized bytes; at most 50 actions | Split work into explicit executions |
+| Snapshot source XML | 8 MiB UTF-8; at most 256 nested elements | Retain extraction failure; narrow the observed screen or report the source limit |
+| Query result | 256 KiB JSON response guard | Narrow the matcher/result request |
+| Compact presentation | `maxNodes` 1..1000; `maxTextChars` 1..4096 | Inspect omitted counts/truncation; retain raw evidence |
 
-The same limits file also defines:
-
-- `MAX_SNAPSHOT_BYTES = 262144`
-
-Operationally:
-
-- do not assume Node will truncate at 2000 lines today
-- do assume very large hierarchies are higher risk across extraction, payload handling, and downstream consumers
-- keep large XML payloads within the documented size constants when possible
+Compact limits do not reduce capture cost or bound exact bytes/tokens. See
+[source completeness](#source-completeness) for capture truncation.
 
 ## Successful Step Example
 

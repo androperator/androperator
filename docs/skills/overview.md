@@ -14,5 +14,6 @@ helpers can parse evidence or perform a short operation on verified state. They
 must retain failures and avoid treating process success as proof of the goal.
 A one-off task can use direct CLI, HTTP or MCP actions without creating a skill.
 
-Read [authoring](authoring.md), [development](development.md),
-[device preparation](runtime.md) and [recording evidence](../api/recording.md).
+For reusable instructions, use [authoring](authoring.md); for helper validation,
+[development](development.md); for a new target, [device preparation](runtime.md).
+Load [recording evidence](../api/recording.md) only when using a demonstration.

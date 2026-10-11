@@ -1,38 +1,67 @@
 # Androperator Documentation
 
-This site contains the canonical technical documentation for Androperator, a deterministic Android automation runtime for AI agents. Androperator is the actuator. Your external agent or LLM is the brain.
+Load the page matching the current task. These references describe the source build; verify installed CLI/Operator compatibility. The full corpus is optional, not a mandatory reading sequence.
 
-## Key pages
+## Start or repair
 
-- Docs home: https://docs.androperator.com/
-- Setup: https://docs.androperator.com/setup/
-- API overview: https://docs.androperator.com/api/overview/
-- CLI reference: https://docs.androperator.com/api/cli/
-- Actions: https://docs.androperator.com/api/actions/
-- Selectors: https://docs.androperator.com/api/selectors/
-- Snapshot format: https://docs.androperator.com/api/snapshot/
-- Errors: https://docs.androperator.com/api/errors/
-- Devices: https://docs.androperator.com/api/devices/
-- Doctor: https://docs.androperator.com/api/doctor/
-- Timeouts: https://docs.androperator.com/api/timeouts/
-- Environment variables: https://docs.androperator.com/api/environment/
-- Serve API: https://docs.androperator.com/api/serve/
-- MCP server: https://docs.androperator.com/api/mcp/
-- Navigation patterns: https://docs.androperator.com/api/navigation/
-- Recording format: https://docs.androperator.com/api/recording/
-- Skills overview: https://docs.androperator.com/skills/overview/
-- Skill authoring: https://docs.androperator.com/skills/authoring/
-- Skill development workflow: https://docs.androperator.com/skills/development/
-- Device prep and runtime: https://docs.androperator.com/skills/runtime/
-- Operator troubleshooting: https://docs.androperator.com/troubleshooting/operator/
-- Known issues: https://docs.androperator.com/troubleshooting/known-issues/
-- Version compatibility: https://docs.androperator.com/troubleshooting/compatibility/
+- Docs home: choose a route: https://docs.androperator.com/
+- Host orientation: select interface, target and readiness: https://docs.androperator.com/host-agents/
+- Quickstart: ready-host observe/action/result loop: https://docs.androperator.com/quickstart/
+- Setup: install or repair prerequisites: https://docs.androperator.com/setup/
+
+## Choose inputs and interpret results
+
+- CLI reference: command syntax and owners: https://docs.androperator.com/api/cli/
+- Execution payloads, envelopes and output parsing: https://docs.androperator.com/api/overview/
+- Action inputs and output examples: https://docs.androperator.com/api/actions/
+- Selectors: exact matching, strictness and containers: https://docs.androperator.com/api/selectors/
+- Scoped selection: repeated rows and ambiguity: https://docs.androperator.com/api/scoped-selection/
+- Devices, package discovery and emulator CLI routing: https://docs.androperator.com/api/devices/
+- Budgets and distinct timeout outcomes: https://docs.androperator.com/api/timeouts/
+
+## Observe and retain evidence
+
+- Raw/compact hierarchy, source completeness and artifacts: https://docs.androperator.com/api/snapshot/
+- Still/video bundles, partial outcomes and artifact retention: https://docs.androperator.com/api/evidence/
+- Notification reads and authorized mutations: https://docs.androperator.com/api/notifications/
+- Media state and controls, including background readiness: https://docs.androperator.com/api/media/
+- Navigation recipes and transition-wait semantics: https://docs.androperator.com/api/navigation/
+- Human demonstration capture and NDJSON export: https://docs.androperator.com/api/recording/
+- On-screen logs and visibility receipts: https://docs.androperator.com/api/on-screen-logs/
+
+## Connect a transport or configure a host
+
+- HTTP: remote device host, endpoints and errors: https://docs.androperator.com/api/serve/
+- MCP: stdio tools and transport-specific results: https://docs.androperator.com/api/mcp/
+- Daemon: lifecycle and uncertain proxy responses: https://docs.androperator.com/api/daemon/
+- Configuration: supported settings and precedence: https://docs.androperator.com/api/environment/
+
+## Diagnose an observed failure
+
+- Errors: typed codes, dispatch evidence and recovery: https://docs.androperator.com/api/errors/
+- Doctor: interactive/background gates and check results: https://docs.androperator.com/api/doctor/
+- Logging: NDJSON and correlation: https://docs.androperator.com/api/logging/
+- Operator: installation, permissions and service failures: https://docs.androperator.com/troubleshooting/operator/
+- Compatibility: exact CLI/APK version checks: https://docs.androperator.com/troubleshooting/compatibility/
+- Known limitations and bug reporting: https://docs.androperator.com/troubleshooting/known-issues/
+- Performance: investigate latency with evidence: https://docs.androperator.com/troubleshooting/performance/
+
+## Optional reusable instructions and integrations
+
+- Skills: when reusable instructions help: https://docs.androperator.com/skills/overview/
+- Authoring: discover and verify a workflow: https://docs.androperator.com/skills/authoring/
+- Development: validate helpers and live outcomes: https://docs.androperator.com/skills/development/
+- Runtime preparation for skill workflows: https://docs.androperator.com/skills/runtime/
+- Optional Settings examples: https://docs.androperator.com/skills/examples/
+- Personalized instructions: https://docs.androperator.com/skills/personalized-skills/
+- Context projection: only for callers using the adapter: https://docs.androperator.com/skills/context-adapter/
+- Jev: only for the optional provider integration: https://docs.androperator.com/skills/jev/
+
+## Upgrade history
+
+- Migration: older names/packages and retained state: https://docs.androperator.com/migration-to-androperator/
+
+## Full references
+
 - Full compiled docs on docs host: https://docs.androperator.com/llms-full.txt
 - Full compiled docs on landing host: https://androperator.com/llms-full.txt
-
-## Guidance for agents
-
-- Prefer this docs site over the marketing homepage for technical behavior.
-- The Node API is strict and contract-driven.
-- Androperator executes validated actions and returns structured results.
-- Reasoning and planning stay outside this runtime.

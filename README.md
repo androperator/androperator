@@ -202,6 +202,6 @@ Androperator was formerly known as Clawperator. See the
 
 [Apache 2.0](LICENSE).
 
-Written by clankers. Engineered by [@chrismlacy](https://x.com/chrismlacy).
+Written by clankers / Engineered by [@chrismlacy](https://x.com/chrismlacy).
 
 Copyright (c) 2026 Action Launcher Pty Ltd

@@ -1,12 +1,14 @@
-# Migrating to Androperator 1.0.0
+# Migrating older installations
 
-Androperator was formerly known as Clawperator. Its first release is 1.0.0.
-The new package, CLI, Android app and runtime contracts change together.
-This release is being prepared; do not use the new download URLs until public cutover is complete.
+This page is for an existing older installation. New installations should use
+[Setup](setup.md). The 1.0 rename from Clawperator changed the CLI, Android app
+and runtime contracts together; 1.1 changes the npm package name as described below.
+Use published installer/version evidence for availability; a source checkout or
+this migration history does not establish release cutover.
 
 | Surface | Before | After |
 | --- | --- | --- |
-| npm package | `clawperator` | `@androperator/cli` |
+| npm package at the 1.0 rename | `clawperator` | `androperator` (now `@androperator/cli`; see 1.1 below) |
 | CLI executable | `clawperator` | `androperator` |
 | Environment variables | `CLAWPERATOR_*` | `ANDROPERATOR_*` |
 | Local state | `~/.clawperator/` | `~/.androperator/` |
@@ -34,16 +36,10 @@ skills you need to retain, then migrate those deliberately. Git hooks use
 `ANDROPERATOR_BLOCKED_TERMS_FILE` or `~/.androperator/blocked-terms.txt`; until that
 file exists, they retain the former default terms file as a migration safeguard.
 
-The old landing site and historical release notes remain under the former name.
-No Clawperator 1.0.0 package or release is to be published.
+Historical release notes remain under the former name. The 1.0 product rename
+and 1.1 package move are separate migrations.
 
-## Release preparation
-
-Before tagging, verify new npm publishing authorization, the destination domains,
-installer routes, downloads bucket and APK redirect Worker. Cloudflare upload
-secrets use `ANDROPERATOR_CLOUDFLARE_*`. Android signing secrets retain their
-existing stored values and secret names; the workflow maps them to renamed build
-variables. Do not generate a new signing key.
+## Runtime changes
 
 Firebase SDKs, plugins, registrations and remote task-status reporting have been
 removed. Crash information remains in the app-private `crash-log.txt` and logcat.

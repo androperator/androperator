@@ -16,6 +16,18 @@ candidate validation, recovery and independent terminal proof. Inspect their
 current instructions and helpers before reuse; app routes and timing are not
 core contracts.
 
+When using candidate menus, clear both public and nested menus after uncertain
+mutation or a failed refresh. Preserve pending overlay-review evidence while
+invalidating stale targets. A provider error alone does not invalidate an otherwise
+current unchanged observation. Use child-local diagnostic directories for helpers.
+The [context adapter](https://docs.androperator.com/skills/context-adapter/) describes
+candidate preparation; its IDs are not native selectors.
+
+The Settings example allows one eligible malformed-XML observation recovery within
+ten seconds and the remaining run budget. This is its app-specific policy, not a
+universal retry rule. Its nested label/value examples are in
+[targeting examples](targeting-examples.md); inspect current helpers before reuse.
+
 For requested authoring, save adaptive instructions with inputs, likely routes,
 supported recovery, budgets and independent outcome verification. Optional helpers
 can parse and retain evidence. Prove live navigation and truthful failure handling.

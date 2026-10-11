@@ -20,22 +20,12 @@ Node paths and candidate IDs belong to one capture; neither is a native selector
 Use supported current selectors, checking uniqueness against all source nodes,
 including hidden and description-only matches. Check enabled/visible state,
 clickable ancestry, bounds and known viewport intersection. Unknown facts remain
-unknown. See [selectors](https://docs.androperator.com/api/selectors/) and the
-[context adapter](https://docs.androperator.com/skills/context-adapter/).
+unknown. See [selectors](https://docs.androperator.com/api/selectors/) for matching
+and strict-selection contracts.
 
-- Offscreen About row: identify the observed scrollable list, scroll within the
-  budget, then refresh and match. Do not click an old offscreen position.
-- Moved button: expire its previous candidate after navigation, scrolling or an
-  interruption. Match again and verify its destination after clicking.
-- Duplicate labels: inspect the containing rows and use a supported disambiguating
-  selector. Do not choose the first match or turn a node path into a selector.
-- Nested label/value: follow explicit parent relationships to the smallest
-  supported row. A title wrapper may sit beside the summary within that row;
-  adjacent unrelated text is not its value. Verify extracted values with a
-  successful independent read. Keep Android OS version and build number separate.
-- Popup: observe its meaning and controls before any dismissal. A known harmless
-  navigation dismissal may be appropriate; arbitrary acceptance, login, payment
-  or permission consent is not recovery authorization.
+For offscreen controls, ambiguous rows and consent-sensitive popups, load
+[worked targeting examples](targeting-examples.md). Use [delegation](delegation.md)
+only when supplying a candidate menu to a helper or provider.
 
 Request a screenshot for a stated unresolved question, such as whether a popup
 covers the target or which visual heading identifies the destination. Preserve
@@ -44,6 +34,18 @@ acquired images and trees are not atomic. Label image-derived facts explicitly.
 Map proposed actions back to supported current targets. Image interpretation does
 not invent accessibility selectors. Overlay metadata, geometry and platform
 visibility do not guarantee lack of occlusion. Verify the resulting screen.
+
+Screenshots default to 25% per dimension. Open `data.path` with an image-reading
+tool; JSON success is not visual inspection. Request a fresh `--scale 50` or
+`--scale 100` image when fine detail is unclear, without replaying the prior action.
+The file belongs to the capture host; remote clients need separate file access.
+
+Step metadata uses strings. Convert image pixels to native coordinates with
+`floor(imageX * nativeWidthPx / captureWidthPx)` and the corresponding height
+ratio. Remove preview padding and map any preview resize to saved-image pixels
+first. Verify current orientation, geometry and content before coordinate input;
+prefer fresh semantic selectors. See the [screenshot contract](https://docs.androperator.com/api/actions/#action-take-screenshot)
+for fields, fallback behavior and failure evidence.
 
 Screenshots add acquisition and interpretation cost. Smaller model input and
 selective screenshots do not establish a speedup or general OEM reliability.

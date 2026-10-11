@@ -7,11 +7,10 @@ description: Execute Android goals that need adaptive navigation or verified ext
 
 Complete the requested Android goal with independently verified results, or return
 a supported partial or failed outcome when a blocker or budget prevents completion.
-For authorized authoring, save adaptive instructions and verify them live.
 
 The agent owns decisions and verification; Androperator executes. Use
 `androperator-agent-orientation` if the CLI, device and Operator have not already
-been selected and checked. Define actual goal coverage before choosing this loop. No provider credential is required.
+been selected and checked.
 
 ## Execute the goal
 

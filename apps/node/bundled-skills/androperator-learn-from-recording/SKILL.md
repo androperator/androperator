@@ -20,7 +20,10 @@ Capture a new demonstration only when it supplies missing evidence.
    `recording pull`. Pass the selected device and Operator to device commands.
    Preserve raw NDJSON privately; do not delete recordings.
 3. Run `recording export --input <local_ndjson> --out <export_json>` and read the
-   generated file. The command response is a summary, not the event evidence.
+   generated file. Check `resolvedInputFile` in the success wrapper to identify
+   the NDJSON actually read: directory input selects the newest `*.ndjson` file.
+   This path may be relative and is not added to the exported artifact. The
+   command response is a summary, not the event evidence.
    Use `--snapshots include` when XML evidence is useful.
 4. Identify likely screens, inputs, candidate selectors, branches and outcome
    evidence. Recorded taps, coordinates and elapsed delays do not prove current

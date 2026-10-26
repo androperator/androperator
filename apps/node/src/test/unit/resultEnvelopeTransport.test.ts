@@ -100,3 +100,88 @@ it("reports missing chunk progress and rejects truncated metadata and size misma
   const invalid = { ...frames[0], byteLength: 1, count: 1 };
   assert.throws(() => new ResultEnvelopeTransport(commandId).consume(frame(invalid)), /chunk data/);
 });
+
+function publication(event = "writes_completed", overrides: Record<string, unknown> = {}) {
+  const frames = chunks();
+  return `[Androperator-Publication] ${JSON.stringify({ commandId, taskId, event,
+    byteLength: Buffer.byteLength(canonical), recordCount: frames.length, chunkCount: frames.length,
+    writtenRecords: frames.length, elapsedMs: 50, ...overrides })}`;
+}
+
+async function readPublicationOutput(lines: string[]) {
+  const process = new EventEmitter() as ChildProcess;
+  const stdout = new PassThrough();
+  const stderr = new PassThrough();
+  let kills = 0;
+  Object.assign(process, { stdout, stderr, kill: () => { kills++; return true; } });
+  const config = getDefaultRuntimeConfig();
+  config.runner = { ...config.runner, spawn: () => process };
+  const result = await waitForResultEnvelope(config, { commandId, taskId, timeoutMs: 30, broadcastDelayMs: 0 }, async begin => {
+    begin();
+    // Split lines across pipe buffers, including the publication event.
+    const output = lines.join("\n") + "\n";
+    for (let offset = 0; offset < output.length; offset += 137) stdout.write(output.slice(offset, offset + 137));
+    return { success: true };
+  });
+  stdout.destroy(); stderr.destroy();
+  assert.equal(kills, 1);
+  return result;
+}
+
+for (const received of [0, 1, 45]) {
+  it(`reports incomplete delivery when publication completes after ${received} chunks`, async () => {
+    const result = await readPublicationOutput([...chunks().slice(0, received).map(frame), publication()]);
+    assert.ok(!result.ok && "error" in result);
+    assert.equal(result.code, "RESULT_ENVELOPE_INCOMPLETE");
+    const transport = result.diagnostics?.transport as Record<string, unknown>;
+    assert.equal(transport.receivedChunks, received);
+    assert.equal(transport.expectedChunks, chunks().length);
+    assert.equal(transport.receivedBytes, received * 1024);
+    assert.equal((transport.publication as Record<string, unknown>).event, "writes_completed");
+    assert.equal(result.diagnostics?.executionPosition, "unknown");
+    assert.equal(result.diagnostics?.dispatchAttempted, true);
+    assert.match(result.error, /Inspect current state before retrying/);
+    const reader = result.diagnostics?.reader as { events: { event: string }[] };
+    assert.ok(!reader.events.some(event => event.event === "deadline_reached"));
+  });
+}
+
+it("reports publication write failure separately from writes completed", async () => {
+  const result = await readPublicationOutput([frame(chunks()[0]), publication("write_failed", { writtenRecords: 1 })]);
+  assert.ok(!result.ok && "error" in result);
+  assert.equal(result.code, "RESULT_ENVELOPE_INCOMPLETE");
+  const transport = result.diagnostics?.transport as Record<string, unknown>;
+  assert.equal((transport.publication as Record<string, unknown>).event, "write_failed");
+  assert.equal((transport.publication as Record<string, unknown>).writtenRecords, 1);
+});
+
+it("keeps the original deadline when no publication completion arrives", async () => {
+  const result = await readPublicationOutput([frame(chunks()[0]), publication("started", { writtenRecords: 0 })]);
+  assert.ok(!result.ok && "timeout" in result);
+  assert.equal(result.diagnostics.code, "RESULT_ENVELOPE_TIMEOUT");
+  const transport = result.diagnostics.details?.transport as Record<string, unknown>;
+  assert.equal(transport.receivedChunks, 1);
+  assert.equal((transport.publication as Record<string, unknown>).event, "started");
+});
+
+it("ignores foreign, malformed and inconsistent publication markers", async () => {
+  const result = await readPublicationOutput([frame(chunks()[0]),
+    publication("writes_completed", { commandId: "other" }),
+    publication("writes_completed", { taskId: "other" }),
+    publication("writes_completed", { byteLength: Buffer.byteLength(canonical) - 1 }),
+    publication("writes_completed", { writtenRecords: 0 }),
+    publication("writes_completed", { elapsedMs: -1 }),
+    publication("unknown"), "[Androperator-Publication] {", "[Androperator-Publication] null",
+  ]);
+  assert.ok(!result.ok && "timeout" in result);
+  const transport = result.diagnostics.details?.transport as Record<string, unknown>;
+  assert.equal(transport.publication, undefined);
+  assert.equal(transport.receivedChunks, 1);
+});
+
+it("a complete envelope remains authoritative with publication markers", async () => {
+  const result = await readPublicationOutput([publication("started", { writtenRecords: 0 }),
+    ...chunks().map(frame), publication()]);
+  assert.ok(result.ok);
+  assert.equal(result.envelope.stepResults[0].data?.query, query);
+});

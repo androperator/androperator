@@ -1,6 +1,6 @@
 
 import { ResultReaderTimeline } from "./resultReaderTimeline.js";
-import { ResultEnvelopeTransport } from "./resultEnvelopeTransport.js";
+import { IncompleteResultEnvelopeError, ResultEnvelopeTransport } from "./resultEnvelopeTransport.js";
 import { StringDecoder } from "node:string_decoder";
 import type { RuntimeConfig } from "./runtimeConfig.js";
 import type { ResultEnvelope, TerminalSource } from "../../contracts/result.js";
@@ -148,7 +148,7 @@ export async function waitForResultEnvelope(
     let broadcastStatus: BroadcastStatus = "not_sent";
     let pending = "";
     const decoder = new StringDecoder("utf8");
-    const transport = new ResultEnvelopeTransport(commandId);
+    const transport = new ResultEnvelopeTransport(commandId, options.taskId);
     let settled = false;
     let settlementCode: string | undefined;
     let failed = false;
@@ -438,7 +438,8 @@ export async function waitForResultEnvelope(
         try {
           terminalLine = transport.consume(parseLogcatLine(line)?.message ?? line);
         } catch (error) {
-          finalize({ ok: false, code: ERROR_CODES.RESULT_ENVELOPE_MALFORMED,
+          finalize({ ok: false, code: error instanceof IncompleteResultEnvelopeError
+            ? ERROR_CODES.RESULT_ENVELOPE_INCOMPLETE : ERROR_CODES.RESULT_ENVELOPE_MALFORMED,
             error: error instanceof Error ? error.message : "Malformed result transport" });
           return;
         }

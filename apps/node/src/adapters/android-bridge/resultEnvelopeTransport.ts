@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { RESULT_ENVELOPE_PREFIX } from "../../contracts/result.js";
 
+const PUBLICATION_PREFIX = "[Androperator-Publication]";
 const CHUNK_PREFIX = "[Androperator-Result-Chunk]";
 const MAX_ENVELOPE_BYTES = 64 * 1024 * 1024;
 
@@ -14,20 +15,74 @@ interface Chunk {
   data: string;
 }
 
+interface Publication {
+  commandId: string;
+  taskId: string;
+  event: "started" | "writes_completed" | "write_failed";
+  byteLength: number;
+  recordCount: number;
+  chunkCount: number;
+  writtenRecords: number;
+  elapsedMs: number;
+}
+
+export class IncompleteResultEnvelopeError extends Error {}
+
 /** One reader owns one command; incomplete chunks never become a terminal result. */
 export class ResultEnvelopeTransport {
   private header?: Chunk;
   private readonly chunks: Buffer[] = [];
   private receivedBytes = 0;
+  private publication?: Publication;
 
-  constructor(private readonly commandId: string) {}
+  constructor(private readonly commandId: string, private readonly taskId?: string) {}
 
   diagnostics(): Record<string, unknown> {
     return { receivedChunks: this.chunks.length, receivedBytes: this.receivedBytes,
-      expectedChunks: this.header?.count, expectedBytes: this.header?.byteLength };
+      expectedChunks: this.header?.count ?? this.publication?.chunkCount,
+      expectedBytes: this.header?.byteLength ?? this.publication?.byteLength,
+      ...(this.publication ? { publication: { ...this.publication } } : {}) };
+  }
+
+  private consumePublication(line: string): void {
+    let value: Publication;
+    try {
+      value = JSON.parse(line.slice(PUBLICATION_PREFIX.length).trim());
+    } catch {
+      return;
+    }
+    // Publication is optional evidence. Invalid or foreign markers cannot end a wait.
+    if (!value || value.commandId !== this.commandId ||
+      typeof value.taskId !== "string" || value.taskId.length < 1 || value.taskId.length > 128 ||
+      (this.taskId !== undefined && value.taskId !== this.taskId) ||
+      !["started", "writes_completed", "write_failed"].includes(value.event) ||
+      !Number.isSafeInteger(value.byteLength) || value.byteLength <= 3000 || value.byteLength > MAX_ENVELOPE_BYTES ||
+      value.chunkCount !== Math.ceil(value.byteLength / 1024) || value.recordCount !== value.chunkCount ||
+      !Number.isSafeInteger(value.writtenRecords) || value.writtenRecords < 0 || value.writtenRecords > value.recordCount ||
+      !Number.isSafeInteger(value.elapsedMs) || value.elapsedMs < 0 ||
+      (value.event === "started" && value.writtenRecords !== 0) ||
+      (value.event === "writes_completed" && value.writtenRecords !== value.recordCount) ||
+      (this.header && (value.taskId !== this.header.taskId || value.chunkCount !== this.header.count ||
+        value.byteLength !== this.header.byteLength))) return;
+    // Copy only the known metadata fields, never arbitrary data from log output.
+    this.publication = { commandId: value.commandId, taskId: value.taskId, event: value.event,
+      byteLength: value.byteLength, recordCount: value.recordCount, chunkCount: value.chunkCount,
+      writtenRecords: value.writtenRecords, elapsedMs: value.elapsedMs };
+    // The publisher emits these markers after its ordered writes have ended.
+    // Logger completion is not host receipt or a canonical execution outcome.
+    if (value.event !== "started" && this.chunks.length < value.chunkCount) {
+      throw new IncompleteResultEnvelopeError(
+        `Result publication ${value.event}, but received only ${this.chunks.length} of ${value.chunkCount} chunks. ` +
+        "Execution outcome is unknown. Inspect current state before retrying; use a targeted query for a known UI element."
+      );
+    }
   }
 
   consume(line: string): string | null {
+    if (line.startsWith(PUBLICATION_PREFIX)) {
+      this.consumePublication(line);
+      return null;
+    }
     if (!line.startsWith(CHUNK_PREFIX)) return line;
     let chunk: Chunk;
     try {

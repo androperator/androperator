@@ -264,6 +264,7 @@ They do not prove that an accepted action failed or that replay is safe.
 | `RESULT_TRANSPORT_EXITED` | The reader closed before a complete correlated terminal result. |
 | `RESULT_TRANSPORT_CANCELLED` | The host cancelled its result wait. This does not cancel an already dispatched Android action. |
 | `RESULT_TRANSPORT_FAILED` | Fallback for an unclassified host transport failure; error prose is never a code. |
+| `RESULT_ENVELOPE_INCOMPLETE` | Correlated Android publication ended, but the host did not receive a complete chunked result. |
 | `RESULT_ENVELOPE_MALFORMED` | Correlated framing, chunk metadata, ordering, size, checksum or envelope parsing failed. |
 
 `details` preserves `commandId`, `taskId`, `deviceId`, `operatorPackage`,
@@ -305,6 +306,35 @@ Partial chunk diagnostics
 report received/expected chunks and bytes; incomplete chunks are not action
 receipts. MCP preserves classification and correlation while applying its
 existing raw-stderr redaction.
+
+When a valid correlated `writes_completed` or `write_failed` publication marker
+arrives after fewer than the expected chunks, the reader returns
+`RESULT_ENVELOPE_INCOMPLETE` immediately. It does not wait out the remaining
+execution timeout. `details.transport.publication` retains the producer's event,
+`writtenRecords`, `recordCount`, `chunkCount`, `byteLength`, `elapsedMs`, and
+command/task identity alongside the host's received counts. A publication marker
+is evidence of logger write attempts, not host delivery or successful execution.
+The error retains `executionPosition: "unknown"` and does not synthesize an envelope.
+
+If only a `started` marker arrives, it is retained in timeout diagnostics. Missing,
+foreign, malformed, or inconsistent publication markers do not shorten the
+existing result deadline. A complete canonical envelope remains authoritative.
+Older Operators without these markers still use the existing result timeout.
+This detection does not recover dropped data or identify where it was lost.
+
+Inspect current state before repeating a mutation. For a known screen element,
+use a targeted read-only query, replacing the example selector with the expected
+visible element:
+
+```sh
+androperator query --text "HOME_SENTINEL" --limit 1 --timeout 8000 --no-daemon --output json
+```
+
+After navigation, wait for the destination first and inspect the subsequent query
+result. A zero match count describes only that capture. See
+[`query_ui`](actions.md#action-query-ui) for selectors and result parsing. A direct
+query can also fail; it is an explicit observation attempt, not proof that the
+previous action failed.
 
 CLI execution failures exit nonzero. Serve returns a non-success HTTP status
 and the same structured execution failure; daemon routing does not retry an

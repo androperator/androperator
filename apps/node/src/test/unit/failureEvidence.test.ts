@@ -212,3 +212,32 @@ it("late broadcast acknowledgement cannot rewind screenshot post-processing evid
   assert.equal(result.envelope.failureEvidence?.phase, "post_processing");
   assert.equal(result.envelope.failureEvidence?.dispatchState, "dispatched");
 });
+
+
+it("preserves incomplete publication evidence through execution, daemon, CLI and MCP", async () => {
+  const process = runner();
+  const logcat = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} });
+  process.spawn = (() => logcat) as FakeProcessRunner["spawn"];
+  const publication = { commandId: execution.commandId, taskId: execution.taskId,
+    event: "writes_completed", byteLength: 4096, recordCount: 4, chunkCount: 4, writtenRecords: 4, elapsedMs: 4 };
+  process.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" }, () => {
+    setImmediate(() => logcat.stdout.emit("data", Buffer.from(`[Androperator-Publication] ${JSON.stringify(publication)}\n`)));
+  });
+  const result = await runExecution(execution, { ...options, runner: process, ensureInteractiveAutomationReadyFn: ready });
+  assert.ok(!result.ok);
+  assert.equal(result.error.code, "RESULT_ENVELOPE_INCOMPLETE");
+  assert.equal("envelope" in result, false);
+  const details = result.error.details as Record<string, unknown>;
+  assert.equal(details.phase, "result_wait");
+  assert.equal(details.dispatchState, "dispatched");
+  assert.equal(details.executionPosition, "unknown");
+  const transport = details.transport as Record<string, unknown>;
+  assert.equal(transport.receivedChunks, 0);
+  assert.equal(transport.expectedChunks, 4);
+  assert.deepEqual(transport.publication, publication);
+  assert.deepEqual(parseDaemonRunExecutionResult(JSON.stringify(result)), JSON.parse(JSON.stringify(result)));
+  assert.deepEqual(JSON.parse(formatRunExecutionResultForCli(result, { format: "json" })).details, JSON.parse(JSON.stringify(details)));
+  const mcp = buildExecutionToolFailureResult(result.error);
+  assert.equal(mcp.isError, true);
+  assert.deepEqual((mcp.structuredContent?.details as Record<string, unknown>).transport, transport);
+});

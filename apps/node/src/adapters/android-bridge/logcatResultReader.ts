@@ -14,7 +14,10 @@ export interface LogcatResultOptions {
   commandId: string;
   taskId?: string;
   timeoutMs: number;
+  /** @deprecated Dispatch now requires reader output; elapsed time cannot authorize it. */
   broadcastDelayMs?: number;
+  /** Bound reader startup separately from the post-dispatch result budget. */
+  readerStartupTimeoutMs?: number;
   cancelSignal?: AbortSignal;
   /** Last N lines to include in timeout diagnostics */
   lastCorrelatedLines?: number;
@@ -119,8 +122,8 @@ function envelopeLineReferencesCommand(line: string, commandId: string): boolean
 }
 
 /**
- * Start logcat stream, then invoke onBroadcast once stdout proves the stream is attached
- * or the fallback delay elapses.
+ * Start logcat, drain initial records, then invoke onBroadcast. Never dispatch
+ * solely because a timer elapsed: a fast terminal could precede logcat attachment.
  * Wait for one terminal envelope or timeout. Kills logcat on envelope or timeout.
  */
 export async function waitForResultEnvelope(
@@ -132,12 +135,12 @@ export async function waitForResultEnvelope(
     commandId,
     timeoutMs: rawTimeoutMs,
     lastCorrelatedLines = 20,
-    broadcastDelayMs: rawBroadcastDelayMs = 100,
+    readerStartupTimeoutMs: rawStartupTimeoutMs = 7000,
     cancelSignal,
   } = options;
   const timeoutMs = Number.isFinite(rawTimeoutMs) && rawTimeoutMs >= 0 ? rawTimeoutMs : 0;
-  const broadcastDelayMs =
-    Number.isFinite(rawBroadcastDelayMs) && rawBroadcastDelayMs >= 0 ? rawBroadcastDelayMs : 0;
+  const readerStartupTimeoutMs =
+    Number.isFinite(rawStartupTimeoutMs) && rawStartupTimeoutMs >= 0 ? rawStartupTimeoutMs : 0;
   const deviceArgs = config.deviceId ? ["-s", config.deviceId] : [];
   const args = [...deviceArgs, "logcat", "-v", "time", "-T", "1"];
   const commandLine = formatCommandLine(config.adbPath, args);
@@ -158,12 +161,13 @@ export async function waitForResultEnvelope(
     const dispatchAfterReaderExitError = new Error("Result reader stopped before broadcast dispatch");
     let stderrBuffer = "";
     let timeoutId: NodeJS.Timeout | undefined;
-    let broadcastStartTimer: NodeJS.Timeout | undefined;
+    let readerStartupTimer: NodeJS.Timeout | undefined;
     let signalBroadcastStartTimer: NodeJS.Timeout | undefined;
     let signalBroadcastMaxTimer: NodeJS.Timeout | undefined;
     let broadcastStarted = false;
     let dispatchCaptureStarted = false;
     let stdoutObserved = false;
+    let readerReady = false;
     let activeSnapshotTag: string | null = null;
     let activeSnapshotCaptured = false;
 
@@ -180,7 +184,7 @@ export async function waitForResultEnvelope(
       commandId, taskId: options.taskId, deviceId: config.deviceId,
       operatorPackage: config.operatorPackage, broadcastDispatchStatus: broadcastStatus,
       dispatchAttempted: dispatchCaptureStarted,
-      executionPosition: "unknown", stdoutObserved,
+      executionPosition: "unknown", stdoutObserved, readerReady, readerStartupTimeoutMs,
       stderr: stderrBuffer, lastCorrelatedEvents: correlatedLines.slice(-lastCorrelatedLines),
       transport: transport.diagnostics(), reader: timeline.snapshot(), ...extra,
     });
@@ -213,8 +217,8 @@ export async function waitForResultEnvelope(
       if (timeoutId !== undefined) {
         clearTimeout(timeoutId);
       }
-      if (broadcastStartTimer !== undefined) {
-        clearTimeout(broadcastStartTimer);
+      if (readerStartupTimer !== undefined) {
+        clearTimeout(readerStartupTimer);
       }
       if (signalBroadcastStartTimer !== undefined) {
         clearTimeout(signalBroadcastStartTimer);
@@ -343,13 +347,13 @@ export async function waitForResultEnvelope(
     };
 
     const startBroadcast = () => {
-      if (settled || processExit !== undefined || broadcastStarted) {
+      if (settled || processExit !== undefined || broadcastStarted || !readerReady) {
         return;
       }
       broadcastStarted = true;
       timeline.record("broadcast_callback_started");
-      if (broadcastStartTimer !== undefined) {
-        clearTimeout(broadcastStartTimer);
+      if (readerStartupTimer !== undefined) {
+        clearTimeout(readerStartupTimer);
       }
       if (signalBroadcastStartTimer !== undefined) {
         clearTimeout(signalBroadcastStartTimer);
@@ -405,6 +409,13 @@ export async function waitForResultEnvelope(
       const lines = pending.split("\n");
       pending = lines.pop() ?? "";
       for (const line of lines) {
+        // Headers can be emitted before logcat has read any device records.
+        // Likewise, an incomplete line is not usable startup evidence.
+        if (!readerReady && line.trim() && !line.startsWith("---------")) {
+          readerReady = true;
+          if (readerStartupTimer !== undefined) clearTimeout(readerStartupTimer);
+          timeline.record("reader_ready");
+        }
         const snapshotMarker = parseSnapshotMarker(line);
         if (snapshotMarker !== null) {
           remember(line);
@@ -466,15 +477,11 @@ export async function waitForResultEnvelope(
           return;
         }
       }
-      if (!broadcastStarted) {
+      if (!broadcastStarted && readerReady) {
         if (signalBroadcastMaxTimer === undefined) {
           signalBroadcastMaxTimer = setTimeout(() => {
             startBroadcast();
           }, SIGNAL_BROADCAST_MAX_DRAIN_MS);
-        }
-        if (broadcastStartTimer !== undefined) {
-          clearTimeout(broadcastStartTimer);
-          broadcastStartTimer = undefined;
         }
         if (signalBroadcastStartTimer !== undefined) {
           clearTimeout(signalBroadcastStartTimer);
@@ -486,8 +493,7 @@ export async function waitForResultEnvelope(
     };
     proc.stdout?.on("data", (chunk: Buffer) => {
       timeline.observe("stdout", chunk.length);
-      // Output can first arrive after the fallback timer has begun dispatch.
-      // Keep observed evidence independent of the startup-drain timer state.
+      // Bytes and usable records are separate evidence (headers are not readiness).
       if (chunk.length > 0) stdoutObserved = true;
       consumeOutput(decoder.write(chunk));
     });
@@ -535,6 +541,7 @@ export async function waitForResultEnvelope(
       // Block new dispatch immediately, but allow buffered results to drain
       // within the existing wait budget even if inherited pipes never close.
       processExit = { code, signal };
+      if (readerStartupTimer !== undefined) clearTimeout(readerStartupTimer);
       if (!settled) startTimeout();
     });
 
@@ -554,6 +561,14 @@ export async function waitForResultEnvelope(
       return;
     }
     cancelSignal?.addEventListener("abort", abortHandler, { once: true });
-    broadcastStartTimer = setTimeout(startBroadcast, broadcastDelayMs);
+    timeline.record("reader_startup_deadline_started", { timeoutMs: readerStartupTimeoutMs });
+    readerStartupTimer = setTimeout(() => {
+      timeline.record("reader_startup_deadline_reached");
+      finalize({
+        ok: false,
+        code: ERROR_CODES.RESULT_READER_NOT_READY,
+        error: `Logcat reader did not become ready within ${readerStartupTimeoutMs}ms; command was not dispatched. Check adb/logcat connectivity before retrying.`,
+      });
+    }, readerStartupTimeoutMs);
   });
 }

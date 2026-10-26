@@ -21,7 +21,11 @@ function runner() {
   const result = new FakeProcessRunner();
   result.queueResult({ code: 0, stdout: "List of devices attached\ntest-device\tdevice\n", stderr: "" });
   result.queueResult({ code: 0, stdout: "package:com.test.operator\n", stderr: "" });
-  result.spawn = (() => Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} })) as FakeProcessRunner["spawn"];
+  result.spawn = (() => {
+    const proc = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} });
+    queueMicrotask(() => proc.stdout.emit("data", Buffer.from("I/Boot: reader ready\n")));
+    return proc;
+  }) as FakeProcessRunner["spawn"];
   return result;
 }
 const ready = async () => ({ ok: true as const, state: { screenOn: true, deviceLocked: false, userUnlocked: true } });
@@ -163,7 +167,10 @@ it("snapshot presentation errors preserve correlation through the CLI", async ()
 it("a correlated terminal result proves dispatch even before broadcast acknowledgement", async () => {
   const process = runner();
   const logcat = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} });
-  process.spawn = (() => logcat) as FakeProcessRunner["spawn"];
+  process.spawn = (() => {
+    queueMicrotask(() => logcat.stdout.emit("data", Buffer.from("I/Boot: reader ready\n")));
+    return logcat;
+  }) as FakeProcessRunner["spawn"];
   const envelope: ResultEnvelope = { commandId: execution.commandId, taskId: execution.taskId, status: "success", error: null, stepResults: [{ id: "snap", actionType: "snapshot_ui", success: true, data: {} }] };
   process.queueResult({ code: 0, stdout: "", stderr: "" }, async () => {
     logcat.stdout.emit("data", Buffer.from(`D/Result: [Androperator-Result] ${JSON.stringify(envelope)}\n`));
@@ -181,7 +188,10 @@ it("late broadcast acknowledgement cannot rewind screenshot post-processing evid
   let startCapture!: () => void;
   const captureStarted = new Promise<void>(resolve => { startCapture = resolve; });
   process.spawn = ((_command, args) => {
-    if (args.includes("logcat")) return logcat;
+    if (args.includes("logcat")) {
+      queueMicrotask(() => logcat.stdout.emit("data", Buffer.from("I/Boot: reader ready\n")));
+      return logcat;
+    }
     assert.ok(args.includes("screencap"));
     startCapture();
     return capture;
@@ -217,7 +227,10 @@ it("late broadcast acknowledgement cannot rewind screenshot post-processing evid
 it("preserves incomplete publication evidence through execution, daemon, CLI and MCP", async () => {
   const process = runner();
   const logcat = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} });
-  process.spawn = (() => logcat) as FakeProcessRunner["spawn"];
+  process.spawn = (() => {
+    queueMicrotask(() => logcat.stdout.emit("data", Buffer.from("I/Boot: reader ready\n")));
+    return logcat;
+  }) as FakeProcessRunner["spawn"];
   const publication = { commandId: execution.commandId, taskId: execution.taskId,
     event: "writes_completed", byteLength: 4096, recordCount: 4, chunkCount: 4, writtenRecords: 4, elapsedMs: 4 };
   process.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" }, () => {

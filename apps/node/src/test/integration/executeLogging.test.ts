@@ -52,6 +52,7 @@ describe("CLI exec logging integration", () => {
         "  exit 0",
         "fi",
         "if [ \"$1\" = \"logcat\" ]; then",
+        "  printf 'I/Boot: reader ready\\n'",
         "  while :; do",
         "    command_id=$(cat \"$LOGCAT_COMMAND_FILE\" 2>/dev/null)",
         "    mode=$(cat \"$LOGCAT_MODE_FILE\" 2>/dev/null)",

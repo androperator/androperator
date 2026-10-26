@@ -60,6 +60,7 @@ it("dispatches each service read/control and mixed lists without interactive rea
       let stream: EventEmitter & { stdout: EventEmitter; stderr: EventEmitter; kill: () => void };
       runner.spawn = (() => {
         stream = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} });
+        queueMicrotask(() => stream.stdout?.emit("data", Buffer.from("I/Boot: reader ready\n")));
         return stream;
       }) as FakeProcessRunner["spawn"];
       runner.queueResult({ code: 0, stdout: "List of devices attached\ntest-device\tdevice\n", stderr: "" });
@@ -144,7 +145,11 @@ it("returns an explicit pre-unlock error without dispatch, wake or remediation",
     buildNotificationMediaExecution("media_seek", { mediaSessionId: "s", positionMs: 0 }),
   ]) {
     const runner = new FakeProcessRunner();
-    runner.spawn = (() => Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} })) as FakeProcessRunner["spawn"];
+    runner.spawn = (() => {
+      const proc = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} });
+      queueMicrotask(() => proc.stdout.emit("data", Buffer.from("I/Boot: reader ready\n")));
+      return proc;
+    }) as FakeProcessRunner["spawn"];
     for (const stdout of ["List of devices attached\ntest-device\tdevice\n", "package:com.test.operator", "0", "RUNNING_LOCKED"]) {
       runner.queueResult({ code: 0, stdout, stderr: "" });
     }
@@ -229,7 +234,11 @@ it("never replays N2 mutations when the transport loses their receipt", async ()
     ["invoke_notification_action", { notificationKey: "k", actionId: "a" }],
   ] as const) {
     const runner = new FakeProcessRunner();
-    runner.spawn = (() => Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} })) as FakeProcessRunner["spawn"];
+    runner.spawn = (() => {
+      const proc = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} });
+      queueMicrotask(() => proc.stdout.emit("data", Buffer.from("I/Boot: reader ready\n")));
+      return proc;
+    }) as FakeProcessRunner["spawn"];
     for (const stdout of ["List of devices attached\ntest-device\tdevice\n", "package:com.test.operator\n", "0", "Broadcast completed: result=0"]) {
       runner.queueResult({ code: 0, stdout, stderr: "" });
     }

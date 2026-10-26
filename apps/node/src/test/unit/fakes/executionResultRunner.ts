@@ -17,7 +17,10 @@ export function executionRunner(envelope: ResultEnvelope, snapshotXml?: string, 
     }, 1);
   });
   runner.spawn = ((_command, args) => {
-    if (args.includes("logcat")) return logcat;
+    if (args.includes("logcat")) {
+      queueMicrotask(() => logcat.stdout.emit("data", Buffer.from("I/Boot: reader ready\n")));
+      return logcat;
+    }
     const capture = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} });
     setTimeout(() => { if (png) capture.stdout.emit("data", png); capture.emit("close", captureExit); }, 1);
     return capture;

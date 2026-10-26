@@ -37,6 +37,7 @@ export interface RunExecutionOptions {
   adbPath?: string;
   runner?: RuntimeConfig["runner"];
   resultEnvelopeTimeoutMs?: number;
+  /** @deprecated Reader output is required before dispatch; elapsed time no longer authorizes it. */
   logcatBroadcastDelayMs?: number;
   ensureInteractiveAutomationReadyFn?: typeof ensureInteractiveAutomationReady;
   probeInteractiveStateFn?: typeof probeInteractiveState;

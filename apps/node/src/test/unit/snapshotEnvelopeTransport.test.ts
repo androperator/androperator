@@ -24,7 +24,10 @@ function frames(envelope: ResultEnvelope): string[] {
 async function execute(sources: string[], transform: (lines: string[]) => string[] = lines => lines) {
   const runner = new FakeProcessRunner();
   const child = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} });
-  runner.spawn = () => child;
+  runner.spawn = () => {
+    queueMicrotask(() => child.stdout.emit("data", Buffer.from("I/Boot: reader ready\n")));
+    return child;
+  };
   runner.queueResult({ code: 0, stdout: "List of devices attached\ntest-device\tdevice\n", stderr: "" });
   runner.queueResult({ code: 0, stdout: "package:com.test.operator\n", stderr: "" });
   const envelope: ResultEnvelope = { commandId, taskId, status: "success", error: null,

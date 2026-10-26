@@ -97,7 +97,11 @@ describe("readiness failure evidence", () => {
     runner.queueResult({ code: 0, stdout: "List of devices attached\ntest-device\tdevice\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "package:com.test.operator\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "", stderr: "" });
-    runner.spawn = (() => Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} })) as FakeProcessRunner["spawn"];
+    runner.spawn = (() => {
+      const proc = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} });
+      queueMicrotask(() => proc.stdout.emit("data", Buffer.from("I/Boot: reader ready\n")));
+      return proc;
+    }) as FakeProcessRunner["spawn"];
     const result = await runExecution({ commandId: "requested", taskId: "requested-task", source: "test", expectedFormat: "android-ui-automator", timeoutMs: 1000, actions: [{ id: "close", type: "close_app", params: { applicationId: "com.example.app" } }, { id: "snap", type: "snapshot" }] }, {
       runner, deviceId: "test-device", operatorPackage: "com.test.operator",
       ensureInteractiveAutomationReadyFn: async () => ({ ok: false, error: { code: "RESULT_ENVELOPE_TIMEOUT", message: "probe failed", details: { probeCommandId: "doctor-handshake-separate" } } }),
@@ -148,7 +152,11 @@ describe("requested dispatch evidence", () => {
       runner.queueResult({ code: 0, stdout: "List of devices attached\ntest-device\tdevice\n", stderr: "" });
       runner.queueResult({ code: 0, stdout: "package:com.test.operator\n", stderr: "" });
       runner.queueResult({ code: acknowledged ? 0 : 1, stdout: acknowledged ? "Broadcast completed: result=0" : "", stderr: acknowledged ? "" : "transport lost" });
-      runner.spawn = (() => Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} })) as FakeProcessRunner["spawn"];
+      runner.spawn = (() => {
+        const proc = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} });
+        queueMicrotask(() => proc.stdout.emit("data", Buffer.from("I/Boot: reader ready\n")));
+        return proc;
+      }) as FakeProcessRunner["spawn"];
       const result = await runExecution({ commandId: "requested-dispatch", taskId: "requested-task", source: "test", expectedFormat: "android-ui-automator", timeoutMs: 1000, actions: [{ id: "back", type: "press_key", params: { key: "BACK" } }] }, {
         deviceId: "test-device", operatorPackage: "com.test.operator", runner,
         ensureInteractiveAutomationReadyFn: ready, logcatBroadcastDelayMs: 0, resultEnvelopeTimeoutMs: 10,
@@ -207,7 +215,11 @@ describe("unusable device readiness evidence", () => {
       const executionProcess = new FakeProcessRunner();
       executionProcess.queueResult({ code: 0, stdout: "List of devices attached\ntest-device\tdevice\n", stderr: "" });
       executionProcess.queueResult({ code: 0, stdout: "package:com.test.operator\n", stderr: "" });
-      executionProcess.spawn = (() => Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} })) as FakeProcessRunner["spawn"];
+      executionProcess.spawn = (() => {
+        const proc = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} });
+        queueMicrotask(() => proc.stdout.emit("data", Buffer.from("I/Boot: reader ready\n")));
+        return proc;
+      }) as FakeProcessRunner["spawn"];
       const result = await runExecution({ commandId: "requested", taskId: "requested-task", source: "test", expectedFormat: "android-ui-automator", timeoutMs: 1000, actions: [{ id: "snap", type: "snapshot" }] }, {
         deviceId: "test-device", operatorPackage: "com.test.operator", runner: executionProcess,
         ensureInteractiveAutomationReadyFn: async () => readiness,

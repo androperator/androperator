@@ -5,10 +5,10 @@ import { formatRunExecutionResultForCli } from "../../cli/output.js";
 import { mapServeErrorCodeToStatus } from "../../cli/commands/serve.js";
 import { buildMcpErrorResult } from "../../mcp/errors.js";
 
-for (const code of ["RESULT_ENVELOPE_INCOMPLETE", "RESULT_TRANSPORT_EXITED", "RESULT_TRANSPORT_SPAWN_FAILED", "RESULT_TRANSPORT_CANCELLED", "RESULT_ENVELOPE_MALFORMED", "RESULT_ENVELOPE_TIMEOUT"]) {
+for (const code of ["RESULT_READER_NOT_READY", "RESULT_ENVELOPE_INCOMPLETE", "RESULT_TRANSPORT_EXITED", "RESULT_TRANSPORT_SPAWN_FAILED", "RESULT_TRANSPORT_CANCELLED", "RESULT_ENVELOPE_MALFORMED", "RESULT_ENVELOPE_TIMEOUT"]) {
   it(`preserves ${code} across daemon, CLI, Serve and MCP adapters`, () => {
     const error = { code, message: "transport failed", details: { commandId: "command", taskId: "task",
-      deviceId: "device", operatorPackage: "com.test.operator", dispatchAttempted: true,
+      deviceId: "device", operatorPackage: "com.test.operator", dispatchAttempted: code !== "RESULT_READER_NOT_READY",
       executionPosition: "unknown", exitCode: 255, signal: null, stderr: "private raw stderr" } };
     const result = parseDaemonRunExecutionResult(JSON.stringify({ ok: false, error, deviceId: "device" }));
     assert.ok(!result.ok);

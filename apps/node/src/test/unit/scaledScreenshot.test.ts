@@ -71,7 +71,7 @@ for (const stage of ["reader", "broadcast", "before-display", "capture-display",
   for (const interruption of ["cancelled", "timeout"]) {
     test(`fallback ${interruption} interrupts ${stage} and stops further work`, async () => {
       const { scaledCaptureRunner } = await import("./fakes/scaledCaptureRunner.js");
-      const f = await scaledCaptureRunner(true);
+      const f = await scaledCaptureRunner(true, stage !== "reader");
       const controller = new AbortController();
       const run = f.runner.run.bind(f.runner), spawn = f.runner.spawn.bind(f.runner);
       let displayReads = 0, stopped = false, probeKilled = false;

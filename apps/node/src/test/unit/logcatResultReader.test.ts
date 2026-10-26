@@ -9,7 +9,7 @@ import { getDefaultRuntimeConfig } from "../../adapters/android-bridge/runtimeCo
 const options = { commandId: "transport-command", taskId: "transport-task", timeoutMs: 1000, broadcastDelayMs: 0 };
 const config = () => getDefaultRuntimeConfig({ deviceId: "test-device", operatorPackage: "com.test.operator" });
 const terminal = '[Androperator-Result] {"commandId":"transport-command","taskId":"transport-task","status":"success","stepResults":[],"error":null}';
-function fake() {
+function fake(ready = true) {
   const proc = new EventEmitter() as ChildProcess;
   const stdout = new PassThrough();
   const stderr = new PassThrough();
@@ -17,6 +17,7 @@ function fake() {
   Object.assign(proc, { stdout, stderr, kill: () => { kills++; return true; } });
   const runtime = config();
   runtime.runner = { ...runtime.runner, spawn: () => proc };
+  if (ready) queueMicrotask(() => stdout.write("I/Boot: reader ready\n"));
   return { proc, stdout, stderr, runtime, kills: () => kills };
 }
 
@@ -41,8 +42,8 @@ for (const [label, script, exitCode, signal] of [
     assert.equal(result.diagnostics?.deviceId, "test-device");
     assert.equal(result.diagnostics?.operatorPackage, "com.test.operator");
     assert.equal(result.diagnostics?.executionPosition, "unknown");
-    assert.equal(result.diagnostics?.dispatchAttempted, true);
-    assert.equal(dispatches, 1);
+    assert.equal(result.diagnostics?.dispatchAttempted, false);
+    assert.equal(dispatches, 0);
   });
 }
 
@@ -283,7 +284,7 @@ it("preserves a signal and rejected framing at the exit-drain deadline", { timeo
   }
 });
 
-it("reports stdout observed when command-start arrives after fallback dispatch", async () => {
+it("reports stdout observed after reader readiness and command dispatch", async () => {
   const f = fake();
   let dispatches = 0;
   const result = await waitForResultEnvelope(f.runtime, options, async begin => {
@@ -320,10 +321,10 @@ it("retains a correlated metadata-only failure timeline and late cleanup lifecyc
   const { reader, transport } = JSON.parse(failure.message);
   assert.deepEqual(transport, { receivedChunks: 0, receivedBytes: 0 });
   assert.equal(reader.readerPid, 12345);
-  assert.equal(reader.stdoutBytes, Buffer.byteLength("private UI text\n"));
+  assert.equal(reader.stdoutBytes, Buffer.byteLength("I/Boot: reader ready\nprivate UI text\n"));
   assert.equal(reader.stderrBytes, Buffer.byteLength("private stderr text"));
   const names = reader.events.map((event: { event: string }) => event.event);
-  assert.ok(names.indexOf("dispatch_started") < names.indexOf("first_stdout"));
+  assert.ok(names.indexOf("first_stdout") < names.indexOf("dispatch_started"));
   assert.ok(names.indexOf("deadline_reached") < names.indexOf("cleanup_requested"));
   assert.equal(reader.events.find((event: { event: string }) => event.event === "cleanup_requested").reason, "RESULT_ENVELOPE_TIMEOUT");
   assert.deepEqual((result.diagnostics.details?.reader as typeof reader).events, reader.events);
@@ -409,3 +410,61 @@ it("retains the deadline cause when the budget expires synchronously inside spaw
   assert.equal(result.diagnostics?.deadlineOwner, "evidence_capture");
   assert.equal(result.diagnostics?.dispatchAttempted, false);
 });
+
+
+it("waits for delayed logcat attachment before sending a fast readiness probe", async () => {
+  const f = fake(false);
+  let attached = false;
+  let dispatchedBeforeAttachment = false;
+  const attachment = setTimeout(() => {
+    attached = true;
+    // -T 1 can retain only the newest record at attachment. A result sent
+    // earlier would have been displaced by this unrelated record.
+    f.stdout.write("I/Boot: reader attached\n");
+  }, 150);
+  const result = await waitForResultEnvelope(f.runtime, { ...options, timeoutMs: 250 }, async begin => {
+    dispatchedBeforeAttachment = !attached;
+    begin();
+    if (attached) f.stdout.write(terminal + "\n");
+    return { success: true };
+  });
+  clearTimeout(attachment);
+  assert.equal(dispatchedBeforeAttachment, false);
+  assert.equal(result.ok, true);
+});
+
+it("buffer headers and partial lines cannot authorize a broadcast", async () => {
+  const f = fake(false);
+  let dispatches = 0;
+  const controller = new AbortController();
+  const resultPromise = waitForResultEnvelope(f.runtime, { ...options, cancelSignal: controller.signal }, async () => {
+    dispatches++;
+    return { success: true };
+  });
+  f.stdout.write("--------- beginning of main\nI/Boot: partial");
+  await new Promise(resolve => setTimeout(resolve, 130));
+  controller.abort();
+  await resultPromise;
+  assert.equal(dispatches, 0);
+});
+
+for (const startupOutput of ["", "--------- beginning of main\n", "I/Boot: partial"]) {
+  it(`fails bounded silent/header/partial reader startup without dispatch: ${JSON.stringify(startupOutput)}`, async () => {
+    const f = fake(false);
+    let calls = 0;
+    const waiting = waitForResultEnvelope(f.runtime, { ...options, readerStartupTimeoutMs: 40 }, async () => {
+      calls++; return { success: true };
+    });
+    f.stdout.write(startupOutput);
+    const result = await waiting;
+    assert.ok(!result.ok && "error" in result);
+    assert.equal(result.code, "RESULT_READER_NOT_READY");
+    assert.equal(result.diagnostics?.dispatchAttempted, false);
+    assert.equal(result.diagnostics?.readerReady, false);
+    assert.equal(calls, 0);
+    assert.equal(f.kills(), 1);
+    f.stdout.write("I/Boot: too late\n");
+    await new Promise(resolve => setTimeout(resolve, 30));
+    assert.equal(calls, 0);
+  });
+}

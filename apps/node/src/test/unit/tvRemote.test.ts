@@ -118,6 +118,7 @@ describe("TV remote execution integration", () => {
         stdout: new EventEmitter(), stderr: new EventEmitter(),
         kill: () => { process.nextTick(() => proc.emit("close", 0, null)); },
       });
+      queueMicrotask(() => proc.stdout?.emit("data", Buffer.from("I/Boot: reader ready\n")));
       return proc;
     };
     const devices = { ...accepted, stdout: `List of devices attached\n${deviceId}\tdevice\n` };

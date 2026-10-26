@@ -5,7 +5,7 @@ import type { ProcessRunner } from "../../../adapters/android-bridge/processRunn
 import { bundledCaptureHelper } from "../../../domain/observe/captureHelper.js";
 
 /** Exercise canonical execution, helper protocol and real fallback decoding without ADB. */
-export async function scaledCaptureRunner(fallback = false) {
+export async function scaledCaptureRunner(fallback = false, readerReady = true) {
   const { sha256 } = await bundledCaptureHelper();
   const calls: string[][] = [];
   let logcat: any;
@@ -46,7 +46,12 @@ export async function scaledCaptureRunner(fallback = false) {
     async runShell() { throw new Error("Unexpected host shell"); },
     spawn(_command, args) {
       calls.push(args);
-      if (args.includes("logcat")) { logcat = child(); return logcat; }
+      if (args.includes("logcat")) {
+        logcat = child();
+        const reader = logcat;
+        if (readerReady) queueMicrotask(() => reader.stdout.write("I/Boot: reader ready\n"));
+        return reader;
+      }
       const process = child();
       if (args.includes("screencap")) {
         captures++;

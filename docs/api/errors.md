@@ -285,6 +285,7 @@ They do not prove that an accepted action failed or that replay is safe.
 
 | Code | Meaning |
 | --- | --- |
+| `RESULT_READER_NOT_READY` | No usable logcat record arrived within the reader startup budget. This reader did not dispatch its command. Check ADB/logcat connectivity before retrying. |
 | `RESULT_TRANSPORT_SPAWN_FAILED` | The result reader process could not start. A missing ADB executable retains `ADB_NOT_FOUND`. |
 | `RESULT_TRANSPORT_EXITED` | The reader closed before a complete correlated terminal result. |
 | `RESULT_TRANSPORT_CANCELLED` | The host cancelled its result wait. This does not cancel an already dispatched Android action. |
@@ -304,8 +305,19 @@ at exit if dispatch never began. If output pipes remain open at that deadline,
 `RESULT_TRANSPORT_EXITED` includes `outputDrainIncomplete: true`, the observed
 exit status and collected diagnostics; the host closes its remaining pipe handles.
 
-`stdoutObserved` reports whether any reader stdout bytes arrived, including
-bytes first received after broadcast dispatch. It does not prove receipt of a
+Readiness probes and main execution both wait for a complete, non-header logcat
+record before dispatch, then drain initial replay output. Elapsed time alone never
+authorizes a broadcast. Reader startup has a separate 7,000 ms default budget;
+the result-envelope budget still starts at dispatch. An outer cancellation or
+execution deadline can end either wait earlier. The low-level `broadcastDelayMs`
+and execution `logcatBroadcastDelayMs` options remain accepted for compatibility,
+but no longer authorize timer-based dispatch.
+
+`readerReady` distinguishes usable startup evidence from `stdoutObserved`, which
+reports whether any stdout bytes arrived, including headers or partial lines.
+`readerStartupTimeoutMs` records the startup budget. The metadata-only reader
+timeline records `reader_ready` before `broadcast_callback_started`.
+These fields do not prove receipt of a
 terminal result; use the correlated events and chunk diagnostics separately.
 
 `details.reader` adds a metadata-only lifecycle snapshot: host/reader PIDs,

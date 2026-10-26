@@ -551,6 +551,7 @@ it("background diagnostics use only host checks and service reads, preserving de
     runner.spawn = ((command, args) => {
       runner.calls.push({ command, args });
       stream = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill() {} });
+      queueMicrotask(() => stream.stdout?.emit("data", Buffer.from("I/Boot: reader ready\n")));
       return stream;
     }) as FakeProcessRunner["spawn"];
     runner.run = async (command, args) => {

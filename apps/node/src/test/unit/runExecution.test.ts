@@ -661,6 +661,7 @@ describe("runExecution", () => {
       proc.kill = () => {
         logcatKilled = true;
       };
+      queueMicrotask(() => proc.stdout?.emit("data", Buffer.from("I/Boot: reader ready\n")));
       return proc;
     }) as FakeProcessRunner["spawn"];
 
@@ -897,6 +898,7 @@ describe("runExecution", () => {
       proc.kill = () => {
         logcatKilled = true;
       };
+      queueMicrotask(() => proc.stdout?.emit("data", Buffer.from("I/Boot: reader ready\n")));
       return proc;
     }) as FakeProcessRunner["spawn"];
 
@@ -931,7 +933,8 @@ describe("runExecution", () => {
 
     runner.queueResult({ code: 0, stdout: "List of devices attached\ntest-device-1\tdevice\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "package:com.test.operator.dev\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" });
+    let publishResult = () => {};
+    runner.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" }, () => publishResult());
     runner.spawn = ((command, args, options) => {
       runner.calls.push({ command, args, options });
       const proc = new EventEmitter() as EventEmitter & {
@@ -942,7 +945,8 @@ describe("runExecution", () => {
       proc.stdout = new EventEmitter();
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
-      setTimeout(() => {
+      publishResult = () => {
+        setTimeout(() => {
         proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
           commandId: "cmd-central-wake",
           taskId: "task-central-wake",
@@ -951,7 +955,9 @@ describe("runExecution", () => {
           error: null,
         })}\n`));
         proc.emit("close", 0, null);
-      }, 5);
+        }, 5);
+      };
+      queueMicrotask(() => proc.stdout?.emit("data", Buffer.from("I/Boot: reader ready\n")));
       return proc;
     }) as FakeProcessRunner["spawn"];
 
@@ -990,7 +996,8 @@ describe("runExecution", () => {
 
     runner.queueResult({ code: 0, stdout: "List of devices attached\ntest-device-1\tdevice\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "package:com.test.operator.dev\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" });
+    let publishResult = () => {};
+    runner.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" }, () => publishResult());
     runner.spawn = ((command, args, options) => {
       runner.calls.push({ command, args, options });
       const proc = new EventEmitter() as EventEmitter & {
@@ -1001,7 +1008,8 @@ describe("runExecution", () => {
       proc.stdout = new EventEmitter();
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
-      setTimeout(() => {
+      publishResult = () => {
+        setTimeout(() => {
         const prefix = formatLogcatTime(new Date());
         proc.stdout?.emit("data", Buffer.from([
           `${prefix} D/TaskScopeDefault(29817): [TaskScope] UI Hierarchy [commandId=cmd-noisy-snapshot]:`,
@@ -1029,7 +1037,9 @@ describe("runExecution", () => {
         })}`,
         ].join("\n") + "\n"));
         proc.emit("close", 0, null);
-      }, 5);
+        }, 5);
+      };
+      queueMicrotask(() => proc.stdout?.emit("data", Buffer.from("I/Boot: reader ready\n")));
       return proc;
     }) as FakeProcessRunner["spawn"];
 
@@ -1136,7 +1146,8 @@ describe("runExecution", () => {
 
     runner.queueResult({ code: 0, stdout: "List of devices attached\ntest-device-1\tdevice\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "package:com.test.operator\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" });
+    let publishResult = () => {};
+    runner.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" }, () => publishResult());
     runner.spawn = ((command, args, options) => {
       runner.calls.push({ command, args, options });
       const proc = new EventEmitter() as EventEmitter & {
@@ -1147,7 +1158,8 @@ describe("runExecution", () => {
       proc.stdout = new EventEmitter();
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
-      setTimeout(() => {
+      publishResult = () => {
+        setTimeout(() => {
         proc.stdout?.emit("data", Buffer.from([
           "04-25 20:14:52.453 D/kw2(29817): [TaskScope] UI Hierarchy:",
           "04-25 20:14:52.454 D/kw2(29817): <hierarchy rotation=\"0\">",
@@ -1169,7 +1181,9 @@ describe("runExecution", () => {
           })}`,
         ].join("\n") + "\n"));
         proc.emit("close", 0, null);
-      }, 5);
+        }, 5);
+      };
+      queueMicrotask(() => proc.stdout?.emit("data", Buffer.from("I/Boot: reader ready\n")));
       return proc;
     }) as FakeProcessRunner["spawn"];
 
@@ -1319,7 +1333,8 @@ describe("runExecution", () => {
 
     runner.queueResult({ code: 0, stdout: "List of devices attached\ntest-device-1\tdevice\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "package:com.test.operator.dev\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" });
+    let publishResult = () => {};
+    runner.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" }, () => publishResult());
     runner.spawn = ((command, args, options) => {
       runner.calls.push({ command, args, options });
       const proc = new EventEmitter() as EventEmitter & {
@@ -1330,7 +1345,8 @@ describe("runExecution", () => {
       proc.stdout = new EventEmitter();
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
-      setTimeout(() => {
+      publishResult = () => {
+        setTimeout(() => {
         proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
           commandId: "cmd-explicit-fast-path",
           taskId: "task-explicit-fast-path",
@@ -1339,7 +1355,9 @@ describe("runExecution", () => {
           error: null,
         })}\n`));
         proc.emit("close", 0, null);
-      }, 5);
+        }, 5);
+      };
+      queueMicrotask(() => proc.stdout?.emit("data", Buffer.from("I/Boot: reader ready\n")));
       return proc;
     }) as FakeProcessRunner["spawn"];
 
@@ -1382,7 +1400,8 @@ describe("runExecution", () => {
 
     runner.queueResult({ code: 0, stdout: "List of devices attached\ntest-device-1\tdevice\n", stderr: "" });
     runner.queueResult({ code: 0, stdout: "package:com.test.operator.dev\n", stderr: "" });
-    runner.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" });
+    let publishResult = () => {};
+    runner.queueResult({ code: 0, stdout: "Broadcast completed: result=0", stderr: "" }, () => publishResult());
     runner.spawn = ((command, args, options) => {
       runner.calls.push({ command, args, options });
       const proc = new EventEmitter() as EventEmitter & {
@@ -1393,7 +1412,8 @@ describe("runExecution", () => {
       proc.stdout = new EventEmitter();
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
-      setTimeout(() => {
+      publishResult = () => {
+        setTimeout(() => {
         proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
           commandId: "cmd-auto-sequential",
           taskId: "task-auto-sequential",
@@ -1402,7 +1422,9 @@ describe("runExecution", () => {
           error: null,
         })}\n`));
         proc.emit("close", 0, null);
-      }, 5);
+        }, 5);
+      };
+      queueMicrotask(() => proc.stdout?.emit("data", Buffer.from("I/Boot: reader ready\n")));
       return proc;
     }) as FakeProcessRunner["spawn"];
 
@@ -1495,6 +1517,7 @@ describe("waitForResultEnvelope", () => {
       proc.stdout = new EventEmitter();
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
+      queueMicrotask(() => proc.stdout?.emit("data", Buffer.from("I/Boot: reader ready\n")));
       return proc;
     }) as FakeProcessRunner["spawn"];
     const config = getDefaultRuntimeConfig({
@@ -1891,6 +1914,7 @@ describe("waitForResultEnvelope", () => {
       proc.stdout = new EventEmitter();
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
+      queueMicrotask(() => proc.stdout?.emit("data", Buffer.from("I/Boot: reader ready\n")));
       return proc;
     }) as FakeProcessRunner["spawn"];
     const config = getDefaultRuntimeConfig({
@@ -2341,6 +2365,7 @@ describe("waitForResultEnvelope", () => {
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
       process.nextTick(() => {
+        proc.stdout?.emit("data", Buffer.from("I/Boot: reader ready\n"));
         proc.stdout?.emit("data", Buffer.from(`[Androperator-Result] ${JSON.stringify({
           commandId: "cmd-partial-replay",
           taskId: "old-task",
@@ -2555,6 +2580,7 @@ describe("buildTimeoutError", () => {
       proc.stdout = new EventEmitter();
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
+      queueMicrotask(() => proc.stdout?.emit("data", Buffer.from("I/Boot: reader ready\n")));
       return proc;
     }) as FakeProcessRunner["spawn"];
 
@@ -2794,6 +2820,13 @@ describe("runExecution logging", () => {
 
   function createLogcatRunner(envelopeLine: string, delayMs = 5): FakeProcessRunner {
     const runner = new FakeProcessRunner();
+    let publishResult = () => {};
+    const run = runner.run.bind(runner);
+    runner.run = async (command, args, options) => {
+      const result = await run(command, args, options);
+      if (args.some(arg => arg.startsWith("am broadcast "))) publishResult();
+      return result;
+    };
     runner.spawn = (() => {
       const proc = new EventEmitter() as EventEmitter & {
         stdout?: EventEmitter;
@@ -2803,10 +2836,13 @@ describe("runExecution logging", () => {
       proc.stdout = new EventEmitter();
       proc.stderr = new EventEmitter();
       proc.kill = () => undefined;
-      setTimeout(() => {
+      publishResult = () => {
+        setTimeout(() => {
         proc.stdout?.emit("data", Buffer.from(`${envelopeLine}\n`));
         proc.emit("close", 0, null);
-      }, delayMs);
+        }, delayMs);
+      };
+      queueMicrotask(() => proc.stdout?.emit("data", Buffer.from("I/Boot: reader ready\n")));
       return proc;
     }) as FakeProcessRunner["spawn"];
     return runner;
@@ -2984,7 +3020,10 @@ describe("transport failure execution evidence", () => {
       const runner = new FakeProcessRunner();
       const proc = new EventEmitter() as EventEmitter & { stdout: EventEmitter; stderr: EventEmitter; kill: () => void };
       Object.assign(proc, { stdout: new EventEmitter(), stderr: new EventEmitter(), kill: () => undefined });
-      runner.spawn = () => proc;
+      runner.spawn = () => {
+        if (afterDispatch) queueMicrotask(() => proc.stdout.emit("data", Buffer.from("I/Boot: reader ready\n")));
+        return proc;
+      };
       let broadcasts = 0;
       runner.run = async (_command, args) => {
         if (args.includes("devices")) return { code: 0, stdout: "List of devices attached\ntransport-device\tdevice\n", stderr: "" };

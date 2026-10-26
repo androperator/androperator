@@ -391,7 +391,7 @@ describe("doctor smoke execution pipeline", () => {
             const logcatProcess = Object.assign(new EventEmitter(), {
                 stdout, stderr: new EventEmitter(), kill() {},
             });
-            runner.spawn = () => logcatProcess;
+            runner.spawn = () => { queueMicrotask(() => stdout.emit("data", Buffer.from("I/Boot: reader ready\n"))); return logcatProcess; };
             let execution: Execution;
             let broadcast = false;
             runner.run = async (command, args) => {

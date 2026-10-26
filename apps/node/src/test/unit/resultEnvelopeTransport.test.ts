@@ -73,7 +73,7 @@ describe("large query result transport", () => {
     const stderr = new PassThrough();
     Object.assign(process, { stdout, stderr, kill: () => true });
     const config = getDefaultRuntimeConfig();
-    config.runner = { ...config.runner, spawn: () => process };
+    config.runner = { ...config.runner, spawn: () => { queueMicrotask(() => stdout.write("I/Boot: reader ready\n")); return process; } };
     let dispatches = 0;
     const result = await waitForResultEnvelope(config, { commandId, timeoutMs: 3000, broadcastDelayMs: 0 }, async () => {
       dispatches++;
@@ -115,7 +115,7 @@ async function readPublicationOutput(lines: string[]) {
   let kills = 0;
   Object.assign(process, { stdout, stderr, kill: () => { kills++; return true; } });
   const config = getDefaultRuntimeConfig();
-  config.runner = { ...config.runner, spawn: () => process };
+  config.runner = { ...config.runner, spawn: () => { queueMicrotask(() => stdout.write("I/Boot: reader ready\n")); return process; } };
   const result = await waitForResultEnvelope(config, { commandId, taskId, timeoutMs: 30, broadcastDelayMs: 0 }, async begin => {
     begin();
     // Split lines across pipe buffers, including the publication event.

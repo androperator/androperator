@@ -485,6 +485,7 @@ it("keeps the screenshot and owned timeout when the evidence budget cancels a di
       queueMicrotask(() => { child.emit("exit", null, "SIGKILL"); child.emit("close", null, "SIGKILL"); });
       return true;
     } });
+    queueMicrotask(() => child.stdout.emit("data", Buffer.from("I/Boot: reader ready\n")));
     return child;
   };
   f.dependencies.screenshot = async () => png;

@@ -1,5 +1,6 @@
 package androperator.accessibilityservice
 
+import action.coroutine.ensureExecutionActive
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.graphics.Path
@@ -61,6 +62,7 @@ suspend fun AccessibilityService.dispatchDrag(
                 release()
             } else {
                 try {
+                    continuation.context.ensureExecutionActive()
                     val accepted = dispatchGesture(GestureDescription.Builder().addStroke(move).build(), moveCallback, handler)
                     movementStarted = accepted
                     // Keep the earlier accepted hold in the action receipt even if movement fails.
@@ -95,6 +97,7 @@ suspend fun AccessibilityService.dispatchDrag(
         handler.post {
             if (!continuation.isActive) return@post
             try {
+                continuation.context.ensureExecutionActive()
                 val accepted = dispatchGesture(GestureDescription.Builder().addStroke(hold).build(), holdCallback, handler)
                 observation?.accepted(accepted)
                 if (!accepted) finish(false)

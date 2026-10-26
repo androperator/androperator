@@ -1,5 +1,6 @@
 package androperator.accessibilityservice
 
+import action.coroutine.ensureExecutionActive
 import action.log.Log
 import action.math.geometry.Rect
 import action.math.geometry.toRect
@@ -552,6 +553,7 @@ suspend fun AccessibilityService.dispatchSingleTap(
                     cont.resume(false)
                 }
             }
+        cont.context.ensureExecutionActive()
         val accepted = dispatchGesture(gesture, cb, null)
         observation?.accepted(accepted)
         if (!accepted) cont.resume(false)
@@ -578,6 +580,7 @@ suspend fun AccessibilityService.dispatchLongPress(
                     cont.resume(false)
                 }
             }
+        cont.context.ensureExecutionActive()
         val accepted = dispatchGesture(gesture, cb, null)
         observation?.accepted(accepted)
         if (!accepted) cont.resume(false)
@@ -611,6 +614,7 @@ suspend fun AccessibilityService.dispatchSwipe(
                     if (cont.isActive) cont.resume(false)
                 }
             }
+        cont.context.ensureExecutionActive()
         val accepted = dispatchGesture(gesture, cb, null)
         observation?.accepted(accepted)
         if (!accepted && cont.isActive) cont.resume(false)

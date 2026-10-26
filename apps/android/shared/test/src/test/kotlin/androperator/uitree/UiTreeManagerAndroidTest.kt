@@ -1,5 +1,6 @@
 package androperator.uitree
 
+import kotlin.time.Duration.Companion.milliseconds
 import action.math.geometry.Rect
 import android.view.accessibility.AccessibilityNodeInfo
 import androperator.accessibilityservice.AccessibilityServiceManager
@@ -24,6 +25,35 @@ import org.robolectric.shadows.ShadowAccessibilityNodeInfo
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
 class UiTreeManagerAndroidTest {
+    @Test
+    fun `expired text preparation cannot focus or click the editor`() = runTest {
+        val node = editableNode().apply { isFocused = false }
+        val clock = kotlin.time.TestTimeSource()
+        kotlin.test.assertFailsWith<action.coroutine.ExecutionDeadlineExceeded> {
+            kotlinx.coroutines.withContext(action.coroutine.ExecutionDeadline(20, clock) + UiDispatchObservation { _, _, _ -> clock += 20.milliseconds }) {
+                createManager().setText(uiNode(node), "hello", submit = false, clear = false)
+            }
+        }
+        assertTrue(performedActionIds(node).isEmpty())
+    }
+
+    @Test
+    fun `expired command cannot dispatch a swipe after blocking preparation`() = runTest {
+        val service = org.robolectric.Robolectric.buildService(ReceiptService::class.java).create().get()
+        val services = androperator.accessibilityservice.AccessibilityServiceManagerAndroid().apply {
+            setCurrentAccessibilityService(service, true)
+        }
+        val shadow = Shadow.extract<org.robolectric.shadows.ShadowAccessibilityService>(service)
+        shadow.setCanDispatchGestures(true)
+        val clock = kotlin.time.TestTimeSource()
+        kotlin.test.assertFailsWith<action.coroutine.ExecutionDeadlineExceeded> {
+            kotlinx.coroutines.withContext(action.coroutine.ExecutionDeadline(20, clock) + UiDispatchObservation { _, _, _ -> clock += 20.milliseconds }) {
+                UiTreeManagerAndroid(services).swipeAt(10, 20, 100, 200, 300)
+            }
+        }
+        assertTrue(shadow.gesturesDispatched.isEmpty())
+    }
+
     class ReceiptService : android.accessibilityservice.AccessibilityService() {
         override fun onAccessibilityEvent(event: android.view.accessibility.AccessibilityEvent?) {}
         override fun onInterrupt() {}

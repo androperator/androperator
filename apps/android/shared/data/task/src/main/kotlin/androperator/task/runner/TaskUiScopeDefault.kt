@@ -2,6 +2,7 @@ package androperator.task.runner
 
 // Helper function to get current task status from coroutine context
 import androperator.uitree.TextSubmissionOutcome
+import action.coroutine.ensureExecutionActive
 import action.log.Log
 import action.time.getCurrentTimeMillis
 import action.math.geometry.Point
@@ -342,14 +343,24 @@ class TaskUiScopeDefault(
         strict: Boolean,
         container: NodeMatcher?,
     ): TaskUiNode {
+        val started = TimeSource.Monotonic.markNow()
+        fun checkWaitDeadline() {
+            if (timeoutMs != null && started.elapsedNow() >= timeoutMs.milliseconds) {
+                throw UiActionFailure("WAIT_TIMEOUT", "Timeout waiting for node matching: $matcher (timeoutMs=$timeoutMs)")
+            }
+        }
         val operation: suspend () -> TaskUiNode = {
             withRetry(retry, "waitForNode($matcher)") {
                 Log.d("$TAG Waiting for node matching: $matcher")
 
+                kotlin.coroutines.coroutineContext.ensureExecutionActive()
+                checkWaitDeadline()
                 val uiTreeRaw =
                     uiTreeInspector.getCurrentUiTree()
                         ?: throw QueryHierarchyUnavailableException(uiTreeInspector.getUnavailableHierarchyDiagnostics())
 
+                kotlin.coroutines.coroutineContext.ensureExecutionActive()
+                checkWaitDeadline()
                 val uiTree = uiTreeFilterer.filterOnScreenOnly(uiTreeRaw)
 
                 val uiNode =
@@ -366,6 +377,8 @@ class TaskUiScopeDefault(
                         bounds = uiNode.bounds,
                         debugPath = uiNode.id.value,
                     )
+                kotlin.coroutines.coroutineContext.ensureExecutionActive()
+                checkWaitDeadline()
                 Log.d("$TAG Found matching node: $taskUiNode")
                 taskUiNode
             }

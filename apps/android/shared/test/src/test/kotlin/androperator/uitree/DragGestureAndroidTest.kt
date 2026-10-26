@@ -1,5 +1,6 @@
 package androperator.uitree
 
+import kotlin.time.Duration.Companion.milliseconds
 import android.os.Looper
 import androperator.accessibilityservice.AccessibilityServiceManagerAndroid
 import kotlinx.coroutines.async
@@ -24,6 +25,39 @@ class DragGestureAndroidTest {
         val shadow = Shadow.extract<ShadowAccessibilityService>(service).apply { setCanDispatchGestures(true) }
         val manager = UiTreeManagerAndroid(AccessibilityServiceManagerAndroid().apply { setCurrentAccessibilityService(service, true) })
         fun complete(index: Int) = shadow.gesturesDispatched[index].let { it.callback().onCompleted(it.description()) }
+    }
+
+    @Test fun `deadline expiry before posted hold never starts a gesture`() = runTest {
+        val fixture = Fixture()
+        val clock = kotlin.time.TestTimeSource()
+        val action = async(action.coroutine.ExecutionDeadline(20, clock)) {
+            fixture.manager.dragAt(10, 20, 100, 200, 1000, 500)
+        }
+        testScheduler.runCurrent()
+        clock += 20.milliseconds
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(fixture.shadow.gesturesDispatched.isEmpty())
+        assertFalse(action.await())
+    }
+
+    @Test fun `deadline expiry during hold releases without starting movement`() = runTest {
+        val fixture = Fixture()
+        val clock = kotlin.time.TestTimeSource()
+        val action = async(action.coroutine.ExecutionDeadline(200, clock)) {
+            fixture.manager.dragAt(10, 20, 100, 200, 1000, 500)
+        }
+        testScheduler.runCurrent()
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(1, fixture.shadow.gesturesDispatched.size)
+        clock += 200.milliseconds
+        fixture.complete(0)
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(1000))
+        val release = fixture.shadow.gesturesDispatched[1].description().getStroke(0)
+        assertEquals(0f, android.graphics.PathMeasure(release.path, false).length)
+        assertFalse(release.willContinue())
+        fixture.complete(1)
+        assertFalse(action.await())
+        assertEquals(2, fixture.shadow.gesturesDispatched.size)
     }
 
     @Test fun `drag holds then continues the same pointer and waits for release`() = runTest {

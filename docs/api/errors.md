@@ -37,6 +37,31 @@ stops the sequence. [Action receipts](actions.md#action-receipts-and-failure-evi
 describe dispatch evidence, not a verified application outcome. Do not replay an
 uncertain mutation automatically.
 
+### Android deadlines and blocking lookups
+
+The Android command budget includes time waiting for another command. A monotonic
+deadline is checked before and after each action and at global-action and gesture
+dispatch boundaries. When a blocking lookup returns after the command deadline,
+the runtime reports `COMMAND_TIMEOUT`, retains preceding steps and the failing
+step, and does not begin the queued actions. An already accepted gesture or other
+platform action cannot be undone; a held drag pointer may still be released for
+cleanup without starting its queued movement.
+
+Node waits and navigation waits also check their own elapsed time after lookup.
+A node found after its wait budget is not a successful match: `wait_for_node`
+reports `WAIT_TIMEOUT`, while a navigation wait returns its existing
+`NAVIGATION_TIMEOUT` failed step if the command budget is still live. Navigation
+continues to use package-or-node matching. Returned failed steps retain the
+existing continuation behavior; use the result of a separate observation command
+when a later mutation must depend on a successful wait.
+
+These checks do not preempt synchronous Android accessibility calls. Such a call
+can delay the terminal result until it returns, even though later actions are
+prevented. A host `RESULT_ENVELOPE_TIMEOUT` or abort signal stops the host wait;
+it is not proof that Android execution was cancelled. Keep requested IDs and
+failure evidence, inspect current state with a read-only query, and do not
+blindly replay a mutation after a missing result.
+
 ## Notification and media controls
 
 See [notifications](notifications.md) for expired keys/actions, non-dismissible

@@ -33,6 +33,52 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TaskRegressionFixesTest : ActionTest {
+    @Test
+    fun `navigation rejects a matching node returned after its deadline`() = actionTest {
+        val tree = UiTree(root = testNode("target", UiRole.Text, label = "Target"))
+        val inspector = object : UiTreeInspector by StaticUiTreeInspector(tree) {
+            override suspend fun getCurrentUiTree(): UiTree {
+                Thread.sleep(60) // Deliberately blocks the timeout dispatcher.
+                return tree
+            }
+        }
+        val ui = TaskUiScopeDefault(inspector, IdentityUiTreeFilterer, unusedProxy(), unusedProxy(), backgroundScope)
+        val scope = TaskScopeDefault(unusedProxy(), unusedProxy(), unusedProxy(), inspector,
+            IdentityUiTreeFilterer, unusedProxy(), ui, unusedProxy(), backgroundScope)
+        val result = scope.waitForNavigation(null, NodeMatcher(textEquals = "Target"), 20, false)
+        assertFalse(result.success)
+        assertTrue(result.elapsedMs >= 20)
+    }
+
+    @Test
+    fun `navigation rejects matching package metadata returned after its deadline`() = actionTest {
+        val inspector = object : UiTreeInspector by SequenceUiTreeInspector(listOf(null)) {
+            private var calls = 0
+            override suspend fun getCurrentWindowMetadata(): UiWindowMetadata {
+                if (calls++ > 0) Thread.sleep(60)
+                return UiWindowMetadata(foregroundPackage = "com.example.target")
+            }
+        }
+        val scope = TaskScopeDefault(unusedProxy(), unusedProxy(), unusedProxy(), inspector,
+            IdentityUiTreeFilterer, unusedProxy(), unusedProxy(), unusedProxy(), backgroundScope)
+        val result = scope.waitForNavigation("com.example.target", null, 20, true)
+        assertFalse(result.success)
+    }
+
+    @Test
+    fun `node wait rejects a matching hierarchy returned after its deadline`() = actionTest {
+        val tree = UiTree(root = testNode("target", UiRole.Text, label = "Target"))
+        val inspector = object : UiTreeInspector by StaticUiTreeInspector(tree) {
+            override suspend fun getCurrentUiTree(): UiTree {
+                Thread.sleep(60)
+                return tree
+            }
+        }
+        val ui = TaskUiScopeDefault(inspector, IdentityUiTreeFilterer, unusedProxy(), unusedProxy(), backgroundScope)
+        val error = assertFailsWith<UiActionFailure> { ui.waitForNode(NodeMatcher(textEquals = "Target"), TaskRetry.None, 20) }
+        assertEquals("WAIT_TIMEOUT", error.code)
+    }
+
     private data class RecordedSetTextCall(
         val text: String,
         val clear: Boolean,

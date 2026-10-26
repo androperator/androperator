@@ -1,5 +1,7 @@
 package androperator.uitree
 
+import action.coroutine.ensureExecutionActive
+import kotlin.coroutines.coroutineContext
 import action.log.Log
 import android.accessibilityservice.AccessibilityService
 import android.os.Build
@@ -33,6 +35,7 @@ class UiTreeManagerAndroid(
 
     private suspend fun dispatch(target: Any?, method: String, action: suspend () -> Boolean): Boolean {
         observeDispatch(target, method, false)
+        coroutineContext.ensureExecutionActive()
         return action().also {
             // Gesture acceptance is observed at dispatchGesture, before its asynchronous callback.
             if (method != "coordinate_gesture") observeDispatch(target, method, it)
@@ -367,6 +370,7 @@ class UiTreeManagerAndroid(
         private suspend fun dispatchTextReplacement(target: AccessibilityNodeInfo, args: Bundle): Boolean {
             observeDispatch(target, "accessibility_action", false, blocksRetry = false)
             val accepted = try {
+                coroutineContext.ensureExecutionActive()
                 target.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
             } catch (error: Exception) {
                 observeDispatch(target, "accessibility_action", false)
@@ -376,7 +380,7 @@ class UiTreeManagerAndroid(
             return accepted
         }
 
-        private fun performLegacySubmit(
+        private suspend fun performLegacySubmit(
             target: AccessibilityNodeInfo,
             submitRequested: Boolean,
         ): TextSubmissionOutcome {
@@ -384,6 +388,7 @@ class UiTreeManagerAndroid(
                 return TextSubmissionOutcome.NotRequested
             }
 
+            coroutineContext.ensureExecutionActive()
             if (
                 supportsImeEnterAction(target) &&
                 target.performAction(AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_IME_ENTER.id)
@@ -391,6 +396,7 @@ class UiTreeManagerAndroid(
                 return TextSubmissionOutcome.ImeEditorAction
             }
 
+            coroutineContext.ensureExecutionActive()
             return if (target.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
                 TextSubmissionOutcome.ClickFallback
             } else {
@@ -456,20 +462,23 @@ class UiTreeManagerAndroid(
             )
         }
 
-        private fun replaceText(
+        private suspend fun replaceText(
             session: TextInputSession,
             request: TextEntryRequest,
         ): ReplaceTextResult {
+            coroutineContext.ensureExecutionActive()
             val cursorMovedToEnd = session.setSelection(Int.MAX_VALUE, Int.MAX_VALUE)
             if (!cursorMovedToEnd) {
                 return ReplaceTextResult.Unavailable(reason = "selection_unavailable")
             }
 
+            coroutineContext.ensureExecutionActive()
             val cleared = session.deleteSurroundingText(Int.MAX_VALUE, 0)
             if (!cleared) {
                 return ReplaceTextResult.Unavailable(reason = "delete_unavailable")
             }
 
+            coroutineContext.ensureExecutionActive()
             return if (session.commitText(request.text, 1)) {
                 ReplaceTextResult.Success
             } else {
@@ -480,7 +489,7 @@ class UiTreeManagerAndroid(
             }
         }
 
-        private fun performSubmit(
+        private suspend fun performSubmit(
             session: TextInputSession,
             editorInfo: TextInputEditorInfo?,
             submitRequested: Boolean,
@@ -490,6 +499,7 @@ class UiTreeManagerAndroid(
             }
 
             val editorAction = editorInfo?.let(::resolveEditorAction) ?: return TextSubmissionOutcome.Unavailable
+            coroutineContext.ensureExecutionActive()
             return if (session.performEditorAction(editorAction)) {
                 TextSubmissionOutcome.ImeEditorAction
             } else {
@@ -547,6 +557,7 @@ private suspend fun prepareTextEntryFocus(target: AccessibilityNodeInfo) {
     for (action in listOf(AccessibilityNodeInfo.ACTION_FOCUS, AccessibilityNodeInfo.ACTION_CLICK)) {
         observeDispatch(target, "accessibility_action", false, blocksRetry = false)
         val accepted = try {
+            coroutineContext.ensureExecutionActive()
             target.performAction(action)
         } catch (error: Exception) {
             observeDispatch(target, "accessibility_action", false)

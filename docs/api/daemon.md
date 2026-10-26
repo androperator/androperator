@@ -199,7 +199,7 @@ Daemon proxying is active for:
 | CLI command | Proxied endpoint | Post-dispatch fallback |
 | --- | --- | --- |
 | `androperator exec <json-or-file>` | `POST /execute` on the daemon socket | no |
-| `androperator snapshot` | synthetic `snapshot` payload sent to `POST /execute` | yes |
+| `androperator snapshot` | synthetic `snapshot` payload sent to `POST /execute` | no |
 | `androperator screenshot` | synthetic `take_screenshot` payload sent to `POST /execute` | no |
 | Flat action commands such as `open`, `click`, `type`, `read`, `wait`, `press`, `back`, `close`, `sleep`, `scroll`, `scroll-until`, `wait-for-nav`, and `read-value` | action payload sent to `POST /execute` | no |
 
@@ -218,6 +218,14 @@ Proxy selection rules:
 7. If the daemon is ready and the version and build identity match, the command sends the execution payload to `POST /execute`.
 8. If a responding socket is not owned by the managed daemon, the command runs direct for that call and leaves the listener untouched.
 9. If the daemon cannot become ready before dispatch, the command runs direct for that call.
+
+After a dispatched request, snapshots return the daemon result, including any
+partial-result transport diagnostics. A lost or malformed daemon response returns
+`DAEMON_PROXY_ERROR` with `phase: "result_wait"` and `dispatchState: "unknown"`;
+it does not start another execution or readiness probe. The unknown state means
+the proxy cannot establish whether Android executed the request. Chunk diagnostics
+are only available when the daemon response carrying them reaches the caller.
+Choose an explicit retry after inspecting the failure.
 
 The proxy sends the caller's effective Operator package in the request body. Precedence is:
 

@@ -28,7 +28,8 @@ export async function cmdObserveSnapshot(options: SnapshotPresentationOptions & 
       rawDeviceId: options.deviceId,
       operatorPackage: options.operatorPackage,
       noDaemon: options.noDaemon,
-      allowPostDispatchFallback: true,
+      // A retry would hide the original failure and start a new readiness budget.
+      allowPostDispatchFallback: false,
     });
     const result = proxyResult ?? await runExecutionFn(execution, {
       deviceId: options.deviceId,

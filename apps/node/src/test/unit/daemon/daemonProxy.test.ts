@@ -1,3 +1,4 @@
+import { cmdObserveSnapshot } from "../../../cli/commands/observe.js";
 import { cmdOnScreenLog } from "../../../cli/commands/action.js";
 import { afterEach, describe, it } from "node:test";
 import assert from "node:assert/strict";
@@ -491,6 +492,70 @@ describe("tryDaemonExecution", () => {
       DEFAULT_OPERATOR_PACKAGE,
       DEFAULT_OPERATOR_PACKAGE,
     ]);
+  });
+
+  for (const response of [
+    { ok: false, dispatched: true, error: new Error("Daemon POST timed out") } as DaemonHttpFailure,
+    { ok: true, body: "{" } as DaemonHttpSuccess,
+  ]) {
+    it(`snapshot reports daemon response loss without a second execution (${response.ok ? "malformed" : "timeout"})`, async () => {
+      let directCalls = 0;
+      const output = await cmdObserveSnapshot({
+        format: "json",
+        tryDaemonExecutionFn: (input, options) => tryDaemonExecution(input, options, {
+          ...makeOwnedDaemonDeps(),
+          httpGetFn: makeAliveGet(),
+          httpPostFn: async () => response,
+        }),
+        runExecutionFn: async () => {
+          directCalls += 1;
+          return { ok: false, error: { code: ERROR_CODES.RESULT_ENVELOPE_TIMEOUT,
+            message: "Fallback readiness failed", details: { dispatchState: "not_dispatched" } } };
+        },
+      });
+      const result = JSON.parse(output);
+      assert.equal(directCalls, 0);
+      assert.equal(result.code, ERROR_CODES.DAEMON_PROXY_ERROR);
+      assert.equal(result.details.phase, "result_wait");
+      assert.equal(result.details.dispatchState, "unknown");
+      assert.ok(result.details.commandId);
+      assert.ok(result.details.startedAt);
+      assert.ok(result.details.completedAt);
+    });
+  }
+
+  it("snapshot preserves daemon partial-result diagnostics without fallback", async () => {
+    const details = {
+      phase: "result_wait", dispatchState: "dispatched",
+      transport: { receivedChunks: 45, expectedChunks: 54, receivedBytes: 46080, expectedBytes: 55247 },
+      reader: { elapsedMs: 65104, droppedEvents: 0 },
+    };
+    const output = await cmdObserveSnapshot({
+      format: "json", compact: true, maxNodes: 20,
+      tryDaemonExecutionFn: (input, options) => tryDaemonExecution(input, options, {
+        ...makeOwnedDaemonDeps(), httpGetFn: makeAliveGet(),
+        httpPostFn: async () => ({ ok: true, body: JSON.stringify({ ok: false,
+          error: { code: ERROR_CODES.RESULT_ENVELOPE_TIMEOUT, message: "Incomplete snapshot", details } }) }),
+      }),
+      runExecutionFn: async () => { throw new Error("Unexpected fallback"); },
+    });
+    const result = JSON.parse(output);
+    assert.equal(result.code, ERROR_CODES.RESULT_ENVELOPE_TIMEOUT);
+    assert.deepEqual(result.details, details);
+  });
+
+  it("snapshot still runs direct when the daemon POST was not dispatched", async () => {
+    let directCalls = 0;
+    const output = await cmdObserveSnapshot({
+      format: "json",
+      tryDaemonExecutionFn: (input, options) => tryDaemonExecution(input, options, {
+        ...makeOwnedDaemonDeps(), httpGetFn: makeAliveGet(),
+        httpPostFn: async () => ({ ok: false, dispatched: false, error: new Error("connect ECONNREFUSED") }),
+      }),
+      runExecutionFn: async () => { directCalls += 1; return successResult; },
+    });
+    assert.equal(directCalls, 1);
+    assert.equal(JSON.parse(output).envelope.status, "success");
   });
 
   it("allows idempotent post-dispatch fallback", async () => {

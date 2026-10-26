@@ -105,8 +105,28 @@ is unchanged. Temporary artifacts are host-local and subject to host temporary
 file cleanup; copy evidence you need to retain.
 
 These limits bound nodes and fields, not exact tokens or bytes. Projection does
-not reduce Android capture cost. A full compact projection can exceed raw XML
+not reduce Android capture cost or the full result transported from Android. A full compact projection can exceed raw XML
 size for short or sparse nodes; choose a node limit appropriate to the task.
+
+## Targeted state verification and failures
+
+When checking for one known destination element, use a targeted
+[`query_ui`](actions.md#action-query-ui) with `limit: 1` rather than transporting a
+full snapshot. After navigation, first use `wait_for_navigation` with the expected
+package and destination node, or `wait_for_node` for the destination selector.
+Inspect the wait and query step results; zero matches do not prove navigation has
+finished. These actions can share one `exec` payload with the navigation action.
+This reduces returned data but does not guarantee a particular latency or eliminate
+transport failures.
+
+The CLI does not automatically repeat a snapshot after losing a dispatched daemon
+response. It returns the original daemon error when available, or
+`DAEMON_PROXY_ERROR` with unknown dispatch state when that response is lost or
+malformed. See [daemon proxy behavior](daemon.md#transparent-proxy).
+`--timeout` is the Android execution budget, not an end-to-end wall-clock limit:
+preflight and readiness take additional time, and the result reader allows a
+five-second envelope buffer. Compact presentation happens only after a complete
+successful result arrives.
 
 ## Compact result example
 

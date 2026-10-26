@@ -1,6 +1,8 @@
 package androperator.task.runner
 
 import androperator.uitree.TextSubmissionOutcome
+import action.coroutine.ExecutionDeadlineExceeded
+import action.coroutine.ensureExecutionActive
 import action.log.Log
 import action.media.NotificationMediaService
 import action.media.NotificationMediaException
@@ -64,7 +66,9 @@ class UiActionEngineDefault(
                     (if (isMediaControl && action is UiAction.NotificationMedia) mapOf("dispatched" to serviceDispatched.toString(), "waitTimeoutMs" to action.waitTimeoutMs.toString()) +
                         (if (action.type == "media_seek") mapOf("requestedPositionMs" to action.positionMs.toString(), "positionToleranceMs" to action.positionToleranceMs.toString()) else emptyMap()) else emptyMap())
                 val stepResult = try {
+                    kotlin.coroutines.coroutineContext.ensureExecutionActive()
                     val result = withContext(warnings + receipt + receipt.observation) { executeSingle(taskScope, action) { serviceDispatched = true } }
+                    kotlin.coroutines.coroutineContext.ensureExecutionActive()
                     val failureCode = if (!result.success && !result.data.containsKey("errorCode")) {
                         // Returned failures already use data.error as a machine-readable code.
                         mapOf("errorCode" to (result.data["error"] ?: "ACTION_FAILED"))
@@ -77,7 +81,7 @@ class UiActionEngineDefault(
                         is StrictSelectionException -> error.code
                         is QueryHierarchyUnavailableException -> error.code
                         is UiActionFailure -> error.code
-                        is kotlinx.coroutines.TimeoutCancellationException -> "COMMAND_TIMEOUT"
+                        is ExecutionDeadlineExceeded, is kotlinx.coroutines.TimeoutCancellationException -> "COMMAND_TIMEOUT"
                         is kotlinx.coroutines.CancellationException -> "COMMAND_CANCELLED"
                         else -> "ACTION_FAILED"
                     }
@@ -999,8 +1003,9 @@ class UiActionEngineDefault(
         )
     }
 
-    private fun executePressKey(action: UiAction.PressKey): UiActionStepResult {
+    private suspend fun executePressKey(action: UiAction.PressKey): UiActionStepResult {
         val keyName = action.key.name.lowercase()
+        kotlin.coroutines.coroutineContext.ensureExecutionActive()
         val success = globalActionDispatcher.perform(action.key)
 
         return if (success) {

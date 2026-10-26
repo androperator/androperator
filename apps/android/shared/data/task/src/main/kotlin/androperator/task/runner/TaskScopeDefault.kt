@@ -1,5 +1,7 @@
 package androperator.task.runner
 
+import action.coroutine.ensureExecutionActive
+import kotlin.time.TimeSource
 import action.log.Log
 import action.system.model.ApplicationId
 import action.time.getCurrentTimeMillis
@@ -422,57 +424,44 @@ class TaskScopeDefault(
         timeoutMs: Long,
         allowAlreadyForeground: Boolean,
     ): WaitForNavigationResult {
-        val startTime = getCurrentTimeMillis()
+        val started = TimeSource.Monotonic.markNow()
         var lastPackage: String? = null
+        fun elapsedMs() = started.elapsedNow().inWholeMilliseconds
+        fun timedOut() = WaitForNavigationResult(false, lastPackage, elapsedMs())
+        kotlin.coroutines.coroutineContext.ensureExecutionActive()
         val initialPackage = uiTreeInspector.getCurrentWindowMetadata()?.foregroundPackage
         var observedDifferentPackage = false
-        val pollDelay = 200.milliseconds
 
         while (true) {
-            val elapsedMs = getCurrentTimeMillis() - startTime
-            if (elapsedMs > timeoutMs) {
-                return WaitForNavigationResult(
-                    success = false,
-                    lastPackage = lastPackage,
-                    elapsedMs = elapsedMs,
-                )
-            }
-
+            kotlin.coroutines.coroutineContext.ensureExecutionActive()
+            if (elapsedMs() >= timeoutMs) return timedOut()
             val windowMetadata = uiTreeInspector.getCurrentWindowMetadata()
             lastPackage = windowMetadata?.foregroundPackage
+            kotlin.coroutines.coroutineContext.ensureExecutionActive()
+            if (elapsedMs() >= timeoutMs) return timedOut()
             if (initialPackage != null && lastPackage != null && lastPackage != initialPackage) {
                 observedDifferentPackage = true
             }
 
-            if (shouldSatisfyExpectedPackage(
-                    expectedPackage = expectedPackage,
-                    initialPackage = initialPackage,
-                    currentPackage = lastPackage,
-                    observedDifferentPackage = observedDifferentPackage,
-                    allowAlreadyForeground = allowAlreadyForeground,
-                )
-            ) {
-                return WaitForNavigationResult(
-                    success = true,
-                    lastPackage = lastPackage,
-                    elapsedMs = getCurrentTimeMillis() - startTime,
-                )
+            if (shouldSatisfyExpectedPackage(expectedPackage, initialPackage, lastPackage,
+                    observedDifferentPackage, allowAlreadyForeground)) {
+                return WaitForNavigationResult(true, lastPackage, elapsedMs())
             }
 
             if (expectedNode != null) {
                 try {
-                    taskUiScope.waitForNode(expectedNode, TaskRetry.None)
-                    return WaitForNavigationResult(
-                        success = true,
-                        lastPackage = lastPackage,
-                        elapsedMs = getCurrentTimeMillis() - startTime,
-                    )
+                    taskUiScope.waitForNode(expectedNode, TaskRetry.None, timeoutMs = (timeoutMs - elapsedMs()).coerceAtLeast(1))
+                    kotlin.coroutines.coroutineContext.ensureExecutionActive()
+                    if (elapsedMs() >= timeoutMs) return timedOut()
+                    return WaitForNavigationResult(true, lastPackage, elapsedMs())
                 } catch (_: IllegalStateException) {
-                    // Not yet visible
+                    // Not yet visible, or the node lookup exhausted this wait's budget.
                 }
             }
-
-            delay(pollDelay)
+            kotlin.coroutines.coroutineContext.ensureExecutionActive()
+            val remainingMs = timeoutMs - elapsedMs()
+            if (remainingMs <= 0) return timedOut()
+            delay(minOf(200, remainingMs).milliseconds)
         }
     }
 

@@ -1,5 +1,8 @@
 package androperator.operator.agent
 
+import action.coroutine.ExecutionDeadline
+import action.coroutine.ExecutionDeadlineExceeded
+import action.coroutine.ensureExecutionActive
 import action.log.Log
 import androperator.task.runner.TaskEvent
 import androperator.task.runner.TaskResult
@@ -35,6 +38,7 @@ class AgentCommandExecutorDefault(
             )
         }
 
+        val deadline = ExecutionDeadline(command.timeoutMs)
         val journal = ActionExecutionJournal()
         var terminalPublished = false
         suspend fun publish(canonicalLine: String) {
@@ -47,6 +51,7 @@ class AgentCommandExecutorDefault(
             // This bounds end-to-end latency per command under contention.
             withTimeout(command.timeoutMs) {
                 commandExecutionMutex.withLock {
+                    deadline.throwIfExpired()
                     val statusSink = LoggingTaskStatusSink(command.commandId, command.taskId)
 
                     Log.i(
@@ -54,13 +59,13 @@ class AgentCommandExecutorDefault(
                     )
 
                     val result =
-                        withContext(journal) {
+                        withContext(journal + deadline) {
                             taskRunnerManager.run(statusSink) {
                                 uiActionEngine.execute(
                                     taskScope = this,
                                     plan = command.toPlan(),
                                 )
-                            }
+                            }.also { kotlin.coroutines.coroutineContext.ensureExecutionActive() }
                         }
 
                     when (result) {
@@ -104,7 +109,7 @@ class AgentCommandExecutorDefault(
                 }
             }
         } catch (e: CancellationException) {
-            val timedOut = e is TimeoutCancellationException
+            val timedOut = e is TimeoutCancellationException || e is ExecutionDeadlineExceeded
             val reason = if (timedOut) "Agent command timed out after ${command.timeoutMs}ms" else "Agent command cancelled"
             try {
                 val canonicalLine = buildCanonicalFailureLine(

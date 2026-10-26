@@ -1675,6 +1675,18 @@ their `cancelled` or `timeout` reason. No successful path or persisted timestamp
 is returned, and a pre-existing destination is preserved when publication is
 interrupted before its atomic rename.
 
+Helper failures can also include `data.captureDiagnostics`, a JSON-encoded object.
+Its `phase` identifies `setup`, `handshake`, `frame`, or `idle`; `event` identifies
+the first failure or closure (for example, `child_close`, `stdin_error`, or
+`stdout_error`). `requestAttempted` says whether Node attempted to write a frame
+request, not whether Android received it or captured a frame. Child closure adds
+`exitCode` and `exitSignal` (null when absent); pipe/process errors may add an
+allowlisted `errorCode`, such as `EPIPE`. Unknown signals become `"unknown"` and
+unknown error codes are omitted. Cleanup cannot replace the first failure.
+These diagnostics exclude stderr, raw error messages, paths, and screen content.
+For a transport failure, retry only a new screenshot request when appropriate;
+never replay the preceding navigation or the entire action batch automatically.
+
 If fallback also fails, check the reported stock/resize error and ADB
 readiness. Use an ordinary unprotected screen for direct content rejection;
 unlock/stabilize the display for state/geometry failures. Protocol/transport

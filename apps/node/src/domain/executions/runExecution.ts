@@ -911,6 +911,7 @@ async function performExecution(
               captureFailureReason, requestedScale: String(screenAction?.params?.scale ?? 25),
               fallbackAttempted: String(e instanceof CaptureHelperError && e.fallbackAttempted),
               protectedContent: e instanceof CaptureHelperError ? e.protectedContent : "unknown",
+              ...(e instanceof CaptureHelperError && e.diagnostics ? { captureDiagnostics: JSON.stringify(e.diagnostics) } : {}),
               ...captureMetadata,
               error: ERROR_CODES.EVIDENCE_CAPTURE_FAILED,
               errorCode: ERROR_CODES.EVIDENCE_CAPTURE_FAILED,

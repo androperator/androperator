@@ -6,7 +6,24 @@ import type { RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.
 import { verifyScreenshot } from "./screenshotMetadata.js";
 
 export type CaptureScale = 100 | 50 | 25;
+export interface CaptureHelperDiagnostics {
+  phase: "setup" | "handshake" | "frame" | "idle";
+  event: "child_error" | "stdin_error" | "stdout_error" | "stderr_error" | "child_close" | "spawn_error" | "setup_failed" | "session_closed" | "timeout" | "cancelled" | "capture_failed" | "protocol";
+  requestAttempted: boolean;
+  exitCode?: number | null;
+  exitSignal?: string | null;
+  errorCode?: string;
+}
+
+const SAFE_PIPE_ERROR_CODES = new Set(["EPIPE", "ECONNRESET", "ECONNABORTED", "EIO", "EBADF", "ENOENT", "EACCES", "EPERM", "ENOTCONN", "ETIMEDOUT", "EINTR"]);
+const SAFE_EXIT_SIGNALS = new Set(["SIGTERM", "SIGKILL", "SIGINT", "SIGHUP", "SIGPIPE", "SIGABRT", "SIGSEGV", "SIGBUS", "SIGILL", "SIGQUIT", "SIGTRAP"]);
+function safePipeError(error: unknown): Pick<CaptureHelperDiagnostics, "errorCode"> {
+  const code = (error as NodeJS.ErrnoException | undefined)?.code;
+  return typeof code === "string" && SAFE_PIPE_ERROR_CODES.has(code) ? { errorCode: code } : {};
+}
+
 export class CaptureHelperError extends Error {
+  diagnostics?: Readonly<CaptureHelperDiagnostics>;
   readonly code = "EVIDENCE_CAPTURE_FAILED";
   fallbackAllowed = false;
   fallbackAttempted = false;
@@ -45,7 +62,9 @@ class Session {
   private child?: ChildProcessWithoutNullStreams;
   private pending?: { resolve: (value: { header: any; buffer: Buffer }) => void; reject: (error: Error) => void; timer: NodeJS.Timeout };
   private bytes: Buffer = Buffer.alloc(0);
-  private dead?: Error;
+  private dead?: CaptureHelperError;
+  private phase: CaptureHelperDiagnostics["phase"] = "setup";
+  private requestAttempted = false;
   private sequence = 0;
   private captureNanos = 0n;
   private idle?: NodeJS.Timeout;
@@ -54,8 +73,12 @@ class Session {
   busy = true;
   constructor(private readonly config: RuntimeConfig) { owners.add(this); }
 
-  close(error = fail("transport", "Capture helper closed. Retry the screenshot; navigation was not replayed.")) {
+  close(error = fail("transport", "Capture helper closed. Retry only the screenshot; navigation was not replayed."),
+    event: CaptureHelperDiagnostics["event"] = ["timeout", "cancelled", "protocol"].includes(error.reason)
+      ? error.reason as "timeout" | "cancelled" | "protocol" : "session_closed",
+    facts: Pick<CaptureHelperDiagnostics, "exitCode" | "exitSignal" | "errorCode"> = {}) {
     if (this.dead) return;
+    error.diagnostics ??= Object.freeze({ phase: this.phase, event, requestAttempted: this.requestAttempted, ...facts });
     this.dead = error;
     this.setupAbort.abort(error);
     if (this.idle) clearTimeout(this.idle);
@@ -128,17 +151,28 @@ class Session {
       const sum = await run(["shell", "sha256sum", `${this.remote}/capture.dex`]);
       if (sum.trim().split(/\s+/)[0] !== artifact.sha256) throw fail("incompatible", "Deployed capture helper checksum mismatch.");
       if (this.dead) throw this.dead;
+      this.phase = "handshake";
       const handshake = this.wait(deadline - performance.now());
       void handshake.catch(() => undefined); // A synchronous spawn failure must not leave an unhandled rejection.
-      const child = this.config.runner.spawn(this.config.adbPath, ["-s", this.config.deviceId!, "shell", "-T",
+      let child: ChildProcessWithoutNullStreams;
+      try { child = this.config.runner.spawn(this.config.adbPath, ["-s", this.config.deviceId!, "shell", "-T",
         `trap 'rm -rf ${this.remote}' EXIT; CLASSPATH=${this.remote}/capture.dex app_process /system/bin CaptureHelper ${this.id}`],
         { stdio: ["pipe", "pipe", "pipe"], shell: false }) as ChildProcessWithoutNullStreams;
+      } catch (cause) {
+        this.transportFailure("spawn_error", safePipeError(cause));
+        throw this.dead;
+      }
       this.child = child;
       child.stdout.on("data", chunk => this.receive(chunk));
       child.stderr.on("data", () => undefined); // Never retain device or private screen diagnostics.
-      child.on("error", () => this.close());
-      child.stdin.on("error", () => this.close());
-      child.on("close", () => this.close());
+      child.stderr.on("error", error => this.transportFailure("stderr_error", safePipeError(error)));
+      child.on("error", error => this.transportFailure("child_error", safePipeError(error)));
+      child.stdin.on("error", error => this.transportFailure("stdin_error", safePipeError(error)));
+      child.stdout.on("error", error => this.transportFailure("stdout_error", safePipeError(error)));
+      child.on("close", (code, signal) => this.transportFailure("child_close", {
+        exitCode: Number.isSafeInteger(code) ? code : null,
+        exitSignal: signal === null || signal === undefined ? null : SAFE_EXIT_SIGNALS.has(signal) ? signal : "unknown",
+      }));
       const { header } = await handshake;
       if (header.status === "incompatible") {
         const api = Number.isInteger(header.androidApi) ? header.androidApi : "unknown";
@@ -149,8 +183,10 @@ class Session {
       }
       if (header.status === "unavailable") throw fail("unavailable", "Android capture service could not initialize. Stock capture and resize can provide the requested size; check device readiness if that also fails.");
       if (header.status !== "ready") throw fail("protocol", "Invalid capture handshake.");
-    } catch (error) {
-      this.close();
+      this.phase = "idle";
+    } catch (cause) {
+      const error = cause instanceof CaptureHelperError ? cause : fail("transport", "Capture helper setup failed. Check ADB and retry only the screenshot.");
+      this.close(error, "setup_failed");
       // Only the newly allocated directory is ours, never another client's helper.
       // Cleanup has its own short bound and must not delay cancellation or fallback.
       void this.config.runner.run(this.config.adbPath, ["-s", this.config.deviceId!, "shell", "rm", "-rf", this.remote], { timeoutMs: 250 }).catch(() => undefined);
@@ -158,15 +194,23 @@ class Session {
     }
   }
 
+  private transportFailure(event: CaptureHelperDiagnostics["event"], facts: Pick<CaptureHelperDiagnostics, "exitCode" | "exitSignal" | "errorCode"> = {}) {
+    this.close(fail("transport", `Capture helper transport failed during ${this.phase} (${event}). Retry only the screenshot; navigation was not replayed.`), event, facts);
+  }
+
   async capture(scale: CaptureScale, deadline: number): Promise<HelperImage> {
     if (this.dead) throw this.dead;
     if (this.idle) clearTimeout(this.idle);
+    this.phase = "frame";
+    this.requestAttempted = false;
     this.child!.ref();
     for (const stream of [this.child!.stdin, this.child!.stdout, this.child!.stderr]) (stream as any).ref?.();
     const request = randomUUID();
     const received = this.wait(deadline - performance.now());
     void received.catch(() => undefined);
-    this.child!.stdin.write(`${request} ${scale}\n`);
+    this.requestAttempted = true; // A write attempt does not prove helper receipt.
+    try { this.child!.stdin.write(`${request} ${scale}\n`); }
+    catch (cause) { this.transportFailure("stdin_error", safePipeError(cause)); }
     const { header, buffer } = await received;
     if (this.dead) throw this.dead;
     if (header.request !== request) throw fail("protocol", "Stale screenshot request ID rejected.");
@@ -193,6 +237,7 @@ class Session {
     }
     this.sequence = header.sequence;
     this.captureNanos = BigInt(captureNanos);
+    this.phase = "idle";
     this.idle = setTimeout(() => this.close(), 30_000);
     this.idle.unref();
     this.child!.unref();
@@ -233,9 +278,10 @@ export async function captureWithHelper(config: RuntimeConfig, options: { scale:
     if (options.signal?.aborted) throw fail("cancelled", "Screenshot cancelled.");
     if (performance.now() >= deadline) throw fail("timeout", "Screenshot deadline exhausted during decoding.");
     return result;
-  } catch (error) {
-    session.close();
-    throw error instanceof CaptureHelperError ? error : fail("protocol", "Screenshot acquisition or decoding failed; retry screenshot. No fallback was attempted.");
+  } catch (cause) {
+    const error = cause instanceof CaptureHelperError ? cause : fail("protocol", "Screenshot acquisition or decoding failed; retry screenshot. No fallback was attempted.");
+    session.close(error, "capture_failed");
+    throw error;
   }
   finally { session.busy = false; options.signal?.removeEventListener("abort", abort); }
 }

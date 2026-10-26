@@ -10,7 +10,7 @@ import { validateExecution } from "../../domain/executions/validateExecution.js"
 import type { ProcessRunner } from "../../adapters/android-bridge/processRunner.js";
 
 afterEach(closeCaptureHelpers);
-async function fixture(mode = "valid") {
+async function fixture(mode = "valid", interrupt?: (child: any, phase: "handshake" | "frame") => boolean) {
   const { sha256 } = await bundledCaptureHelper();
   const children: any[] = [];
   const commands: string[][] = [];
@@ -47,6 +47,7 @@ async function fixture(mode = "valid") {
         }
         const bytes = Buffer.concat([Buffer.from(JSON.stringify(header) + "\n"), header.status === "ok" ? buffer : Buffer.alloc(0)]);
         setImmediate(() => {
+          if (interrupt?.(child, "frame")) return;
           if (mode === "death") { child.emit("close", 1); return; }
           if (mode === "silent") return;
           child.stdout.write(bytes.subarray(0, 20));
@@ -56,8 +57,11 @@ async function fixture(mode = "valid") {
         callback();
       }});
       children.push(child);
-      setImmediate(() => child.stdout.write(JSON.stringify({ protocol: 1, session, status: ["incompatible", "protected_composition"].includes(mode) ? "incompatible" : mode === "unavailable" ? "unavailable" : "ready", androidApi: 36,
-        ...(mode === "protected_composition" ? { missingCapability: "protected_composition" } : mode === "unavailable" ? { missingCapability: "hardware_buffer_initialization" } : {}) }) + "\n"));
+      setImmediate(() => {
+        if (interrupt?.(child, "handshake")) return;
+        child.stdout.write(JSON.stringify({ protocol: 1, session, status: ["incompatible", "protected_composition"].includes(mode) ? "incompatible" : mode === "unavailable" ? "unavailable" : "ready", androidApi: 36,
+        ...(mode === "protected_composition" ? { missingCapability: "protected_composition" } : mode === "unavailable" ? { missingCapability: "hardware_buffer_initialization" } : {}) }) + "\n");
+      });
       return child;
     },
   };
@@ -199,4 +203,74 @@ test("buffer initialization failure permits fallback before any capture request"
     return true;
   });
   assert.equal(requests(), 0);
+});
+
+for (const phase of ["handshake", "frame"] as const) {
+  for (const event of ["child_close", "stdin_error", "stdout_error", "stderr_error", "child_error"] as const) {
+    test(`${event} during ${phase} retains safe lifecycle facts without retry`, async () => {
+      const f = await fixture("valid", (child, current) => {
+        if (current !== phase) return false;
+        child.stderr.write("PRIVATE_SCREEN_AND_DEVICE_DETAILS");
+        if (event === "child_close") { child.emit("exit", 17, null); child.emit("close", 17, null); }
+        else (event === "child_error" ? child : event === "stdout_error" ? child.stdout : event === "stderr_error" ? child.stderr : child.stdin).emit("error", Object.assign(new Error("PRIVATE_PIPE_MESSAGE"), { code: "EPIPE", path: "/private/path" }));
+        return true;
+      });
+      await assert.rejects(captureWithHelper(f.config, { scale: 50, timeoutMs: 1000 }), (error: any) => {
+        assert.equal(error.reason, "transport");
+        assert.equal(error.fallbackAllowed, false);
+        assert.deepEqual(error.diagnostics, { phase, event, requestAttempted: phase === "frame",
+          ...(event === "child_close" ? { exitCode: 17, exitSignal: null } : { errorCode: "EPIPE" }) });
+        assert.ok(!JSON.stringify(error).includes("PRIVATE"));
+        assert.ok(!error.message.includes("PRIVATE"));
+        return true;
+      });
+      assert.equal(f.children.length, 1);
+      assert.equal(f.requests(), phase === "frame" ? 1 : 0);
+      assert.ok(f.commands.every(args => !args.includes("input") && !args.includes("screencap")));
+    });
+  }
+}
+
+
+test("first lifecycle failure survives cleanup and unknown error details are omitted", async () => {
+  const f = await fixture("valid", (child, phase) => {
+    if (phase !== "frame") return false;
+    child.stdin.emit("error", Object.assign(new Error("PRIVATE_ERROR"), { code: "PRIVATE_CODE" }));
+    child.emit("close", null, "SIGKILL");
+    return true;
+  });
+  await assert.rejects(captureWithHelper(f.config, { scale: 50, timeoutMs: 1000 }), (error: any) => {
+    assert.deepEqual(error.diagnostics, { phase: "frame", event: "stdin_error", requestAttempted: true });
+    assert.ok(!JSON.stringify(error).includes("PRIVATE"));
+    return true;
+  });
+});
+
+test("signal exit and synchronous spawn failure retain only safe facts", async () => {
+  const f = await fixture("valid", (child, phase) => {
+    if (phase !== "handshake") return false;
+    child.emit("close", null, "SIGTERM"); return true;
+  });
+  await assert.rejects(captureWithHelper(f.config, { scale: 50, timeoutMs: 1000 }), (error: any) => {
+    assert.deepEqual(error.diagnostics, { phase: "handshake", event: "child_close", requestAttempted: false, exitCode: null, exitSignal: "SIGTERM" });
+    return true;
+  });
+  f.config.runner.spawn = () => { throw Object.assign(new Error("PRIVATE_EXEC_PATH"), { code: "ENOENT" }); };
+  await assert.rejects(captureWithHelper(f.config, { scale: 50, timeoutMs: 1000 }), (error: any) => {
+    assert.equal(error.reason, "transport");
+    assert.deepEqual(error.diagnostics, { phase: "handshake", event: "spawn_error", requestAttempted: false, errorCode: "ENOENT" });
+    assert.ok(!error.message.includes("PRIVATE")); return true;
+  });
+});
+
+test("a synchronous frame write failure is transport evidence, not a decoding error", async () => {
+  const f = await fixture("valid", (child, phase) => {
+    if (phase === "handshake") child.stdin.write = () => { throw Object.assign(new Error("PRIVATE_WRITE"), { code: "EPIPE" }); };
+    return false;
+  });
+  await assert.rejects(captureWithHelper(f.config, { scale: 50, timeoutMs: 1000 }), (error: any) => {
+    assert.equal(error.reason, "transport");
+    assert.deepEqual(error.diagnostics, { phase: "frame", event: "stdin_error", requestAttempted: true, errorCode: "EPIPE" });
+    return true;
+  });
 });

@@ -112,3 +112,52 @@ for (const fallback of [false, true]) {
     });
   }
 }
+
+for (const phase of ["handshake", "frame"] as const) {
+  test(`helper closes during ${phase}: preserve failure receipt and retry only screenshot in a fresh session`, async () => {
+    const directory = await fs.mkdtemp(join(tmpdir(), "capture-lifecycle-"));
+    const path = join(directory, "screen.png");
+    const previous = Buffer.from("previous screenshot");
+    await fs.writeFile(path, previous);
+    const f = await scaledCaptureRunner();
+    const spawn = f.runner.spawn.bind(f.runner);
+    let helpers = 0;
+    f.runner.spawn = (command, args, options) => {
+      const child = spawn(command, args, options);
+      if (args.at(-1)?.includes("app_process") && ++helpers === 1) {
+        const close = () => { child.stderr.write("PRIVATE_STDERR"); child.emit("close", 23, null); };
+        if (phase === "handshake") queueMicrotask(close);
+        else child.stdin.write = () => { queueMicrotask(close); return true; };
+      }
+      return child;
+    };
+    const options = { runner: f.runner, deviceId: "test-device", operatorPackage: "com.test.operator", logcatBroadcastDelayMs: 0,
+      ensureInteractiveAutomationReadyFn: async () => ({ ok: true as const, state: { screenOn: true, deviceLocked: false, userUnlocked: true } }) };
+    try {
+      const execution = { commandId: "capture-failed", taskId: "capture-task", source: "test", expectedFormat: "android-ui-automator" as const, timeoutMs: 5000,
+        actions: [{ id: "navigate", type: "press_key" as const, params: { key: "home" as const } },
+          { id: "shot", type: "take_screenshot" as const, params: { path, scale: 50 as const } }] };
+      const result = await runExecution(execution, options);
+      assert.ok(result.ok);
+      assert.equal(result.envelope.status, "failed");
+      assert.equal(result.envelope.stepResults[0].success, true);
+      const step = result.envelope.stepResults[1];
+      assert.equal(step.success, false);
+      assert.equal(step.data.errorCode, "EVIDENCE_CAPTURE_FAILED");
+      assert.equal(step.data.captureFailureReason, "transport");
+      assert.equal(step.data.fallbackAttempted, "false");
+      assert.equal(step.data.path, undefined);
+      assert.deepEqual(JSON.parse(String(step.data.captureDiagnostics)), { phase, event: "child_close", requestAttempted: phase === "frame", exitCode: 23, exitSignal: null });
+      assert.ok(!JSON.stringify(result).includes("PRIVATE"));
+      assert.deepEqual(await fs.readFile(path), previous);
+      const retry = await runExecution({ ...execution, commandId: "screenshot-only-retry", actions: [execution.actions[1]] }, options);
+      assert.ok(retry.ok);
+      assert.equal(retry.envelope.status, "success");
+      assert.equal(helpers, 2);
+      const broadcasts = f.calls.filter(args => args.some(arg => arg.startsWith("am broadcast ")))
+        .map(args => JSON.parse(args.join(" ").match(/\{.*\}/)![0]));
+      assert.deepEqual(broadcasts.map(payload => payload.actions.map((action: { type: string }) => action.type)), [["press_key", "take_screenshot"], ["take_screenshot"]]);
+      assert.equal(f.calls.some(args => args.includes("screencap")), false);
+    } finally { closeCaptureHelpers(); await fs.rm(directory, { recursive: true, force: true }); }
+  });
+}

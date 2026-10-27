@@ -13,7 +13,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.coroutineContext
 import kotlin.coroutines.resume
 
-/** Local dev prototype: each segment continues the original pointer, including hover pauses. */
+/** Each segment continues the original pointer, including hover pauses. */
 @RequiresApi(26)
 suspend fun AccessibilityService.dispatchDrag(
     startX: Float, startY: Float, endX: Float, endY: Float,
@@ -23,7 +23,8 @@ suspend fun AccessibilityService.dispatchDrag(
     val handler = Handler(Looper.getMainLooper())
     val points = waypoints + DragWaypoint(endX.toInt(), endY.toInt(), moveDurationMs)
     return suspendCancellableCoroutine { continuation ->
-        var x = startX; var y = startY
+        var x = startX
+        var y = startY
         var stroke: GestureDescription.StrokeDescription? = null
         var inFlight = false
         var releasing = false
@@ -55,7 +56,10 @@ suspend fun AccessibilityService.dispatchDrag(
             try {
                 val accepted = dispatchGesture(GestureDescription.Builder().addStroke(next).build(), object : AccessibilityService.GestureResultCallback() {
                     override fun onCompleted(gestureDescription: GestureDescription?) {
-                        inFlight = false; stroke = next; x = point.x.toFloat(); y = point.y.toFloat()
+                        inFlight = false
+                        stroke = next
+                        x = point.x.toFloat()
+                        y = point.y.toFloat()
                         if (finalMovement) { finish(true); return }
                         if (!continuation.isActive) { release(false); return }
                         pending = Runnable { segment(index + 1) }.also { handler.postDelayed(it, point.holdDurationMs + if (stationary) point.durationMs else 0) }
@@ -74,7 +78,8 @@ suspend fun AccessibilityService.dispatchDrag(
                 continuation.context.ensureExecutionActive()
                 val accepted = dispatchGesture(GestureDescription.Builder().addStroke(first).build(), object : AccessibilityService.GestureResultCallback() {
                     override fun onCompleted(gestureDescription: GestureDescription?) {
-                        inFlight = false; stroke = first
+                        inFlight = false
+                        stroke = first
                         if (!continuation.isActive) { release(false); return }
                         pending = Runnable { segment(0) }.also { handler.postDelayed(it, holdDurationMs) }
                     }

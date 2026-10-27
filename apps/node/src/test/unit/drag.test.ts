@@ -111,3 +111,14 @@ it("continuous drag preserves hover waypoints and rejects unsafe paths", () => {
     assert.throws(() => validateExecution(buildDragExecution({ ...params, waypoints })));
   }
 });
+
+
+it("MCP drag advertises hover points and rejects excessive path time before dispatch", async () => {
+  const tool = getNamedMcpTools().find(tool => tool.name === "drag")!;
+  const properties = tool.inputSchema.properties as Record<string, any>;
+  assert.equal(properties.waypoints.maxItems, 8);
+  assert.deepEqual(properties.waypoints.items.required, ["x", "y", "durationMs"]);
+  await assert.rejects(async () => tool.handler({ ...params,
+    waypoints: Array(4).fill({ x: 30, y: 40, durationMs: 10000, holdDurationMs: 10000 }),
+  }));
+});

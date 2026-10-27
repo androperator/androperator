@@ -59,13 +59,13 @@ follow-up work.
 - `apps/android/shared/test/src/test/kotlin/androperator/uitree/DragGestureAndroidTest.kt`
 
 
-## Local waypoint prototype
+## Hover waypoints
 
-This development branch extends raw execution `drag` parameters with optional
-`waypoints`: an ordered array of `{x, y, durationMs, holdDurationMs?}`. Use the
-branch-local CLI and **dev APK** (`com.androperator.operator.dev`). This is a local
-prototype for [issue 426](https://github.com/androperator/androperator/issues/426),
-not a claim that the installed release CLI/APK supports these fields. No named CLI
+Raw execution `drag` parameters accept optional `waypoints`: an ordered array of
+`{x, y, durationMs, holdDurationMs?}`, addressing
+[issue 426](https://github.com/androperator/androperator/issues/426). During development,
+use the branch-local CLI and **dev APK** (`com.androperator.operator.dev`). An older
+installed release CLI/APK does not support these fields. No named CLI
 waypoint flags are added. MCP forwards the optional array to execution validation.
 
 Each waypoint continues the original pointer and optionally holds before the next

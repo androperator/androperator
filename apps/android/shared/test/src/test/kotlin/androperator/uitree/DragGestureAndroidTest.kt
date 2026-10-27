@@ -185,6 +185,10 @@ class DragGestureAndroidTest {
         assertFalse(fixture.manager.dragAt(10, 20, 10, 20, 1000, 500))
         assertFalse(fixture.manager.dragAt(10, 20, 100, 200, 0, 500))
         assertFalse(fixture.manager.dragAt(10, 20, 100, 200, 1000, 10001))
+        assertFalse(fixture.manager.dragAt(10, 20, 100, 200, 1000, 500,
+            List(4) { DragWaypoint(40, 60, 10000, 10000) }))
+        assertFalse(fixture.manager.dragAt(10, 20, 100, 200, 1000, 500,
+            listOf(DragWaypoint(Int.MAX_VALUE, 60, 300))))
         assertTrue(fixture.shadow.gesturesDispatched.isEmpty())
     }
 

@@ -33,6 +33,9 @@ suspend fun AccessibilityService.dispatchDrag(
         fun release(success: Boolean) {
             if (inFlight || releasing) return
             val previous = stroke ?: return
+            // Final movement may complete before queued cancellation cleanup runs.
+            // Its non-continuing stroke already released the pointer.
+            if (!previous.willContinue()) return
             releasing = true
             val path = Path().apply { moveTo(x, y) }
             val up = previous.continueStroke(path, 0, 1, false)

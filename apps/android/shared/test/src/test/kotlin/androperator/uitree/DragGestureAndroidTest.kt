@@ -241,4 +241,21 @@ class DragGestureAndroidTest {
         assertEquals(3, fixture.shadow.gesturesDispatched.size)
         action.join()
     }
+
+    @Test fun `final movement completion before queued cancellation cleanup does not release twice`() = runTest {
+        val fixture = Fixture()
+        val action = async { fixture.manager.dragAt(10, 20, 100, 200, 1000, 500) }
+        testScheduler.runCurrent()
+        shadowOf(Looper.getMainLooper()).idle()
+        fixture.complete(0)
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(1000))
+        action.cancel()
+        testScheduler.runCurrent()
+        // The platform callback wins the race with the already-posted cancellation task.
+        fixture.complete(1)
+        shadowOf(Looper.getMainLooper()).idle()
+        action.join()
+        assertTrue(action.isCancelled)
+        assertEquals(2, fixture.shadow.gesturesDispatched.size)
+    }
 }

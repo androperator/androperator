@@ -32,8 +32,9 @@ After an accepted hold, failed movement retains `dispatch_accepted: "true"`.
 Cancellation before movement removes the pending hold timer and requests a
 stationary pointer-up continuation. If the initial down acknowledgement is
 pending, its callback requests release when it arrives. Rejected movement also
-requests that release. A movement already accepted finishes with its own
-pointer-up; cancellation does not reverse app effects. No failure automatically
+requests that release. An accepted final movement owns its pointer-up; queued cancellation cleanup must
+not continue that completed, non-continuing stroke. An accepted intermediate
+movement is released after its callback. Cancellation does not reverse app effects. No failure automatically
 replays the drag, and cleanup cannot be guaranteed if the service disappears.
 
 State changes and platform calls run on the main handler. Keep cancellation

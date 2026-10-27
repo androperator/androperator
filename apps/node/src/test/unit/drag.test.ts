@@ -97,3 +97,28 @@ it("MCP drag advertises required duration and rejects omitted duration before di
   await assert.rejects(async () => tool.handler({ ...params, holdDurationMs: undefined }));
   assert.ok((tool.inputSchema.required as string[]).includes("holdDurationMs"));
 });
+
+
+it("continuous drag preserves hover waypoints and rejects unsafe paths", () => {
+  const point = { x: 30, y: 40, durationMs: 700, holdDurationMs: 2000 };
+  const value = { ...params, waypoints: [point, { ...point, x: 50 }] };
+  assert.deepEqual(validateExecution(buildDragExecution(value)).actions[0].params, value);
+  for (const waypoints of [
+    [{ ...point, x: -1 }], [{ ...point, durationMs: 0 }],
+    [{ ...point, holdDurationMs: 10001 }], [{ ...point, release: true }],
+    Array(9).fill(point), Array(4).fill({ ...point, durationMs: 10000, holdDurationMs: 10000 }),
+  ]) {
+    assert.throws(() => validateExecution(buildDragExecution({ ...params, waypoints })));
+  }
+});
+
+
+it("MCP drag advertises hover points and rejects excessive path time before dispatch", async () => {
+  const tool = getNamedMcpTools().find(tool => tool.name === "drag")!;
+  const properties = tool.inputSchema.properties as Record<string, any>;
+  assert.equal(properties.waypoints.maxItems, 8);
+  assert.deepEqual(properties.waypoints.items.required, ["x", "y", "durationMs"]);
+  await assert.rejects(async () => tool.handler({ ...params,
+    waypoints: Array(4).fill({ x: 30, y: 40, durationMs: 10000, holdDurationMs: 10000 }),
+  }));
+});

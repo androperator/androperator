@@ -492,8 +492,8 @@ accepted by Android may finish after the caller stops waiting.
 <a id="action-drag"></a>
 ### `drag`
 
-Press at a screen coordinate, hold without moving, move in a straight line while
-keeping the same pointer down, then release. Requires Android 8 (API 26) or later
+Press at a screen coordinate, hold without moving, optionally move through hover
+waypoints while keeping the same pointer down, then move to the endpoint and release. Requires Android 8 (API 26) or later
 and an available accessibility service. Unlike `swipe`, this action has an
 explicit initial hold. Choose a hold long enough for the target app to enter
 its drag state. The required hold duration depends on the target app.
@@ -503,12 +503,17 @@ its drag state. The required hold duration depends on the target app.
 | `start` | required object with only integer `x` and `y`, each in `[0, 2147483647]` |
 | `end` | required object with only integer `x` and `y`, each in `[0, 2147483647]`; must differ from `start` |
 | `holdDurationMs` | required integer in `[1, 10000]`; no default |
-| `moveDurationMs` | required integer in `[1, 10000]`; no default |
+| `moveDurationMs` | required integer in `[1, 10000]`; duration of the final leg to `end` |
+| `waypoints` | optional array of at most 8 objects, each containing `x`, `y`, `durationMs`, and optional `holdDurationMs` |
 
 Coordinates are physical screen pixels on the current default display, with
 origin at the top left. Android rejects endpoints outside its bounds before
-dispatch. No selector, grid position, path waypoints, retry, or extra params are
-accepted. Find the source item with a snapshot and start inside its bounds.
+dispatch, including every waypoint. Waypoint coordinates use the same integer
+range as endpoints. Each waypoint movement takes `durationMs` in `[1, 10000]`,
+followed by `holdDurationMs` in `[0, 10000]` (default 0). Initial hold plus all
+movement and hover durations must total at most 60000 ms. Omitted or empty
+waypoints preserve the straight-drag behavior. No selector, grid position, retry,
+or extra params are accepted. Find the source item with a snapshot and start inside its bounds.
 Choosing a destination and interpreting the result belong in the agent or
 app-specific skill.
 
@@ -524,7 +529,7 @@ For a local development Operator, also pass
 `--operator-package com.androperator.operator.dev` consistently on every command.
 
 Raw execution action, also usable through HTTP `POST /execute` and the MCP
-`drag` tool with the same four parameter fields:
+`drag` tool with the same parameters (the flat CLI has no waypoint flag):
 
 ```json
 {
@@ -534,7 +539,10 @@ Raw execution action, also usable through HTTP `POST /execute` and the MCP
     "start": { "x": 600, "y": 1600 },
     "end": { "x": 200, "y": 1000 },
     "holdDurationMs": 1200,
-    "moveDurationMs": 800
+    "moveDurationMs": 800,
+    "waypoints": [
+      { "x": 300, "y": 1200, "durationMs": 600, "holdDurationMs": 1500 }
+    ]
   }
 }
 ```
@@ -542,7 +550,7 @@ Raw execution action, also usable through HTTP `POST /execute` and the MCP
 Success means Android completed the gesture, including pointer release.
 It does not prove a successful drop. Query or snapshot the resulting app state;
 check that the intended item reached the destination. This action provides a
-straight same-screen gesture; app-specific drop behavior is not guaranteed.
+same-screen gesture; app-specific drop behavior is not guaranteed.
 
 Successful step data includes JSON-encoded `start` and `end`, string-valued
 `hold_duration_ms` and `move_duration_ms`, plus `dispatch_method`,

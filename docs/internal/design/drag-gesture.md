@@ -10,8 +10,8 @@ app-specific skill.
 
 A long-click followed by a swipe releases the first touch. A slower swipe moves
 immediately. Neither expresses a stationary hold followed by movement of the
-same pointer. `drag` uses an API 26 continuing stationary stroke followed by a
-non-continuing movement stroke.
+same pointer. `drag` uses an API 26 continuing stationary stroke followed by movement
+continuations. The final moving stroke releases the pointer.
 
 A stationary continuing stroke can complete as soon as DOWN is delivered because
 there are no later motion events. Its Android stroke duration alone does not
@@ -32,8 +32,9 @@ After an accepted hold, failed movement retains `dispatch_accepted: "true"`.
 Cancellation before movement removes the pending hold timer and requests a
 stationary pointer-up continuation. If the initial down acknowledgement is
 pending, its callback requests release when it arrives. Rejected movement also
-requests that release. A movement already accepted finishes with its own
-pointer-up; cancellation does not reverse app effects. No failure automatically
+requests that release. An accepted final movement owns its pointer-up; queued cancellation cleanup must
+not continue that completed, non-continuing stroke. An accepted intermediate
+movement is released after its callback. Cancellation does not reverse app effects. No failure automatically
 replays the drag, and cleanup cannot be guaranteed if the service disappears.
 
 State changes and platform calls run on the main handler. Keep cancellation
@@ -57,3 +58,31 @@ follow-up work.
 
 - `apps/android/shared/data/uitree/src/main/kotlin/androperator/accessibilityservice/DragGestureAndroid.kt`
 - `apps/android/shared/test/src/test/kotlin/androperator/uitree/DragGestureAndroidTest.kt`
+
+
+## Hover waypoints
+
+Raw execution `drag` parameters accept optional `waypoints`: an ordered array of
+`{x, y, durationMs, holdDurationMs?}`, addressing
+[issue 426](https://github.com/androperator/androperator/issues/426). During development,
+use the branch-local CLI and **dev APK** (`com.androperator.operator.dev`). An older
+installed release CLI/APK does not support these fields. No named CLI
+waypoint flags are added. MCP forwards the optional array to execution validation.
+
+Each waypoint continues the original pointer and optionally holds before the next
+segment. The final leg uses `end` and `moveDurationMs`. Start and end must still
+differ. Up to eight points are accepted; movement durations are 1–10000 ms, holds
+are 0–10000 ms, and total requested hold/movement time is at most 60000 ms. The
+execution timeout must also accommodate callbacks and scheduling latency. Bounds
+are checked before dispatch. Stationary segments use a minimal continuing stroke
+and a handler timer, because Android can acknowledge stationary strokes early.
+
+Cancellation during a hover removes the timer and releases that continued pointer.
+Cancellation during a continuing movement waits for its callback, releases, and
+never visits later points. A final non-continuing movement already owns release.
+Execution deadlines are checked before initial dispatch and each new movement.
+Receipts still prove dispatch only: verify target UI and persisted state separately.
+
+Focused tests cover parameter preservation, invalid paths and time budgets, held
+pointer continuity across hover points, and cancellation without later movement.
+The existing straight-drag dispatch, deadline and cancellation tests remain required.

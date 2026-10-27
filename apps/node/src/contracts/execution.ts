@@ -17,6 +17,7 @@ export interface ActionParams {
   durationMs?: number;
   holdDurationMs?: number;
   moveDurationMs?: number;
+  waypoints?: Array<{ x: number; y: number; durationMs: number; holdDurationMs?: number }>;
   path?: string;
   /** Screenshot percentage per dimension; omitted defaults to 25%. */
   scale?: 100 | 50 | 25;

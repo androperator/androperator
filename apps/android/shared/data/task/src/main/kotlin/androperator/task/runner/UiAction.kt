@@ -59,6 +59,7 @@ sealed interface UiAction {
         val end: Point,
         val holdDurationMs: Long,
         val moveDurationMs: Long,
+        val waypoints: List<androperator.uitree.DragWaypoint> = emptyList(),
     ) : UiAction
 
     data class Swipe(

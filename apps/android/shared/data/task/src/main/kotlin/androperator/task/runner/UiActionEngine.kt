@@ -130,7 +130,7 @@ class UiActionEngineDefault(
                 is UiAction.CloseApp -> executeCloseApp(taskScope, action)
                 is UiAction.WaitForNode -> executeWaitForNode(taskScope, action)
                 is UiAction.Drag -> {
-                    taskScope.ui { drag(action.start, action.end, action.holdDurationMs, action.moveDurationMs) }
+                    taskScope.ui { drag(action.start, action.end, action.holdDurationMs, action.moveDurationMs, action.waypoints) }
                     UiActionStepResult(action.id, "drag", data = mapOf(
                         "start" to "{\"x\":${action.start.x},\"y\":${action.start.y}}",
                         "end" to "{\"x\":${action.end.x},\"y\":${action.end.y}}",

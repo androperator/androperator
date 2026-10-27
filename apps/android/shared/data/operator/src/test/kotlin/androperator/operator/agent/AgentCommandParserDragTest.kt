@@ -38,4 +38,19 @@ class AgentCommandParserDragTest {
             assertTrue(parse("{$start,$end,\"holdDurationMs\":$value,\"moveDurationMs\":300}").isFailure)
         }
     }
+
+    @Test
+    fun `continuous drag preserves hover waypoints and rejects invalid paths`() {
+        val base = "\"start\":{\"x\":0,\"y\":200},\"end\":{\"x\":300,\"y\":200},\"holdDurationMs\":1000,\"moveDurationMs\":300"
+        val point = """{"x":30,"y":40,"durationMs":700,"holdDurationMs":2000}"""
+        val drag = assertIs<UiAction.Drag>(parse("{$base,\"waypoints\":[$point]}").getOrThrow().actions.single())
+        assertEquals(1, drag.waypoints.size)
+        assertEquals(2000L, drag.waypoints.single().holdDurationMs)
+        for (path in listOf(
+            point.replace("700", "0"), point.replace("2000", "10001"),
+            point.replace("30", "-1"), point.replace("40", "1.5"),
+            List(9) { point }.joinToString(","),
+            List(4) { point.replace("700", "10000").replace("2000", "10000") }.joinToString(","),
+        )) assertTrue(parse("{$base,\"waypoints\":[$path]}").isFailure, path)
+    }
 }

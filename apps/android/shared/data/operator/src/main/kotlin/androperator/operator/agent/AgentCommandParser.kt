@@ -186,7 +186,7 @@ class AgentCommandParserDefault : AgentCommandParser {
                     )
                 }
             "drag" -> {
-                require(params.keys == setOf("start", "end", "holdDurationMs", "moveDurationMs")) { "drag requires only start, end, holdDurationMs, and moveDurationMs" }
+                require(params.keys - "waypoints" == setOf("start", "end", "holdDurationMs", "moveDurationMs")) { "drag requires only start, end, holdDurationMs, and moveDurationMs" }
                 fun point(key: String): Point {
                     val value = params[key] as? JsonObject ?: error("$key must be an object")
                     require(value.keys == setOf("x", "y")) { "$key requires only x and y" }
@@ -209,7 +209,22 @@ class AgentCommandParserDefault : AgentCommandParser {
                     require(number in 1L..10000L) { "$key must be in [1, 10000]" }
                     return number
                 }
-                UiAction.Drag(id, start, end, duration("holdDurationMs"), duration("moveDurationMs"))
+                val waypoints = if ("waypoints" in params) {
+                    val values = params["waypoints"] as? kotlinx.serialization.json.JsonArray ?: error("waypoints must be an array")
+                    require(values.size <= 8)
+                    values.map { raw ->
+                        val v = raw as? JsonObject ?: error("waypoint must be an object")
+                        require(v.keys - "holdDurationMs" == setOf("x", "y", "durationMs"))
+                        fun number(k: String, range: LongRange): Long {
+                            val value = v[k] as? JsonPrimitive ?: error("$k must be an integer")
+                            require(!value.isString)
+                            return (value.longOrNull ?: error("$k must be an integer")).also { require(it in range) }
+                        }
+                        androperator.uitree.DragWaypoint(number("x", 0L..Int.MAX_VALUE).toInt(), number("y", 0L..Int.MAX_VALUE).toInt(), number("durationMs", 1L..10000L), if ("holdDurationMs" in v) number("holdDurationMs", 0L..10000L) else 0)
+                    }
+                } else emptyList()
+                require((waypoints.sumOf { it.durationMs + it.holdDurationMs } + duration("holdDurationMs") + duration("moveDurationMs")) <= 60000L)
+                UiAction.Drag(id, start, end, duration("holdDurationMs"), duration("moveDurationMs"), waypoints)
             }
             "swipe" -> {
                 require(params.keys == setOf("start", "end", "durationMs")) { "swipe requires only start, end, and durationMs" }

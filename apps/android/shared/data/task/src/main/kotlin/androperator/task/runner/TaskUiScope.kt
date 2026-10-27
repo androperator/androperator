@@ -13,7 +13,7 @@ import kotlin.time.Duration.Companion.seconds
  * Provides methods for UI inspection and interaction with retry support.
  */
 interface TaskUiScope {
-    suspend fun drag(start: Point, end: Point, holdDurationMs: Long, moveDurationMs: Long)
+    suspend fun drag(start: Point, end: Point, holdDurationMs: Long, moveDurationMs: Long, waypoints: List<androperator.uitree.DragWaypoint> = emptyList())
 
     suspend fun swipe(start: Point, end: Point, durationMs: Long)
 

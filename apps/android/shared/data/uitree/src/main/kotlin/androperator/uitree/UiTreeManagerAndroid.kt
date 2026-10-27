@@ -42,7 +42,7 @@ class UiTreeManagerAndroid(
         }
     }
 
-    override suspend fun dragAt(startX: Int, startY: Int, endX: Int, endY: Int, holdDurationMs: Long, moveDurationMs: Long): Boolean {
+    override suspend fun dragAt(startX: Int, startY: Int, endX: Int, endY: Int, holdDurationMs: Long, moveDurationMs: Long, waypoints: List<androperator.uitree.DragWaypoint>): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
         val service = accessibilityServiceManager.currentAccessibilityService ?: return false
         val metrics = android.util.DisplayMetrics()
@@ -51,8 +51,9 @@ class UiTreeManagerAndroid(
         if (startX !in 0 until metrics.widthPixels || endX !in 0 until metrics.widthPixels ||
             startY !in 0 until metrics.heightPixels || endY !in 0 until metrics.heightPixels ||
             (startX == endX && startY == endY) || holdDurationMs !in 1L..10000L || moveDurationMs !in 1L..10000L) return false
+        if (waypoints.size > 8 || waypoints.any { it.x !in 0 until metrics.widthPixels || it.y !in 0 until metrics.heightPixels || it.durationMs !in 1L..10000L || it.holdDurationMs !in 0L..10000L }) return false
         return dispatch(null, "coordinate_gesture") {
-            service.dispatchDrag(startX.toFloat(), startY.toFloat(), endX.toFloat(), endY.toFloat(), holdDurationMs, moveDurationMs)
+            service.dispatchDrag(startX.toFloat(), startY.toFloat(), endX.toFloat(), endY.toFloat(), holdDurationMs, moveDurationMs, waypoints)
         }
     }
 

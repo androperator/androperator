@@ -10,8 +10,8 @@ app-specific skill.
 
 A long-click followed by a swipe releases the first touch. A slower swipe moves
 immediately. Neither expresses a stationary hold followed by movement of the
-same pointer. `drag` uses an API 26 continuing stationary stroke followed by a
-non-continuing movement stroke.
+same pointer. `drag` uses an API 26 continuing stationary stroke followed by movement
+continuations. The final moving stroke releases the pointer.
 
 A stationary continuing stroke can complete as soon as DOWN is delivered because
 there are no later motion events. Its Android stroke duration alone does not
@@ -57,3 +57,31 @@ follow-up work.
 
 - `apps/android/shared/data/uitree/src/main/kotlin/androperator/accessibilityservice/DragGestureAndroid.kt`
 - `apps/android/shared/test/src/test/kotlin/androperator/uitree/DragGestureAndroidTest.kt`
+
+
+## Local waypoint prototype
+
+This development branch extends raw execution `drag` parameters with optional
+`waypoints`: an ordered array of `{x, y, durationMs, holdDurationMs?}`. Use the
+branch-local CLI and **dev APK** (`com.androperator.operator.dev`). This is a local
+prototype for [issue 426](https://github.com/androperator/androperator/issues/426),
+not a claim that the installed release CLI/APK supports these fields. No named CLI
+waypoint flags are added. MCP forwards the optional array to execution validation.
+
+Each waypoint continues the original pointer and optionally holds before the next
+segment. The final leg uses `end` and `moveDurationMs`. Start and end must still
+differ. Up to eight points are accepted; movement durations are 1–10000 ms, holds
+are 0–10000 ms, and total requested hold/movement time is at most 60000 ms. The
+execution timeout must also accommodate callbacks and scheduling latency. Bounds
+are checked before dispatch. Stationary segments use a minimal continuing stroke
+and a handler timer, because Android can acknowledge stationary strokes early.
+
+Cancellation during a hover removes the timer and releases that continued pointer.
+Cancellation during a continuing movement waits for its callback, releases, and
+never visits later points. A final non-continuing movement already owns release.
+Execution deadlines are checked before initial dispatch and each new movement.
+Receipts still prove dispatch only: verify target UI and persisted state separately.
+
+Focused tests cover parameter preservation, invalid paths and time budgets, held
+pointer continuity across hover points, and cancellation without later movement.
+The existing straight-drag dispatch, deadline and cancellation tests remain required.

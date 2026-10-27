@@ -7,103 +7,82 @@ import android.graphics.Path
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
+import androperator.uitree.DragWaypoint
 import androperator.uitree.UiDispatchObservation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.coroutineContext
 import kotlin.coroutines.resume
 
-/** Holds and moves one pointer. Cancellation never starts a new movement segment. */
+/** Local dev prototype: each segment continues the original pointer, including hover pauses. */
 @RequiresApi(26)
 suspend fun AccessibilityService.dispatchDrag(
-    startX: Float,
-    startY: Float,
-    endX: Float,
-    endY: Float,
-    holdDurationMs: Long,
-    moveDurationMs: Long,
+    startX: Float, startY: Float, endX: Float, endY: Float,
+    holdDurationMs: Long, moveDurationMs: Long, waypoints: List<DragWaypoint> = emptyList(),
 ): Boolean {
     val observation = coroutineContext[UiDispatchObservation]
     val handler = Handler(Looper.getMainLooper())
-    val holdPath = Path().apply { moveTo(startX, startY) }
-    val hold = GestureDescription.StrokeDescription(holdPath, 0, 1, true)
-    val movePath = Path().apply { moveTo(startX, startY); lineTo(endX, endY) }
-    val move = hold.continueStroke(movePath, 0, moveDurationMs, false)
-    // The execution deadline owns timeout; service callback latency is not gesture duration.
+    val points = waypoints + DragWaypoint(endX.toInt(), endY.toInt(), moveDurationMs)
     return suspendCancellableCoroutine { continuation ->
-        // All state changes and platform calls run on the main handler.
-        var holdCompleted = false
-        var movementStarted = false
-        var releaseStarted = false
-        fun finish(success: Boolean) {
-            if (continuation.isActive) continuation.resume(success)
-        }
-        fun release() {
-            if (releaseStarted || movementStarted) return
-            releaseStarted = true
-            // Continue the held pointer, rather than injecting a fresh tap.
-            val gesture = GestureDescription.Builder()
-                .addStroke(hold.continueStroke(holdPath, 0, 1, false)).build()
-            val callback = object : AccessibilityService.GestureResultCallback() {
-                override fun onCompleted(gestureDescription: GestureDescription?) = finish(false)
-                override fun onCancelled(gestureDescription: GestureDescription?) = finish(false)
-            }
+        var x = startX; var y = startY
+        var stroke: GestureDescription.StrokeDescription? = null
+        var inFlight = false
+        var releasing = false
+        var pending: Runnable? = null
+        fun finish(success: Boolean) { if (continuation.isActive) continuation.resume(success) }
+        fun release(success: Boolean) {
+            if (inFlight || releasing) return
+            val previous = stroke ?: return
+            releasing = true
+            val path = Path().apply { moveTo(x, y) }
+            val up = previous.continueStroke(path, 0, 1, false)
             try {
-                if (!dispatchGesture(gesture, callback, handler)) finish(false)
-            } catch (_: Exception) {
-                finish(false)
-            }
+                if (!dispatchGesture(GestureDescription.Builder().addStroke(up).build(), object : AccessibilityService.GestureResultCallback() {
+                    override fun onCompleted(gestureDescription: GestureDescription?) = finish(success)
+                    override fun onCancelled(gestureDescription: GestureDescription?) = finish(false)
+                }, handler)) finish(false)
+            } catch (_: Exception) { finish(false) }
         }
-        val moveCallback = object : AccessibilityService.GestureResultCallback() {
-            override fun onCompleted(gestureDescription: GestureDescription?) = finish(true)
-            override fun onCancelled(gestureDescription: GestureDescription?) = finish(false)
+        fun segment(index: Int) {
+            if (!continuation.isActive) { release(false); return }
+            if (index == points.size) { release(true); return }
+            try { continuation.context.ensureExecutionActive() } catch (_: Exception) { release(false); return }
+            val point = points[index]
+            val stationary = x == point.x.toFloat() && y == point.y.toFloat()
+            val path = Path().apply { moveTo(x, y); if (!stationary) lineTo(point.x.toFloat(), point.y.toFloat()) }
+            val finalMovement = index == points.lastIndex && !stationary
+            val next = stroke!!.continueStroke(path, 0, if (stationary) 1 else point.durationMs, !finalMovement)
+            inFlight = true
+            try {
+                val accepted = dispatchGesture(GestureDescription.Builder().addStroke(next).build(), object : AccessibilityService.GestureResultCallback() {
+                    override fun onCompleted(gestureDescription: GestureDescription?) {
+                        inFlight = false; stroke = next; x = point.x.toFloat(); y = point.y.toFloat()
+                        if (finalMovement) { finish(true); return }
+                        if (!continuation.isActive) { release(false); return }
+                        pending = Runnable { segment(index + 1) }.also { handler.postDelayed(it, point.holdDurationMs + if (stationary) point.durationMs else 0) }
+                    }
+                    override fun onCancelled(gestureDescription: GestureDescription?) { inFlight = false; finish(false) }
+                }, handler)
+                if (!accepted) { inFlight = false; release(false) }
+            } catch (_: Exception) { inFlight = false; release(false) }
         }
-        val startMovement = Runnable {
-            if (!continuation.isActive) {
-                release()
-            } else {
-                try {
-                    continuation.context.ensureExecutionActive()
-                    val accepted = dispatchGesture(GestureDescription.Builder().addStroke(move).build(), moveCallback, handler)
-                    movementStarted = accepted
-                    // Keep the earlier accepted hold in the action receipt even if movement fails.
-                    if (!accepted) release()
-                } catch (_: Exception) {
-                    release()
-                }
-            }
-        }
-        val holdCallback = object : AccessibilityService.GestureResultCallback() {
-            override fun onCompleted(gestureDescription: GestureDescription?) {
-                holdCompleted = true
-                if (!continuation.isActive) {
-                    release()
-                } else {
-                    // A stationary continuing stroke can complete as soon as DOWN is delivered:
-                    // there are no later motion events to delay its completion callback.
-                    // Wait after that acknowledgement so the app observes a real long press.
-                    handler.postDelayed(startMovement, holdDurationMs)
-                }
-            }
-            override fun onCancelled(gestureDescription: GestureDescription?) = finish(false)
-        }
-        continuation.invokeOnCancellation {
-            handler.post {
-                handler.removeCallbacks(startMovement)
-                if (holdCompleted) release()
-                // If holding, its callback will release. If moving, the bounded,
-                // non-continuing stroke already owns pointer-up at its endpoint.
-            }
-        }
+        continuation.invokeOnCancellation { handler.post { pending?.let { handler.removeCallbacks(it) }; release(false) } }
         handler.post {
             if (!continuation.isActive) return@post
+            val first = GestureDescription.StrokeDescription(Path().apply { moveTo(x, y) }, 0, 1, true)
+            inFlight = true
             try {
                 continuation.context.ensureExecutionActive()
-                val accepted = dispatchGesture(GestureDescription.Builder().addStroke(hold).build(), holdCallback, handler)
+                val accepted = dispatchGesture(GestureDescription.Builder().addStroke(first).build(), object : AccessibilityService.GestureResultCallback() {
+                    override fun onCompleted(gestureDescription: GestureDescription?) {
+                        inFlight = false; stroke = first
+                        if (!continuation.isActive) { release(false); return }
+                        pending = Runnable { segment(0) }.also { handler.postDelayed(it, holdDurationMs) }
+                    }
+                    override fun onCancelled(gestureDescription: GestureDescription?) { inFlight = false; finish(false) }
+                }, handler)
                 observation?.accepted(accepted)
-                if (!accepted) finish(false)
-            } catch (_: Exception) {
-                finish(false)
-            }
+                if (!accepted) { inFlight = false; finish(false) }
+            } catch (_: Exception) { inFlight = false; finish(false) }
         }
     }
 }

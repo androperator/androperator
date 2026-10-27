@@ -236,7 +236,7 @@ export function getNamedMcpTools(
       }, ["start", "end", "holdDurationMs", "moveDurationMs"]),
       handler: async (args) => {
         const opts = mergeWithSessionDefaults(parseToolArguments(dragArgsSchema, args), session);
-        const execution = applyMcpExecutionMetadata(buildDragExecution({ start: opts.start, end: opts.end, holdDurationMs: opts.holdDurationMs, moveDurationMs: opts.moveDurationMs }), "drag", opts.timeoutMs);
+        const execution = applyMcpExecutionMetadata(buildDragExecution({ start: opts.start, end: opts.end, holdDurationMs: opts.holdDurationMs, moveDurationMs: opts.moveDurationMs, ...(opts.waypoints === undefined ? {} : { waypoints: opts.waypoints }) }), "drag", opts.timeoutMs);
         return await runExecutionTool(execution, opts, logger, result => buildSuccessResult(buildExecutionSuccessPayload(result)));
       },
     },

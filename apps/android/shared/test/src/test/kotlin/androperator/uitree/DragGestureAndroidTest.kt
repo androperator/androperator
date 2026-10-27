@@ -194,4 +194,47 @@ class DragGestureAndroidTest {
         assertFalse(fixture.manager.dragAt(10, 20, 100, 200, 1000, 500))
         assertTrue(fixture.shadow.gesturesDispatched.isEmpty())
     }
+
+    @Test fun `waypoint hover keeps pointer down until the final destination`() = runTest {
+        val fixture = Fixture()
+        val action = async { fixture.manager.dragAt(10, 20, 100, 200, 1000, 500,
+            listOf(DragWaypoint(40, 60, 300, 800))) }
+        testScheduler.runCurrent()
+        shadowOf(Looper.getMainLooper()).idle()
+        fixture.complete(0)
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(1000))
+        val waypoint = fixture.shadow.gesturesDispatched[1].description().getStroke(0)
+        assertTrue(waypoint.willContinue())
+        fixture.complete(1)
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(799))
+        assertEquals(2, fixture.shadow.gesturesDispatched.size)
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(1))
+        val final = fixture.shadow.gesturesDispatched[2].description().getStroke(0)
+        assertFalse(final.willContinue())
+        assertEquals(waypoint.javaClass.getMethod("getId").invoke(waypoint),
+            final.javaClass.getMethod("getContinuedStrokeId").invoke(final))
+        fixture.complete(2)
+        assertTrue(action.await())
+    }
+
+    @Test fun `cancelling waypoint hover releases without visiting the destination`() = runTest {
+        val fixture = Fixture()
+        val action = async { fixture.manager.dragAt(10, 20, 100, 200, 1000, 500,
+            listOf(DragWaypoint(40, 60, 300, 800))) }
+        testScheduler.runCurrent()
+        shadowOf(Looper.getMainLooper()).idle()
+        fixture.complete(0)
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(1000))
+        fixture.complete(1)
+        action.cancel()
+        testScheduler.runCurrent()
+        shadowOf(Looper.getMainLooper()).idle()
+        val release = fixture.shadow.gesturesDispatched[2].description().getStroke(0)
+        assertFalse(release.willContinue())
+        assertEquals(0f, android.graphics.PathMeasure(release.path, false).length)
+        fixture.complete(2)
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(1000))
+        assertEquals(3, fixture.shadow.gesturesDispatched.size)
+        action.join()
+    }
 }

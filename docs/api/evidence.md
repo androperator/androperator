@@ -123,7 +123,10 @@ The manifest contains `schemaVersion: 1`, `evidenceId`, `label`, opaque `context
   display's natural (unrotated) size and do not change with rotation; a consumer
   that needs the current size swaps them when `rotation` is `1` or `3` (for
   example, a 1344x2992 display rotated to landscape reports `width` 1344,
-  `height` 2992, `rotation` 1, and is 2992 wide on screen). Rotation uses the primary
+  `height` 2992, `rotation` 1, and is 2992 wide on screen). `currentWidth` and
+  `currentHeight` give that rotated size directly (2992 and 1344 in the example);
+  they are `null` when the size or rotation is unavailable, and absent from
+  manifests written by earlier versions. Rotation uses the primary
   display's input viewport or the older `SurfaceOrientation` value (`0..3`).
 
 Still and video capture use the same classification policy. Emulator flags are

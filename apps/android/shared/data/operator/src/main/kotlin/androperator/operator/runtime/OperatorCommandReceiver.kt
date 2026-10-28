@@ -13,6 +13,7 @@ import androperator.operator.agent.AgentCommandExecutor
 import androperator.operator.agent.AgentCommandParser
 import androperator.operator.agent.EnvelopeErrorCodes
 import androperator.operator.agent.buildCanonicalFailureLine
+import androperator.operator.agent.buildRejectedCommandLine
 import androperator.task.runner.TaskResult
 import androperator.task.runner.isBackgroundServiceExecution
 import kotlinx.coroutines.launch
@@ -45,6 +46,12 @@ class OperatorCommandReceiver :
                 }
 
                 val parsedCommand = agentCommandParser.parse(payload)
+                parsedCommand.onFailure { error ->
+                    // Nothing runs for a rejected payload. Publish a failure the client can correlate when possible.
+                    Log.e(error, "[Operator-Receiver] Failed to parse agent command payload")
+                    buildRejectedCommandLine(payload, error)?.let { Log.i(it) }
+                    return
+                }
                 val background = parsedCommand.getOrNull()?.actions?.isBackgroundServiceExecution() == true
                 val accessibilityService = if (background) null else accessibilityServiceManager.currentAccessibilityService
                 if (!background && accessibilityService == null) {

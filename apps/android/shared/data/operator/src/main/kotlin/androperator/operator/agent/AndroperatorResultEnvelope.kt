@@ -16,6 +16,9 @@ const val ANDROPERATOR_RESULT_PREFIX = "[Androperator-Result]"
 object EnvelopeErrorCodes {
     /** The Androperator Operator accessibility service is not running. */
     const val SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE"
+
+    /** The Operator could not accept the command payload (parse or validation failure); nothing ran. */
+    const val COMMAND_REJECTED = "COMMAND_REJECTED"
 }
 
 /**
@@ -97,4 +100,25 @@ fun buildCanonicalFailureLine(
         errorCode = errorCode,
     )
     return ANDROPERATOR_RESULT_PREFIX + " " + json.encodeToString(envelope)
+}
+
+/**
+ * Canonical failed envelope for a payload the parser rejected, so the caller fails fast with the reason
+ * instead of waiting out its result timeout. Returns null when the payload has no readable string
+ * `commandId`, because the Node client could not correlate such a result.
+ */
+fun buildRejectedCommandLine(
+    payload: String,
+    error: Throwable,
+): String? {
+    val root = runCatching { json.parseToJsonElement(payload) }.getOrNull() as? kotlinx.serialization.json.JsonObject ?: return null
+    fun text(key: String): String? =
+        (root[key] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content?.takeIf { it.isNotEmpty() }
+    val commandId = text("commandId") ?: return null
+    return buildCanonicalFailureLine(
+        commandId = commandId,
+        taskId = text("taskId") ?: commandId,
+        reason = "Command rejected: ${error.message ?: error::class.simpleName}",
+        errorCode = EnvelopeErrorCodes.COMMAND_REJECTED,
+    )
 }

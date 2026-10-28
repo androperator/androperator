@@ -67,16 +67,21 @@ function runnerFor(outputs: Record<string, string>): ProcessRunner {
   };
 }
 
-const viewport = (orientation: number) =>
-  `DisplayViewport{type=INTERNAL, valid=true, isActive=true, displayId=0, uniqueId='local:4619827259835644672', orientation=${orientation}, logicalFrame=Rect(0, 0 - 1344, 2992), physicalFrame=Rect(0, 0 - 1344, 2992), deviceWidth=1344, deviceHeight=2992}`;
+// logicalFrame is already in the current rotation, as on a real device (orientation 1: 2992x1344).
+const viewport = (orientation: number) => {
+  const [w, h] = orientation % 2 ? [2992, 1344] : [1344, 2992];
+  return `DisplayViewport{type=INTERNAL, valid=true, isActive=true, displayId=0, uniqueId='local:4619827259835644672', orientation=${orientation}, logicalFrame=Rect(0, 0 - ${w}, ${h}), physicalFrame=Rect(0, 0 - ${w}, ${h}), deviceWidth=${w}, deviceHeight=${h}}`;
+};
 
 it("reads the navigation mode and the display in its current rotation", async () => {
   const config = getDefaultRuntimeConfig({ deviceId: "dev", runner: runnerFor({
     "shell settings get secure navigation_mode": "2\n", "shell dumpsys display": viewport(0) }) });
   assert.deepEqual(await readBackGestureDevice(config), { display: { width: 1344, height: 2992 }, navigationMode: "2" });
-  const landscape = getDefaultRuntimeConfig({ deviceId: "dev", runner: runnerFor({
-    "shell settings get secure navigation_mode": "0\n", "shell dumpsys display": viewport(1) }) });
-  assert.deepEqual(await readBackGestureDevice(landscape), { display: { width: 2992, height: 1344 }, navigationMode: "0" });
+  for (const orientation of [1, 3]) {
+    const landscape = getDefaultRuntimeConfig({ deviceId: "dev", runner: runnerFor({
+      "shell settings get secure navigation_mode": "0\n", "shell dumpsys display": viewport(orientation) }) });
+    assert.deepEqual(await readBackGestureDevice(landscape), { display: { width: 2992, height: 1344 }, navigationMode: "0" }, `orientation ${orientation}`);
+  }
 });
 
 it("falls back to wm size and the input viewport when the display dump has no activity field", async () => {
@@ -95,4 +100,14 @@ it("back-gesture CLI reports structured validation errors with exit 1 before tou
     assert.equal(result.status, 1, JSON.stringify(args));
     assert.equal(JSON.parse(result.stdout).code, "EXECUTION_VALIDATION_FAILED", result.stdout);
   }
+});
+
+it("refuses to guess the rotation when the fallback cannot read it", async () => {
+  const outputs = { "shell settings get secure navigation_mode": "2\n", "shell dumpsys display": "no viewports", "shell wm size": "Physical size: 1080x2400\n" };
+  for (const input of [undefined, "nothing useful"]) {
+    const config = getDefaultRuntimeConfig({ deviceId: "dev", runner: runnerFor(input === undefined ? outputs : { ...outputs, "shell dumpsys input": input }) });
+    await assert.rejects(readBackGestureDevice(config), (error: any) => error.code === "EXECUTION_VALIDATION_FAILED" && /rotation/.test(error.message), String(input));
+  }
+  const noSize = getDefaultRuntimeConfig({ deviceId: "dev", runner: runnerFor({ "shell settings get secure navigation_mode": "2\n", "shell dumpsys display": "none" }) });
+  await assert.rejects(readBackGestureDevice(noSize), (error: any) => /display size/.test(error.message));
 });

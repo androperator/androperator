@@ -75,15 +75,19 @@ export async function readBackGestureDevice(config: RuntimeConfig): Promise<{ di
   const mode = (await read(config, ["shell", "settings", "get", "secure", "navigation_mode"]))?.trim() ?? null;
   let active = null;
   try { active = parseActiveDisplay(await read(config, ["shell", "dumpsys", "display"]) ?? ""); } catch { /* fall back below */ }
-  let width = active ? (active.rotation % 2 ? active.height : active.width) : null;
-  let height = active ? (active.rotation % 2 ? active.width : active.height) : null;
+  // The active viewport's logical frame is already in the current rotation.
+  let width = active ? active.width : null;
+  let height = active ? active.height : null;
   if (width === null || height === null) {
+    const unreadable = (what: string) => ({ code: ERROR_CODES.EXECUTION_VALIDATION_FAILED, message: `back-gesture could not read the ${what} from the device` });
     const size = await read(config, ["shell", "wm", "size"]) ?? "";
     const match = size.match(/Override size:\s*(\d+)x(\d+)/) ?? size.match(/Physical size:\s*(\d+)x(\d+)/);
+    if (match === null) throw unreadable("display size");
     const input = await read(config, ["shell", "dumpsys", "input"]) ?? "";
-    const rotation = Number((input.match(/Viewport [^\n]*displayId=0,[^\n]*orientation=([0-3])\b/) ?? input.match(/SurfaceOrientation:\s*([0-3])\b/))?.[1] ?? 0);
-    if (match === null) throw { code: ERROR_CODES.EXECUTION_VALIDATION_FAILED, message: "back-gesture could not read the display size from the device" };
-    [width, height] = rotation % 2 ? [Number(match[2]), Number(match[1])] : [Number(match[1]), Number(match[2])];
+    const orientation = (input.match(/Viewport [^\n]*displayId=0,[^\n]*orientation=([0-3])\b/) ?? input.match(/SurfaceOrientation:\s*([0-3])\b/))?.[1];
+    if (orientation === undefined) throw unreadable("display rotation");
+    // wm size reports the natural orientation; a quarter turn swaps it.
+    [width, height] = Number(orientation) % 2 ? [Number(match[2]), Number(match[1])] : [Number(match[1]), Number(match[2])];
   }
   return { display: { width, height }, navigationMode: mode };
 }

@@ -50,6 +50,16 @@ class RejectedCommandEnvelopeTest {
     }
 
     @Test
+    fun `ids that could overflow one log record are not echoed`() {
+        val long = "i".repeat(MAX_REJECTION_ID_CHARS + 1)
+        assertNull(buildRejectedCommandLine("""{"commandId":"$long"}""", IllegalArgumentException("bad")))
+        assertNull(buildRejectedCommandLine("""{"commandId":"ok","taskId":"$long"}""", IllegalArgumentException("bad")))
+        val limit = "i".repeat(MAX_REJECTION_ID_CHARS)
+        val line = assertNotNull(buildRejectedCommandLine("""{"commandId":"$limit","taskId":"$limit"}""", IllegalArgumentException("x".repeat(5000))))
+        assertTrue(line.toByteArray().size < 1500, "envelope is ${line.length} chars")
+    }
+
+    @Test
     fun `bounding never splits a surrogate pair`() {
         val message = "a".repeat(MAX_REJECTION_REASON_CHARS - 1) + "\uD83D\uDE00" + "tail"
         val line = assertNotNull(buildRejectedCommandLine("""{"commandId":"emoji"}""", IllegalArgumentException(message)))

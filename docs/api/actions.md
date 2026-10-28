@@ -71,8 +71,8 @@ older or newer than the CLI), it publishes a failed envelope with no steps,
 `errorCode="COMMAND_REJECTED"` and `error` starting with `Command rejected:` (cut to about 400 characters), so the
 caller fails at once instead of waiting for its result timeout. The envelope carries
 the payload's `commandId` and `taskId` (the command id when `taskId` is missing). A
-payload without a readable string `commandId` still produces no envelope, because a
-client could not correlate it; update the CLI and Operator to the same version.
+payload without a readable string `commandId`, or with a `commandId` or `taskId` longer
+than 128 characters, still produces no envelope, because a client could not correlate it; update the CLI and Operator to the same version.
 
 Missing application hierarchies include serialized `diagnostics` JSON with
 `serviceAvailable`, `rootAvailable`, `windowCount`, and `foregroundPackage`.

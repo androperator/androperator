@@ -110,6 +110,9 @@ fun buildCanonicalFailureLine(
 /** Parser messages can echo payload values; keep the envelope within one log record. */
 internal const val MAX_REJECTION_REASON_CHARS = 400
 
+/** Ids come from the payload too. Node ids are short, so a longer one is treated as not correlatable. */
+internal const val MAX_REJECTION_ID_CHARS = 128
+
 private fun boundedReason(message: String): String {
     if (message.length <= MAX_REJECTION_REASON_CHARS) return message
     var end = MAX_REJECTION_REASON_CHARS
@@ -125,9 +128,11 @@ fun buildRejectedCommandLine(
     fun text(key: String): String? =
         (root[key] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content?.takeIf { it.isNotEmpty() }
     val commandId = text("commandId") ?: return null
+    val taskId = text("taskId") ?: commandId
+    if (commandId.length > MAX_REJECTION_ID_CHARS || taskId.length > MAX_REJECTION_ID_CHARS) return null
     return buildCanonicalFailureLine(
         commandId = commandId,
-        taskId = text("taskId") ?: commandId,
+        taskId = taskId,
         reason = boundedReason("Command rejected: ${error.message ?: error::class.simpleName}"),
         errorCode = EnvelopeErrorCodes.COMMAND_REJECTED,
     )

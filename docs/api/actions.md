@@ -410,6 +410,7 @@ Rules:
 - `matcher` and `coordinate` are mutually exclusive.
 - `clickType = "focus"` is invalid with `coordinate`.
 - CLI defaults to `"default"` and omits the field from the payload.
+- `coordinate` with `clickType = "long_click"` presses and holds at a screen coordinate that has no UI node, such as an empty launcher workspace or a map. The CLI form is `androperator click --coordinate <x> <y> --long`. Use this, not a zero-length `swipe` or `drag`, which are rejected.
 
 Success data:
 
@@ -439,7 +440,9 @@ Example:
 Move one finger immediately along a straight line between two screen coordinates,
 then release. This does not require a UI node or scrollable container. It has no
 initial hold and does not perform drag and drop. Use [drag](#action-drag) when
-the app needs a long press before movement.
+the app needs a long press before movement. Start and end must differ; to press
+and hold at one point, use [click](#action-click) with a `coordinate` and
+`clickType: "long_click"`.
 
 | Field | Valid values |
 | --- | --- |

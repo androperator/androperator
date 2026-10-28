@@ -1512,6 +1512,7 @@ Usage:
 All three flags are required. Coordinates are non-negative integer screen pixels,
 with origin at the top left, and must be inside the current default display.
 Start and end must differ. Duration must be an integer from 1 to 10000 milliseconds.
+To press and hold at one point, use: androperator click --coordinate <x> <y> --long
 The finger moves immediately in a straight line and releases at the end.
 Success means gesture completion, not confirmation of an app-specific effect.
 
@@ -1568,6 +1569,7 @@ Usage:
 All four flags are required. Coordinates are non-negative integer screen pixels,
 with origin at the top left, and must be inside the current default display.
 Start and end must differ. Each duration must be an integer from 1 to 10000 milliseconds.
+To press and hold at one point without moving, use: androperator click --coordinate <x> <y> --long
 Requires Android 8 (API 26). The finger holds at the start, moves in a straight
 line without lifting, then releases. Choose a hold long enough for the app.
 Success means gesture completion, not confirmation of an app-specific effect.

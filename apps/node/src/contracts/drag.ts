@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { swipePointSchema } from "./swipe.js";
+import { LONG_PRESS_AT_POINT_HINT, swipePointSchema } from "./swipe.js";
 
 const dragFieldsSchema = z.object({
   start: swipePointSchema,
@@ -19,8 +19,10 @@ export function isValidDragPath(value: z.infer<typeof dragFieldsSchema>): boolea
     value.holdDurationMs + value.moveDurationMs + waypointDuration <= 60000;
 }
 
+export const DRAG_PATH_MESSAGE = `drag start and end must differ and total duration must not exceed 60000ms. ${LONG_PRESS_AT_POINT_HINT}`;
+
 export const dragParamsSchema = dragFieldsSchema.refine(isValidDragPath, {
-  message: "drag start and end must differ and total duration must not exceed 60000ms",
+  message: DRAG_PATH_MESSAGE,
 });
 
 export type DragParams = z.infer<typeof dragParamsSchema>;

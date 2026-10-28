@@ -559,6 +559,10 @@ Target types:
   Package ID (e.g. com.android.settings) uses open_app
   URL/URI (e.g. https://google.com) uses open_uri
 
+A package launch resumes the app's existing task when there is one, like tapping its icon. By default, success
+means the package reached the foreground, not that a particular screen did; with
+--skip-navigation-wait it means only that the launch was dispatched.
+
 Options:
   --app <target>         Alternative to positional target argument
   --output <json|pretty> Output format (default: json)

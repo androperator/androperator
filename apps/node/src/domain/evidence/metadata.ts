@@ -78,5 +78,12 @@ export async function collectEvidenceMetadata(config: RuntimeConfig, remaining: 
   let cliVersion: string | null = null;
   try { cliVersion = getCliVersion(); } catch { failure("cliVersion"); }
   return { device: { serial: config.deviceId!, operatorPackage: config.operatorPackage, cliVersion, operatorVersion,
-    apiLevel, androidVersion, manufacturer, model, deviceType, deviceTypeProperties, display: { width, height, density, rotation } }, errors };
+    apiLevel, androidVersion, manufacturer, model, deviceType, deviceTypeProperties,
+    display: { width, height, density, rotation, ...currentSize(width, height, rotation) } }, errors };
+}
+
+/** `width` and `height` are the natural size; the size on screen swaps them in a quarter-turn rotation. */
+function currentSize(width: number | null, height: number | null, rotation: number | null): { currentWidth: number | null; currentHeight: number | null } {
+  if (width === null || height === null || rotation === null) return { currentWidth: null, currentHeight: null };
+  return rotation % 2 ? { currentWidth: height, currentHeight: width } : { currentWidth: width, currentHeight: height };
 }

@@ -68,7 +68,7 @@ describe("still evidence capture", () => {
       const manifest = await manifestAt(result.manifestPath);
       assert.equal(manifest.label, ""); assert.deepEqual(manifest.context, context);
       assert.equal(manifest.device.serial, "test-device");
-      assert.deepEqual(manifest.device.display, { width: 100, height: 200, density: 200, rotation: 1 });
+      assert.deepEqual(manifest.device.display, { width: 100, height: 200, density: 200, rotation: 1, currentWidth: 200, currentHeight: 100 });
       assert.equal(manifest.device.deviceType, "physical");
       assert.equal(manifest.device.deviceTypeProperties["ro.kernel.qemu"], null);
       assert.deepEqual(manifest.artifacts[0].image, { captureWidthPx: 2, captureHeightPx: 2, coordinateSpace: "screenshot_pixels", origin: "top_left" });
@@ -235,6 +235,18 @@ describe("still evidence capture", () => {
       : run(command, args);
     try { assert.equal((await collectEvidenceMetadata(f.config, () => 1000)).device.display.rotation, 3); }
     finally { await f.cleanup(); }
+  });
+  it("reports the natural size and the size in the current rotation for an active landscape display", async () => {
+    const f = await fixture();
+    const run = f.runner.run.bind(f.runner);
+    // A real landscape dump: the logical frame is already rotated (2992x1344) for a 1344x2992 display.
+    f.runner.run = async (command, args) => args.includes("display") && args.includes("dumpsys")
+      ? { code: 0, stderr: "", stdout: "DisplayViewport{type=INTERNAL, valid=true, isActive=true, displayId=0, uniqueId='local:1', orientation=1, logicalFrame=Rect(0, 0 - 2992, 1344)}" }
+      : run(command, args);
+    try {
+      const display = (await collectEvidenceMetadata(f.config, () => 1000)).device.display;
+      assert.deepEqual([display.width, display.height, display.rotation, display.currentWidth, display.currentHeight], [1344, 2992, 1, 2992, 1344]);
+    } finally { await f.cleanup(); }
   });
   it("rejects collisions without changing the existing directory", async () => {
     const f = await fixture();

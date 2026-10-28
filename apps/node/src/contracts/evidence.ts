@@ -34,7 +34,9 @@ export const evidenceDeviceSchema = z.object({
   apiLevel: nullableNumber, androidVersion: nullableString, manufacturer: nullableString, model: nullableString,
   deviceType: z.enum(["emulator", "physical", "unknown"]),
   deviceTypeProperties: z.object({ "ro.kernel.qemu": nullableString, "ro.boot.qemu": nullableString }).strict(),
-  display: z.object({ width: nullableNumber, height: nullableNumber, density: nullableNumber, rotation: nullableNumber }).strict(),
+  display: z.object({ width: nullableNumber, height: nullableNumber, density: nullableNumber, rotation: nullableNumber,
+    // Size as displayed in the current rotation; optional so manifests written before these fields still parse.
+    currentWidth: nullableNumber.optional(), currentHeight: nullableNumber.optional() }).strict(),
 }).strict();
 export type EvidenceDevice = z.infer<typeof evidenceDeviceSchema>;
 export const evidenceManifestSchema = z.object({

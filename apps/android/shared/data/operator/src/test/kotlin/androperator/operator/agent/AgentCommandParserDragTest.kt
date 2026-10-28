@@ -53,4 +53,15 @@ class AgentCommandParserDragTest {
             List(4) { point.replace("700", "10000").replace("2000", "10000") }.joinToString(","),
         )) assertTrue(parse("{$base,\"waypoints\":[$path]}").isFailure, path)
     }
+
+    @Test
+    fun `a path may end where it started when it goes somewhere and a path that never moves is rejected`() {
+        val point = """{"x":400,"y":1500,"durationMs":500}"""
+        val outAndBack = """{"start":{"x":3,"y":1500},"end":{"x":3,"y":1500},"holdDurationMs":1,"moveDurationMs":500,"waypoints":[$point]}"""
+        val drag = assertIs<UiAction.Drag>(parse(outAndBack).getOrThrow().actions.single())
+        assertEquals(drag.start, drag.end)
+        val stationary = """{"x":3,"y":1500,"durationMs":500}"""
+        assertTrue(parse(outAndBack.replace(point, stationary)).isFailure)
+        assertTrue(parse("""{"start":{"x":3,"y":1500},"end":{"x":3,"y":1500},"holdDurationMs":1,"moveDurationMs":500}""").isFailure)
+    }
 }

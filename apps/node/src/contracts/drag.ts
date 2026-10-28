@@ -15,11 +15,13 @@ const dragFieldsSchema = z.object({
 export function isValidDragPath(value: z.infer<typeof dragFieldsSchema>): boolean {
   const waypointDuration = (value.waypoints ?? []).reduce(
     (total, point) => total + point.durationMs + (point.holdDurationMs ?? 0), 0);
-  return (value.start.x !== value.end.x || value.start.y !== value.end.y) &&
+  const points = [value.start, ...(value.waypoints ?? []), value.end];
+  // A path may end where it started (out and back), but it must go somewhere.
+  return points.some(point => point.x !== value.start.x || point.y !== value.start.y) &&
     value.holdDurationMs + value.moveDurationMs + waypointDuration <= 60000;
 }
 
-export const DRAG_PATH_MESSAGE = `drag start and end must differ and total duration must not exceed 60000ms. ${LONG_PRESS_AT_POINT_HINT}`;
+export const DRAG_PATH_MESSAGE = `drag path must move (start, waypoints and end are not all the same point) and total duration must not exceed 60000ms. ${LONG_PRESS_AT_POINT_HINT}`;
 
 export const dragParamsSchema = dragFieldsSchema.refine(isValidDragPath, {
   message: DRAG_PATH_MESSAGE,

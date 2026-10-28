@@ -201,7 +201,6 @@ class AgentCommandParserDefault : AgentCommandParser {
                 }
                 val start = point("start")
                 val end = point("end")
-                require(start != end) { "drag start and end must differ" }
                 fun duration(key: String): Long {
                     val value = params[key] as? JsonPrimitive ?: error("$key must be an integer")
                     require(!value.isString) { "$key must be an integer" }
@@ -223,6 +222,8 @@ class AgentCommandParserDefault : AgentCommandParser {
                         androperator.uitree.DragWaypoint(number("x", 0L..Int.MAX_VALUE).toInt(), number("y", 0L..Int.MAX_VALUE).toInt(), number("durationMs", 1L..10000L), if ("holdDurationMs" in v) number("holdDurationMs", 0L..10000L) else 0)
                     }
                 } else emptyList()
+                // A path may end where it started, but it must go somewhere.
+                require(waypoints.any { it.x != start.x || it.y != start.y } || start != end) { "drag path must move" }
                 require((waypoints.sumOf { it.durationMs + it.holdDurationMs } + duration("holdDurationMs") + duration("moveDurationMs")) <= 60000L)
                 UiAction.Drag(id, start, end, duration("holdDurationMs"), duration("moveDurationMs"), waypoints)
             }

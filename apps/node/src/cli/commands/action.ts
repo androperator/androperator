@@ -36,7 +36,7 @@ export async function cmdActionSwipe(options: ActionCommandOptions & SwipeParams
 
 export async function cmdActionDrag(options: ActionCommandOptions & DragParams): Promise<string> {
   try {
-    return await runActionExecution(buildDragExecution({ start: options.start, end: options.end, holdDurationMs: options.holdDurationMs, moveDurationMs: options.moveDurationMs }, options.timeoutMs), options);
+    return await runActionExecution(buildDragExecution({ start: options.start, end: options.end, holdDurationMs: options.holdDurationMs, moveDurationMs: options.moveDurationMs, ...(options.waypoints === undefined ? {} : { waypoints: options.waypoints }) }, options.timeoutMs), options);
   } catch (error) {
     return formatError(error, options);
   }

@@ -74,8 +74,16 @@ segment. The final leg uses `end` and `moveDurationMs`. Start and end must still
 differ. Up to eight points are accepted; movement durations are 1–10000 ms, holds
 are 0–10000 ms, and total requested hold/movement time is at most 60000 ms. The
 execution timeout must also accommodate callbacks and scheduling latency. Bounds
-are checked before dispatch. Stationary segments use a minimal continuing stroke
-and a handler timer, because Android can acknowledge stationary strokes early.
+are checked before dispatch. A segment whose point equals the current position
+(a hold at the end of a path) dispatches no stroke: the pointer is already down, so
+it waits on a handler timer. A zero-length continuation stroke is rejected by real
+devices (observed on an API 36 emulator as GESTURE_FAILED right after the preceding
+move), although Robolectric accepts it.
+
+A path may end at its start when a waypoint differs, so the node contract, the
+Operator parser, `TaskUiScope` and `UiTreeManager` all check that the whole path moves.
+A rejected Operator parse currently produces no result envelope, so the client
+waits for its timeout; the Node layer must validate first.
 
 Cancellation during a hover removes the timer and releases that continued pointer.
 Cancellation during a continuing movement waits for its callback, releases, and

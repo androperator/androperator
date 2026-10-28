@@ -65,6 +65,15 @@ failed step continue to subsequent actions; Node still reports the execution as
 failed. Returned failed steps add `data.errorCode` while retaining their legacy
 `data.error` code. This sequence policy is unchanged.
 
+If the Operator rejects a command payload before running anything (a parse or
+validation failure that Node validation did not catch, for example when the Operator is
+older or newer than the CLI), it publishes a failed envelope with no steps,
+`errorCode="COMMAND_REJECTED"` and `error` starting with `Command rejected:` (cut to about 400 characters), so the
+caller fails at once instead of waiting for its result timeout. The envelope carries
+the payload's `commandId` and `taskId` (the command id when `taskId` is missing). A
+payload without a readable string `commandId`, or with a `commandId` or `taskId` longer
+than 128 characters, still produces no envelope, because a client could not correlate it; update the CLI and Operator to the same version.
+
 Missing application hierarchies include serialized `diagnostics` JSON with
 `serviceAvailable`, `rootAvailable`, `windowCount`, and `foregroundPackage`.
 Unavailable service/window metadata is `null`; a known missing root is `false`.

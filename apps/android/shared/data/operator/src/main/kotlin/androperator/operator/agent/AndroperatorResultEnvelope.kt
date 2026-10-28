@@ -16,6 +16,9 @@ const val ANDROPERATOR_RESULT_PREFIX = "[Androperator-Result]"
 object EnvelopeErrorCodes {
     /** The Androperator Operator accessibility service is not running. */
     const val SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE"
+
+    /** The Operator could not accept the command payload (parse or validation failure); nothing ran. */
+    const val COMMAND_REJECTED = "COMMAND_REJECTED"
 }
 
 /**
@@ -97,4 +100,40 @@ fun buildCanonicalFailureLine(
         errorCode = errorCode,
     )
     return ANDROPERATOR_RESULT_PREFIX + " " + json.encodeToString(envelope)
+}
+
+/**
+ * Canonical failed envelope for a payload the parser rejected, so the caller fails fast with the reason
+ * instead of waiting out its result timeout. Returns null when the payload has no readable string
+ * `commandId`, because the Node client could not correlate such a result.
+ */
+/** Parser messages can echo payload values; keep the envelope within one log record. */
+internal const val MAX_REJECTION_REASON_CHARS = 400
+
+/** Ids come from the payload too. Node ids are short, so a longer one is treated as not correlatable. */
+internal const val MAX_REJECTION_ID_CHARS = 128
+
+private fun boundedReason(message: String): String {
+    if (message.length <= MAX_REJECTION_REASON_CHARS) return message
+    var end = MAX_REJECTION_REASON_CHARS
+    if (message[end - 1].isHighSurrogate()) end--
+    return message.substring(0, end) + "..."
+}
+
+fun buildRejectedCommandLine(
+    payload: String,
+    error: Throwable,
+): String? {
+    val root = runCatching { json.parseToJsonElement(payload) }.getOrNull() as? kotlinx.serialization.json.JsonObject ?: return null
+    fun text(key: String): String? =
+        (root[key] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content?.takeIf { it.isNotEmpty() }
+    val commandId = text("commandId") ?: return null
+    val taskId = text("taskId") ?: commandId
+    if (commandId.length > MAX_REJECTION_ID_CHARS || taskId.length > MAX_REJECTION_ID_CHARS) return null
+    return buildCanonicalFailureLine(
+        commandId = commandId,
+        taskId = taskId,
+        reason = boundedReason("Command rejected: ${error.message ?: error::class.simpleName}"),
+        errorCode = EnvelopeErrorCodes.COMMAND_REJECTED,
+    )
 }

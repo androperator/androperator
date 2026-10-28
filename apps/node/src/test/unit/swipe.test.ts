@@ -86,3 +86,9 @@ it("MCP swipe advertises required duration and rejects omitted duration before d
   await assert.rejects(async () => tool.handler({ start: params.start, end: params.end }));
   await assert.rejects(async () => tool.handler({ ...params, end: params.start }));
 });
+
+it("a zero-length swipe teaches the coordinate long press", () => {
+  const result = spawnSync(process.execPath, [cli, "swipe", "--start", "300", "700", "--end", "300", "700", "--duration-ms", "1500"], { encoding: "utf8" });
+  assert.equal(result.status, 1);
+  assert.match(JSON.parse(result.stdout).message, /click --coordinate <x> <y> --long/);
+});

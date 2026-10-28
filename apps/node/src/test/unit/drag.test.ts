@@ -122,3 +122,9 @@ it("MCP drag advertises hover points and rejects excessive path time before disp
     waypoints: Array(4).fill({ x: 30, y: 40, durationMs: 10000, holdDurationMs: 10000 }),
   }));
 });
+
+it("a drag in place teaches the coordinate long press", () => {
+  const result = spawnSync(process.execPath, [cli, "drag", "--start", "0", "200", "--end", "0", "200", "--hold-duration-ms", "1000", "--move-duration-ms", "300"], { encoding: "utf8" });
+  assert.equal(result.status, 1);
+  assert.match(JSON.parse(result.stdout).message, /click --coordinate <x> <y> --long/);
+});

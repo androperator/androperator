@@ -553,6 +553,39 @@ androperator gesture --path "100,500 800,500" --duration-ms 300
 androperator gesture --path "3,1500 400,1500 3,1500" --duration-ms 800 --hold-ms 200
 ```
 
+<a id="cli-back-gesture"></a>
+#### CLI: `back-gesture`
+
+`androperator back-gesture [--edge left|right] [--y <px|fraction>] [--distance <px|fraction>] [--duration-ms <ms>] [--hold-ms <ms>] [--cancel]`
+drives the system Back edge gesture as a [`drag`](#action-drag) path, so an app with
+predictive Back shows its preview while the finger is down. Releasing commits Back. With
+`--cancel` the finger returns to the edge before release, which cancels the gesture.
+It is not the same as `press back`, which sends the Back key and never shows a preview.
+
+| Flag | Valid values |
+| --- | --- |
+| `--edge` | `left` or `right`, default `left`; the physical screen edge, regardless of layout direction |
+| `--y` | integer pixels from the top, or a decimal fraction in `(0, 1]` of the display height; default `0.5` |
+| `--distance` | integer pixels, or a decimal fraction in `(0, 1]` of the display width; default `0.4`; at most the width minus 3 pixels |
+| `--duration-ms` | integer in `[1, 10000]`, default `400`; the time to travel the distance, and again to return when `--cancel` is set |
+| `--hold-ms` | optional integer in `[1, 10000]`; keeps the finger down before release, for example to capture a screenshot at that gesture progress |
+| `--cancel` | boolean flag, no value |
+
+A value with a decimal point is a fraction (`0.5`) and an integer is pixels (`500`). The
+command reads the current display size, including rotation, and the `navigation_mode`
+setting from the device. The finger lands one pixel inside the chosen edge pixel (x `1` on
+the left, width minus 2 on the right), so it starts inside the system gesture inset on any
+display, and the receipt contains the resolved start and end coordinates. In 3-button or
+2-button navigation the command fails with `EXECUTION_ACTION_UNSUPPORTED` before
+dispatching, rather than reporting a gesture the system ignores. Success means the
+gesture completed, not that the app handled Back.
+
+```sh
+androperator back-gesture
+androperator back-gesture --edge right --y 0.3 --distance 0.5 --duration-ms 600
+androperator back-gesture --cancel --hold-ms 500
+```
+
 ```bash
 androperator drag --start 600 1600 --end 200 1000 \
   --hold-duration-ms 1200 --move-duration-ms 800 --device <device_serial>
@@ -1959,7 +1992,9 @@ Example:
 | `toast <text>` | `show_toast` | optional `--duration short\|long` |
 | `toast --cancel` | `cancel_toast` | no text or duration |
 | `open` | `open_app` or `open_uri` | dispatch depends on target string |
-| `press`, `back` | `press_key` | `back` hardcodes `key = "back"` |
+| `press`, `back` | `press_key` | `back` hardcodes `key = "back"`; it sends the Back key, not the edge gesture (see `back-gesture`) |
+| `gesture` | `drag` | path through points, built by the CLI |
+| `back-gesture` | `drag` | edge Back gesture path, built by the CLI from the device display |
 | `scroll` | `scroll` | container flags optional |
 | `scroll-until` | `scroll_until` or `scroll_and_click` | `--click` switches to `scroll_and_click` |
 | `scroll-and-click` | `scroll_and_click` | alias that implies click-after |

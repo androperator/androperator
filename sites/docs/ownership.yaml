@@ -71,6 +71,10 @@ command_details:
     href: actions.md#cli-gesture
     label: "CLI: gesture"
     action: drag
+  back-gesture:
+    href: actions.md#cli-back-gesture
+    label: "CLI: back-gesture"
+    action: drag
   swipe:
     href: actions.md#action-swipe
     label: "Action: swipe"

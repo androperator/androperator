@@ -84,3 +84,19 @@ it("gesture CLI accepts a valid path with global flags before or after the comma
     assert.notEqual(JSON.parse(result.stdout).code, "EXECUTION_VALIDATION_FAILED", result.stdout);
   }
 });
+
+it("a long path gets an execution timeout that covers its movement, holds and overhead", async () => {
+  const { cmdActionDrag } = await import("../../cli/commands/action.js");
+  const timeouts: number[] = [];
+  const run = (params: Parameters<typeof buildPathGestureParams>, timeoutMs?: number) => cmdActionDrag({
+    ...buildPathGestureParams(...params), format: "json", timeoutMs,
+    tryDaemonExecutionFn: async () => null,
+    runExecutionFn: async (execution: unknown) => { timeouts.push((execution as { timeoutMs: number }).timeoutMs); return { ok: false, error: "stop" } as never; },
+  });
+  await run([[{ x: 1, y: 1 }, { x: 900, y: 1 }, { x: 1, y: 1 }], 20000, 10000]);
+  assert.ok(timeouts[0] >= 31001 + 5000, `timeout ${timeouts[0]} must exceed 31001 ms of gesture`);
+  await run([[{ x: 1, y: 1 }, { x: 900, y: 1 }], 300]);
+  assert.equal(timeouts[1], 30000, "short gestures keep the existing default");
+  await run([[{ x: 1, y: 1 }, { x: 900, y: 1 }, { x: 1, y: 1 }], 20000, 10000], 90000);
+  assert.equal(timeouts[2], 90000, "an explicit timeout is preserved");
+});

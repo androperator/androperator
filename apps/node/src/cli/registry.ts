@@ -1682,6 +1682,117 @@ Examples:
   },
 };
 
+COMMANDS["back-gesture"] = {
+  name: "back-gesture",
+  group: "Device Interaction",
+  documentedFlags: ["--edge", "--y", "--distance", "--duration-ms", "--hold-ms", "--cancel", "--no-daemon"],
+  supportedFlags: ["--edge", "--y", "--distance", "--duration-ms", "--hold-ms", "--cancel", "--no-daemon"],
+  summary: "Swipe in from a screen edge as the system Back gesture, optionally cancelling it",
+  help: `androperator back-gesture - Drive the system Back edge gesture
+
+Usage:
+  androperator back-gesture [--edge left|right] [--y <px|fraction>] [--distance <px|fraction>]
+                            [--duration-ms <ms>] [--hold-ms <ms>] [--cancel]
+
+The finger lands one pixel inside the chosen physical screen edge, so it starts inside the system
+gesture inset on any device, and travels inward. Releasing commits Back; with --cancel it returns to
+the edge before release, which cancels the gesture. Apps with predictive Back show their preview
+while the finger is down. This is different from "press-key back", which sends the Back key and never
+shows a gesture preview.
+
+Options (all optional):
+  --edge left|right       Screen edge to start from (default: left). Physical edge, regardless of layout direction.
+  --y <px|fraction>       Position along the edge: an integer is pixels from the top, a decimal such as 0.5 is a
+                          fraction of the display height (default: 0.5).
+  --distance <px|fraction> How far the finger travels inward: pixels, or a decimal fraction of the display width
+                          (default: 0.4).
+  --duration-ms <ms>      Time to travel the distance, 1 to 10000 (default: 400). A cancelled gesture spends the same
+                          time returning.
+  --hold-ms <ms>          Keep the finger down for 1 to 10000 ms before release, for example to capture a screenshot at
+                          that progress.
+  --cancel                Return to the edge before release.
+  --no-daemon             Force direct execution instead of daemon proxy
+
+Requires gesture navigation (the device's navigation_mode setting is 2) and Android 8 (API 26). On a
+device using 3-button or 2-button navigation the command fails with EXECUTION_ACTION_UNSUPPORTED instead
+of reporting a gesture that the system ignores. The result includes the resolved start and end
+coordinates. Success means the gesture completed, not that the app handled Back.
+
+Examples:
+  androperator back-gesture
+  androperator back-gesture --edge right --y 0.3 --distance 0.5 --duration-ms 600
+  androperator back-gesture --cancel --hold-ms 500
+`,
+  topLevelBlock: `  back-gesture [--edge left|right] [--cancel] [--hold-ms <ms>]
+                                            Drive the system Back edge gesture`,
+  handler: async (ctx) => {
+    const invalid = (message: string) => formatError({
+      code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
+      message: `${message}\nExample: androperator back-gesture --edge left --cancel`,
+    }, { format: ctx.format });
+    const valued = new Set(["--edge", "--y", "--distance", "--duration-ms", "--hold-ms"]);
+    const seen = new Map<string, string>();
+    let cancel = false;
+    for (let i = 0; i < ctx.rest.length; i++) {
+      const flag = ctx.rest[i];
+      if (flag === "--no-daemon") continue;
+      if (flag === "--cancel") {
+        if (cancel) return invalid("--cancel must not appear more than once");
+        cancel = true;
+        continue;
+      }
+      if (!valued.has(flag)) return invalid(`Unexpected back-gesture argument: ${flag}`);
+      if (seen.has(flag)) return invalid(`${flag} must not appear more than once`);
+      const value = ctx.rest[i + 1];
+      if (value === undefined || value.startsWith("--")) return invalid(`${flag} requires a value`);
+      seen.set(flag, value);
+      i += 1;
+    }
+    const backGesture = await import("../domain/actions/backGesture.js");
+    const integer = (flag: string, fallback?: number): number | undefined => {
+      const raw = seen.get(flag);
+      if (raw === undefined) return fallback;
+      if (!/^\d+$/.test(raw)) throw new Error(`${flag} requires a non-negative integer`);
+      return Number(raw);
+    };
+    let options;
+    try {
+      const edge = seen.get("--edge") ?? backGesture.BACK_GESTURE_DEFAULTS.edge;
+      if (edge !== "left" && edge !== "right") throw new Error("--edge must be left or right");
+      options = {
+        edge,
+        y: seen.has("--y") ? backGesture.parseMeasure(seen.get("--y")!, "--y") : backGesture.BACK_GESTURE_DEFAULTS.y,
+        distance: seen.has("--distance") ? backGesture.parseMeasure(seen.get("--distance")!, "--distance") : backGesture.BACK_GESTURE_DEFAULTS.distance,
+        durationMs: integer("--duration-ms", backGesture.BACK_GESTURE_DEFAULTS.durationMs)!,
+        holdMs: integer("--hold-ms"),
+        cancel,
+      } as import("../domain/actions/backGesture.js").BackGestureOptions;
+      if (options.durationMs < 1 || options.durationMs > 10000) throw new Error("--duration-ms must be from 1 to 10000");
+      if (options.holdMs !== undefined && (options.holdMs < 1 || options.holdMs > 10000)) throw new Error("--hold-ms must be from 1 to 10000");
+    } catch (error) {
+      return invalid(error instanceof Error ? error.message : String(error));
+    }
+    try {
+      const { getDefaultRuntimeConfig } = await import("../adapters/android-bridge/runtimeConfig.js");
+      const { resolveDevice } = await import("../domain/devices/resolveDevice.js");
+      const config = getDefaultRuntimeConfig({ adbPath: process.env.ADB_PATH, deviceId: ctx.deviceId, logger: ctx.logger });
+      const { deviceId } = await resolveDevice(config);
+      const { display, navigationMode } = await backGesture.readBackGestureDevice({ ...config, deviceId });
+      backGesture.assertGestureNavigation(navigationMode);
+      const plan = backGesture.planBackGesture(options, display);
+      const { buildPathGestureParams } = await import("../domain/actions/gesture.js");
+      const params = buildPathGestureParams(plan.points, plan.durationMs, plan.holdMs);
+      return (await import("./commands/action.js")).cmdActionDrag({
+        ...params, format: ctx.format, deviceId, operatorPackage: ctx.operatorPackage,
+        noDaemon: ctx.noDaemon, logger: ctx.logger, timeoutMs: ctx.timeoutMs,
+      });
+    } catch (error) {
+      if (error instanceof Error) return invalid(error.message);
+      return formatError(error, { format: ctx.format });
+    }
+  },
+};
+
 COMMANDS["click"] = {
   name: "click",
   synonyms: ["tap"],

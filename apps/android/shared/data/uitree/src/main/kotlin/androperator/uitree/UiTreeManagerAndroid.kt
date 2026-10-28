@@ -50,7 +50,8 @@ class UiTreeManagerAndroid(
         (service.getSystemService(android.content.Context.WINDOW_SERVICE) as android.view.WindowManager).defaultDisplay.getRealMetrics(metrics)
         if (startX !in 0 until metrics.widthPixels || endX !in 0 until metrics.widthPixels ||
             startY !in 0 until metrics.heightPixels || endY !in 0 until metrics.heightPixels ||
-            (startX == endX && startY == endY) || holdDurationMs !in 1L..10000L || moveDurationMs !in 1L..10000L) return false
+            (startX == endX && startY == endY && waypoints.none { it.x != startX || it.y != startY }) ||
+            holdDurationMs !in 1L..10000L || moveDurationMs !in 1L..10000L) return false
         if (waypoints.size > 8 || waypoints.any { it.x !in 0 until metrics.widthPixels || it.y !in 0 until metrics.heightPixels || it.durationMs !in 1L..10000L || it.holdDurationMs !in 0L..10000L }) return false
         if (holdDurationMs + moveDurationMs + waypoints.sumOf { it.durationMs + it.holdDurationMs } > 60000L) return false
         return dispatch(null, "coordinate_gesture") {

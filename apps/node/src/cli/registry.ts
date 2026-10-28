@@ -1614,6 +1614,74 @@ Example:
   },
 };
 
+COMMANDS["gesture"] = {
+  name: "gesture",
+  group: "Device Interaction",
+  documentedFlags: ["--path", "--duration-ms", "--hold-ms", "--no-daemon"],
+  supportedFlags: ["--path", "--duration-ms", "--hold-ms", "--no-daemon"],
+  summary: "Move one finger through a list of points without lifting",
+  help: `androperator gesture - Move one finger through a path of screen points
+
+Usage:
+  androperator gesture --path "<x>,<y> <x>,<y> ..." --duration-ms <ms> [--hold-ms <ms>]
+
+--path is one quoted string of 2 to 10 points, each x,y in non-negative integer screen
+pixels inside the current default display. The finger touches down on the first point,
+moves through the rest in order without lifting, and releases on the last. The path may
+end where it started, so a gesture can go out and come back before release.
+--duration-ms is the total movement time, an integer split evenly across the segments;
+each segment takes 1 to 10000 ms. --hold-ms keeps the finger down on the last point for
+1 to 10000 ms before release, for example to capture a screenshot mid-gesture.
+Requires Android 8 (API 26). A path of more than 10 points, or more than 9 with --hold-ms, is
+too long; use raw drag waypoints for per-point holds.
+Success means gesture completion, not confirmation of an app-specific effect.
+A swipe that starts at a screen edge is recognized by the system as an edge gesture only if
+the first point is inside the system gesture inset.
+
+Examples:
+  androperator gesture --path "100,500 800,500" --duration-ms 300
+  androperator gesture --path "3,1500 400,1500 3,1500" --duration-ms 800 --hold-ms 200
+`,
+  topLevelBlock: `  gesture --path "<x>,<y> <x>,<y> ..." --duration-ms <ms> [--hold-ms <ms>]
+                                            Move one finger through a path of points`,
+  handler: async (ctx) => {
+    const example = 'Example: androperator gesture --path "3,1500 400,1500 3,1500" --duration-ms 800';
+    const invalid = (message: string) => formatError({
+      code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
+      message: `${message}\n${example}`,
+    }, { format: ctx.format });
+    const seen = new Map<string, string>();
+    const flags = ["--path", "--duration-ms", "--hold-ms"];
+    for (let i = 0; i < ctx.rest.length; i++) {
+      const flag = ctx.rest[i];
+      if (flag === "--no-daemon") continue;
+      if (!flags.includes(flag)) return invalid(`Unexpected gesture argument: ${flag}`);
+      if (seen.has(flag)) return invalid(`${flag} must not appear more than once`);
+      const value = ctx.rest[i + 1];
+      if (value === undefined || (flag !== "--path" && !/^\d+$/.test(value))) {
+        return invalid(`${flag} requires ${flag === "--path" ? "a quoted list of points" : "a non-negative integer"}`);
+      }
+      seen.set(flag, value);
+      i += 1;
+    }
+    if (!seen.has("--path")) return invalid("--path is required");
+    if (!seen.has("--duration-ms")) return invalid("--duration-ms is required");
+    const { buildPathGestureParams, parseGesturePath } = await import("../domain/actions/gesture.js");
+    let params;
+    try {
+      params = buildPathGestureParams(
+        parseGesturePath(seen.get("--path")!), Number(seen.get("--duration-ms")),
+        seen.has("--hold-ms") ? Number(seen.get("--hold-ms")) : undefined);
+    } catch (error) {
+      return invalid(error instanceof Error ? error.message : String(error));
+    }
+    return (await import("./commands/action.js")).cmdActionDrag({
+      ...params, format: ctx.format, deviceId: ctx.deviceId, operatorPackage: ctx.operatorPackage,
+      noDaemon: ctx.noDaemon, logger: ctx.logger, timeoutMs: ctx.timeoutMs,
+    });
+  },
+};
+
 COMMANDS["click"] = {
   name: "click",
   synonyms: ["tap"],

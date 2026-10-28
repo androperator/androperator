@@ -35,7 +35,7 @@ class TaskUiScopeDefault(
 ) : TaskUiScope {
     override suspend fun drag(start: Point, end: Point, holdDurationMs: Long, moveDurationMs: Long, waypoints: List<androperator.uitree.DragWaypoint>) {
         require(start.x >= 0 && start.y >= 0 && end.x >= 0 && end.y >= 0) { "drag coordinates must be non-negative" }
-        require(start != end) { "drag start and end must differ" }
+        require(start != end || waypoints.any { it.x != start.x || it.y != start.y }) { "drag path must move" }
         require(holdDurationMs in 1L..10000L && moveDurationMs in 1L..10000L) { "drag durations must be in [1, 10000]" }
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
             throw UiActionFailure("GESTURE_UNSUPPORTED", "Drag requires Android API 26 or newer")

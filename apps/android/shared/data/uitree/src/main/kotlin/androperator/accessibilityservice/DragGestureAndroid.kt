@@ -52,9 +52,15 @@ suspend fun AccessibilityService.dispatchDrag(
             try { continuation.context.ensureExecutionActive() } catch (_: Exception) { release(false); return }
             val point = points[index]
             val stationary = x == point.x.toFloat() && y == point.y.toFloat()
+            if (stationary) {
+                // The pointer is already down here. Wait on a timer instead of dispatching a zero-length continuation,
+                // which devices reject with a failed gesture.
+                pending = Runnable { segment(index + 1) }.also { handler.postDelayed(it, point.holdDurationMs + point.durationMs) }
+                return
+            }
             val path = Path().apply { moveTo(x, y); if (!stationary) lineTo(point.x.toFloat(), point.y.toFloat()) }
-            val finalMovement = index == points.lastIndex && !stationary
-            val next = stroke!!.continueStroke(path, 0, if (stationary) 1 else point.durationMs, !finalMovement)
+            val finalMovement = index == points.lastIndex
+            val next = stroke!!.continueStroke(path, 0, point.durationMs, !finalMovement)
             inFlight = true
             try {
                 val accepted = dispatchGesture(GestureDescription.Builder().addStroke(next).build(), object : AccessibilityService.GestureResultCallback() {
@@ -65,7 +71,7 @@ suspend fun AccessibilityService.dispatchDrag(
                         y = point.y.toFloat()
                         if (finalMovement) { finish(true); return }
                         if (!continuation.isActive) { release(false); return }
-                        pending = Runnable { segment(index + 1) }.also { handler.postDelayed(it, point.holdDurationMs + if (stationary) point.durationMs else 0) }
+                        pending = Runnable { segment(index + 1) }.also { handler.postDelayed(it, point.holdDurationMs) }
                     }
                     override fun onCancelled(gestureDescription: GestureDescription?) { inFlight = false; finish(false) }
                 }, handler)

@@ -183,6 +183,7 @@ class DragGestureAndroidTest {
         assertFalse(fixture.manager.dragAt(-1, 20, 100, 200, 1000, 500))
         assertFalse(fixture.manager.dragAt(10, 20, Int.MAX_VALUE, 200, 1000, 500))
         assertFalse(fixture.manager.dragAt(10, 20, 10, 20, 1000, 500))
+        assertFalse(fixture.manager.dragAt(10, 20, 10, 20, 1000, 500, listOf(DragWaypoint(10, 20, 300))))
         assertFalse(fixture.manager.dragAt(10, 20, 100, 200, 0, 500))
         assertFalse(fixture.manager.dragAt(10, 20, 100, 200, 1000, 10001))
         assertFalse(fixture.manager.dragAt(10, 20, 100, 200, 1000, 500,
@@ -257,5 +258,38 @@ class DragGestureAndroidTest {
         action.join()
         assertTrue(action.isCancelled)
         assertEquals(2, fixture.shadow.gesturesDispatched.size)
+    }
+
+    @Test fun `a path that returns to its start is dispatched and releases at the start`() = runTest {
+        val fixture = Fixture()
+        val action = async { fixture.manager.dragAt(10, 20, 10, 20, 1, 500, listOf(DragWaypoint(100, 200, 300))) }
+        testScheduler.runCurrent()
+        shadowOf(Looper.getMainLooper()).idle()
+        fixture.complete(0)
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(5))
+        assertTrue(fixture.shadow.gesturesDispatched[1].description().getStroke(0).willContinue())
+        fixture.complete(1)
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(5))
+        assertFalse(fixture.shadow.gesturesDispatched[2].description().getStroke(0).willContinue())
+        fixture.complete(2)
+        assertTrue(action.await())
+    }
+
+    @Test fun `ending on the last waypoint holds the pointer there on a timer before releasing`() = runTest {
+        val fixture = Fixture()
+        val action = async { fixture.manager.dragAt(10, 20, 100, 200, 1, 700, listOf(DragWaypoint(100, 200, 300))) }
+        testScheduler.runCurrent()
+        shadowOf(Looper.getMainLooper()).idle()
+        fixture.complete(0)
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(5))
+        fixture.complete(1)
+        // No zero-length continuation is dispatched for the hold; the pointer simply stays down.
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(699))
+        assertEquals(2, fixture.shadow.gesturesDispatched.size)
+        shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofMillis(2))
+        val release = fixture.shadow.gesturesDispatched[2].description().getStroke(0)
+        assertFalse(release.willContinue())
+        fixture.complete(2)
+        assertTrue(action.await())
     }
 }

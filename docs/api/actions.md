@@ -504,7 +504,7 @@ its drag state. The required hold duration depends on the target app.
 | Field | Valid values |
 | --- | --- |
 | `start` | required object with only integer `x` and `y`, each in `[0, 2147483647]` |
-| `end` | required object with only integer `x` and `y`, each in `[0, 2147483647]`; must differ from `start` |
+| `end` | required object with only integer `x` and `y`, each in `[0, 2147483647]`; may equal `start` only when a waypoint differs from it (an out-and-back path) |
 | `holdDurationMs` | required integer in `[1, 10000]`; no default |
 | `moveDurationMs` | required integer in `[1, 10000]`; duration of the final leg to `end` |
 | `waypoints` | optional array of at most 8 objects, each containing `x`, `y`, `durationMs`, and optional `holdDurationMs` |
@@ -519,6 +519,39 @@ waypoints preserve the straight-drag behavior. No selector, grid position, retry
 or extra params are accepted. Find the source item with a snapshot and start inside its bounds.
 Choosing a destination and interpreting the result belong in the agent or
 app-specific skill.
+
+The path must go somewhere: `start`, every waypoint and `end` cannot all be the
+same point. A path may end where it started when a waypoint leaves it, so a
+gesture can go out and come back before release. When `end` equals the last
+waypoint (or the current position), the pointer stays down there for
+`moveDurationMs` on a timer and then releases, which gives a hold at the end of
+a path.
+
+<a id="cli-gesture"></a>
+#### CLI: `gesture`
+
+`androperator gesture --path "<x>,<y> <x>,<y> ..." --duration-ms <ms> [--hold-ms <ms>]`
+builds a `drag` for one finger moving through a path, for gestures with no initial
+hold such as a system edge swipe or a gesture that is cancelled partway.
+
+| Flag | Valid values |
+| --- | --- |
+| `--path` | required quoted string of 2 to 10 `x,y` points, non-negative integers |
+| `--duration-ms` | required integer, total movement time split evenly across the segments; each segment takes 1 to 10000 ms |
+| `--hold-ms` | optional integer in `[1, 10000]`; keeps the finger down on the last point before release |
+
+The first point is touched with a 1 ms hold, then the finger moves through the
+other points without lifting and releases on the last. A path of more than 10
+points, or more than 9 with `--hold-ms`, is rejected; use raw `drag` waypoints for
+per-point holds. The command returns the same envelope as `drag`. Success means
+the gesture completed, not that the app reacted: for an edge swipe, the first
+point must be inside the system gesture inset, and navigation must be in gesture
+mode.
+
+```sh
+androperator gesture --path "100,500 800,500" --duration-ms 300
+androperator gesture --path "3,1500 400,1500 3,1500" --duration-ms 800 --hold-ms 200
+```
 
 ```bash
 androperator drag --start 600 1600 --end 200 1000 \

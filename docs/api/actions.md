@@ -520,6 +520,10 @@ or extra params are accepted. Find the source item with a snapshot and start ins
 Choosing a destination and interpreting the result belong in the agent or
 app-specific skill.
 
+The CLI builders use an execution timeout of 30000 ms, or the gesture's planned time
+(initial hold, movements and holds) plus 15000 ms when that is longer, so a long path is
+not cut off by the default. An explicit `--timeout` always wins.
+
 The path must go somewhere: `start`, every waypoint and `end` cannot all be the
 same point. A path may end where it started when a waypoint leaves it, so a
 gesture can go out and come back before release. When `end` equals the last

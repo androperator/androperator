@@ -4,6 +4,56 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims to follow Semantic Versioning.
 
+## [1.3.0] - 2026-10-28
+
+The CLI added continuous drag paths, one-finger gestures, and a system Back edge gesture with preview and cancellation support. Transport and Android deadline fixes made failures more explicit and prevented late queued input after blocking work exceeded its deadline.
+
+### 🤖 Node API & CLI
+
+- **Added:** Drag actions accepted bounded hover waypoints for continuous folder exit, hover, and drop flows through execution JSON, HTTP, and MCP.
+- **Added:** `gesture --path` drove one finger through 2 to 10 points, including out-and-back paths and an optional final hold.
+- **Added:** `back-gesture` drove either physical screen edge, supported hold and cancellation, resolved coordinates in the current rotation, and rejected non-gesture navigation before dispatch. Default timeouts covered long drag and gesture paths.
+- **Added:** Evidence metadata included `display.currentWidth` and `display.currentHeight` alongside natural dimensions and rotation; older manifests remained valid.
+- **Changed:** Package-open help explained that launching resumes the existing task and that app-owned saved state determines restoration.
+- **Fixed:** Snapshot failures after daemon dispatch were preserved instead of silently repeating a request whose outcome was unknown.
+- **Fixed:** Incomplete chunked results returned `RESULT_ENVELOPE_INCOMPLETE` when a correlated publication-end marker arrived without the complete result.
+- **Fixed:** Screenshot receipts retained safe helper lifecycle diagnostics without exposing stderr, paths, or screen content, and preserved uncertain-frame failures without automatic replay.
+- **Fixed:** Commands waited for genuine logcat-reader readiness before dispatch; silent startup returned `RESULT_READER_NOT_READY` with not-dispatched evidence.
+- **Fixed:** Zero-length swipe and drag errors pointed callers to `click --coordinate <x> <y> --long` for a stationary long press.
+
+### 📚 Documentation & Website
+
+- **Added:** Continuous drag, path gesture, and Back gesture examples documented timing, holds, cancellation, and navigation-mode requirements.
+- **Added:** Evidence documentation explained natural dimensions, rotation, and the new current-rotation dimensions.
+- **Changed:** Published-version badges, APK remediation examples, installer marker, and release commands were aligned with the verified 1.2.0 release.
+- **Changed:** Snapshot and transport recovery guidance distinguished pre-dispatch fallback, uncertain outcomes, incomplete publication, and explicit retries.
+- **Changed:** Screenshot recovery guidance documented safe lifecycle diagnostics and screenshot-only recovery after helper failure.
+- **Changed:** Deadline guidance distinguished host timeout from device cancellation and explained limits on preempting synchronous Android work.
+- **Changed:** Package-open guidance clarified task resumption and saved-state restoration; swipe and drag guidance identified coordinate long press.
+- **Added:** Operator rejection documentation described `COMMAND_REJECTED`, bounded reasons, and the requirement for readable, bounded correlation IDs.
+
+### 📱 Android Operator APK
+
+- **Added:** Continuous drag waypoints and out-and-back gesture paths preserved one held pointer, with final stationary holds and cancellation cleanup.
+- **Fixed:** Waits rejected matches returned after their deadline, and monotonic command checks stopped queued actions and input dispatch after blocking work exceeded the command deadline.
+- **Fixed:** Rejected command payloads with readable, bounded correlation IDs promptly produced failed `COMMAND_REJECTED` envelopes instead of leaving clients to time out.
+
+Pull requests:
+- [chore(release): finalize 1.2.0 and advance code to 1.2.1](https://github.com/androperator/androperator/pull/416)
+- [fix(snapshot): preserve failures after daemon dispatch](https://github.com/androperator/androperator/pull/419)
+- [fix(transport): report incomplete result publication promptly](https://github.com/androperator/androperator/pull/420)
+- [fix(android): stop queued actions after blocking work exceeds deadlines](https://github.com/androperator/androperator/pull/421)
+- [fix(capture): report safe helper lifecycle failures](https://github.com/androperator/androperator/pull/425)
+- [fix(transport): wait for logcat readiness before dispatch](https://github.com/androperator/androperator/pull/424)
+- [feat(drag): support continuous hover waypoints](https://github.com/androperator/androperator/pull/427)
+- [docs(open): state that a package launch resumes the existing task](https://github.com/androperator/androperator/pull/433)
+- [fix(cli): point zero-length swipe and drag errors at click --coordinate --long](https://github.com/androperator/androperator/pull/434)
+- [feat(gesture): add a one-finger path gesture command and let a drag path end where it started](https://github.com/androperator/androperator/pull/435)
+- [feat(cli): add back-gesture to drive the system Back edge gesture](https://github.com/androperator/androperator/pull/436)
+- [fix(operator): publish a failed envelope when a command payload is rejected](https://github.com/androperator/androperator/pull/439)
+- [docs(evidence): state that display width and height are the natural size](https://github.com/androperator/androperator/pull/440)
+- [feat(evidence): report the display size in the current rotation](https://github.com/androperator/androperator/pull/441)
+
 ## [1.2.0] - 2026-10-11
 
 **Breaking:** Screenshots now default to 25% per native dimension and each execution allows only one final screenshot action. Request `--scale 100` (Node/HTTP: `scale: 100`) for full-size images and use separate executions for intermediate observations. Car rotary keys now use explicit `aaos_` and `android_auto_` prefixes; update callers using the old spellings.

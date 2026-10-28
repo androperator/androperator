@@ -107,6 +107,16 @@ fun buildCanonicalFailureLine(
  * instead of waiting out its result timeout. Returns null when the payload has no readable string
  * `commandId`, because the Node client could not correlate such a result.
  */
+/** Parser messages can echo payload values; keep the envelope within one log record. */
+internal const val MAX_REJECTION_REASON_CHARS = 400
+
+private fun boundedReason(message: String): String {
+    if (message.length <= MAX_REJECTION_REASON_CHARS) return message
+    var end = MAX_REJECTION_REASON_CHARS
+    if (message[end - 1].isHighSurrogate()) end--
+    return message.substring(0, end) + "..."
+}
+
 fun buildRejectedCommandLine(
     payload: String,
     error: Throwable,
@@ -118,7 +128,7 @@ fun buildRejectedCommandLine(
     return buildCanonicalFailureLine(
         commandId = commandId,
         taskId = text("taskId") ?: commandId,
-        reason = "Command rejected: ${error.message ?: error::class.simpleName}",
+        reason = boundedReason("Command rejected: ${error.message ?: error::class.simpleName}"),
         errorCode = EnvelopeErrorCodes.COMMAND_REJECTED,
     )
 }

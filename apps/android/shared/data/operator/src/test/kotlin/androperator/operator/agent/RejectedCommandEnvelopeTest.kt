@@ -39,4 +39,21 @@ class RejectedCommandEnvelopeTest {
             assertNull(buildRejectedCommandLine(payload, IllegalArgumentException("bad")), payload)
         }
     }
+
+    @Test
+    fun `an oversized parser message is bounded so the envelope fits one log record`() {
+        val line = assertNotNull(buildRejectedCommandLine("""{"commandId":"big"}""", IllegalArgumentException("x".repeat(5000))))
+        assertTrue(line.toByteArray().size < 1000, "envelope is ${line.length} chars")
+        val reason = envelope(line)["error"]?.jsonPrimitive?.content.orEmpty()
+        assertTrue(reason.startsWith("Command rejected: xxx"))
+        assertTrue(reason.endsWith("..."))
+    }
+
+    @Test
+    fun `bounding never splits a surrogate pair`() {
+        val message = "a".repeat(MAX_REJECTION_REASON_CHARS - 1) + "\uD83D\uDE00" + "tail"
+        val line = assertNotNull(buildRejectedCommandLine("""{"commandId":"emoji"}""", IllegalArgumentException(message)))
+        val reason = envelope(line)["error"]?.jsonPrimitive?.content.orEmpty()
+        assertTrue(reason.none { it.isHighSurrogate() && !reason.getOrNull(reason.indexOf(it) + 1).let { next -> next != null && next.isLowSurrogate() } })
+    }
 }

@@ -1788,6 +1788,7 @@ Semantics:
 - set `skipNavigationWait: true` only when you intentionally want the older fire-and-forget behavior.
 - `navigationTimeoutMs` controls the readiness wait only. It does not change the execution-level timeout.
 - already-foreground launches succeed without a package-transition race.
+- the launch is a normal `MAIN` launch of the app's launcher activity with `FLAG_ACTIVITY_NEW_TASK`. Android resumes an existing task for that app, as when the user taps the app icon, and reports it as a task brought to the front. If the app's process died while it was in the background, the task is brought back and the process restarts. Whether a screen is restored is the app's own saved-state behavior, not something `open_app` adds or removes. To verify restoration, compare the app's state before and after instead of relying on the receipt: success proves the package reached the foreground, not that a particular screen did.
 - callers that need content to be present after the package is foreground should follow with `wait_for_node`.
 - the `androperator open` CLI exposes `--skip-navigation-wait` and `--navigation-timeout-ms` for package targets only; URI targets reject both flags with `EXECUTION_VALIDATION_FAILED`.
 

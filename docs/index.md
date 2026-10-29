@@ -6,7 +6,7 @@ Use this page as the routing index into the authored docs. The concrete machine 
 
 ---
 
-**Current release: [1.3.0](https://github.com/androperator/androperator/releases/tag/v1.3.0)**
+**Current release: [1.3.1](https://github.com/androperator/androperator/releases/tag/v1.3.1)**
 
 ---
 

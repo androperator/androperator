@@ -1,6 +1,6 @@
 # Version Compatibility
 
-**Current release: [1.3.0](https://github.com/androperator/androperator/releases/tag/v1.3.0)**
+**Current release: [1.3.1](https://github.com/androperator/androperator/releases/tag/v1.3.1)**
 
 *This is the latest published release. Download URLs below reference this version. See [Docs Home](../index.md) for the unreleased code version.*
 
@@ -100,25 +100,25 @@ Compatible response:
 }
 ```
 
-Incompatible response (CLI 1.3.0 with an older APK; use the URLs returned for your installed CLI):
+Incompatible response (CLI 1.3.1 with an older APK; use the URLs returned for your installed CLI):
 
 ```json
 {
-  "cliVersion": "1.3.0",
+  "cliVersion": "1.3.1",
   "apkVersion": "0.1.0",
   "apkVersionCode": 1,
   "operatorPackage": "com.androperator.operator",
   "compatible": false,
   "error": {
     "code": "VERSION_INCOMPATIBLE",
-    "message": "CLI 1.3.0 is not compatible with installed APK 0.1.0.",
+    "message": "CLI 1.3.1 is not compatible with installed APK 0.1.0.",
     "hint": "Androperator requires the exact same version between the CLI and APK, ignoring only the debug suffix."
   },
   "remediation": [
-    "Download the matching APK: https://downloads.androperator.com/operator/v1.3.0/operator-v1.3.0.apk",
-    "Download the checksum: https://downloads.androperator.com/operator/v1.3.0/operator-v1.3.0.apk.sha256",
-    "Verify the checksum: sha256sum -c operator-v1.3.0.apk.sha256",
-    "Install the matching APK: androperator operator setup --apk operator-v1.3.0.apk --device <device_id>",
+    "Download the matching APK: https://downloads.androperator.com/operator/v1.3.1/operator-v1.3.1.apk",
+    "Download the checksum: https://downloads.androperator.com/operator/v1.3.1/operator-v1.3.1.apk.sha256",
+    "Verify the checksum: sha256sum -c operator-v1.3.1.apk.sha256",
+    "Install the matching APK: androperator operator setup --apk operator-v1.3.1.apk --device <device_id>",
     "If you are using the release package, the versioned download above is the exact APK to install."
   ]
 }

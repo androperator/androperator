@@ -741,7 +741,11 @@ Android emits `[Androperator-Publication]` followed by a single JSON object with
 `commandId`, `taskId`, `event`, `byteLength`, `recordCount`, `chunkCount`,
 `writtenRecords`, and monotonic `elapsedMs`. Events are `started`,
 `writes_completed`, or `write_failed`. A small unchunked result has one record
-and zero chunks. Identifiers are JSON-escaped; no result payload or exception
+and zero chunks. Node retains publication diagnostics for positive sizes through
+3,000 bytes with this single-record shape, as well as for larger chunked
+results. A small-result marker alone never completes the reader or ends its
+wait early; only a canonical result establishes the execution outcome.
+Identifiers are JSON-escaped; no result payload or exception
 message is copied into these markers. `writtenRecords` counts logging calls
 that returned. Diagnostic-write exceptions cannot block canonical publication,
 and canonical-write exceptions retain their existing failure behavior.

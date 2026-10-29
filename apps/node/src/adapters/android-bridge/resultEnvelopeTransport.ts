@@ -56,8 +56,10 @@ export class ResultEnvelopeTransport {
       typeof value.taskId !== "string" || value.taskId.length < 1 || value.taskId.length > 128 ||
       (this.taskId !== undefined && value.taskId !== this.taskId) ||
       !["started", "writes_completed", "write_failed"].includes(value.event) ||
-      !Number.isSafeInteger(value.byteLength) || value.byteLength <= 3000 || value.byteLength > MAX_ENVELOPE_BYTES ||
-      value.chunkCount !== Math.ceil(value.byteLength / 1024) || value.recordCount !== value.chunkCount ||
+      !Number.isSafeInteger(value.byteLength) || value.byteLength <= 0 || value.byteLength > MAX_ENVELOPE_BYTES ||
+      (value.byteLength <= 3000
+        ? value.chunkCount !== 0 || value.recordCount !== 1
+        : value.chunkCount !== Math.ceil(value.byteLength / 1024) || value.recordCount !== value.chunkCount) ||
       !Number.isSafeInteger(value.writtenRecords) || value.writtenRecords < 0 || value.writtenRecords > value.recordCount ||
       !Number.isSafeInteger(value.elapsedMs) || value.elapsedMs < 0 ||
       (value.event === "started" && value.writtenRecords !== 0) ||

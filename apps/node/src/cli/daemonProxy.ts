@@ -41,8 +41,13 @@ export interface DaemonProxyDeps {
 
 const DEFAULT_START_TIMEOUT_MS = 3000;
 const DEFAULT_POLL_INTERVAL_MS = 100;
-const DEFAULT_POST_TIMEOUT_MS = 35000;
-const POST_TIMEOUT_BUFFER_MS = 5000;
+// The reader starts its execution + 5s budget after preparation/attachment.
+// Reserve separate time for preparation and delivering its structured terminal.
+const POST_PREPARATION_ALLOWANCE_MS = 30000;
+const RESULT_ENVELOPE_BUFFER_MS = 5000;
+const POST_RESPONSE_MARGIN_MS = 1000;
+const POST_OVERHEAD_MS = POST_PREPARATION_ALLOWANCE_MS + RESULT_ENVELOPE_BUFFER_MS + POST_RESPONSE_MARGIN_MS;
+const DEFAULT_POST_TIMEOUT_MS = 30000 + POST_OVERHEAD_MS;
 
 type DaemonReadinessState = "ready" | "replace" | "not_ready" | "unowned";
 type DaemonStartAction = "ready" | "spawned" | "unowned" | "replace";
@@ -106,8 +111,8 @@ async function httpPost(socketPath: string, path: string, body: unknown): Promis
           "Content-Type": "application/json",
           "Content-Length": Buffer.byteLength(payload),
         },
-        timeout: timeoutMs,
       }, (res) => {
+        res.on("error", reject);
         const chunks: Buffer[] = [];
         res.on("data", (chunk: Buffer) => chunks.push(chunk));
         res.on("end", () => {
@@ -115,7 +120,9 @@ async function httpPost(socketPath: string, path: string, body: unknown): Promis
           resolve(raw);
         });
       });
-      req.on("timeout", () => req.destroy(new Error(`Daemon POST timed out after ${timeoutMs}ms`)));
+      // An absolute deadline also bounds a daemon that trickles an unfinished response.
+      const deadline = setTimeout(() => req.destroy(new Error(`Daemon POST timed out after ${timeoutMs}ms`)), timeoutMs);
+      req.once("close", () => clearTimeout(deadline));
       req.on("error", reject);
       req.on("socket", (socket) => {
         if (socket.connecting) {
@@ -148,7 +155,7 @@ export function getDaemonPostTimeoutMs(body: unknown): number {
     ? (execution as { timeoutMs?: unknown }).timeoutMs
     : undefined;
   if (typeof timeoutMs === "number" && Number.isFinite(timeoutMs) && timeoutMs > 0) {
-    return timeoutMs + POST_TIMEOUT_BUFFER_MS;
+    return timeoutMs + POST_OVERHEAD_MS;
   }
   return DEFAULT_POST_TIMEOUT_MS;
 }

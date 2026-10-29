@@ -34,6 +34,24 @@ Internal command:
 | --- | --- |
 | `androperator daemon run` | Internal foreground server process. It is registered so `daemon start` can spawn it, but it is intentionally omitted from help output. |
 
+## Proxied execution deadline
+
+A daemon execution POST has an absolute budget of the requested execution
+`timeoutMs` plus 36,000 ms: a 30,000 ms preparation allowance, the result
+reader's 5,000 ms envelope buffer, and a 1,000 ms response margin. Preparation
+includes device checks, readiness and reader attachment, which happen before
+the inner result deadline starts. The default execution budget of 30,000 ms
+therefore gives the POST a 66,000 ms limit. Daemon startup and version checks
+precede the POST and have their own limits.
+
+This lets a structured reader timeout reach the caller when preparation fits
+within its allowance. It does not extend Android execution or guarantee delivery
+when preparation, post-processing, or transport exceeds the allowance. An
+unresponsive daemon or an unfinished response still reaches the absolute POST
+deadline, even if response bytes continue arriving. A lost dispatched response
+remains `DAEMON_PROXY_ERROR` with `dispatchState: "unknown"`; it does not authorize
+replaying input. Missing result chunks remain a separate transport failure.
+
 ## Device Key And Paths
 
 The daemon lifecycle is keyed by the raw `--device` value before device resolution. If `--device` is omitted or blank, the key is `default`.

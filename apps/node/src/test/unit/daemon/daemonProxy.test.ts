@@ -1,6 +1,8 @@
 import { cmdObserveSnapshot } from "../../../cli/commands/observe.js";
 import { cmdOnScreenLog } from "../../../cli/commands/action.js";
 import { afterEach, describe, it } from "node:test";
+import http from "node:http";
+import { once } from "node:events";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { mkdtemp, rm, stat, writeFile } from "node:fs/promises";
@@ -87,10 +89,10 @@ afterEach(async () => {
 });
 
 describe("tryDaemonExecution", () => {
-  it("derives POST timeout from execution timeout plus buffer", () => {
-    assert.equal(getDaemonPostTimeoutMs({ execution: { timeoutMs: 30000 } }), 35000);
-    assert.equal(getDaemonPostTimeoutMs({ execution: { timeoutMs: 12000 } }), 17000);
-    assert.equal(getDaemonPostTimeoutMs({ execution: { timeoutMs: "30000" } }), 35000);
+  it("budgets preparation, inner result wait and response delivery separately", () => {
+    assert.equal(getDaemonPostTimeoutMs({ execution: { timeoutMs: 30000 } }), 66000);
+    assert.equal(getDaemonPostTimeoutMs({ execution: { timeoutMs: 12000 } }), 48000);
+    assert.equal(getDaemonPostTimeoutMs({ execution: { timeoutMs: "30000" } }), 66000);
   });
 
   it("returns null when ANDROPERATOR_NO_DAEMON=1 is set", async () => {
@@ -727,3 +729,65 @@ describe("on-screen-log public mutation proxy", () => {
     }
   }
 });
+
+
+it("preserves the inner reader timeout after daemon preparation", async () => {
+  const baseDir = await mkdtemp("/tmp/ap-budget-");
+  tempDirs.push(baseDir);
+  const options = { rawDeviceId: "budget-device", baseDir, operatorPackage: DEFAULT_OPERATOR_PACKAGE };
+  const terminal = { ok: false, error: { code: "RESULT_ENVELOPE_TIMEOUT", message: "Inner reader deadline reached",
+    details: { phase: "result_wait", dispatchState: "dispatched", receivedChunks: 30, expectedChunks: 32 } } };
+  const server = http.createServer((request, response) => {
+    request.resume();
+    // 250 ms preparation, then the 1,000 ms execution + 5,000 ms reader budget.
+    setTimeout(() => { response.writeHead(504); response.end(JSON.stringify(terminal)); }, 6250);
+  });
+  try {
+    server.listen(getDaemonSocketPath(options.rawDeviceId, options));
+    await once(server, "listening");
+    const result = await tryDaemonExecution({ ...execution, timeoutMs: 1000 }, options, {
+      ...makeOwnedDaemonDeps(), httpGetFn: makeAliveGet(),
+    });
+    assert.deepEqual(result, terminal);
+  } finally {
+    await new Promise<void>(resolve => server.close(() => resolve()));
+  }
+});
+
+
+for (const trickle of [false, true]) {
+  it(`bounds a ${trickle ? "trickling" : "silent"} daemon by an absolute POST deadline`, async (t) => {
+    const baseDir = await mkdtemp("/tmp/ap-deadline-");
+    tempDirs.push(baseDir);
+    const options = { rawDeviceId: "budget", baseDir, operatorPackage: DEFAULT_OPERATOR_PACKAGE };
+    let response: http.ServerResponse | undefined;
+    const server = http.createServer((request, res) => { request.resume(); response = res; });
+    try {
+      server.listen(getDaemonSocketPath(options.rawDeviceId, options));
+      await once(server, "listening");
+      t.mock.timers.enable({ apis: ["setTimeout"] });
+      const pending = tryDaemonExecution({ ...execution, timeoutMs: 1000 }, options, {
+        ...makeOwnedDaemonDeps(), httpGetFn: makeAliveGet(),
+      });
+      await once(server, "request");
+      await new Promise<void>(resolve => setImmediate(resolve));
+      const budget = getDaemonPostTimeoutMs({ execution: { timeoutMs: 1000 } });
+      t.mock.timers.tick(budget - 1);
+      if (trickle) {
+        response!.writeHead(200);
+        response!.write('{"ok":');
+        await new Promise<void>(resolve => setImmediate(resolve));
+      }
+      t.mock.timers.tick(1);
+      const result = await pending;
+      assert.ok(result && !result.ok);
+      assert.equal(result.error.code, "DAEMON_PROXY_ERROR");
+      const details = result.error.details as Record<string, unknown>;
+      assert.equal(details.dispatchState, "unknown");
+      assert.match(String(details.error), new RegExp(`timed out after ${budget}ms`));
+    } finally {
+      t.mock.timers.reset();
+      await new Promise<void>(resolve => server.close(() => resolve()));
+    }
+  });
+}

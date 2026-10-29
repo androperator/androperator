@@ -185,3 +185,52 @@ it("a complete envelope remains authoritative with publication markers", async (
   assert.ok(result.ok);
   assert.equal(result.envelope.stepResults[0].data?.query, query);
 });
+
+for (const byteLength of [1, 376, 3000]) {
+  for (const [event, writtenRecords] of [["started", 0], ["writes_completed", 1], ["write_failed", 0], ["write_failed", 1]] as const) {
+    it(`retains ${event} diagnostics for an unchunked ${byteLength}-byte result`, () => {
+      const reader = new ResultEnvelopeTransport(commandId, taskId);
+      assert.equal(reader.consume(publication(event, { byteLength, recordCount: 1, chunkCount: 0, writtenRecords })), null);
+      assert.deepEqual(reader.diagnostics(), {
+        receivedChunks: 0, receivedBytes: 0, expectedChunks: 0, expectedBytes: byteLength,
+        publication: { commandId, taskId, event, byteLength, recordCount: 1, chunkCount: 0, writtenRecords, elapsedMs: 50 },
+      });
+    });
+  }
+}
+
+it("rejects inconsistent unchunked publication metadata", () => {
+  for (const overrides of [
+    { byteLength: 0 }, { byteLength: -1 }, { byteLength: 1.5 }, { byteLength: 3001 },
+    { recordCount: 0 }, { recordCount: 2 }, { chunkCount: 1 },
+    { writtenRecords: -1 }, { writtenRecords: 2 }, { writtenRecords: 0.5 },
+    { event: "started", writtenRecords: 1 }, { event: "writes_completed", writtenRecords: 0 },
+    { commandId: "other" }, { taskId: "other" },
+  ]) {
+    const reader = new ResultEnvelopeTransport(commandId, taskId);
+    reader.consume(publication("writes_completed", { byteLength: 376, recordCount: 1, chunkCount: 0, writtenRecords: 1, ...overrides }));
+    assert.equal(reader.diagnostics().publication, undefined, JSON.stringify(overrides));
+  }
+});
+
+for (const event of ["started", "writes_completed", "write_failed"]) {
+  it(`small ${event} marker alone keeps waiting for a canonical result`, async () => {
+    const result = await readPublicationOutput([publication(event, {
+      byteLength: 376, recordCount: 1, chunkCount: 0, writtenRecords: event === "writes_completed" ? 1 : 0,
+    })]);
+    assert.ok(!result.ok && "timeout" in result);
+    assert.equal(result.diagnostics.code, "RESULT_ENVELOPE_TIMEOUT");
+    const transport = result.diagnostics.details?.transport as Record<string, unknown>;
+    assert.equal((transport.publication as Record<string, unknown>).event, event);
+  });
+}
+
+it("a small canonical result remains authoritative after publication metadata", async () => {
+  const small = `[Androperator-Result] ${JSON.stringify({ commandId, taskId, status: "success", error: null, stepResults: [] })}`;
+  const result = await readPublicationOutput([
+    publication("started", { byteLength: Buffer.byteLength(small), recordCount: 1, chunkCount: 0, writtenRecords: 0 }),
+    small,
+  ]);
+  assert.ok(result.ok);
+  assert.equal(result.envelope.commandId, commandId);
+});

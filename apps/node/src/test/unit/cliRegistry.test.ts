@@ -1,6 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
 import { spawn } from "node:child_process";
+import { mkdtemp, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -511,4 +513,53 @@ describe("direct execution product surface", () => {
       assert.doesNotMatch(result.stdout || result.stderr, /deprecated|migration|legacy/i);
     }
   });
+});
+
+
+describe("open target and navigation option parsing", () => {
+  for (const targetFlag of ["--app", "--package"]) {
+    for (const globalsFirst of [false, true]) {
+      it(`accepts ${targetFlag} with navigation timeout and globals ${globalsFirst ? "before" : "after"} open`, async () => {
+        const dir = await mkdtemp(join(tmpdir(), "open-cli-"));
+        try {
+          await writeFile(join(dir, "adb"), "#!/bin/sh\nprintf 'List of devices attached\\n'\n", { mode: 0o755 });
+          const globals = ["--timeout", "35000", "--output", "json", "--device", "test-device", "--operator-package", "com.androperator.operator.dev"];
+          const command = ["open", targetFlag, "com.example.app", "--navigation-timeout-ms", "30000", "--no-daemon"];
+          const args = globalsFirst ? [...globals, ...command] : [...command, ...globals];
+          const result = await runCli(args, { PATH: `${dir}:${process.env.PATH}` });
+          const parsed = JSON.parse(result.stdout);
+          // Empty fake device discovery proves parsing passed without touching a device.
+          assert.strictEqual(result.code, 1);
+          assert.strictEqual(parsed.code, "DEVICE_NOT_FOUND");
+        } finally {
+          await rm(dir, { recursive: true, force: true });
+        }
+      });
+    }
+    for (const value of ["abc", "1.5", "-1"]) {
+      it(`rejects invalid navigation timeout ${value} with ${targetFlag}`, async () => {
+        const result = await runCli(["open", targetFlag, "com.example.app", "--navigation-timeout-ms", value, "--output", "json"]);
+        const parsed = JSON.parse(result.stdout);
+        assert.strictEqual(result.code, 1);
+        assert.strictEqual(parsed.code, "EXECUTION_VALIDATION_FAILED");
+        assert.doesNotMatch(parsed.message, /positional argument or via/);
+      });
+    }
+    it(`rejects a missing target value with ${targetFlag}`, async () => {
+      const result = await runCli(["open", targetFlag, "--output", "json"]);
+      assert.strictEqual(result.code, 1);
+      assert.strictEqual(JSON.parse(result.stdout).code, "MISSING_ARGUMENT");
+    });
+    it(`rejects a missing navigation timeout value with ${targetFlag}`, async () => {
+      const result = await runCli(["open", targetFlag, "com.example.app", "--navigation-timeout-ms", "--output", "json"]);
+      assert.strictEqual(result.code, 1);
+      assert.match(JSON.parse(result.stdout).message, /requires a value/);
+    });
+    it(`still rejects a real positional target alongside ${targetFlag}`, async () => {
+      const result = await runCli(["open", targetFlag, "com.example.app", "com.example.other", "--navigation-timeout-ms", "30000", "--output", "json"]);
+      assert.strictEqual(result.code, 1);
+      assert.strictEqual(JSON.parse(result.stdout).code, "EXECUTION_VALIDATION_FAILED");
+      assert.match(JSON.parse(result.stdout).message, /positional argument or via/);
+    });
+  }
 });

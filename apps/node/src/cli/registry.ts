@@ -1915,7 +1915,7 @@ COMMANDS["open"] = {
     const appFlag = getOpt(rest, "--app");
     const navigationTimeoutMsRaw = getStringOptStrict(rest, "--navigation-timeout-ms", ["--app", "--navigation-timeout-ms", "--skip-navigation-wait", "--no-daemon"]);
     const skipNavigationWait = hasFlag(rest, "--skip-navigation-wait");
-    const bare = barePositionalTokens(rest, ["--app"], []);
+    const bare = barePositionalTokens(rest, ["--app", "--navigation-timeout-ms"], []);
     if (appFlag !== undefined && bare.length > 0) {
       return formatError(
         {

@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims to follow Semantic Versioning.
 
+## [1.3.1] - 2026-10-29
+
+The CLI fixed named `open` targets with navigation timeouts and preserved more transport failure evidence through daemon requests.
+
+### 🤖 Node API & CLI
+
+- **Fixed:** Small results retained validated single-record publication diagnostics up to 3,000 bytes without changing canonical outcomes or reader deadlines.
+- **Fixed:** Daemon requests reserved separate preparation, envelope, and response allowances so reader failures could reach callers with their original partial-result diagnostics. An absolute POST limit also bounded unfinished responses; the default limit became 66 seconds.
+- **Fixed:** `open --app` and `open --package` accepted `--navigation-timeout-ms` without mistaking its value for a conflicting positional target, while preserving rejection of actual target conflicts.
+
+### 📚 Documentation & Website
+
+- **Changed:** Published release badges, APK remediation examples, installer marker, and release commands were aligned with the verified 1.3.0 release.
+- **Changed:** Daemon documentation explained preparation and response allowances and the limits of failure recovery.
+- **Fixed:** Open-action documentation clarified named target forms with navigation timeouts.
+
+Pull requests:
+- [chore(release): finalize 1.3.0 and advance code to 1.3.1](https://github.com/androperator/androperator/pull/443)
+- [fix(transport): retain small-result publication diagnostics](https://github.com/androperator/androperator/pull/448)
+- [fix(daemon): preserve reader failures across preparation deadlines](https://github.com/androperator/androperator/pull/449)
+- [fix(cli): accept named open targets with navigation timeouts](https://github.com/androperator/androperator/pull/450)
+
 ## [1.3.0] - 2026-10-28
 
 The CLI added continuous drag paths, one-finger gestures, and a system Back edge gesture with preview and cancellation support. Transport and Android deadline fixes made failures more explicit and prevented late queued input after blocking work exceeded its deadline.

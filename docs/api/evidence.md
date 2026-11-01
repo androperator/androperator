@@ -351,7 +351,14 @@ finish time. `video` contains `requestedDurationSeconds`, `hostDurationMs`,
 `mediaDurationMs`, `requestedSize`, `actualSize`, `codec`, and `stopReason`.
 Host duration uses a monotonic clock and is measured independently of the decoded
 media timeline. Idle screens can produce shorter media timelines; neither duration
-is a substitute for the other. A zero-duration idle recording remains partial,
+is a substitute for the other. A media timeline shorter than the active recording
+interval by more than the greater of 2,000 ms or 10% leaves the session partial,
+with an `EVIDENCE_CAPTURE_FAILED` error at stage `coverage` and
+`videoVerified: false` in `captures.json`. The interval excludes startup and
+stop/encoding latency and is capped at the requested recording duration. This
+flags uncertain session coverage, including possible idle-screen timing effects;
+it does not diagnose the source of missing frames. Playable verified clips and
+the source MKV are retained. A zero-duration idle recording remains partial,
 even if one frame decodes. Available probe metadata is retained on verification
 failure. For multiple clips, `mediaDurationMs` is the sum of verified clip
 durations and `actualSize` is null when clip sizes differ. `captures.json` lists

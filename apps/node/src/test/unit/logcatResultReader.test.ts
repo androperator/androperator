@@ -534,3 +534,24 @@ it("keeps explicitly requested successful UI content intact", async () => {
   assert.equal(result.envelope.stepResults[0].data?.text, privateMarker);
   f.stdout.destroy(); f.stderr.destroy();
 });
+
+it("omits decoded malformed canonical bodies from reassembly errors", async () => {
+  const { createHash } = await import("node:crypto");
+  const f = fake();
+  const bytes = Buffer.from(`[Androperator-Result] PRIVATE_UI_MARKER${"x".repeat(5000)}`);
+  const count = Math.ceil(bytes.length / 1024);
+  const result = await waitForResultEnvelope(f.runtime, options, async begin => {
+    begin();
+    for (let index = 0; index < count; index++) {
+      f.stdout.write(`[Androperator-Result-Chunk] ${JSON.stringify({ commandId: options.commandId,
+        taskId: options.taskId, index, count, byteLength: bytes.length,
+        sha256: createHash("sha256").update(bytes).digest("hex"),
+        data: bytes.subarray(index * 1024, (index + 1) * 1024).toString("base64") })}\n`);
+    }
+    return { success: true };
+  });
+  assert.ok(!result.ok && "error" in result);
+  assert.equal(result.code, "RESULT_ENVELOPE_MALFORMED");
+  assert.ok(!JSON.stringify(result).includes("PRIVATE_UI"));
+  f.stdout.destroy(); f.stderr.destroy();
+});

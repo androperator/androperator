@@ -124,8 +124,13 @@ export class ResultEnvelopeTransport {
     }
     const canonicalLine = result.toString("utf8");
     if (!canonicalLine.startsWith(`${RESULT_ENVELOPE_PREFIX} `)) throw new Error("Missing canonical result prefix");
-    const envelope = JSON.parse(canonicalLine.slice(RESULT_ENVELOPE_PREFIX.length));
-    if (envelope.commandId !== this.commandId || envelope.taskId !== chunk.taskId) {
+    let envelope: { commandId?: unknown; taskId?: unknown } | null;
+    try {
+      envelope = JSON.parse(canonicalLine.slice(RESULT_ENVELOPE_PREFIX.length));
+    } catch {
+      throw new Error("Malformed reconstructed result envelope");
+    }
+    if (!envelope || envelope.commandId !== this.commandId || envelope.taskId !== chunk.taskId) {
       throw new Error("Result transport correlation mismatch");
     }
     return canonicalLine;

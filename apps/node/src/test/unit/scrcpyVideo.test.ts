@@ -234,6 +234,8 @@ for (const scenario of ["graceful", "no-ack", "forced-close", "early-signal", "s
       if (scenario === "no-ack" || scenario === "forced-close") {
         assert.deepEqual(signals, ["SIGINT", "SIGKILL"]);
         assert.equal(state.recoveryRequired, true);
+        assert.ok(manifest.errors.some((error: { code: string; message: string }) => error.code === "EVIDENCE_RECOVERY_REQUIRED" &&
+          error.message.includes("https://docs.androperator.com/api/evidence/#video-artifacts-and-recovery")));
         await fs.stat(state.lockPath);
       }
       if (scenario === "owner-changed") assert.equal(JSON.parse(await fs.readFile(state.lockPath, "utf8")).nonce, "another-owner");

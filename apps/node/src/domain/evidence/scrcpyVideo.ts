@@ -242,7 +242,7 @@ export async function runScrcpyVideoWorker(state: VideoState, runner: ProcessRun
       manifest.finishedAt = new Date().toISOString();
       manifest.status = verified && manifest.errors.length === 0 && manifest.artifacts.every(value => value.status === "complete") ? "complete"
         : manifest.artifacts.some(value => value.kind === "video" && value.path !== null) ? "partial" : "failed";
-      if (state.recoveryRequired) manifest.errors.push(videoError({ code: "EVIDENCE_RECOVERY_REQUIRED", message: "Recorder termination requires manual verification; device lock retained" }, "recovery"));
+      if (state.recoveryRequired) manifest.errors.push(videoError({ code: "EVIDENCE_RECOVERY_REQUIRED", message: "Recorder termination requires manual verification; device lock retained. Recovery checks: https://docs.androperator.com/api/evidence/#video-artifacts-and-recovery" }, "recovery"));
       await persist();
       await writeEvidenceManifest(outputDir, manifest);
       if (!state.recoveryRequired) await releaseLock(state);

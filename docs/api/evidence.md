@@ -443,6 +443,29 @@ an unavailable worker as failed while retaining its last persisted manifest and
 lock. Inspect the saved session and verify any surviving recorder before manual
 recovery; never remove a lock based on age alone or signal a PID without checking
 its identity. scrcpy's own duration cap bounds a surviving recorder process.
+For a retained scrcpy lock, use these read-only checks before manual recovery:
+
+1. Run `androperator evidence video status --session <manifest_path>`. Privately
+   inspect its `session.json`, `heartbeat.json`, `captures.json`, and the exact
+   `lockPath` saved in the session. A terminal manifest alone does not establish
+   recorder shutdown. Compare both the session ID and nonce with the lock.
+2. Inspect host process identities and full command lines, for example with
+   `ps -axww -o pid,lstart,command`. Establish that the saved worker identity is
+   gone and no scrcpy recorder remains with both this device serial and this
+   session's `--record=<output_dir>/capture.partial.mkv` argument. A PID reused
+   by another process is not the saved worker. `cleanup.closeObserved` is useful
+   host evidence, but forced closure does not establish Android cleanup.
+3. Inspect the selected Android device using
+   `adb -s <device_serial> shell ps -A -o PID,ARGS`. Confirm that no scrcpy server
+   remains. If process identities or arguments are unavailable, or any relevant
+   worker, recorder or Android server remains, retain the lock and resolve that
+   uncertainty before starting another recording. These checks authorize no
+   process signal.
+4. Only after both sides are confirmed stopped, re-read the saved lock and verify
+   its session ID and nonce still match. Manual recovery may remove that one
+   saved lock file; never remove another owner's lock, the lock directory, or
+   the evidence bundle. Do not infer safety from elapsed time or a duration cap.
+
 No automatic stale-lock takeover occurs. A confirmed failure to spawn the host
 worker records a failed startup manifest and releases its own lock because no
 recorder was started. An unresponsive recorder retains the lock for recovery.

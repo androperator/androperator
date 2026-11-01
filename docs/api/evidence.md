@@ -356,7 +356,16 @@ even if one frame decodes. Available probe metadata is retained on verification
 failure. For multiple clips, `mediaDurationMs` is the sum of verified clip
 durations and `actualSize` is null when clip sizes differ. `captures.json` lists
 each span's source start/end time, frame count, output path, and verified media
-properties. Stop reasons are `requested`, `duration_cap`,
+properties. `captures.json` also records the recorder exit signal, startup failure category
+(`deadline`, `early_exit`, `process_error`, or null), startup elapsed time and spawn
+state, plus cleanup signal and close acknowledgement. Startup waits up to four
+seconds for the partial artifact. A startup failure attempts the normal SIGINT
+stop path and waits up to two seconds. If the owned child exits normally with
+code zero and no process error, the worker can release its matching session lock.
+Otherwise a still-running child receives SIGKILL with a further two-second wait;
+forced or unacknowledged shutdown retains recovery ownership because Android-side
+cleanup is uncertain. An ownership change never permits deleting the new lock.
+Stop reasons are `requested`, `duration_cap`,
 `startup_failure`, or `failure` (null while recording).
 
 The worker records `capture.partial.mkv` locally, inspects decoded frame dimensions

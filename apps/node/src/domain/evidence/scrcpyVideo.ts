@@ -64,6 +64,11 @@ export async function runScrcpyVideoWorker(state: VideoState, runner: ProcessRun
   let child: ReturnType<ProcessRunner["spawn"]> | undefined;
   let spawned = false, closed = false, recording = false, stopSent = false, truncated = false, verified = false;
   let exitCode: number | null = null;
+  let exitSignal: string | null = null;
+  let closeObserved = false;
+  let startupFailure: "deadline" | "early_exit" | "process_error" | null = null;
+  let startupElapsedMs = 0;
+  let cleanupSignal: string | null = null;
   let processError: Error | undefined;
   let diagnostics = Buffer.alloc(0);
   const receipts: Array<Record<string, unknown>> = [];
@@ -105,14 +110,21 @@ export async function runScrcpyVideoWorker(state: VideoState, runner: ProcessRun
     child.stderr?.on("data", collect);
     child.on("spawn", () => { spawned = true; });
     child.on("error", (error: Error) => { processError = error; if (!spawned) closed = true; });
-    child.on("close", (code: number | null) => { exitCode = code; closed = true; });
+    child.on("close", (code: number | null, signal: string | null) => {
+      exitCode = code; exitSignal = signal ?? null; closeObserved = true; closed = true;
+    });
     const startupDeadline = clock.now() + 4000;
     while (!closed && !processError && clock.now() < startupDeadline) {
       try { await fs.stat(source); recording = true; break; }
       catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
       await clock.sleep(50);
     }
-    if (!recording || closed || processError) fail(`Recorder failed to start: ${processError?.message ?? diagnostics.toString()}`);
+    startupElapsedMs = Math.max(0, clock.monotonic() - started);
+    if (!recording || closed || processError) {
+      startupFailure = processError ? "process_error" : closed ? "early_exit" : "deadline";
+      fail(startupFailure === "deadline" ? "Recorder startup deadline expired after 4000ms"
+        : `Recorder failed during startup: ${startupFailure} (exit=${exitCode}, signal=${exitSignal})`);
+    }
     state.deadline = clock.now() + state.durationSeconds * 1000;
     await persist();
     manifest.status = "recording";
@@ -184,7 +196,20 @@ export async function runScrcpyVideoWorker(state: VideoState, runner: ProcessRun
     manifest.video!.stopReason = recording ? "failure" : "startup_failure";
     if (child && !closed) {
       state.recoveryRequired = true;
-      child.kill("SIGKILL");
+      const terminateOwnedChild = async (signal: "SIGINT" | "SIGKILL") => {
+        cleanupSignal = signal;
+        try { child!.kill(signal); }
+        catch (cleanupError) { manifest.errors.push(videoError(cleanupError, "cleanup")); }
+        const deadline = clock.now() + 2000;
+        while (!closed && clock.now() < deadline) await clock.sleep(50);
+      };
+      if (!recording) {
+        // Use the normal scrcpy stop path first so a successful close can confirm cleanup.
+        await terminateOwnedChild("SIGINT");
+        if (closeObserved && exitCode === 0 && exitSignal === null && !processError) state.recoveryRequired = false;
+      }
+      if (!closed) await terminateOwnedChild("SIGKILL");
+      // Forced closure alone cannot confirm Android-side cleanup; retain recovery ownership.
     }
   } finally {
     try {
@@ -194,7 +219,11 @@ export async function runScrcpyVideoWorker(state: VideoState, runner: ProcessRun
       await fs.writeFile(join(outputDir, "encoder.stderr.txt"), diagnostics, { mode: 0o600 });
       await artifact("encoder.stderr.txt", "encoder_stderr", "text/plain", truncated ? manifest.errors.at(-1) : undefined);
       await atomicJson(join(outputDir, "captures.json"), [{ kind: "video", source: "scrcpy", sessionId: state.sessionId,
-        exitCode, stopSent, videoVerified: verified, segments: receipts, errors: manifest.errors }]);
+        exitCode, exitSignal, stopSent, videoVerified: verified,
+        startup: { failure: startupFailure, elapsedMs: startupElapsedMs, spawned,
+          processErrorCode: (processError as NodeJS.ErrnoException | undefined)?.code ?? null },
+        cleanup: { signal: cleanupSignal, closeObserved, recoveryRequired: state.recoveryRequired },
+        segments: receipts, errors: manifest.errors }]);
       await artifact("captures.json", "capture_envelopes", "application/json");
       manifest.finishedAt = new Date().toISOString();
       manifest.status = verified && manifest.errors.length === 0 && manifest.artifacts.every(value => value.status === "complete") ? "complete"

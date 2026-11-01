@@ -488,10 +488,35 @@ class UiTreeManagerAndroidTest {
 
             val result = manager.setText(uiNode(node), "hello", submit = false, clear = false)
 
-            assertEquals(TextSubmissionOutcome.NotRequested, result)
-            assertEquals("hello", if (legacySetText) text else session.text)
+            if (legacySetText) {
+                assertEquals(TextSubmissionOutcome.NotRequested, result)
+                assertEquals("hello", text)
+            } else {
+                assertEquals(null, result)
+                assertTrue(session.operations.isEmpty())
+                // A fresh attempt after the input session catches up may replace text.
+                assertEquals(TextSubmissionOutcome.NotRequested,
+                    manager.setText(uiNode(node), "hello", submit = false, clear = false))
+                assertEquals("hello", session.text)
+            }
             assertEquals(1, coveredPage, "legacySetText=$legacySetText")
         }
+    }
+
+    @Test
+    fun `a newly focused editor cannot mutate the previous input connection`() = runTest {
+        val oldSession = FakeTextInputSession(initialText = "previous editor")
+        val manager = createManager(FakeTextInputConnectionSource(oldSession))
+        val node = editableNode(includeSetTextAction = false).apply { isFocused = false }
+        Shadow.extract<ShadowAccessibilityNodeInfo>(node).setOnPerformActionListener { action, _ ->
+            if (action == AccessibilityNodeInfo.ACTION_CLICK) node.isFocused = true
+            action != AccessibilityNodeInfo.ACTION_SET_TEXT
+        }
+
+        assertEquals(null, manager.setText(uiNode(node), "hello", submit = false, clear = false))
+        assertTrue(node.isFocused)
+        assertEquals("previous editor", oldSession.text)
+        assertTrue(oldSession.operations.isEmpty())
     }
 
     @Test

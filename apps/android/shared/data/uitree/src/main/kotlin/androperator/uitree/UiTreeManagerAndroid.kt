@@ -302,6 +302,7 @@ class UiTreeManagerAndroid(
         val submit: Boolean,
         val clear: Boolean,
         val replacementSemantics: ReplacementSemantics,
+        val initiallyFocused: Boolean = target.isFocused,
     )
 
     private enum class ReplacementSemantics {
@@ -427,9 +428,10 @@ class UiTreeManagerAndroid(
         override suspend fun attempt(request: TextEntryRequest): TextEntryAttemptResult? {
             val target = request.target
 
-            if (!target.isFocused) {
-                prepareTextEntryFocus(target)
-                // InputMethod session ownership updates asynchronously after focus changes.
+            if (!request.initiallyFocused || !target.isFocused) {
+                if (!target.isFocused) prepareTextEntryFocus(target)
+                // InputMethod session ownership updates asynchronously after focus changes,
+                // including focus refreshed by the earlier legacy strategy.
                 // Stop here and let the existing UiReadiness retry rerun once the editor session
                 // catches up instead of mutating a stale or not-yet-started connection.
                 logUnavailable(request, "session_pending_after_focus")

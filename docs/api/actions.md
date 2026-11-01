@@ -925,11 +925,13 @@ Semantics:
 - `submit` defaults to `false` in the built-in CLI builders
 - `clear` defaults to `false` in the built-in CLI builders
 - Android uses an internal first-match-wins text-entry ladder while keeping the public `enter_text` shape unchanged
+- For an unfocused editor, Android first tries its normal click action. If the refreshed node is focused, it skips the direct focus request; otherwise it retains that fallback. This avoids unnecessary focus requests that can move covered Compose ancestors.
 - Android prefers the editable node `ACTION_SET_TEXT` route when it is available because that path already matches current replace-text semantics
 - on that `ACTION_SET_TEXT` route, `clear == true` first dispatches `ACTION_SET_TEXT("")`, then dispatches `ACTION_SET_TEXT` with the requested `text`
 - on that same `ACTION_SET_TEXT` route, `clear == false` or omitted keeps the existing single `ACTION_SET_TEXT` behavior
 - if the requested clear step fails on the `ACTION_SET_TEXT` route, Android stops before the real text set for that legacy strategy; on Android 13+ it can still continue to the accessibility input-connection fallback when that route is available, otherwise the action fails
 - on Android 13+ (`Build.VERSION_CODES.TIRAMISU`) when the legacy `ACTION_SET_TEXT` route is unavailable or does not complete successfully, Android can fall back to the accessibility input-connection path for custom editors
+- if focus preparation was needed in the current attempt, the API 33 fallback waits for a readiness retry before using the input connection, even when the refreshed node is already focused
 - that API 33 fallback still preserves replace-style behavior by moving the cursor to the end, deleting preceding text, then committing the replacement text
 - that API 33 replace sequence also preserves `clear == true` semantics even though there is no separate public strategy flag
 - `submit == true` is best effort after successful text entry

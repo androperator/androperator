@@ -40,11 +40,20 @@ const value=name=>args.find(a=>a.startsWith(name+'=')).slice(name.length+1);
 const output=value('--record'),device=value('--serial');
 const state=JSON.parse(fs.readFileSync(path.join(path.dirname(output),'session.json'),'utf8'));
 fs.writeFileSync(path.join(__dirname,'recorder-'+device+'.json'),JSON.stringify({pid:process.pid,remote:state.remotePath}));
-fs.writeFileSync(output,'simulated video');
-process.on('SIGINT',()=>process.exit(0));setTimeout(()=>process.exit(0),Number(value('--time-limit'))*1000);
+const started=performance.now();
+fs.writeFileSync(output,JSON.stringify({durationSeconds:0.001}));
+const finish=()=>{fs.writeFileSync(output,JSON.stringify({durationSeconds:Math.max(0.001,(performance.now()-started)/1000)}));process.exit(0);};
+process.on('SIGINT',finish);setTimeout(finish,Number(value('--time-limit'))*1000);
 `);
-  await binary("ffprobe", "console.log(JSON.stringify(process.argv.includes('-show_frames')?{frames:[{width:720,height:1280,best_effort_timestamp_time:'0'},{width:720,height:1280,best_effort_timestamp_time:'0.25'}]}:{streams:[{codec_name:'h264',width:720,height:1280,duration:'0.25'}]}));");
-  await binary("ffmpeg", "if(process.argv.includes('-version')) console.log('ffmpeg version 6.1'); else {if(process.argv.at(-1).endsWith('.mp4'))require('node:fs').writeFileSync(process.argv.at(-1),'simulated video'); console.log('frame=2\\nprogress=end\\n');}");
+  await binary("ffprobe", `
+const args=process.argv.slice(2);
+if(!args.includes('-show_frames')&&!args.includes('-show_entries')) {console.log('ffprobe version 6.1');process.exit(0);}
+const media=JSON.parse(require('node:fs').readFileSync(args.at(-1),'utf8'));
+console.log(JSON.stringify(args.includes('-show_frames')?{frames:[{width:720,height:1280,best_effort_timestamp_time:'0'},
+{width:720,height:1280,best_effort_timestamp_time:String(media.durationSeconds/2)}]}:
+{streams:[{codec_name:'h264',width:720,height:1280,duration:String(media.durationSeconds)}]}));
+`);
+  await binary("ffmpeg", "if(process.argv.includes('-version')) console.log('ffmpeg version 6.1'); else {if(process.argv.at(-1).endsWith('.mp4'))require('node:fs').copyFileSync(process.argv[process.argv.indexOf('-i')+1],process.argv.at(-1)); console.log('frame=2\\nprogress=end\\n');}");
   const parent = join(root, "start.mjs");
   await fs.writeFile(parent, `import {startVideo} from ${JSON.stringify(pathToFileURL(resolve("dist/domain/evidence/video.js")).href)};console.log(JSON.stringify(await startVideo({deviceId:process.argv[2]||${JSON.stringify(deviceId)},operatorPackage:'com.example.operator',durationSeconds:20}).catch(error=>error)));`);
   const env = { ...process.env, ADB_PATH: adb, PATH: root + ":" + process.env.PATH, ANDROPERATOR_EVIDENCE_DIR: relative(process.cwd(), join(root, "state with spaces")) };
@@ -58,6 +67,9 @@ process.on('SIGINT',()=>process.exit(0));setTimeout(()=>process.exit(0),Number(v
       if (deviceType !== "unknown" || error.code !== 1) throw error;
       return { stdout: error.stdout as string, exitCode: error.code as number };
     });
+    assert.equal(JSON.parse((await cli("status")).stdout).status, "recording");
+    // Keep the detached recorder alive beyond the coverage tolerance before stopping it.
+    await new Promise(resolve => setTimeout(resolve, 2500));
     assert.equal(JSON.parse((await cli("status")).stdout).status, "recording");
     for (const evidenceDir of [env.ANDROPERATOR_EVIDENCE_DIR, join(root, "other-state")]) {
       const competing = JSON.parse((await execute(process.execPath, [parent], { env: { ...env, ANDROPERATOR_EVIDENCE_DIR: evidenceDir, TMPDIR: root }, timeout: 8000 })).stdout);
@@ -76,6 +88,8 @@ process.on('SIGINT',()=>process.exit(0));setTimeout(()=>process.exit(0),Number(v
     assert.deepEqual(JSON.parse(original).device.deviceTypeProperties, { "ro.kernel.qemu": deviceType === "physical" ? null : deviceType === "emulator" ? "1" : "unexpected", "ro.boot.qemu": null });
     assert.equal(JSON.parse(original).errors.some((error: { component?: string }) => error.component === "deviceType"), deviceType === "unknown");
     assert.equal(JSON.parse(original).video.stopReason, "requested");
+    assert.ok(!JSON.parse(original).errors.some((error: { stage?: string }) => error.stage === "coverage"),
+      "The fake recorder must report its measured recording interval, not a fixed short clip");
     assert.ok(JSON.parse(original).video.hostDurationMs < 19000, "Explicit stop must finish before the cap");
     assert.equal(JSON.parse((await cli("stop")).stdout).status, deviceType === "unknown" ? "partial" : "complete");
     assert.equal(await fs.readFile(manifestPath!, "utf8"), original);

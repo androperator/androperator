@@ -176,3 +176,73 @@ for (const [failure, startupDelayMs, recordingIntervalMs, naturalExit] of [
     } finally { await fs.rm(root, { recursive: true, force: true }); }
   });
 }
+
+for (const scenario of ["graceful", "no-ack", "forced-close", "early-signal", "spawn-error", "owner-changed", "delayed-start"] as const) {
+  it(`bounded recorder startup cleanup: ${scenario}`, async () => {
+    const root = await fs.mkdtemp(join(tmpdir(), "scrcpy-startup-"));
+    const sessionId = randomUUID(), nonce = randomUUID();
+    const state: VideoState = { sessionId, nonce, deviceId: "test-device", operatorPackage: "com.test.operator", adbPath: "adb",
+      outputDir: root, lockPath: join(root, "lock.json"), managed: false, durationSeconds: 1, size: "720x1280", hostPid: null,
+      hostStartedAt: null, remotePid: null, remoteStart: null, remotePath: `/data/local/tmp/androperator-video-${sessionId}.mp4`,
+      deadline: 0, updatedAt: 0, recoveryRequired: false, backend: "scrcpy" };
+    const device = { serial: "test-device", operatorPackage: state.operatorPackage, cliVersion: "test", operatorVersion: "test", apiLevel: 36,
+      androidVersion: "16", manufacturer: "test", model: "test", deviceType: "emulator", deviceTypeProperties: { "ro.kernel.qemu": "1", "ro.boot.qemu": null },
+      display: { width: 720, height: 1280, rotation: 0, density: 320 } };
+    await atomicJson(join(root, "manifest.json"), { schemaVersion: 1, evidenceId: sessionId, label: null, context: {}, device,
+      startedAt: new Date().toISOString(), finishedAt: null, status: "starting", artifacts: [], errors: [],
+      video: { requestedDurationSeconds: 1, hostDurationMs: 0, mediaDurationMs: null, requestedSize: state.size, actualSize: null, codec: null, stopReason: null } });
+    await atomicJson(state.lockPath, { sessionId, nonce });
+    let now = 0, shutdownAt: number | undefined;
+    const signals: string[] = [];
+    const child = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill(signal: string) {
+      signals.push(signal);
+      if ((signal === "SIGINT" && ["graceful", "owner-changed"].includes(scenario)) ||
+        (signal === "SIGKILL" && scenario === "forced-close")) shutdownAt = now + 100;
+      return true;
+    } });
+    const runner: ProcessRunner = {
+      spawn: () => { queueMicrotask(() => scenario === "spawn-error"
+        ? child.emit("error", Object.assign(new Error("spawn refused"), { code: "ENOENT" })) : child.emit("spawn")); return child; },
+      run: async () => ({ code: 1, stdout: "", stderr: "synthetic finalization failure" }),
+      runShell: async () => { throw new Error("No device operations or persisted-PID signals"); },
+    };
+    const clock = { now: () => now, monotonic: () => now, sleep: async (ms: number) => {
+      now += ms;
+      if (scenario === "delayed-start" && now === 3000) await fs.writeFile(join(root, "capture.partial.mkv"), "media");
+      if (scenario === "delayed-start" && now === 4050) child.emit("close", 0, null);
+      if (scenario === "early-signal" && now === 100) child.emit("close", null, "SIGTERM");
+      if (shutdownAt !== undefined && now >= shutdownAt) {
+        shutdownAt = undefined;
+        if (scenario === "owner-changed") await atomicJson(state.lockPath, { sessionId: "another-session", nonce: "another-owner" });
+        child.emit("close", scenario === "forced-close" ? null : 0, scenario === "forced-close" ? "SIGKILL" : null);
+      }
+    } };
+    try {
+      if (scenario === "owner-changed") await assert.rejects(runScrcpyVideoWorker(state, runner, clock, fs.readFile),
+        (error: unknown) => (error as { message?: string }).message === "Evidence lock ownership changed");
+      else await runScrcpyVideoWorker(state, runner, clock, fs.readFile);
+      const manifest = JSON.parse(await fs.readFile(join(root, "manifest.json"), "utf8"));
+      const receipt = JSON.parse(await fs.readFile(join(root, "captures.json"), "utf8"))[0];
+      assert.equal(receipt.videoVerified, false);
+      assert.ok(["failed", "partial"].includes(manifest.status));
+      assert.ok(now <= 9000, "startup and cleanup remain bounded");
+      if (scenario === "graceful") {
+        assert.deepEqual(signals, ["SIGINT"]);
+        assert.equal(state.recoveryRequired, false);
+        await assert.rejects(fs.stat(state.lockPath));
+      }
+      if (scenario === "no-ack" || scenario === "forced-close") {
+        assert.deepEqual(signals, ["SIGINT", "SIGKILL"]);
+        assert.equal(state.recoveryRequired, true);
+        assert.ok(manifest.errors.some((error: { code: string; message: string }) => error.code === "EVIDENCE_RECOVERY_REQUIRED" &&
+          error.message.includes("https://docs.androperator.com/api/evidence/#video-artifacts-and-recovery")));
+        await fs.stat(state.lockPath);
+      }
+      if (scenario === "owner-changed") assert.equal(JSON.parse(await fs.readFile(state.lockPath, "utf8")).nonce, "another-owner");
+      if (scenario === "early-signal") { assert.equal(receipt.exitSignal, "SIGTERM"); assert.equal(receipt.startup.failure, "early_exit"); }
+      if (scenario === "spawn-error") { assert.equal(receipt.startup.failure, "process_error"); assert.equal(receipt.startup.processErrorCode, "ENOENT"); }
+      if (scenario === "delayed-start") assert.equal(receipt.startup.failure, null);
+      if (["graceful", "no-ack", "forced-close"].includes(scenario)) assert.equal(receipt.startup.failure, "deadline");
+    } finally { await fs.rm(root, { recursive: true, force: true }); }
+  });
+}

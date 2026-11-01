@@ -68,8 +68,12 @@ describe("scrcpy geometry", () => {
   });
 });
 
-for (const failure of [undefined, "late-decode", "second-encode", "missing-encode", "scan", "disconnect", "hung", "artifact", "lost-frame", "signal-error"] as const) {
-  it(`scrcpy worker preserves ownership and evidence: ${failure ?? "success with three clips"}`, async () => {
+for (const [failure, startupDelayMs, recordingIntervalMs] of [
+  [undefined, 0, 0], [undefined, 0, 5000], [undefined, 15000, 0], [undefined, 15000, 5000],
+  ...(["late-decode", "second-encode", "missing-encode", "scan", "disconnect", "hung", "artifact", "lost-frame", "signal-error", "short-media"] as const)
+    .map(failure => [failure, 0, 0] as const),
+] as const) {
+  it(`scrcpy worker preserves ownership and evidence: ${failure ?? "success with three clips"}, startup ${startupDelayMs}ms, interval ${recordingIntervalMs}ms`, async () => {
     const root = await fs.mkdtemp(join(tmpdir(), "scrcpy-worker-"));
     const sessionId = randomUUID();
     const state: VideoState = { sessionId, nonce: randomUUID(), deviceId: "test-device", operatorPackage: "com.test.operator", adbPath: "/custom/adb",
@@ -83,12 +87,13 @@ for (const failure of [undefined, "late-decode", "second-encode", "missing-encod
       startedAt: new Date().toISOString(), finishedAt: null, status: "starting", artifacts: [], errors: [],
       video: { requestedDurationSeconds: 10, hostDurationMs: 0, mediaDurationMs: null, requestedSize: state.size, actualSize: null, codec: null, stopReason: null } });
     await atomicJson(state.lockPath, { sessionId, nonce: state.nonce });
-    await atomicJson(join(root, "stop.json"), { nonce: state.nonce });
+    if (failure !== "short-media" && recordingIntervalMs === 0) await atomicJson(join(root, "stop.json"), { nonce: state.nonce });
     await fs.writeFile(join(root, "capture.partial.mkv"), "source media");
     let now = 10000;
     const signals: string[] = [], sizes = new Map<string, string>();
     const child = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill(signal: string) {
       signals.push(signal);
+
       if (failure === "signal-error" && signal === "SIGINT") { child.emit("error", new Error("Signal permission denied")); return; }
       if (failure !== "hung") queueMicrotask(() => child.emit("close", failure === "disconnect" ? 1 : 0));
     } });
@@ -99,7 +104,7 @@ for (const failure of [undefined, "late-decode", "second-encode", "missing-encod
         assert.deepEqual(args, scrcpyArguments(state));
         assert.equal(options?.env?.ADB, "/custom/adb");
         assert.ok(args.includes("--capture-orientation=@"));
-        queueMicrotask(() => child.emit("spawn"));
+        queueMicrotask(() => { now += startupDelayMs; child.emit("spawn"); });
         return child;
       },
       run: async (command, args) => {
@@ -127,11 +132,16 @@ for (const failure of [undefined, "late-decode", "second-encode", "missing-encod
         if (failure === "artifact" && String(path).endsWith("video.mp4")) throw new Error("unreadable artifact");
         return fs.readFile(path);
       }) as typeof fs.readFile;
-      await runScrcpyVideoWorker(state, runner, { now: () => now, monotonic: () => now, sleep: async ms => { now += ms; } }, read);
+      await runScrcpyVideoWorker(state, runner, { now: () => now, monotonic: () => now, sleep: async ms => {
+        now += ms;
+        if (recordingIntervalMs > 0 && now >= 10000 + startupDelayMs + recordingIntervalMs) {
+          await atomicJson(join(root, "stop.json"), { nonce: state.nonce });
+        }
+      } }, read);
       const manifest = evidenceManifestSchema.parse(JSON.parse(await fs.readFile(join(root, "manifest.json"), "utf8")));
       assert.equal(manifest.context.verdict, "failed");
       assert.equal(manifest.status, failure ? "partial" : "complete");
-      assert.equal(manifest.video!.stopReason, ["hung", "disconnect", "scan", "signal-error"].includes(failure ?? "") ? "failure" : "requested");
+      assert.equal(manifest.video!.stopReason, ["hung", "disconnect", "scan", "signal-error"].includes(failure ?? "") ? "failure" : failure === "short-media" ? "duration_cap" : "requested");
       if (!failure) {
         assert.deepEqual(manifest.artifacts.filter(a => a.kind === "video").map(a => a.path), ["video.mp4", "video-0002.mp4", "video-0003.mp4"]);
         assert.equal(manifest.video!.actualSize, null);
@@ -140,6 +150,12 @@ for (const failure of [undefined, "late-decode", "second-encode", "missing-encod
       } else {
         assert.ok(manifest.errors.length);
         assert.equal(await fs.readFile(join(root, "capture.partial.mkv"), "utf8"), "source media");
+      }
+      if (failure === "short-media") {
+        const receipt = JSON.parse(await fs.readFile(join(root, "captures.json"), "utf8"));
+        assert.equal(receipt[0].videoVerified, false);
+        assert.ok(manifest.errors.some(error => error.stage === "coverage"));
+        assert.equal(manifest.artifacts.filter(a => a.kind === "video" && a.status === "complete").length, 3);
       }
       if (failure === "missing-encode") {
         assert.ok(manifest.errors.every(error => !error.message.includes("ENOENT")));

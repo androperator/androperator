@@ -709,6 +709,15 @@ access failure remains in private accounting before the authorized build.
 
 ### Correlated reader and publication diagnostics
 
+`lastCorrelatedEvents` contains metadata summaries rather than raw log records.
+Chunk summaries retain integer index, count and byte length; publication summaries
+retain their known event and numeric counters. Canonical bodies, encoded chunk
+payloads, hierarchy lines and echoed action payloads are omitted before buffering,
+including malformed records. Invalid chunk header values cannot be reflected as
+arbitrary text in transport error messages. Timing, dispatch certainty and
+accepted-chunk progress remain available. Requested successful canonical results
+and legacy successful snapshot output retain their content.
+
 The reader keeps a bounded, metadata-only timeline in memory for each command.
 It records process creation and confirmed spawn separately, first stdout/stderr,
 broadcast callback entry, dispatch, deadline start/expiry, exit, close, settlement,

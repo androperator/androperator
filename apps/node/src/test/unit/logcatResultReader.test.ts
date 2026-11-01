@@ -468,3 +468,69 @@ for (const startupOutput of ["", "--------- beginning of main\n", "I/Boot: parti
     assert.equal(calls, 0);
   });
 }
+
+const privateMarker = "SYNTHETIC_PRIVATE_UI_MARKER";
+for (const ending of ["timeout", "exit", "cancel", "incomplete"] as const) {
+  it(`omits recoverable payloads from ${ending} diagnostics while retaining transport evidence`, async () => {
+    const { createHash } = await import("node:crypto");
+    const f = fake();
+    const controller = new AbortController();
+    const canonical = terminal.replace('"stepResults":[]', `"stepResults":[{"id":"snap","actionType":"snapshot_ui","success":true,"data":{"text":"${privateMarker}${"x".repeat(5000)}"}}]`);
+    const bytes = Buffer.from(canonical);
+    const data = bytes.subarray(0, 1024).toString("base64");
+    const count = Math.ceil(bytes.length / 1024);
+    const result = await waitForResultEnvelope(f.runtime, { ...options, timeoutMs: 10, cancelSignal: controller.signal }, async begin => {
+      begin();
+      f.stdout.write(`I/Result: [Androperator-Result-Chunk] ${JSON.stringify({ commandId: options.commandId,
+        taskId: options.taskId, index: 0, count, byteLength: bytes.length,
+        sha256: createHash("sha256").update(bytes).digest("hex"), data })}\n`);
+      f.stdout.write(`I/Task: [TaskScope] UI Hierarchy [commandId=${options.commandId}]:\nI/Task: <hierarchy><node text="${privateMarker}" /></hierarchy>\n`);
+      f.stdout.write(`I/Task: commandId=${options.commandId} action payload={"text":"${privateMarker}"}\n`);
+      if (ending === "exit") f.proc.emit("close", 255, null);
+      if (ending === "cancel") controller.abort();
+      if (ending === "incomplete") f.stdout.write(`[Androperator-Publication] ${JSON.stringify({ commandId: options.commandId,
+        taskId: options.taskId, event: "writes_completed", byteLength: bytes.length, chunkCount: count,
+        recordCount: count, writtenRecords: count, elapsedMs: 1 })}\n`);
+      return { success: true };
+    });
+    assert.ok(!result.ok);
+    const serialized = JSON.stringify(result);
+    assert.ok(!serialized.includes(privateMarker), "plaintext UI must not enter diagnostics");
+    assert.ok(!serialized.includes(data), "recoverable encoded UI must not enter diagnostics");
+    const diagnostics = "error" in result ? result.diagnostics : result.diagnostics.details;
+    const transport = diagnostics?.transport as Record<string, unknown>;
+    assert.equal(transport.receivedChunks, 1);
+    assert.equal(transport.expectedChunks, count);
+    assert.equal(diagnostics?.dispatchAttempted, true);
+    f.stdout.destroy(); f.stderr.destroy();
+  });
+}
+
+for (const payload of [
+  `[Androperator-Result] {"commandId":"transport-command","taskId":"transport-task","private":"${privateMarker}"}`,
+  `[Androperator-Result-Chunk] {"commandId":"transport-command","taskId":"transport-task","index":"${privateMarker}","data":"${Buffer.from(privateMarker).toString("base64")}"}`,
+  `[Androperator-Result-Chunk] {"commandId":"transport-command","data":"${Buffer.from(privateMarker).toString("base64")}"`,
+]) {
+  it("omits valid and malformed protocol bodies from malformed-result diagnostics", async () => {
+    const f = fake();
+    const result = await waitForResultEnvelope(f.runtime, options, async begin => {
+      begin(); f.stdout.write(payload + "\n"); return { success: true };
+    });
+    assert.ok(!result.ok && "error" in result);
+    assert.equal(result.code, "RESULT_ENVELOPE_MALFORMED");
+    assert.ok(!JSON.stringify(result).includes(privateMarker));
+    assert.ok(!JSON.stringify(result).includes(Buffer.from(privateMarker).toString("base64")));
+    f.stdout.destroy(); f.stderr.destroy();
+  });
+}
+
+it("keeps explicitly requested successful UI content intact", async () => {
+  const f = fake();
+  const result = await waitForResultEnvelope(f.runtime, options, async begin => {
+    begin(); f.stdout.write(terminal.replace('"stepResults":[]', `"stepResults":[{"id":"snap","actionType":"snapshot_ui","success":true,"data":{"text":"${privateMarker}"}}]`) + "\n");
+    return { success: true };
+  });
+  assert.ok(result.ok);
+  assert.equal(result.envelope.stepResults[0].data?.text, privateMarker);
+  f.stdout.destroy(); f.stderr.destroy();
+});

@@ -925,6 +925,7 @@ Semantics:
 - `submit` defaults to `false` in the built-in CLI builders
 - `clear` defaults to `false` in the built-in CLI builders
 - Android uses an internal first-match-wins text-entry ladder while keeping the public `enter_text` shape unchanged
+- For an unfocused editor, Android first tries its normal click action. If the refreshed node is focused, it skips the direct focus request; otherwise it retains that fallback. This avoids unnecessary focus requests that can move covered Compose ancestors.
 - Android prefers the editable node `ACTION_SET_TEXT` route when it is available because that path already matches current replace-text semantics
 - on that `ACTION_SET_TEXT` route, `clear == true` first dispatches `ACTION_SET_TEXT("")`, then dispatches `ACTION_SET_TEXT` with the requested `text`
 - on that same `ACTION_SET_TEXT` route, `clear == false` or omitted keeps the existing single `ACTION_SET_TEXT` behavior

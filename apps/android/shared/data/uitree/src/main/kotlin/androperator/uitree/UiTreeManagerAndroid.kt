@@ -557,7 +557,9 @@ class UiTreeManagerAndroid(
 // Completed focus preparation permits readiness retries, but an exception leaves
 // the dispatch outcome uncertain and must prevent the outer loop from replaying it.
 private suspend fun prepareTextEntryFocus(target: AccessibilityNodeInfo) {
-    for (action in listOf(AccessibilityNodeInfo.ACTION_FOCUS, AccessibilityNodeInfo.ACTION_CLICK)) {
+    // Prefer the editor's normal click path. Requesting focus directly can make
+    // Compose bring covered ancestors (including a pager) into view.
+    for (action in listOf(AccessibilityNodeInfo.ACTION_CLICK, AccessibilityNodeInfo.ACTION_FOCUS)) {
         observeDispatch(target, "accessibility_action", false, blocksRetry = false)
         val accepted = try {
             coroutineContext.ensureExecutionActive()
@@ -567,5 +569,9 @@ private suspend fun prepareTextEntryFocus(target: AccessibilityNodeInfo) {
             throw error
         }
         observeDispatch(target, "accessibility_action", accepted, blocksRetry = false)
+        if (action == AccessibilityNodeInfo.ACTION_CLICK && accepted) {
+            target.refresh()
+            if (target.isFocused) return
+        }
     }
 }

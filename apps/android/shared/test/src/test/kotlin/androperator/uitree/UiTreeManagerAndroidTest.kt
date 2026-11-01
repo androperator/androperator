@@ -456,6 +456,74 @@ class UiTreeManagerAndroidTest {
         }
 
     @Test
+    fun `typing into an unfocused editor preserves the covered pager when clicking focuses it`() = runTest {
+        for (legacySetText in listOf(true, false)) {
+            val session = FakeTextInputSession(initialText = "existing")
+            val manager = createManager(FakeTextInputConnectionSource(session))
+            val node = editableNode().apply { isFocused = false }
+            var coveredPage = 1
+            var text = "existing"
+            Shadow.extract<ShadowAccessibilityNodeInfo>(node).setOnPerformActionListener { action, args ->
+                when (action) {
+                    AccessibilityNodeInfo.ACTION_FOCUS -> {
+                        // An unfocused Compose editor can request ancestor bring-into-view,
+                        // including a pager covered by the current settings destination.
+                        if (!node.isFocused) coveredPage = 0
+                        node.isFocused = true
+                        true
+                    }
+                    AccessibilityNodeInfo.ACTION_CLICK -> {
+                        node.isFocused = true
+                        true
+                    }
+                    AccessibilityNodeInfo.ACTION_SET_TEXT -> {
+                        if (legacySetText) text = args!!.getCharSequence(
+                            AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                        ).toString()
+                        legacySetText
+                    }
+                    else -> true
+                }
+            }
+
+            val result = manager.setText(uiNode(node), "hello", submit = false, clear = false)
+
+            assertEquals(TextSubmissionOutcome.NotRequested, result)
+            assertEquals("hello", if (legacySetText) text else session.text)
+            assertEquals(1, coveredPage, "legacySetText=$legacySetText")
+        }
+    }
+
+    @Test
+    fun `typing still requests focus when clicking is rejected or leaves the editor unfocused`() = runTest {
+        for (clickAccepted in listOf(true, false)) {
+            val node = editableNode().apply { isFocused = false }
+            var text = "existing"
+            Shadow.extract<ShadowAccessibilityNodeInfo>(node).setOnPerformActionListener { action, args ->
+                when (action) {
+                    AccessibilityNodeInfo.ACTION_CLICK -> clickAccepted
+                    AccessibilityNodeInfo.ACTION_FOCUS -> {
+                        node.isFocused = true
+                        true
+                    }
+                    AccessibilityNodeInfo.ACTION_SET_TEXT -> {
+                        if (node.isFocused) text = args!!.getCharSequence(
+                            AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                        ).toString()
+                        node.isFocused
+                    }
+                    else -> true
+                }
+            }
+
+            assertEquals(TextSubmissionOutcome.NotRequested,
+                createManager().setText(uiNode(node), "hello", submit = false, clear = false))
+            assertEquals("hello", text, "clickAccepted=$clickAccepted")
+            assertTrue(node.isFocused)
+        }
+    }
+
+    @Test
     fun `setText api33 path waits for retry after focus handoff`() =
         runTest {
             val session = FakeTextInputSession(initialText = "existing")

@@ -5,6 +5,10 @@ const PUBLICATION_PREFIX = "[Androperator-Publication]";
 const CHUNK_PREFIX = "[Androperator-Result-Chunk]";
 const MAX_ENVELOPE_BYTES = 64 * 1024 * 1024;
 
+function diagnosticInteger(value: unknown): string {
+  return typeof value === "number" && Number.isSafeInteger(value) ? String(value) : "invalid";
+}
+
 interface Chunk {
   commandId: string;
   taskId: string;
@@ -102,7 +106,7 @@ export class ResultEnvelopeTransport {
       chunk.count !== Math.ceil(chunk.byteLength / 1024) ||
       typeof chunk.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(chunk.sha256) ||
       typeof chunk.data !== "string" || chunk.data.length > 1368
-    ) throw new Error(`Invalid result transport chunk (expectedIndex=${this.chunks.length}, receivedIndex=${chunk.index}, count=${chunk.count}, byteLength=${chunk.byteLength})`);
+    ) throw new Error(`Invalid result transport chunk (expectedIndex=${this.chunks.length}, receivedIndex=${diagnosticInteger(chunk.index)}, count=${diagnosticInteger(chunk.count)}, byteLength=${diagnosticInteger(chunk.byteLength)})`);
     if (this.header && ["taskId", "count", "byteLength", "sha256"].some(key =>
       chunk[key as keyof Chunk] !== this.header![key as keyof Chunk]
     )) throw new Error("Inconsistent result transport chunks");
@@ -120,8 +124,13 @@ export class ResultEnvelopeTransport {
     }
     const canonicalLine = result.toString("utf8");
     if (!canonicalLine.startsWith(`${RESULT_ENVELOPE_PREFIX} `)) throw new Error("Missing canonical result prefix");
-    const envelope = JSON.parse(canonicalLine.slice(RESULT_ENVELOPE_PREFIX.length));
-    if (envelope.commandId !== this.commandId || envelope.taskId !== chunk.taskId) {
+    let envelope: { commandId?: unknown; taskId?: unknown } | null;
+    try {
+      envelope = JSON.parse(canonicalLine.slice(RESULT_ENVELOPE_PREFIX.length));
+    } catch {
+      throw new Error("Malformed reconstructed result envelope");
+    }
+    if (!envelope || envelope.commandId !== this.commandId || envelope.taskId !== chunk.taskId) {
       throw new Error("Result transport correlation mismatch");
     }
     return canonicalLine;

@@ -112,6 +112,37 @@ function shouldEndSnapshotBlock(line: string, activeTag: string | null): boolean
   return trimmed.startsWith("[") && !trimmed.startsWith("<?xml") && !trimmed.startsWith("<");
 }
 
+/** Diagnostic excerpts never retain canonical bodies, hierarchy text or echoed action payloads. */
+function summarizeDiagnosticLine(line: string): string {
+  const message = parseLogcatLine(line)?.message ?? "";
+  for (const [prefix, fields] of [
+    ["[Androperator-Result-Chunk]", ["index", "count", "byteLength"]],
+    ["[Androperator-Publication]", ["byteLength", "recordCount", "chunkCount", "writtenRecords", "elapsedMs"]],
+  ] as const) {
+    if (!message.startsWith(prefix)) continue;
+    const metadata: Record<string, number | string> = {};
+    try {
+      const value: unknown = JSON.parse(message.slice(prefix.length).trim());
+      if (value && typeof value === "object") {
+        const record = value as Record<string, unknown>;
+        for (const field of fields) {
+          const number = record[field];
+          if (typeof number === "number" && Number.isSafeInteger(number) && number >= 0) metadata[field] = number;
+        }
+        if (prefix === "[Androperator-Publication]" &&
+          ["started", "writes_completed", "write_failed"].includes(String(record.event))) {
+          metadata.event = String(record.event);
+        }
+      }
+    } catch {
+      // Malformed bodies are omitted too; arbitrary fragments may still contain UI data.
+    }
+    return `${prefix} ${JSON.stringify(metadata)}`;
+  }
+  if (message.startsWith(RESULT_ENVELOPE_PREFIX)) return `${RESULT_ENVELOPE_PREFIX} [body omitted]`;
+  return "[correlated log content omitted]";
+}
+
 const SIGNAL_BROADCAST_REPLAY_DRAIN_MS = 25;
 const SIGNAL_BROADCAST_MAX_DRAIN_MS = 100;
 
@@ -189,7 +220,7 @@ export async function waitForResultEnvelope(
       transport: transport.diagnostics(), reader: timeline.snapshot(), ...extra,
     });
     const remember = (line: string) => {
-      correlatedLines.push(line.slice(0, 2048));
+      correlatedLines.push(summarizeDiagnosticLine(line));
       if (correlatedLines.length > lastCorrelatedLines) correlatedLines.shift();
     };
 

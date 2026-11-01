@@ -402,6 +402,11 @@ Agent-side success test:
 - `envelope.stepResults[0].success == true`
 - `"text" in envelope.stepResults[0].data`
 
+Transport failure diagnostics retain chunk progress, reader timing and dispatch
+certainty. `lastCorrelatedEvents` contains metadata summaries, not raw result
+bodies, encoded hierarchy chunks or echoed action payloads. A failed observation
+is not a successful partial snapshot and does not authorize replaying input.
+
 ## Related Pages
 
 - [Actions](actions.md)

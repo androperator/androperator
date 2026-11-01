@@ -135,6 +135,7 @@ export async function runScrcpyVideoWorker(state: VideoState, runner: ProcessRun
       if (stopDeadline !== undefined && clock.now() > stopDeadline) fail("scrcpy did not terminate after stop", "EVIDENCE_RECOVERY_REQUIRED");
       await clock.sleep(50);
     }
+    recordingStopped ??= clock.monotonic();
     manifest.video!.hostDurationMs = Math.max(0, clock.monotonic() - started);
     manifest.video!.stopReason ??= "duration_cap";
     if (processError) throw processError;

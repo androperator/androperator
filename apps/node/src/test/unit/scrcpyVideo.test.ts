@@ -68,12 +68,13 @@ describe("scrcpy geometry", () => {
   });
 });
 
-for (const [failure, startupDelayMs, recordingIntervalMs] of [
-  [undefined, 0, 0], [undefined, 0, 5000], [undefined, 15000, 0], [undefined, 15000, 5000],
+for (const [failure, startupDelayMs, recordingIntervalMs, naturalExit] of [
+  [undefined, 0, 0, false], [undefined, 0, 5000, false], [undefined, 15000, 0, false], [undefined, 15000, 5000, false],
+  [undefined, 0, 8500, true],
   ...(["late-decode", "second-encode", "missing-encode", "scan", "disconnect", "hung", "artifact", "lost-frame", "signal-error", "short-media"] as const)
-    .map(failure => [failure, 0, 0] as const),
+    .map(failure => [failure, 0, 0, false] as const),
 ] as const) {
-  it(`scrcpy worker preserves ownership and evidence: ${failure ?? "success with three clips"}, startup ${startupDelayMs}ms, interval ${recordingIntervalMs}ms`, async () => {
+  it(`scrcpy worker preserves ownership and evidence: ${failure ?? "success with three clips"}, startup ${startupDelayMs}ms, interval ${recordingIntervalMs}ms, natural exit ${naturalExit}`, async () => {
     const root = await fs.mkdtemp(join(tmpdir(), "scrcpy-worker-"));
     const sessionId = randomUUID();
     const state: VideoState = { sessionId, nonce: randomUUID(), deviceId: "test-device", operatorPackage: "com.test.operator", adbPath: "/custom/adb",
@@ -112,9 +113,10 @@ for (const [failure, startupDelayMs, recordingIntervalMs] of [
         if (args.includes("-show_frames")) return failure === "scan" ? { code: 0, stdout: "{}", stderr: "corrupt tail" } : ok(JSON.stringify({ frames: [frame(0, 720, 1280), frame(1, 720, 1280), frame(2, 1000, 1000), frame(3, 720, 1280)] }));
         if (command === "ffprobe") {
           const [width, height] = sizes.get(args.at(-1)!)!.split(":").map(Number);
-          return ok(JSON.stringify({ streams: [{ codec_name: "h264", width, height, duration: "1" }] }));
+          return ok(JSON.stringify({ streams: [{ codec_name: "h264", width, height, duration: naturalExit ? (args.at(-1)!.includes("video-000") ? "2" : "2.5") : "1" }] }));
         }
         if (args.includes("-vf")) {
+          if (naturalExit) now += 1000;
           assert.equal(args[args.indexOf("-enc_time_base") + 1], "demux", "Preserve close VFR timestamps instead of rounding to a nominal frame rate");
           const path = args.at(-1)!;
           if (failure === "missing-encode") return { code: 1, stdout: "", stderr: "Unrecognized option" };
@@ -135,17 +137,18 @@ for (const [failure, startupDelayMs, recordingIntervalMs] of [
       await runScrcpyVideoWorker(state, runner, { now: () => now, monotonic: () => now, sleep: async ms => {
         now += ms;
         if (recordingIntervalMs > 0 && now >= 10000 + startupDelayMs + recordingIntervalMs) {
-          await atomicJson(join(root, "stop.json"), { nonce: state.nonce });
+          if (naturalExit) child.emit("close", 0);
+          else await atomicJson(join(root, "stop.json"), { nonce: state.nonce });
         }
       } }, read);
       const manifest = evidenceManifestSchema.parse(JSON.parse(await fs.readFile(join(root, "manifest.json"), "utf8")));
       assert.equal(manifest.context.verdict, "failed");
       assert.equal(manifest.status, failure ? "partial" : "complete");
-      assert.equal(manifest.video!.stopReason, ["hung", "disconnect", "scan", "signal-error"].includes(failure ?? "") ? "failure" : failure === "short-media" ? "duration_cap" : "requested");
+      assert.equal(manifest.video!.stopReason, ["hung", "disconnect", "scan", "signal-error"].includes(failure ?? "") ? "failure" : failure === "short-media" || naturalExit ? "duration_cap" : "requested");
       if (!failure) {
         assert.deepEqual(manifest.artifacts.filter(a => a.kind === "video").map(a => a.path), ["video.mp4", "video-0002.mp4", "video-0003.mp4"]);
         assert.equal(manifest.video!.actualSize, null);
-        assert.equal(manifest.video!.mediaDurationMs, 3000);
+        assert.equal(manifest.video!.mediaDurationMs, naturalExit ? 6500 : 3000);
         await assert.rejects(fs.stat(join(root, "capture.partial.mkv")));
       } else {
         assert.ok(manifest.errors.length);
@@ -169,7 +172,7 @@ for (const [failure, startupDelayMs, recordingIntervalMs] of [
       }
       if (failure === "second-encode") assert.equal(manifest.artifacts.filter(a => a.kind === "video" && a.status === "complete").length, 2);
       if (failure === "hung" || failure === "signal-error") { await fs.stat(state.lockPath); assert.deepEqual(signals, ["SIGINT", "SIGKILL"]); }
-      else { await assert.rejects(fs.stat(state.lockPath)); assert.deepEqual(signals, ["SIGINT"]); }
+      else { await assert.rejects(fs.stat(state.lockPath)); assert.deepEqual(signals, naturalExit ? [] : ["SIGINT"]); }
     } finally { await fs.rm(root, { recursive: true, force: true }); }
   });
 }

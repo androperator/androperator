@@ -68,8 +68,13 @@ describe("scrcpy geometry", () => {
   });
 });
 
-for (const failure of [undefined, "late-decode", "second-encode", "missing-encode", "scan", "disconnect", "hung", "artifact", "lost-frame", "signal-error"] as const) {
-  it(`scrcpy worker preserves ownership and evidence: ${failure ?? "success with three clips"}`, async () => {
+for (const [failure, startupDelayMs, recordingIntervalMs, naturalExit] of [
+  [undefined, 0, 0, false], [undefined, 0, 5000, false], [undefined, 15000, 0, false], [undefined, 15000, 5000, false],
+  [undefined, 0, 8500, true],
+  ...(["late-decode", "second-encode", "missing-encode", "scan", "disconnect", "hung", "artifact", "lost-frame", "signal-error", "short-media"] as const)
+    .map(failure => [failure, 0, 0, false] as const),
+] as const) {
+  it(`scrcpy worker preserves ownership and evidence: ${failure ?? "success with three clips"}, startup ${startupDelayMs}ms, interval ${recordingIntervalMs}ms, natural exit ${naturalExit}`, async () => {
     const root = await fs.mkdtemp(join(tmpdir(), "scrcpy-worker-"));
     const sessionId = randomUUID();
     const state: VideoState = { sessionId, nonce: randomUUID(), deviceId: "test-device", operatorPackage: "com.test.operator", adbPath: "/custom/adb",
@@ -83,12 +88,13 @@ for (const failure of [undefined, "late-decode", "second-encode", "missing-encod
       startedAt: new Date().toISOString(), finishedAt: null, status: "starting", artifacts: [], errors: [],
       video: { requestedDurationSeconds: 10, hostDurationMs: 0, mediaDurationMs: null, requestedSize: state.size, actualSize: null, codec: null, stopReason: null } });
     await atomicJson(state.lockPath, { sessionId, nonce: state.nonce });
-    await atomicJson(join(root, "stop.json"), { nonce: state.nonce });
+    if (failure !== "short-media" && recordingIntervalMs === 0) await atomicJson(join(root, "stop.json"), { nonce: state.nonce });
     await fs.writeFile(join(root, "capture.partial.mkv"), "source media");
     let now = 10000;
     const signals: string[] = [], sizes = new Map<string, string>();
     const child = Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter(), kill(signal: string) {
       signals.push(signal);
+
       if (failure === "signal-error" && signal === "SIGINT") { child.emit("error", new Error("Signal permission denied")); return; }
       if (failure !== "hung") queueMicrotask(() => child.emit("close", failure === "disconnect" ? 1 : 0));
     } });
@@ -99,7 +105,7 @@ for (const failure of [undefined, "late-decode", "second-encode", "missing-encod
         assert.deepEqual(args, scrcpyArguments(state));
         assert.equal(options?.env?.ADB, "/custom/adb");
         assert.ok(args.includes("--capture-orientation=@"));
-        queueMicrotask(() => child.emit("spawn"));
+        queueMicrotask(() => { now += startupDelayMs; child.emit("spawn"); });
         return child;
       },
       run: async (command, args) => {
@@ -107,9 +113,10 @@ for (const failure of [undefined, "late-decode", "second-encode", "missing-encod
         if (args.includes("-show_frames")) return failure === "scan" ? { code: 0, stdout: "{}", stderr: "corrupt tail" } : ok(JSON.stringify({ frames: [frame(0, 720, 1280), frame(1, 720, 1280), frame(2, 1000, 1000), frame(3, 720, 1280)] }));
         if (command === "ffprobe") {
           const [width, height] = sizes.get(args.at(-1)!)!.split(":").map(Number);
-          return ok(JSON.stringify({ streams: [{ codec_name: "h264", width, height, duration: "1" }] }));
+          return ok(JSON.stringify({ streams: [{ codec_name: "h264", width, height, duration: naturalExit ? (args.at(-1)!.includes("video-000") ? "2" : "2.5") : "1" }] }));
         }
         if (args.includes("-vf")) {
+          if (naturalExit) now += 1000;
           assert.equal(args[args.indexOf("-enc_time_base") + 1], "demux", "Preserve close VFR timestamps instead of rounding to a nominal frame rate");
           const path = args.at(-1)!;
           if (failure === "missing-encode") return { code: 1, stdout: "", stderr: "Unrecognized option" };
@@ -127,19 +134,31 @@ for (const failure of [undefined, "late-decode", "second-encode", "missing-encod
         if (failure === "artifact" && String(path).endsWith("video.mp4")) throw new Error("unreadable artifact");
         return fs.readFile(path);
       }) as typeof fs.readFile;
-      await runScrcpyVideoWorker(state, runner, { now: () => now, monotonic: () => now, sleep: async ms => { now += ms; } }, read);
+      await runScrcpyVideoWorker(state, runner, { now: () => now, monotonic: () => now, sleep: async ms => {
+        now += ms;
+        if (recordingIntervalMs > 0 && now >= 10000 + startupDelayMs + recordingIntervalMs) {
+          if (naturalExit) child.emit("close", 0);
+          else await atomicJson(join(root, "stop.json"), { nonce: state.nonce });
+        }
+      } }, read);
       const manifest = evidenceManifestSchema.parse(JSON.parse(await fs.readFile(join(root, "manifest.json"), "utf8")));
       assert.equal(manifest.context.verdict, "failed");
       assert.equal(manifest.status, failure ? "partial" : "complete");
-      assert.equal(manifest.video!.stopReason, ["hung", "disconnect", "scan", "signal-error"].includes(failure ?? "") ? "failure" : "requested");
+      assert.equal(manifest.video!.stopReason, ["hung", "disconnect", "scan", "signal-error"].includes(failure ?? "") ? "failure" : failure === "short-media" || naturalExit ? "duration_cap" : "requested");
       if (!failure) {
         assert.deepEqual(manifest.artifacts.filter(a => a.kind === "video").map(a => a.path), ["video.mp4", "video-0002.mp4", "video-0003.mp4"]);
         assert.equal(manifest.video!.actualSize, null);
-        assert.equal(manifest.video!.mediaDurationMs, 3000);
+        assert.equal(manifest.video!.mediaDurationMs, naturalExit ? 6500 : 3000);
         await assert.rejects(fs.stat(join(root, "capture.partial.mkv")));
       } else {
         assert.ok(manifest.errors.length);
         assert.equal(await fs.readFile(join(root, "capture.partial.mkv"), "utf8"), "source media");
+      }
+      if (failure === "short-media") {
+        const receipt = JSON.parse(await fs.readFile(join(root, "captures.json"), "utf8"));
+        assert.equal(receipt[0].videoVerified, false);
+        assert.ok(manifest.errors.some(error => error.stage === "coverage"));
+        assert.equal(manifest.artifacts.filter(a => a.kind === "video" && a.status === "complete").length, 3);
       }
       if (failure === "missing-encode") {
         assert.ok(manifest.errors.every(error => !error.message.includes("ENOENT")));
@@ -153,7 +172,7 @@ for (const failure of [undefined, "late-decode", "second-encode", "missing-encod
       }
       if (failure === "second-encode") assert.equal(manifest.artifacts.filter(a => a.kind === "video" && a.status === "complete").length, 2);
       if (failure === "hung" || failure === "signal-error") { await fs.stat(state.lockPath); assert.deepEqual(signals, ["SIGINT", "SIGKILL"]); }
-      else { await assert.rejects(fs.stat(state.lockPath)); assert.deepEqual(signals, ["SIGINT"]); }
+      else { await assert.rejects(fs.stat(state.lockPath)); assert.deepEqual(signals, naturalExit ? [] : ["SIGINT"]); }
     } finally { await fs.rm(root, { recursive: true, force: true }); }
   });
 }

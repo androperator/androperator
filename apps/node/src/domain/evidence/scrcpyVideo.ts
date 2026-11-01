@@ -60,6 +60,8 @@ export async function runScrcpyVideoWorker(state: VideoState, runner: ProcessRun
   state.hostPid = process.pid;
   state.hostStartedAt = new Date(performance.timeOrigin).toISOString();
   const started = clock.monotonic();
+  let recordingStarted = started;
+  let recordingStopped: number | undefined;
   const source = join(outputDir, "capture.partial.mkv");
   let child: ReturnType<ProcessRunner["spawn"]> | undefined;
   let spawned = false, closed = false, recording = false, stopSent = false, truncated = false, verified = false;
@@ -108,7 +110,7 @@ export async function runScrcpyVideoWorker(state: VideoState, runner: ProcessRun
     child.on("close", (code: number | null) => { exitCode = code; closed = true; });
     const startupDeadline = clock.now() + 4000;
     while (!closed && !processError && clock.now() < startupDeadline) {
-      try { await fs.stat(source); recording = true; break; }
+      try { await fs.stat(source); recording = true; recordingStarted = clock.monotonic(); break; }
       catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
       await clock.sleep(50);
     }
@@ -123,6 +125,7 @@ export async function runScrcpyVideoWorker(state: VideoState, runner: ProcessRun
       const requested = await stopRequested();
       if (!stopSent && (requested || clock.now() >= state.deadline)) {
         stopSent = true;
+        recordingStopped = clock.monotonic();
         manifest.video!.stopReason = requested ? "requested" : "duration_cap";
         manifest.status = "finalizing";
         await writeEvidenceManifest(outputDir, manifest);
@@ -132,6 +135,7 @@ export async function runScrcpyVideoWorker(state: VideoState, runner: ProcessRun
       if (stopDeadline !== undefined && clock.now() > stopDeadline) fail("scrcpy did not terminate after stop", "EVIDENCE_RECOVERY_REQUIRED");
       await clock.sleep(50);
     }
+    recordingStopped ??= clock.monotonic();
     manifest.video!.hostDurationMs = Math.max(0, clock.monotonic() - started);
     manifest.video!.stopReason ??= "duration_cap";
     if (processError) throw processError;
@@ -177,7 +181,17 @@ export async function runScrcpyVideoWorker(state: VideoState, runner: ProcessRun
     manifest.video!.mediaDurationMs = mediaDurationMs;
     manifest.video!.actualSize = sizes.size === 1 ? [...sizes][0] : null;
     manifest.video!.codec = sizes.size ? "h264" : null;
-    verified = manifest.artifacts.length === segments.length && manifest.artifacts.every(value => value.status === "complete");
+    const clipsVerified = manifest.artifacts.length === segments.length && manifest.artifacts.every(value => value.status === "complete");
+    const recordingDurationMs = Math.min(state.durationSeconds * 1000,
+      Math.max(0, (recordingStopped ?? clock.monotonic()) - recordingStarted));
+    // Startup and stop/encode latency are not time that the recorder was asked to cover.
+    const coverageShortfall = recordingDurationMs - mediaDurationMs;
+    const coverageIncomplete = coverageShortfall > Math.max(2000, recordingDurationMs * 0.1);
+    if (clipsVerified && coverageIncomplete) {
+      manifest.errors.push(videoError({ message:
+        `Media timeline covers ${mediaDurationMs}ms of a ${recordingDurationMs}ms recording interval; session coverage is unverified` }, "coverage"));
+    }
+    verified = clipsVerified && !coverageIncomplete;
     if (verified) await fs.unlink(source);
   } catch (error) {
     manifest.errors.push(videoError(error));

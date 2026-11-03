@@ -59,6 +59,7 @@ def main(argv=None):
             ['python3', '-m', 'unittest', 'discover', '-s', 'validation/sensitive-hierarchy-access'],
             ['python3', '-m', 'unittest', 'discover', '-s', 'validation/result-transport-reliability'],
             ['python3', '-m', 'unittest', 'discover', '-s', 'validation/foreground-observation'],
+            ['python3', '-m', 'unittest', 'discover', '-s', 'validation/landscape-targeting'],
             ['bash', 'validation/test_blocked_terms_policy.sh'],
             ['bash', 'validation/install/test_install.sh'],
             ['bash', 'validation/homebrew/test_release_dispatch.sh'],

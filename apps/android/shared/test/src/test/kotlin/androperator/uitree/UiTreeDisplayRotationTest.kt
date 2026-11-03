@@ -21,6 +21,17 @@ import org.robolectric.shadows.ShadowDisplay
 @Config(sdk = [33])
 class UiTreeDisplayRotationTest {
     @Test
+    fun `reading display geometry cannot mark UI ready without an Activity`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val frames = WindowFrameManagerAndroid(context, object : UiControllerManager {
+            override val currentUiController: UiController? = null
+        }, SystemUnitManagerAndroid(context))
+        assertFalse(frames.isReady.value)
+        UiTreeFiltererDefault(frames).filterOnScreenOnly(UiTree(node("ROOT", Rect(0f, 0f, 100f, 100f))))
+        assertFalse(frames.isReady.value)
+    }
+
+    @Test
     fun `filter follows the live display while the Operator Activity is absent`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val display = (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay

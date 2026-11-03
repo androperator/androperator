@@ -7,6 +7,7 @@ import subprocess
 import time
 from pathlib import Path
 import xml.etree.ElementTree as ET
+from evidence import run_recorded
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--device', required=True)
@@ -29,10 +30,8 @@ def call(label, *command, error=None):
     global sequence
     assert time.monotonic() - started < 240, 'Integration time budget exhausted'
     sequence += 1
-    result = subprocess.run(['node', str(cli), *command, *flags], cwd=root, capture_output=True, text=True, timeout=45)
     prefix = args.output / f'{sequence:02d}-{label}'
-    prefix.with_suffix('.json').write_text(result.stdout)
-    prefix.with_suffix('.stderr').write_text(result.stderr)
+    result = run_recorded(['node', str(cli), *command, *flags], prefix, root)
     value = json.loads(result.stdout)
     envelope = value.get('envelope', {})
     if error:
@@ -56,11 +55,11 @@ def observe(label, rotation):
         assert not value['compact']['truncated']
         nodes = value['compact']['nodes']
         bounds = list(map(int, re.findall(r'\d+', nodes[0]['bounds'])))
-        if (bounds[2] > bounds[3]) == (rotation in (1, 3)):
-            assert ET.parse(raw).getroot().attrib['rotation'] == str(rotation)
+        actual_rotation = ET.parse(raw).getroot().attrib['rotation']
+        if (bounds[2] > bounds[3]) == (rotation in (1, 3)) and actual_rotation == str(rotation):
             return nodes
         time.sleep(.2)
-    raise AssertionError('Display geometry did not settle')
+    raise AssertionError(f'Display did not settle: expected rotation={rotation}, last rotation={actual_rotation}, bounds={bounds}')
 
 
 def count(nodes, label):

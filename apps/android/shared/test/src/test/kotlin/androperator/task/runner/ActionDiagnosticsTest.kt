@@ -122,6 +122,25 @@ class ActionDiagnosticsTest : ActionTest {
         }
     }
 
+    @Test fun `retried scroll interrupted after dispatch cannot retain an earlier termination`() = actionTest {
+        val fixture = Fixture(listOf(tree(containers = 0), tree()), backgroundScope)
+        val journal = ActionExecutionJournal()
+        val completed = withTimeoutOrNull(1000) {
+            withContext(journal) {
+                execute(fixture.ui, UiAction.ScrollAndClick(
+                    "scroll", NodeMatcher(resourceId = "target"), maxSwipes = 10,
+                    settleDelayMs = 2000, scrollRetry = TaskRetry(2, Duration.ZERO), clickRetry = TaskRetry.None))
+            }
+        }
+        assertNull(completed)
+        assertEquals(1, fixture.dispatches)
+        val data = journal.steps.single().data
+        assertEquals("COMMAND_TIMEOUT", data["errorCode"])
+        assertFalse(data.containsKey("termination_reason"), "Interrupted attempt has no terminal loop result")
+        assertFalse(data.containsKey("scrolls_executed"), "An earlier zero count must not describe the dispatched retry")
+        assertFalse(data.containsKey("scroll_progress"))
+    }
+
     private suspend fun execute(ui: TaskUiScope, action: UiAction): UiActionExecutionResult {
         val task = object : TaskScope by proxy<TaskScope>({ error("unused") }) {
             override suspend fun <T> ui(block: suspend TaskUiScope.() -> T): T = ui.block()

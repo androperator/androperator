@@ -702,6 +702,7 @@ class TaskUiScopeDefault(
         findFirstScrollableChild: Boolean,
         strict: Boolean,
     ): TaskScrollResult = withRetry(retry, "scrollUntil($target)") {
+        kotlin.coroutines.coroutineContext[ActionReceipt]?.beginScrollSearchAttempt()
         val result = scrollLoop(target, container, direction, distanceRatio, settleDelay,
             maxSwipes, Duration.INFINITE, 2, findFirstScrollableChild, strict)
         kotlin.coroutines.coroutineContext[ActionReceipt]?.scrollTerminated(result, maxSwipes)

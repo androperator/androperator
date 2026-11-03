@@ -10,7 +10,7 @@ class UiTreeFiltererDefault(
     private val windowFrameManager: WindowFrameManager,
 ) : UiTreeFilterer {
     private val currentWindowFrame: WindowFrame
-        get() = windowFrameManager.windowFrame.value
+        get() = windowFrameManager.currentFrame()
 
     override fun filterOnScreenOnly(uiTree: UiTree): UiTree {
         val filteredRoot = filterOnScreenOnly(uiTree.root)

@@ -62,6 +62,13 @@ class WindowFrameManagerAndroid(
         )
     }
 
+    override fun currentFrame(): WindowFrame {
+        // The Operator Activity may remain stopped across another app's rotation.
+        // Refresh display dimensions at the point of use instead of relying on its lifecycle.
+        updateWindowFrame()
+        return _windowFrame.value
+    }
+
     fun updateWindowFrame() {
         _windowFrame.value =
             getWindowFrame().also {

@@ -110,6 +110,11 @@ queries choose `on_screen` or `all`. Hidden stale descendant labels therefore
 cannot select an otherwise visible container during an action. Structural
 ancestors remain available when resolving within a selected container.
 
+On-screen eligibility uses the active display dimensions at filtering time, including
+after rotation while the Operator Activity is backgrounded. Hidden nodes and bounds
+wholly outside that frame remain excluded. Snapshot XML can still contain those
+nodes; presence in raw XML alone does not make a target eligible.
+
 ```bash
 androperator query --matcher-json '{"resourceId":"row","ancestor":{"role":"list"},"descendant":{"textEquals":"Display"}}'
 ```

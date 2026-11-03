@@ -291,6 +291,7 @@ Important limits on what to infer:
 
 - `data.text` is the only Node-guaranteed snapshot success field today.
 - `NodeMatcher.role` is an Androperator selector concept documented in [Selectors](selectors.md), not a direct XML attribute.
+- The hierarchy `rotation` is the current display rotation (`0`, `1`, `2`, or `3`), including when the accessibility service has no visual display context. Bounds use the current screen orientation. Evidence manifests separately retain their documented natural-dimension convention.
 - A node appearing in the XML does not guarantee it is currently reachable on screen. Use `bounds`, scrolling, and follow-up actions to confirm reachability.
 
 Current runtime note:

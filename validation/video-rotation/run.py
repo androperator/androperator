@@ -97,11 +97,16 @@ try:
             assert extracted.returncode == 0, extracted.stderr
     (args.output / 'summary.json').write_text(json.dumps({'observations': observations, 'segments': segments}, indent=2) + '\n')
 finally:
-    if started and not stopped:
-        # Stop the owned recording once; preserve its result even if verification fails.
-        run('stop-interrupted-attempt', ['node', str(ROOT / 'apps/node/dist/cli/index.js'),
-            'evidence', 'video', 'stop', '--session', str(manifest), *flags])
-    # Restore only settings this harness changed, even when recording fails.
-    for key, value in [('user_rotation', rotation), ('accelerometer_rotation', automatic)]:
+    def restore(key, value):
         adb('restore-' + key, 'settings', 'delete' if value == 'null' else 'put', 'system', key,
             *([] if value == 'null' else [value]))
+    try:
+        if started and not stopped:
+            # Stop once; a timeout must not prevent either settings-restoration attempt.
+            run('stop-interrupted-attempt', ['node', str(ROOT / 'apps/node/dist/cli/index.js'),
+                'evidence', 'video', 'stop', '--session', str(manifest), *flags])
+    finally:
+        try:
+            restore('user_rotation', rotation)
+        finally:
+            restore('accelerometer_rotation', automatic)

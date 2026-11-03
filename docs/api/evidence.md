@@ -307,20 +307,18 @@ retry, wake, navigation, overlay change, audio, or application assertion.
 By default, the current display dimensions are scaled down to a longest edge of
 at most 1280 pixels, with both edges rounded down to positive even numbers.
 `--size WIDTHxHEIGHT` accepts positive even dimensions within 1% of the current
-display aspect ratio. The recording canvas stays in its initial orientation.
-When Android rotates, content rotates within that canvas at full size instead
-of shrinking into a portrait letterbox. Landscape content can therefore appear
-sideways in a recording that started in portrait; device rotation settings are
-not changed.
+display aspect ratio. Capture follows the device's current orientation, so content
+stays upright when Android rotates; device rotation settings are not changed.
 
-Folding or unfolding can change the capture dimensions. Capture continues without
-restarting, and finalization creates a separate MP4 for each consecutive size
+Rotation, folding or unfolding can change the capture dimensions. Capture continues
+without restarting, and finalization creates a separate MP4 for each consecutive size
 span. The first clip is `video.mp4`; later clips are `video-0002.mp4`,
 `video-0003.mp4`, and so on. Read every `kind: "video"` artifact in manifest order.
 Each clip has fixed dimensions, its own codec headers, and timestamps starting
 at zero. Later sizes preserve their aspect ratio and stay within the initial
 longest-edge limit (1280 by default, or the longest edge of `--size`). The initial
 clip honors the exact requested size. No framing or padding is added.
+A 180-degree rotation can keep the same dimensions and remain in the same clip.
 
 The source is captured as H.264, then each span is encoded as H.264 MP4 and fully
 verified. This final encoding requires host CPU time; stop can return pending

@@ -752,9 +752,22 @@ Semantics:
 - an identifiable container that stops reporting `scrollable` still allows a revealed target to satisfy the search and the requested click to run once; if the target remains absent after bounded observation, the search terminates with `CONTAINER_NOT_SCROLLABLE` without scrolling a different container
 - initially visible targets retain legacy unscoped matching when neither strict selection nor a container is requested
 
-Success data:
+Terminal step data:
 
-- no Node-guaranteed success keys
+| Field | Meaning |
+| --- | --- |
+| `termination_reason` | `TARGET_FOUND`, `MAX_SCROLLS_REACHED`, `MAX_DURATION_REACHED`, `EDGE_REACHED`, `NO_POSITION_CHANGE`, `CONTAINER_NOT_FOUND`, `CONTAINER_NOT_SCROLLABLE`, or `CONTAINER_LOST` |
+| `scrolls_executed` | Base-10 count of gestures dispatched by the loop |
+| `max_scrolls` | Configured `maxScrolls` cap |
+| `max_duration_ms` | Configured `maxDurationMs` cap |
+| `resolved_container` | Container resource ID, when available |
+| `scroll_progress` | Serialized final observed scroll progress, when a gesture produced it; retained even if a subsequent click replaces the dispatch receipt |
+
+With a target matcher, only `TARGET_FOUND` makes the step successful. Budget
+exhaustion does not prove the target is absent, and does not click it. Repeated
+unchanged signatures establish `NO_POSITION_CHANGE`, not positive edge evidence.
+If execution fails before a loop result is available, terminal reason/count fields
+may be absent; command timeout and cancellation keep their existing error codes.
 
 Common failures:
 
@@ -805,9 +818,13 @@ Semantics:
 - `clickRetry` applies only to the final click after the target is visible
 - setting `clickAfter: false` is accepted in raw `exec` JSON and makes Android stop after revealing the target, but the flat CLI does not emit that variant for `scroll_and_click`
 
-Success data:
+Terminal step data:
 
-- no Node-guaranteed success keys
+- `termination_reason`, `scrolls_executed`, `max_scrolls`, `resolved_container`, and optional `scroll_progress` follow the bounded-search meanings above. Here `max_scrolls` is the configured `maxSwipes` cap.
+- There is no separate loop duration cap for this wrapper, so it does not add `max_duration_ms`; the command deadline still applies.
+- When the loop stops before the target becomes visible, the compatibility error code remains `NODE_NOT_FOUND`. Inspect `termination_reason` to distinguish budget exhaustion from no movement or an edge. This does not assert that the target does not exist.
+- Container failures keep their specific error codes and available termination evidence. A found target is clicked only when requested; click failure remains unsuccessful even when `termination_reason` is `TARGET_FOUND`.
+- If the target was initially visible, `scrolls_executed` is `"0"` and no scroll progress is invented. Existing success fields such as `max_swipes`, `direction`, and `click_after` remain unchanged.
 
 Common failures:
 

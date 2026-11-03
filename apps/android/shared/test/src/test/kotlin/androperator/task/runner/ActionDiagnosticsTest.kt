@@ -81,6 +81,80 @@ class ActionDiagnosticsTest : ActionTest {
         return UiTree(node("root", children = listOf(outer) + if (outside) targets else emptyList()))
     }
 
+    @Test fun `scroll and click budget failure survives canonical serialization without clicking`() = actionTest {
+        val fixture = Fixture(listOf(tree(), tree(), tree(listOf(node("row", "Changed row")))), backgroundScope)
+        val result = execute(fixture.ui, UiAction.ScrollAndClick(
+            "scroll", NodeMatcher(resourceId = "missing"), maxSwipes = 1,
+            settleDelayMs = 0, scrollRetry = TaskRetry.None, clickRetry = TaskRetry.None))
+        assertEquals(1, fixture.dispatches, "Only the scroll may dispatch")
+        assertEquals("NODE_NOT_FOUND", result.errorCode, "Retain the compatibility error code")
+        assertFalse(result.stepResults.single().success)
+        val line = androperator.operator.agent.buildCanonicalSuccessLine("command", "task", result)
+        val envelope = Json.parseToJsonElement(line.substringAfter("[Androperator-Result] ")).jsonObject
+        assertEquals("failed", envelope.getValue("status").jsonPrimitive.content)
+        val data = envelope.getValue("stepResults").jsonArray.single().jsonObject.getValue("data").jsonObject
+        assertEquals("MAX_SCROLLS_REACHED", data["termination_reason"]?.jsonPrimitive?.content)
+        assertEquals("1", data["scrolls_executed"]?.jsonPrimitive?.content)
+        assertEquals("1", data["max_scrolls"]?.jsonPrimitive?.content)
+        val progress = Json.parseToJsonElement(data.getValue("scroll_progress").jsonPrimitive.content).jsonObject
+        assertEquals("signature_changed", progress.getValue("reason").jsonPrimitive.content)
+    }
+
+    @Test fun `wrapper preserves no movement lost container and found target outcomes`() = actionTest {
+        val cases = listOf(
+            Triple(listOf(tree()), "NO_POSITION_CHANGE", 2),
+            Triple(listOf(tree(), tree(), null), "CONTAINER_LOST", 1),
+            Triple(listOf(tree(containers = 0)), "CONTAINER_NOT_FOUND", 0),
+            Triple(listOf(tree(), tree(), tree(listOf(node("target")))), "TARGET_FOUND", 2),
+        )
+        for ((trees, reason, dispatches) in cases) {
+            val fixture = Fixture(trees, backgroundScope)
+            val result = execute(fixture.ui, UiAction.ScrollAndClick(
+                "scroll", NodeMatcher(resourceId = "target"), maxSwipes = 10,
+                settleDelayMs = 0, scrollRetry = TaskRetry.None, clickRetry = TaskRetry.None))
+            val data = result.stepResults.single().data
+            assertEquals(reason, data["termination_reason"])
+            assertEquals(if (reason == "TARGET_FOUND") "1" else dispatches.toString(), data["scrolls_executed"])
+            assertEquals("10", data["max_scrolls"])
+            assertEquals(dispatches, fixture.dispatches, reason)
+            assertEquals(reason == "TARGET_FOUND", result.stepResults.single().success)
+            if (reason == "TARGET_FOUND") assertTrue(data.containsKey("scroll_progress"), "Click must not erase search progress")
+        }
+    }
+
+    @Test fun `retried scroll interrupted after dispatch cannot retain an earlier termination`() = actionTest {
+        val fixture = Fixture(listOf(tree(containers = 0), tree()), backgroundScope)
+        val journal = ActionExecutionJournal()
+        val completed = withTimeoutOrNull(1000) {
+            withContext(journal) {
+                execute(fixture.ui, UiAction.ScrollAndClick(
+                    "scroll", NodeMatcher(resourceId = "target"), maxSwipes = 10,
+                    settleDelayMs = 2000, scrollRetry = TaskRetry(2, Duration.ZERO), clickRetry = TaskRetry.None))
+            }
+        }
+        assertNull(completed)
+        assertEquals(1, fixture.dispatches)
+        val data = journal.steps.single().data
+        assertEquals("COMMAND_TIMEOUT", data["errorCode"])
+        assertFalse(data.containsKey("termination_reason"), "Interrupted attempt has no terminal loop result")
+        assertFalse(data.containsKey("scrolls_executed"), "An earlier zero count must not describe the dispatched retry")
+        assertFalse(data.containsKey("scroll_progress"))
+    }
+
+    private suspend fun execute(ui: TaskUiScope, action: UiAction): UiActionExecutionResult {
+        val task = object : TaskScope by proxy<TaskScope>({ error("unused") }) {
+            override suspend fun <T> ui(block: suspend TaskUiScope.() -> T): T = ui.block()
+        }
+        val developer = object : action.developeroptions.DeveloperOptionsManager {
+            override val isEnabled = kotlinx.coroutines.flow.flowOf(true)
+            override val isUsbDebuggingEnabled = kotlinx.coroutines.flow.flowOf(true)
+        }
+        val global = object : UiGlobalActionDispatcher {
+            override fun perform(key: UiSystemKey): Boolean = error("unused")
+        }
+        return UiActionEngineDefault(developer, global).execute(task, UiActionPlan("command", "task", "test", listOf(action)))
+    }
+
     @Test fun `revealed target survives eligibility loss for strict and legacy searches and clicks once`() = actionTest {
         for (strict in listOf(false, true)) {
             val reference = Any()

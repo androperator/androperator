@@ -44,6 +44,7 @@ android {
 }
 
 dependencies {
+    testImplementation(project(":shared:data:operator"))
     implementation(project(":shared:app:app-adapter"))
     implementation(project(":shared:core:common"))
     implementation(project(":shared:core:devicepackage"))

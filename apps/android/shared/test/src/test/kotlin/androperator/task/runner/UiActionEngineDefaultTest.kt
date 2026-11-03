@@ -1,6 +1,8 @@
 package androperator.task.runner
 
 import androperator.uitree.TextSubmissionOutcome
+import androperator.operator.agent.AndroperatorResultEnvelope
+import kotlinx.serialization.json.Json
 import action.developeroptions.DeveloperOptionsManager
 import action.devicestate.DeviceState
 import action.devicestate.DeviceStateMock
@@ -813,6 +815,36 @@ class UiActionEngineDefaultTest : ActionTest {
             assertEquals(false, stepResult.success)
             assertEquals("CONTAINER_NOT_SCROLLABLE", stepResult.data["error"])
         }
+
+    @Test
+    fun `plain scroll search serializes each termination with configured bounds and clicks only when found`() = actionTest {
+        val reasons = mapOf(
+            TaskScrollTerminationReason.TargetFound to "TARGET_FOUND",
+            TaskScrollTerminationReason.EdgeReached to "EDGE_REACHED",
+            TaskScrollTerminationReason.MaxScrollsReached to "MAX_SCROLLS_REACHED",
+            TaskScrollTerminationReason.MaxDurationReached to "MAX_DURATION_REACHED",
+            TaskScrollTerminationReason.NoPositionChange to "NO_POSITION_CHANGE",
+            TaskScrollTerminationReason.ContainerNotFound to "CONTAINER_NOT_FOUND",
+            TaskScrollTerminationReason.ContainerNotScrollable to "CONTAINER_NOT_SCROLLABLE",
+            TaskScrollTerminationReason.ContainerLost to "CONTAINER_LOST",
+        )
+        for ((reason, wire) in reasons) {
+            val ui = RecordingTaskUiScope(scrollLoopResult = TaskScrollLoopResult(reason, 2))
+            val result = UiActionEngineDefault(DeveloperOptionsManagerMock(), UiGlobalActionDispatcherMock()).execute(
+                RecordingTaskScope(ui), UiActionPlan("command", "task", "test", listOf(UiAction.ScrollUntil(
+                    "scroll", matcher = NodeMatcher(resourceId = "target"), maxScrolls = 7,
+                    maxDurationMs = 5000, clickAfter = true))))
+            val line = androperator.operator.agent.buildCanonicalSuccessLine("command", "task", result)
+            val envelope = Json.decodeFromString<AndroperatorResultEnvelope>(line.substringAfter("[Androperator-Result] "))
+            val data = envelope.stepResults.single().data
+            assertEquals(wire, data["termination_reason"])
+            assertEquals("2", data["scrolls_executed"])
+            assertEquals("7", data["max_scrolls"])
+            assertEquals("5000", data["max_duration_ms"])
+            assertEquals(reason == TaskScrollTerminationReason.TargetFound, result.stepResults.single().success)
+            assertEquals(reason == TaskScrollTerminationReason.TargetFound, ui.clickCalled)
+        }
+    }
 
     @Test
     fun `execute scroll_until returns edge_reached termination`() =

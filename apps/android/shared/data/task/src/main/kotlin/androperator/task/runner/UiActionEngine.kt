@@ -467,6 +467,8 @@ class UiActionEngineDefault(
                 )
             }
 
+        kotlin.coroutines.coroutineContext[ActionReceipt]?.scrollTerminated(result, action.maxScrolls, action.maxDurationMs)
+
         val containerError = result.terminationReason == TaskScrollTerminationReason.ContainerNotFound ||
             result.terminationReason == TaskScrollTerminationReason.ContainerNotScrollable ||
             result.terminationReason == TaskScrollTerminationReason.ContainerLost
@@ -1054,17 +1056,6 @@ private fun TaskScrollOutcome.toWireValue(): String =
         TaskScrollOutcome.GestureFailed -> "gesture_failed"
     }
 
-private fun TaskScrollTerminationReason.toWireValue(): String =
-    when (this) {
-        TaskScrollTerminationReason.TargetFound -> "TARGET_FOUND"
-        TaskScrollTerminationReason.EdgeReached -> "EDGE_REACHED"
-        TaskScrollTerminationReason.MaxScrollsReached -> "MAX_SCROLLS_REACHED"
-        TaskScrollTerminationReason.MaxDurationReached -> "MAX_DURATION_REACHED"
-        TaskScrollTerminationReason.NoPositionChange -> "NO_POSITION_CHANGE"
-        TaskScrollTerminationReason.ContainerNotFound -> "CONTAINER_NOT_FOUND"
-        TaskScrollTerminationReason.ContainerNotScrollable -> "CONTAINER_NOT_SCROLLABLE"
-        TaskScrollTerminationReason.ContainerLost -> "CONTAINER_LOST"
-    }
 
 /** Canonical names also cover failures before an action returns its normal result. */
 private fun UiAction.wireType(): String = when (this) {

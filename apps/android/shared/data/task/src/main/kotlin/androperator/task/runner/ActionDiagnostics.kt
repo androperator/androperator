@@ -36,6 +36,26 @@ class ActionReceipt : AbstractCoroutineContextElement(Key) {
         data["progress"] = value
     }
 
+    fun beginScrollSearchAttempt() {
+        // A pre-dispatch failure may retry. Its terminal facts cannot describe an
+        // interrupted later attempt, while a final click must retain the completed search.
+        for (key in listOf("termination_reason", "scrolls_executed", "max_scrolls", "max_duration_ms",
+            "resolved_container", "scroll_progress", "progress")) {
+            data.remove(key)
+        }
+    }
+
+    fun scrollTerminated(result: TaskScrollLoopResult, maxScrolls: Int, maxDurationMs: Long? = null) {
+        data["termination_reason"] = result.terminationReason.toWireValue()
+        data["scrolls_executed"] = result.scrollsExecuted.toString()
+        data["max_scrolls"] = maxScrolls.toString()
+        maxDurationMs?.let { data["max_duration_ms"] = it.toString() }
+        result.resolvedContainerId?.let { data["resolved_container"] = it }
+        // A subsequent target click replaces selection/gesture evidence. Retain the
+        // final scroll observation separately so success and failure explain the search.
+        data["progress"]?.let { data["scroll_progress"] = it }
+    }
+
     fun coordinate(x: Double, y: Double) {
         data["coordinate"] = "{\"x\":$x,\"y\":$y}"
     }

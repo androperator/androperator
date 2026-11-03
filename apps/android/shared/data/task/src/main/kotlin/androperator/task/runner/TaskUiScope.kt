@@ -316,7 +316,7 @@ interface TaskUiScope {
         strict: Boolean = false,
     ) {
         val result = scrollUntil(target, container, direction, maxSwipes, distanceRatio, settleDelay, scrollRetry, findFirstScrollableChild, strict)
-        if (result !is TaskScrollResult.Found) throw UiActionFailure("NODE_NOT_FOUND", "Target node not found after scrolling: $target")
+        if (result !is TaskScrollResult.Found) throw UiActionFailure("NODE_NOT_FOUND", "Scroll ended before the target became visible")
         if (clickAfter) {
             clickScrollTarget(
                 target = target,

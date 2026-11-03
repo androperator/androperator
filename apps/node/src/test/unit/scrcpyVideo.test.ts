@@ -104,7 +104,7 @@ for (const [failure, startupDelayMs, recordingIntervalMs, naturalExit] of [
         assert.equal(command, "scrcpy");
         assert.deepEqual(args, scrcpyArguments(state));
         assert.equal(options?.env?.ADB, "/custom/adb");
-        assert.ok(args.includes("--capture-orientation=@"));
+        assert.ok(!args.some(arg => arg.startsWith("--capture-orientation=")), "Follow device rotation instead of locking the initial orientation");
         queueMicrotask(() => { now += startupDelayMs; child.emit("spawn"); });
         return child;
       },

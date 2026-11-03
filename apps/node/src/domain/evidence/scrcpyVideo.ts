@@ -10,7 +10,7 @@ import type { VideoWorkerClock } from "./videoWorker.js";
 import { writeEvidenceManifest } from "./manifest.js";
 
 export function scrcpyArguments(state: VideoState): string[] {
-  return [`--serial=${state.deviceId}`, "--no-window", "--no-audio", "--no-control", "--capture-orientation=@",
+  return [`--serial=${state.deviceId}`, "--no-window", "--no-audio", "--no-control",
     "--video-codec=h264", `--max-size=${state.maxEdge ?? 1280}`, "--record-format=mkv",
     `--record=${join(state.outputDir, "capture.partial.mkv")}`, `--time-limit=${state.durationSeconds}`];
 }

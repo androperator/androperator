@@ -41,7 +41,7 @@ def main(argv=None):
         env['ANDROID_SERIAL'] = args.device
         env['ANDROPERATOR_SMOKE_DEVICE'] = args.device
     suites = {
-        'android': [['./gradlew', 'unitTest'], ['bash', 'validation/persistent-screenshots/check-fixtures.sh'], ['bash', 'validation/landscape-targeting/check-fixture.sh'], ['bash', 'validation/scroll-termination/check-fixture.sh']],
+        'android': [['./gradlew', 'unitTest'], ['bash', 'validation/persistent-screenshots/check-fixtures.sh'], ['bash', 'validation/landscape-targeting/check-fixture.sh'], ['bash', 'validation/scroll-termination/check-fixture.sh'], ['bash', 'validation/video-rotation/check-fixture.sh']],
         'node': [['npm', '--prefix', 'apps/node', 'test']],
         'evals': [['uv', 'run', '--project', 'evals', '--extra', 'dev', 'pytest', 'evals/harness', '-v']],
         'validation': [

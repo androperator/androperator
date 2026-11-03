@@ -704,6 +704,7 @@ class TaskUiScopeDefault(
     ): TaskScrollResult = withRetry(retry, "scrollUntil($target)") {
         val result = scrollLoop(target, container, direction, distanceRatio, settleDelay,
             maxSwipes, Duration.INFINITE, 2, findFirstScrollableChild, strict)
+        kotlin.coroutines.coroutineContext[ActionReceipt]?.scrollTerminated(result, maxSwipes)
         if (result.terminationReason == TaskScrollTerminationReason.TargetFound) {
             val tree = currentUiTreeFiltered()
             val found = scrollTarget(target, tree, container, strict, findFirstScrollableChild, expectedScope = result.scope)
@@ -732,7 +733,7 @@ class TaskUiScopeDefault(
     ): TaskUiNode =
         when (val result = scrollUntil(target, container, direction, maxSwipes, distanceRatio, settleDelay, retry, findFirstScrollableChild, strict)) {
             is TaskScrollResult.Found -> result.node
-            TaskScrollResult.NotFoundExhausted -> throw UiActionFailure("NODE_NOT_FOUND", "Target node not found after scrolling: $target")
+            TaskScrollResult.NotFoundExhausted -> throw UiActionFailure("NODE_NOT_FOUND", "Scroll ended before the target became visible")
         }
 
     override suspend fun scrollOnce(

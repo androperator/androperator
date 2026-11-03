@@ -10,7 +10,7 @@ sealed interface TaskScrollResult {
         val scope: TaskScrollScope? = null,
     ) : TaskScrollResult
 
-    /** Scrolling was exhausted without finding the target */
+    /** Legacy search outcome; canonical receipts separately retain the loop termination facts. */
     data object NotFoundExhausted : TaskScrollResult
 }
 
@@ -43,7 +43,7 @@ data class TaskScrollOnceResult(
 enum class TaskScrollTerminationReason {
     /** Target matcher became visible in the current UI tree */
     TargetFound,
-    /** Content ended naturally - leading-child signature unchanged at the boundary */
+    /** Positive edge evidence; unchanged signatures alone only establish no movement. */
     EdgeReached,
     /** Hit the [UiAction.ScrollUntil.maxScrolls] safety cap */
     MaxScrollsReached,
@@ -71,3 +71,15 @@ data class TaskScrollLoopResult(
     val resolvedContainerId: String? = null,
     val scope: TaskScrollScope? = null,
 )
+
+internal fun TaskScrollTerminationReason.toWireValue(): String =
+    when (this) {
+        TaskScrollTerminationReason.TargetFound -> "TARGET_FOUND"
+        TaskScrollTerminationReason.EdgeReached -> "EDGE_REACHED"
+        TaskScrollTerminationReason.MaxScrollsReached -> "MAX_SCROLLS_REACHED"
+        TaskScrollTerminationReason.MaxDurationReached -> "MAX_DURATION_REACHED"
+        TaskScrollTerminationReason.NoPositionChange -> "NO_POSITION_CHANGE"
+        TaskScrollTerminationReason.ContainerNotFound -> "CONTAINER_NOT_FOUND"
+        TaskScrollTerminationReason.ContainerNotScrollable -> "CONTAINER_NOT_SCROLLABLE"
+        TaskScrollTerminationReason.ContainerLost -> "CONTAINER_LOST"
+    }

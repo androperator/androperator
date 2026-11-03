@@ -8,6 +8,9 @@ interface WindowFrameManager {
 
     val windowFrame: StateFlow<WindowFrame>
 
+    /** A fresh frame for geometry-sensitive operations, including background services. */
+    fun currentFrame(): WindowFrame = windowFrame.value
+
     fun setInsets(
         statusBarHeight: Dp,
         navBarHeight: Dp,

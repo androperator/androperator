@@ -116,7 +116,17 @@ class UiTreeInspectorAndroid(
 
     private fun getDisplayRotation(service: AccessibilityService): Int =
         try {
-            service.display?.rotation ?: 0
+            val associatedDisplay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                try {
+                    service.display
+                } catch (_: UnsupportedOperationException) {
+                    null // Accessibility services need not have a visual display context.
+                }
+            } else null
+            @Suppress("DEPRECATION")
+            val display = associatedDisplay
+                ?: (service.getSystemService(Context.WINDOW_SERVICE) as? WindowManager)?.defaultDisplay
+            display?.rotation ?: 0
         } catch (e: Exception) {
             0
         }

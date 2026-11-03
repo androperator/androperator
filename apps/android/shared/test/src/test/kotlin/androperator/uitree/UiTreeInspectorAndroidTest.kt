@@ -53,6 +53,30 @@ class UiTreeInspectorAndroidTest {
     }
 
     @Test
+    @Config(sdk = [33])
+    fun `hierarchy rotation uses the window display when the service has no display context`() = kotlinx.coroutines.runBlocking {
+        val display = (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
+        val shadow = org.robolectric.shadow.api.Shadow.extract<org.robolectric.shadows.ShadowDisplay>(display)
+        val manager = androperator.accessibilityservice.AccessibilityServiceManagerAndroid()
+        val service = object : TestAccessibilityService(context) {
+            override fun getDisplay(): android.view.Display = throw UnsupportedOperationException("No display context")
+            override fun getRootInActiveWindow(): android.view.accessibility.AccessibilityNodeInfo =
+                android.view.accessibility.AccessibilityNodeInfo.obtain().apply {
+                    packageName = "com.example.fixture"
+                    className = "android.widget.FrameLayout"
+                    isVisibleToUser = true
+                    setBoundsInScreen(android.graphics.Rect(0, 0, 2856, 1280))
+                }
+        }
+        manager.setCurrentAccessibilityService(service, true)
+        for (rotation in listOf(1, 3, 0)) {
+            shadow.setRotation(rotation)
+            val xml = UiTreeInspectorAndroid(manager).getCurrentUiHierarchyDump()
+            assertTrue(xml!!.contains("rotation=\"$rotation\""), xml)
+        }
+    }
+
+    @Test
     @Config(sdk = [Build.VERSION_CODES.R])
     fun `getScreenDimensionsFromService returns dimensions using WindowMetrics on API 30+`() {
         val service = TestAccessibilityService(context)

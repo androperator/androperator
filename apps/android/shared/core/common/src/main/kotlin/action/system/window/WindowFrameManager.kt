@@ -8,6 +8,9 @@ interface WindowFrameManager {
 
     val windowFrame: StateFlow<WindowFrame>
 
+    /** Refresh geometry for synchronous consumers that may run while the Activity is backgrounded. */
+    fun getCurrentWindowFrame(): WindowFrame = windowFrame.value
+
     fun setInsets(
         statusBarHeight: Dp,
         navBarHeight: Dp,

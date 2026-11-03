@@ -76,6 +76,11 @@ class WindowFrameManagerAndroid(
     override val windowFrame: StateFlow<WindowFrame>
         get() = _windowFrame
 
+    override fun getCurrentWindowFrame(): WindowFrame {
+        updateWindowFrame()
+        return _windowFrame.value
+    }
+
     fun updateInsetsAndFrame() {
         val activity = activity
         val windowManager = windowManager

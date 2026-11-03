@@ -11,3 +11,6 @@ java -cp "$build:$sdk/platforms/android-35/android.jar" CaptureSafetyTest
 "$sdk/build-tools/35.0.0/d8" --min-api 28 --lib "$sdk/platforms/android-35/android.jar" --output "$build" "$build/CaptureApiProbe.class"
 bash "$source_dir/secure-fixture/build.sh" "$build/fixture.apk"
 "$sdk/build-tools/35.0.0/apksigner" verify "$build/fixture.apk"
+
+bash "$source_dir/../rotation-targeting/fixture/build.sh" "$build/rotation-fixture.apk"
+"$sdk/build-tools/35.0.0/apksigner" verify "$build/rotation-fixture.apk"

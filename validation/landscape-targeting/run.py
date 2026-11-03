@@ -81,12 +81,17 @@ try:
         adb('shell', 'settings', 'put', 'system', 'user_rotation', str(rotation))
         nodes = observe(f'before-{index}', rotation)
         before = {label: count(nodes, label) for label in ('LEFT_TARGET', 'RIGHT_TARGET')}
+        expected = before.copy()
         for label in before:
             value = call(f'click-{index}-{label}', 'click', '--desc', label, '--strict')
             receipt = value['envelope']['stepResults'][0]['data']
             assert receipt['candidate_count'] == '1' and receipt['dispatch_accepted'] == 'true', receipt
-        after = observe(f'after-{index}', rotation)
-        assert all(count(after, label) == previous + 1 for label, previous in before.items())
+            expected[label] += 1
+            after = observe(f'after-{index}-{label}', rotation)
+            assert all(count(after, target) == total for target, total in expected.items()), {
+                'requested': label, 'expected': expected,
+                'observed': {target: count(after, target) for target in expected},
+            }
         summary.append({'rotation': rotation, 'counts': {label: count(after, label) for label in before}})
     for label in ('HIDDEN_TARGET', 'OFFSCREEN_TARGET'):
         call(label, 'click', '--desc', label, '--strict', error='NODE_NOT_FOUND')

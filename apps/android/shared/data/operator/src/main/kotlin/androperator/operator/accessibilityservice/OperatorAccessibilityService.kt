@@ -33,13 +33,9 @@ class OperatorAccessibilityService :
     private val onScreenLogPanelLifecycle: OnScreenLogPanelLifecycle by inject()
     private val foregroundApplicationObserver: ForegroundApplicationObserver by inject()
     private var routineLoopJob: Job? = null
-    private val recordingDiagnosticHook: RecordingDiagnosticHook? by lazy {
-        if (buildConfig.debug) {
-            RecordingDiagnosticHook()
-        } else {
-            null
-        }
-    }
+    private val verboseRecordingDiagnosticHook by lazy { RecordingDiagnosticHook() }
+    private val recordingDiagnosticHook: RecordingDiagnosticHook?
+        get() = if (buildConfig.debug && RecordingDiagnosticHook.isEnabled()) verboseRecordingDiagnosticHook else null
 
     override fun onCreateInputMethod(): InputMethod {
         if (buildConfig.debug) {
@@ -148,13 +144,17 @@ class OperatorAccessibilityService :
         } catch (t: Throwable) {
             Log.e(t, "[Operator-AccessibilityService] RecordingEventFilter failed for accessibility event")
         }
+        val diagnosticHook = recordingDiagnosticHook
         runRecordingDiagnosticHook(
-            hook = recordingDiagnosticHook,
+            hook = diagnosticHook,
             hookLabel = "for accessibility event",
         ) {
             onAccessibilityEvent(this@OperatorAccessibilityService, event)
         }
-        Log.d("[Operator-AccessibilityService] onAccessibilityEvent($event)")
+        // Event bursts share logd with canonical results. Full event diagnostics are opt-in.
+        if (diagnosticHook != null) {
+            Log.d("[Operator-AccessibilityService] onAccessibilityEvent($event)")
+        }
     }
 
     override fun onKeyEvent(event: KeyEvent): Boolean {

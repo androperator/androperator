@@ -7,6 +7,7 @@ import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.Application
 import android.content.res.Configuration
 import android.view.KeyEvent
+import android.util.Log as AndroidLog
 import android.view.accessibility.AccessibilityEvent
 import androperator.accessibilityservice.AccessibilityServiceManagerAndroid
 import androperator.operator.recording.RecordingEventFilter
@@ -35,6 +36,8 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.Implementation
 import org.robolectric.annotation.Implements
 import org.robolectric.shadows.ShadowAccessibilityService
+import org.robolectric.shadows.ShadowLog
+import timber.log.Timber
 import org.robolectric.util.ReflectionHelpers
 
 @RunWith(RobolectricTestRunner::class)
@@ -131,8 +134,98 @@ class OperatorAccessibilityServiceTest {
         }
     }
 
+    @Test
+    @Config(sdk = [33], manifest = Config.NONE, application = Application::class)
+    fun `event bursts still reach recording without automatic verbose logging`() {
+        for (debug in listOf(false, true)) {
+            ShadowLog.clear()
+            ShadowLog.setLoggable("RecordingDiag", AndroidLog.INFO)
+            val logger = Timber.DebugTree()
+            Timber.plant(logger)
+            try {
+                var delivered = 0
+                val filter = object : RecordingEventFilter {
+                    override fun onAccessibilityEvent(service: AccessibilityService, event: AccessibilityEvent?) {
+                        assertEquals("SYNTHETIC_EVENT_PAYLOAD", event?.text?.single()?.toString())
+                        delivered++
+                    }
+                    override fun onKeyEvent(service: AccessibilityService, event: KeyEvent) = Unit
+                }
+                withServiceKoin(debug, eventFilter = filter) { _, _ ->
+                    val service = Robolectric.buildService(OperatorAccessibilityService::class.java).create().get()
+                    repeat(1000) { index ->
+                        val type = if (index % 2 == 0) AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
+                            else AccessibilityEvent.TYPE_VIEW_SCROLLED
+                        val event = AccessibilityEvent.obtain(type).apply {
+                            packageName = "com.example.fixture"
+                            text.add("SYNTHETIC_EVENT_PAYLOAD")
+                        }
+                        service.onAccessibilityEvent(event)
+                    }
+                    assertEquals(1000, delivered)
+                    assertTrue(ShadowLog.getLogs().none {
+                        it.tag == "RecordingDiag" || it.msg.contains("SYNTHETIC_EVENT_PAYLOAD")
+                    }, "Ordinary event delivery must not flood the shared canonical-result logger")
+                }
+            } finally {
+                Timber.uproot(logger)
+            }
+        }
+    }
+
+    @Test
+    @Config(sdk = [33], manifest = Config.NONE, application = Application::class)
+    fun `explicit verbose recording diagnostics retain full event detail only in debug builds`() {
+        try {
+            for (debug in listOf(false, true)) {
+                ShadowLog.clear()
+                ShadowLog.setLoggable("RecordingDiag", AndroidLog.INFO)
+                val logger = Timber.DebugTree()
+                Timber.plant(logger)
+                try {
+                    var delivered = 0
+                    val filter = object : RecordingEventFilter {
+                        override fun onAccessibilityEvent(service: AccessibilityService, event: AccessibilityEvent?) {
+                            delivered++
+                        }
+                        override fun onKeyEvent(service: AccessibilityService, event: KeyEvent) = Unit
+                    }
+                    withServiceKoin(debug, eventFilter = filter) { _, _ ->
+                        val service = Robolectric.buildService(OperatorAccessibilityService::class.java).create().get()
+                        val event = AccessibilityEvent.obtain(AccessibilityEvent.TYPE_VIEW_SCROLLED).apply {
+                            packageName = "com.example.fixture"
+                            text.add("SYNTHETIC_EVENT_PAYLOAD")
+                        }
+                        service.onAccessibilityEvent(event)
+                        assertEquals(1, delivered)
+                        assertTrue(ShadowLog.getLogs().none { it.tag == "RecordingDiag" || it.msg.contains("SYNTHETIC_EVENT_PAYLOAD") })
+
+                        ShadowLog.setLoggable("RecordingDiag", AndroidLog.VERBOSE)
+                        service.onAccessibilityEvent(event)
+                        assertEquals(2, delivered)
+                        assertEquals(debug, ShadowLog.getLogs().any {
+                            it.tag == "RecordingDiag" && it.msg.startsWith("HANDLER type=TYPE_VIEW_SCROLLED")
+                        })
+                        assertEquals(debug, ShadowLog.getLogs().any { it.msg.contains("SYNTHETIC_EVENT_PAYLOAD") })
+
+                        ShadowLog.setLoggable("RecordingDiag", AndroidLog.INFO)
+                        ShadowLog.clear()
+                        service.onAccessibilityEvent(event)
+                        assertEquals(3, delivered)
+                        assertTrue(ShadowLog.getLogs().none { it.tag == "RecordingDiag" || it.msg.contains("SYNTHETIC_EVENT_PAYLOAD") })
+                    }
+                } finally {
+                    Timber.uproot(logger)
+                }
+            }
+        } finally {
+            ShadowLog.setLoggable("RecordingDiag", AndroidLog.INFO)
+        }
+    }
+
     private fun withServiceKoin(
         debug: Boolean,
+        eventFilter: RecordingEventFilter = NoOpRecordingEventFilter(),
         block: (AccessibilityServiceManagerAndroid, RecordingOnScreenLogPanelLifecycle) -> Unit,
     ) {
         stopKoin()
@@ -145,7 +238,6 @@ class OperatorAccessibilityServiceTest {
                 io = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
             )
         val routineManager = NoOpRoutineManager()
-        val recordingEventFilter = NoOpRecordingEventFilter()
         val panelLifecycle = RecordingOnScreenLogPanelLifecycle()
 
         try {
@@ -157,7 +249,7 @@ class OperatorAccessibilityServiceTest {
                         single<action.buildconfig.BuildConfig> { buildConfig }
                         single { coroutineScopes }
                         single<RoutineManager> { routineManager }
-                        single<RecordingEventFilter> { recordingEventFilter }
+                        single<RecordingEventFilter> { eventFilter }
                         single<OnScreenLogPanelLifecycle> { panelLifecycle }
                     },
                 )

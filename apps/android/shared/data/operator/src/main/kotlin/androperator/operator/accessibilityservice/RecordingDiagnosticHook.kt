@@ -306,6 +306,8 @@ internal class RecordingDiagnosticHook {
         private const val LOG_TAG = "RecordingDiag"
         private const val RATE_WINDOW_MS = 1_000L
 
+        fun isEnabled(): Boolean = Log.isLoggable(LOG_TAG, Log.VERBOSE)
+
         private fun eventTypeLabel(eventType: Int): String =
             when (eventType) {
                 AccessibilityEvent.TYPE_VIEW_CLICKED -> "TYPE_VIEW_CLICKED"

@@ -77,6 +77,32 @@ Treat the repair as complete only when:
 - `readiness.apk.presence` and `readiness.handshake` are both passing checks
 - `snapshot` returns a success envelope
 
+## Verbose Accessibility Diagnostics
+
+Dev Operator keeps full accessibility-event dumps and `RecordingDiag` handler,
+root-lookup and rate statistics off by default. Recording and foreground
+observation continue to receive accessibility events with this diagnostic stream
+disabled.
+
+Enable the verbose stream on a selected device while the debug Operator is running:
+
+```sh
+adb -s <device_serial> shell setprop log.tag.RecordingDiag VERBOSE
+adb -s <device_serial> logcat -s RecordingDiag:I OperatorAccessibilityService:D
+```
+
+The switch takes effect on subsequent callbacks. The verbose stream includes
+accessibility-event content and can compete with canonical results for Android
+logger capacity. Use it for a bounded diagnostic capture, then disable it:
+
+```sh
+adb -s <device_serial> shell setprop log.tag.RecordingDiag INFO
+```
+
+Release Operator keeps these verbose diagnostics disabled. Canonical result
+publication, integrity checks, deadlines and dispatch certainty use their usual
+contracts in both modes.
+
 ## Installation Failures
 
 ### `OPERATOR_APK_NOT_FOUND`

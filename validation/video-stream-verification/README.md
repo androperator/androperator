@@ -17,7 +17,11 @@ probe metadata, caller verdict, hashes, ownership release, and repeated stop.
 The scrcpy worker fixture simulates only recorder transport and runs real frame
 inspection, encoding and verification. It asserts one capture yields three
 independently sized MP4s, all source frames survive, timestamps match every source frame after rebasing to zero,
-and completed stop is immutable. It requires no scrcpy installation.
+and completed stop is immutable. A second dimension-span fixture adds a sparse
+final-frame gap and requires aggregate MP4 duration to retain that timeline
+(with at most one second of segment endpoint tolerance), alongside exact frame
+counts and timestamps. This catches B-frame reordering that shortens MP4
+duration tables without dropping decoded frames. It requires no scrcpy installation.
 
 An optional `VIDEO_FIXTURE_OUTPUT` environment variable names an existing local
 directory in which to retain the small valid/corrupt/VFR fixtures. Do not commit

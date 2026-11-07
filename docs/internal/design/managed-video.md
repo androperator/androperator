@@ -96,7 +96,12 @@ budget; source inspection, each encode and each full decode have separate
 two decoder threads, one output thread and a 256 MiB maximum single allocation.
 These are not whole-session time or memory limits.
 
-Output encoding preserves variable frame timing. Idle periods can make media
+Output encoding preserves variable frame timing and disables B-frame reordering.
+Sparse final-frame gaps can otherwise leave MP4 duration tables shorter than
+the decoded presentation timeline, even when every frame survives. The codec
+fixture checks duration as well as exact source frame counts and timestamps.
+This does not repair missing source time or weaken coverage verification.
+Idle periods can make media
 duration shorter than wall-clock capture duration. A zero-duration clip remains
 partial. Aggregate media duration sums verified clips; aggregate size is null
 when verified clips have different dimensions. Stop waits only 15 seconds and

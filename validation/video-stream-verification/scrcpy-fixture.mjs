@@ -8,7 +8,7 @@ import { atomicJson } from '../../apps/node/dist/domain/evidence/videoSupport.js
 import { stopVideo } from '../../apps/node/dist/domain/evidence/video.js';
 
 // Fake only scrcpy transport. Real H.264 parameter changes, splitting, encoding and decoding exercise the worker.
-export async function verifyDimensionChanges(root, runner) {
+export async function verifyDimensionChanges(root, runner, sparseTail = false) {
   const run = async (command, args) => {
     const result = await runner.run(command, args, { timeoutMs: 120000 });
     assert.equal(result.code, 0, result.stderr);
@@ -25,7 +25,8 @@ export async function verifyDimensionChanges(root, runner) {
   const raw = join(root, 'geometry.h264'), source = join(root, 'geometry.mkv');
   await writeFile(raw, Buffer.concat(chunks));
   // Closely spaced VFR frames reproduce nominal-timebase rounding seen during live rotation.
-  await run('ffmpeg', ['-v', 'error', '-fflags', '+genpts', '-r', '60', '-i', raw, '-c', 'copy', '-bsf:v', "setts=time_base=1/1000:pts='if(eq(mod(N,60),30),floor((N-1)*1001/60)+1,floor(N*1001/60))':dts=PTS", source]);
+  // A final-frame gap also exposes MP4 duration loss with reordered B-frames.
+  await run('ffmpeg', ['-v', 'error', '-fflags', '+genpts', '-r', '60', '-i', raw, '-c', 'copy', '-bsf:v', `setts=time_base=1/1000:pts='if(eq(mod(N,60),30),floor((N-1)*1001/60)+1,floor(N*1001/60))${sparseTail ? '+if(gte(N,179),10000,0)' : ''}':dts=PTS`, source]);
   const sourceFrames = JSON.parse(await run('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_frames',
     '-show_entries', 'frame=best_effort_timestamp_time', '-of', 'json', source])).frames;
   const outputDir = join(root, 'scrcpy-worker');
@@ -73,6 +74,12 @@ export async function verifyDimensionChanges(root, runner) {
       const expected = Number(sourceFrames[index * 60 + frameIndex].best_effort_timestamp_time) - sourceStart;
       assert.ok(Math.abs(Number(frame.best_effort_timestamp_time) - expected) < 0.00001, 'Preserve every source timestamp after rebasing');
     }
+  }
+  if (sparseTail) {
+    const lastSourceTime = Number(sourceFrames.at(-1).best_effort_timestamp_time);
+    // Clip endpoint durations differ slightly from the next span's starting timestamp.
+    assert.ok(Math.abs(manifest.video.mediaDurationMs - lastSourceTime * 1000) < 1000,
+      'MP4 durations must include the sparse tail without inventing or dropping frames');
   }
   assert.equal(spawns, 1, 'Folding must not restart capture');
   await assert.rejects(stat(join(outputDir, 'capture.partial.mkv')));

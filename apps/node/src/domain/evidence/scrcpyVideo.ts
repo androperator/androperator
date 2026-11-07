@@ -174,7 +174,8 @@ export async function runScrcpyVideoWorker(state: VideoState, runner: ProcessRun
         const encoded = await runner.run("ffmpeg", ["-v", "error", "-nostdin", "-nostats", "-xerror", "-threads", "2",
           "-i", source, "-ss", String(segment.start), ...(segment.end === undefined ? [] : ["-t", String(segment.end - segment.start)]),
           "-map", "0:v:0", "-an", "-sn", "-dn", "-vf", `scale=${size.replace("x", ":")},setsar=1`,
-          "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-threads", "2", ...FFMPEG_VIDEO_TIMING_ARGS, join(outputDir, partial)],
+          // B-frame reordering can shorten MP4 duration tables across sparse VFR gaps.
+          "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-bf", "0", "-threads", "2", ...FFMPEG_VIDEO_TIMING_ARGS, join(outputDir, partial)],
         { timeoutMs: VIDEO_DECODE_TIMEOUT_MS });
         if (encoded.code !== 0 || encoded.error || encoded.stderr.trim()) fail(`Video segment encoding failed: ${encoded.stderr || encoded.error?.message || encoded.code}`);
         const metadata = await verifyVideo(runner, join(outputDir, partial), size, value => { probed = value; }, segment.frames);

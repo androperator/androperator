@@ -1,7 +1,7 @@
 import { verifyDimensionChanges } from './scrcpy-fixture.mjs';
 import { verifyWorkerFailure } from './worker-fixture.mjs';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, writeFile, rm, copyFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, writeFile, rm, copyFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { VideoProcessRunner } from '../../apps/node/dist/domain/evidence/videoProcessRunner.js';
@@ -24,6 +24,9 @@ async function generate(name, size, duration, filter) {
 }
 try {
   await verifyDimensionChanges(root, runner);
+  const sparseRoot = join(root, 'sparse-tail');
+  await mkdir(sparseRoot);
+  await verifyDimensionChanges(sparseRoot, runner, true);
   const valid = await generate('valid', '320x240', 3);
   assert.equal((await verifyVideo(runner, valid, '320x240')).mediaDurationMs, 3000);
   const probe = JSON.parse(await run('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_packets', '-of', 'json', valid]));

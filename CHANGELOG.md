@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims to follow Semantic Versioning.
 
+## [1.3.2] - 2026-11-08
+
+Recordings stayed upright after rotation, and MP4 clips preserved the timing of sparse frames. The release also improved selector and scroll behavior and reduced sensitive or verbose diagnostic output.
+
+### 🤖 Node API & CLI
+
+- **Fixed:** Transport failures retained allowlisted diagnostics without including UI chunks, hierarchy content, or arbitrary payload text.
+- **Fixed:** Recordings with insufficient video timeline coverage were marked partial and unverified while retaining playable clips and the source recording.
+- **Fixed:** Recorder startup failures waited for bounded cleanup before releasing ownership; forced or unconfirmed shutdown retained recovery ownership.
+- **Fixed:** Screen recording followed device rotation instead of locking the initial orientation.
+- **Fixed:** MP4 encoding preserved sparse-frame duration without padding frames or timestamps.
+
+### 📚 Documentation & Website
+
+- **Changed:** Published-version markers and download examples reflected the verified 1.3.1 release.
+- **Changed:** Documented safe transport diagnostics, video coverage checks, recorder recovery, and ordered clips across rotation.
+- **Changed:** Documented focus preparation, current display geometry for strict clicks, bounded scroll receipts, and opt-in accessibility diagnostics.
+
+### 📱 Android Operator APK
+
+- **Changed:** Verbose accessibility diagnostics became opt-in for debug builds; recording and foreground callbacks remained active.
+- **Fixed:** Text entry tried the editor's normal click path first, preventing a covered pager from changing pages during focus preparation.
+- **Fixed:** Strict clicks used current display dimensions after background rotation while preserving off-screen filtering and ambiguity rejection.
+- **Fixed:** Canonical scroll receipts retained termination reason, scroll count, configured bounds, and available final progress.
+
+Pull requests:
+- [chore(release): finalize 1.3.1 and advance code to 1.3.2](https://github.com/androperator/androperator/pull/452)
+- [fix(transport): omit UI payloads from failure diagnostics](https://github.com/androperator/androperator/pull/459)
+- [fix(evidence): flag incomplete video timeline coverage](https://github.com/androperator/androperator/pull/460)
+- [fix(evidence): await owned recorder startup cleanup](https://github.com/androperator/androperator/pull/461)
+- [fix(android): preserve covered pager during text entry focus](https://github.com/androperator/androperator/pull/462)
+- [fix(selectors): refresh display geometry after background rotation](https://github.com/androperator/androperator/pull/467)
+- [fix(scroll): retain bounded search termination in canonical results](https://github.com/androperator/androperator/pull/468)
+- [fix(evidence): keep recordings upright across device rotation](https://github.com/androperator/androperator/pull/469)
+- [fix(operator): make verbose accessibility diagnostics opt-in](https://github.com/androperator/androperator/pull/470)
+- [fix(evidence): preserve sparse video duration in MP4 clips](https://github.com/androperator/androperator/pull/471)
+
 ## [1.3.1] - 2026-10-29
 
 The CLI fixed named `open` targets with navigation timeouts and preserved more transport failure evidence through daemon requests.

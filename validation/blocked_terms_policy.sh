@@ -118,11 +118,49 @@ blocked_terms_policy_scan_commit_message() {
   return "$preparation_status"
 }
 
-# With no revisions, inspect Git's effective identities, including environment
-# overrides and --author. Otherwise scan raw identities and messages in history.
+# Identity exceptions are exact, repository-local opt-ins. They never exempt
+# matching terms in staged content or commit messages.
+blocked_terms_policy_scan_git_identity_file() {
+  local identity_file="$1"
+  local allowed_identities
+  local config_status=0
+  allowed_identities="$(git config --local --get-all androperator.allowedGitIdentity)" || config_status=$?
+  if [[ $config_status -gt 1 ]]; then
+    echo "[blocked-terms] unable to read allowed Git identities" >&2
+    return "$config_status"
+  fi
+
+  local identity
+  local allowed_identity
+  local is_allowed
+  local status=0
+  local filtered_file
+  filtered_file="$(mktemp "${TMPDIR:-/tmp}/androperator-unapproved-identities.XXXXXX")" || return 1
+  while IFS= read -r identity; do
+    is_allowed=0
+    while IFS= read -r allowed_identity; do
+      if [[ -n "$allowed_identity" && "$identity" == "$allowed_identity" ]]; then
+        is_allowed=1
+        break
+      fi
+    done <<< "$allowed_identities"
+    if [[ $is_allowed -eq 0 ]]; then
+      printf '%s\n' "$identity" >> "$filtered_file" || status=1
+    fi
+  done < "$identity_file"
+  if [[ $status -eq 0 ]]; then
+    blocked_terms_policy_scan_file "commit identities" "$filtered_file" || status=$?
+  fi
+  rm -f "$filtered_file"
+  return "$status"
+}
+
+# With no revisions, inspect effective identities, including environment overrides
+# and --author. Otherwise inspect raw history identities and messages separately.
 blocked_terms_policy_scan_identities() {
   local preparation_status=0
   local identity_file
+  local message_file
   local status=0
 
   if blocked_terms_policy_prepare; then
@@ -137,18 +175,28 @@ blocked_terms_policy_scan_identities() {
 
   identity_file="$(mktemp "${TMPDIR:-/tmp}/androperator-identities.XXXXXX")" || return 1
   if [[ $# -eq 0 ]]; then
-    if ! git var GIT_AUTHOR_IDENT > "$identity_file" ||
-       ! git var GIT_COMMITTER_IDENT >> "$identity_file"; then
+    if ! git var GIT_AUTHOR_IDENT | sed -E 's/ [0-9]+ [+-][0-9]{4}$//' > "$identity_file" ||
+       ! git var GIT_COMMITTER_IDENT | sed -E 's/ [0-9]+ [+-][0-9]{4}$//' >> "$identity_file"; then
       status=1
     fi
-  elif ! git log --format='%an <%ae>%n%cn <%ce>%n%B' "$@" -- > "$identity_file"; then
+  elif ! git log --format='%an <%ae>%n%cn <%ce>' "$@" -- > "$identity_file"; then
     status=1
   fi
 
   if [[ $status -eq 0 ]]; then
-    blocked_terms_policy_scan_file "commit identities or history" "$identity_file" || status=$?
+    blocked_terms_policy_scan_git_identity_file "$identity_file" || status=$?
   fi
   rm -f "$identity_file"
+
+  if [[ $# -gt 0 ]]; then
+    message_file="$(mktemp "${TMPDIR:-/tmp}/androperator-messages.XXXXXX")" || return 1
+    if ! git log --format='%B' "$@" -- > "$message_file"; then
+      status=1
+    else
+      blocked_terms_policy_scan_file "commit messages in history" "$message_file" || status=$?
+    fi
+    rm -f "$message_file"
+  fi
   return "$status"
 }
 

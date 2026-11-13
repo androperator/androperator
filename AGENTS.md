@@ -202,7 +202,11 @@ content, and the sanitized commit message, case-insensitively, matching identifi
 or literal phrases as appropriate. Staged-content scans exempt PNG and WebP payloads with
 a verified format signature and files named `KnownAppsRepository*`; text disguised
 with a PNG or WebP extension is still scanned. Before pushing, the hooks also scan raw author
-and committer identities and messages in the outgoing history.
+and committer identities and messages in the outgoing history. An owner-approved
+Git author/committer identity may be exempted with an exact `Name <email>` value
+in repository-local `androperator.allowedGitIdentity` config. This exemption
+applies only to attribution; staged content and commit messages remain scanned.
+Never configure an identity exception without the owner's explicit approval.
 Verify changes to this policy with `./validation/test_blocked_terms_policy.sh`.
 Before release or force-push events, scan for blocked terms and verify history.
 

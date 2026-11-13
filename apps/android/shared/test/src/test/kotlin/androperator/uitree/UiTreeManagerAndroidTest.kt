@@ -150,6 +150,78 @@ class UiTreeManagerAndroidTest {
     }
 
     @Test
+    fun `long click selects nearest long-clickable node instead of clickable ancestors`() = runTest {
+        for (targetIsSelf in listOf(true, false)) {
+            val service = org.robolectric.Robolectric.buildService(ReceiptService::class.java).create().get()
+            val services = androperator.accessibilityservice.AccessibilityServiceManagerAndroid().apply {
+                setCurrentAccessibilityService(service, true)
+            }
+            val outer = AccessibilityNodeInfo.obtain().apply {
+                isClickable = true
+                isLongClickable = true
+                isEnabled = true
+            }
+            val target = AccessibilityNodeInfo.obtain().apply {
+                isLongClickable = true
+                isEnabled = true
+            }
+            val clickableOnly = AccessibilityNodeInfo.obtain().apply { isClickable = true; isEnabled = true }
+            val text = AccessibilityNodeInfo.obtain()
+            Shadow.extract<ShadowAccessibilityNodeInfo>(outer).addChild(target)
+            Shadow.extract<ShadowAccessibilityNodeInfo>(target).addChild(clickableOnly)
+            Shadow.extract<ShadowAccessibilityNodeInfo>(clickableOnly).addChild(text)
+            for (node in listOf(outer, target, clickableOnly)) {
+                Shadow.extract<ShadowAccessibilityNodeInfo>(node).setOnPerformActionListener { _, _ -> true }
+            }
+            val observations = mutableListOf<Triple<Any?, String, Boolean>>()
+            val accepted = kotlinx.coroutines.withContext(UiDispatchObservation { node, method, result ->
+                observations += Triple(node, method, result)
+            }) {
+                UiTreeManagerAndroid(services).triggerClick(uiNode(if (targetIsSelf) target else text), UiTreeClickTypes.LongClick)
+            }
+            assertTrue(accepted)
+            assertEquals(listOf(AccessibilityNodeInfo.ACTION_LONG_CLICK), performedActionIds(target))
+            assertTrue(performedActionIds(clickableOnly).isEmpty())
+            assertTrue(performedActionIds(outer).isEmpty())
+            assertEquals(Triple<Any?, String, Boolean>(target, "accessibility_action", true), observations.last())
+        }
+    }
+
+    @Test
+    @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    fun `long click retains gesture fallback for missing disabled or rejected semantic target`() = runTest {
+        for (targetState in listOf("missing", "disabled", "rejected")) {
+            val service = org.robolectric.Robolectric.buildService(ReceiptService::class.java).create().get()
+            val services = androperator.accessibilityservice.AccessibilityServiceManagerAndroid().apply {
+                setCurrentAccessibilityService(service, true)
+            }
+            val serviceShadow = Shadow.extract<org.robolectric.shadows.ShadowAccessibilityService>(service)
+            serviceShadow.setCanDispatchGestures(true)
+            val parent = AccessibilityNodeInfo.obtain().apply {
+                isClickable = true
+                isLongClickable = targetState != "missing"
+                isEnabled = targetState != "disabled"
+            }
+            val text = AccessibilityNodeInfo.obtain().apply {
+                setBoundsInScreen(android.graphics.Rect(20, 40, 100, 120))
+            }
+            Shadow.extract<ShadowAccessibilityNodeInfo>(parent).addChild(text)
+            Shadow.extract<ShadowAccessibilityNodeInfo>(parent).setOnPerformActionListener { _, _ -> false }
+            val action = async { UiTreeManagerAndroid(services).triggerClick(uiNode(text), UiTreeClickTypes.LongClick) }
+            testScheduler.runCurrent()
+            val dispatched = serviceShadow.gesturesDispatched.single()
+            val stroke = dispatched.description().getStroke(0)
+            assertTrue(stroke.duration >= android.view.ViewConfiguration.getLongPressTimeout())
+            dispatched.callback().onCompleted(dispatched.description())
+            assertTrue(action.await())
+            assertEquals(
+                if (targetState == "rejected") listOf(AccessibilityNodeInfo.ACTION_LONG_CLICK) else emptyList(),
+                performedActionIds(parent),
+            )
+        }
+    }
+
+    @Test
     fun `gesture fallback records acceptance before completion or cancellation`() = runTest {
         val service = org.robolectric.Robolectric.buildService(ReceiptService::class.java).create().get()
         val services = androperator.accessibilityservice.AccessibilityServiceManagerAndroid().apply {

@@ -87,6 +87,40 @@ git -C "$test_repo" config user.email "person@${blocked_lower}.invalid"
 assert_rejected git -C "$test_repo" commit --allow-empty -m "test: configured identity"
 git -C "$test_repo" config user.email "blocked-terms-test@example.invalid"
 
+# Exact local identity exceptions permit attribution without exempting content,
+# messages, different names/emails, or identities admitted only by global config.
+approved_email="person@${blocked_lower}.invalid"
+approved_identity="Allowed Person <$approved_email>"
+git -C "$test_repo" config --local --add androperator.allowedGitIdentity "$approved_identity"
+GIT_AUTHOR_NAME="Allowed Person" GIT_AUTHOR_EMAIL="$approved_email" \
+  GIT_COMMITTER_NAME="Allowed Person" GIT_COMMITTER_EMAIL="$approved_email" \
+  git -C "$test_repo" commit --allow-empty -m "test: approved attribution" --quiet
+git -C "$test_repo" push --quiet origin HEAD:refs/heads/approved-identity
+assert_rejected env GIT_AUTHOR_NAME="Different Person" GIT_AUTHOR_EMAIL="$approved_email" \
+  git -C "$test_repo" commit --allow-empty -m "test: unapproved name"
+assert_rejected env GIT_AUTHOR_NAME="Allowed Person" GIT_AUTHOR_EMAIL="other@${blocked_lower}.invalid" \
+  git -C "$test_repo" commit --allow-empty -m "test: unapproved email"
+assert_rejected env GIT_AUTHOR_NAME="Allowed Person" GIT_AUTHOR_EMAIL="$approved_email" \
+  GIT_COMMITTER_NAME="Allowed Person" GIT_COMMITTER_EMAIL="$approved_email" \
+  git -C "$test_repo" commit --allow-empty -m "test: $blocked_lower"
+printf '%s\n' "$blocked_lower" > "$test_repo/approved-identity-content.txt"
+git -C "$test_repo" add approved-identity-content.txt
+assert_rejected env GIT_AUTHOR_NAME="Allowed Person" GIT_AUTHOR_EMAIL="$approved_email" \
+  GIT_COMMITTER_NAME="Allowed Person" GIT_COMMITTER_EMAIL="$approved_email" \
+  git -C "$test_repo" commit -m "test: approved identity with blocked content"
+git -C "$test_repo" reset --hard --quiet HEAD
+approved_head="$(git -C "$test_repo" rev-parse HEAD)"
+ANDROPERATOR_BLOCKED_TERMS_FILE="$test_root/missing" \
+  GIT_AUTHOR_NAME="Allowed Person" GIT_AUTHOR_EMAIL="$approved_email" \
+  GIT_COMMITTER_NAME="Allowed Person" GIT_COMMITTER_EMAIL="$approved_email" \
+  git -C "$test_repo" commit --allow-empty -m "test: historical $blocked_lower" --quiet
+assert_rejected git -C "$test_repo" push origin HEAD:refs/heads/approved-identity
+git -C "$test_repo" reset --hard --quiet "$approved_head"
+git -C "$test_repo" config --local --unset-all androperator.allowedGitIdentity
+assert_rejected env GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=androperator.allowedGitIdentity \
+  GIT_CONFIG_VALUE_0="$approved_identity" GIT_AUTHOR_NAME="Allowed Person" GIT_AUTHOR_EMAIL="$approved_email" \
+  git -C "$test_repo" commit --allow-empty -m "test: nonlocal identity exception"
+
 # Both direct message checks and identity checks must fail closed for invalid files.
 mkdir "$test_root/not-a-file"
 printf 'test: allowed\n' > "$test_root/message"

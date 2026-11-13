@@ -418,6 +418,7 @@ Rules:
 
 - `matcher` and `coordinate` are mutually exclusive.
 - `clickType = "focus"` is invalid with `coordinate`.
+- A matcher-based `long_click` targets the nearest long-clickable node, starting with the matched node. Clickable-only ancestors are skipped. If no long-clickable node is found within the ancestor search limit, or the target is disabled or rejects the action, the runtime falls back to a long-press gesture at the matched node.
 - CLI defaults to `"default"` and omits the field from the payload.
 - `coordinate` with `clickType = "long_click"` presses and holds at a screen coordinate that has no UI node, such as an empty launcher workspace or a map. The CLI form is `androperator click --coordinate <x> <y> --long`. Use this, not a zero-length `swipe` or `drag`, which are rejected.
 

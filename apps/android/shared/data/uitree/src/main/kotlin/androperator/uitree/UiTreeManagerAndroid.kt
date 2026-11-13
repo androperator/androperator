@@ -25,6 +25,7 @@ import androperator.accessibilityservice.dispatchSwipe
 import androperator.accessibilityservice.firstClickableAncestorOrSelf
 import androperator.accessibilityservice.firstEditableAncestorOrSelf
 import androperator.accessibilityservice.firstFocusableAncestorOrSelf
+import androperator.accessibilityservice.firstLongClickableAncestorOrSelf
 
 class UiTreeManagerAndroid(
     private val accessibilityServiceManager: AccessibilityServiceManager,
@@ -237,17 +238,17 @@ class UiTreeManagerAndroid(
     }
 
     /**
-     * Performs a long click: try ACTION_LONG_CLICK on clickable ancestor, fallback to long-press gesture
+     * Performs a long click: try ACTION_LONG_CLICK on long-clickable ancestor, fallback to long-press gesture
      */
     private suspend fun performLongClick(
         accessibilityNodeInfo: AccessibilityNodeInfo,
         service: AccessibilityService,
         uiNode: UiNode,
     ): Boolean {
-        // 1) Try ACTION_LONG_CLICK on clickable ancestor
-        accessibilityNodeInfo.firstClickableAncestorOrSelf()?.let { clickable ->
-            if (clickable.isEnabled && dispatch(clickable, "accessibility_action") { clickable.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK) }) {
-                Log.d("[UiTreeManager] Long-clicked via ACTION_LONG_CLICK on ${clickable.debugNode()} for id=${uiNode.id}")
+        // 1) Try ACTION_LONG_CLICK on long-clickable ancestor
+        accessibilityNodeInfo.firstLongClickableAncestorOrSelf()?.let { longClickable ->
+            if (longClickable.isEnabled && dispatch(longClickable, "accessibility_action") { longClickable.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK) }) {
+                Log.d("[UiTreeManager] Long-clicked via ACTION_LONG_CLICK on ${longClickable.debugNode()} for id=${uiNode.id}")
                 return true
             }
         }

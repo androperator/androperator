@@ -482,6 +482,29 @@ fun AccessibilityNodeInfo.firstClickableAncestorOrSelf(): AccessibilityNodeInfo?
 }
 
 /**
+ * Finds the nearest long-clickable node, including this node, within the same depth limit as clicks.
+ */
+fun AccessibilityNodeInfo.firstLongClickableAncestorOrSelf(): AccessibilityNodeInfo? {
+    var current: AccessibilityNodeInfo? = this
+    var depth = 0
+    while (current != null && depth < 8) {
+        if (current.isLongClickable) return current
+        val parent =
+            try {
+                current.parent
+            } catch (_: Exception) {
+                null
+            }
+        if (parent == null) break
+        if (current !== this) current.recycleSafe()
+        current = parent
+        depth++
+    }
+    if (current !== this) current?.recycleSafe()
+    return null
+}
+
+/**
  * Finds the first focusable ancestor of this node (or itself) by walking up the parent hierarchy.
  * Checks both for the ACTION_FOCUS action availability and the isFocusable property.
  * This is used to find a focusable target when the specific node can't receive focus.

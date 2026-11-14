@@ -84,7 +84,6 @@ kotlin_test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 kotlin_test_junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 kotlinx_coroutines_android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinCoroutines" }
 kotlinx_coroutines_core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinCoroutines" }
-kotlinx_coroutines_play_services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinCoroutines" }
 kotlinx_coroutines_test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinCoroutines" }
 kotlinx_datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinDateTime" }
 kotlinx_serialization_json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinSerializationJson" }

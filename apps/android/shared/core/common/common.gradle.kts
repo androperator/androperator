@@ -35,7 +35,6 @@ dependencies {
 
     api(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.coroutines.android)
-    api(libs.kotlinx.coroutines.play.services)
     api(libs.kotlinx.datetime)
 
     // Compose dependencies

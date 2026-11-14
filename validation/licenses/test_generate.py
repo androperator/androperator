@@ -24,8 +24,8 @@ class LicenseInventoryTest(unittest.TestCase):
             self.assertIn(coordinate, rendered)
         self.assertIn('Copyright (c) 2004-2022 QOS.ch', rendered)
         self.assertIn('Mozilla Public License', rendered)
-        self.assertIn('Protobuf Nano', rendered)
-        self.assertIn('Android SDK terms', rendered)
+        self.assertNotIn('Google Play Services', rendered)
+        self.assertNotIn('ICU4C', rendered)
         self.assertNotIn('<script', rendered)
         self.assertEqual(rendered, GENERATOR.render(reversed(self.metadata['modules']), self.metadata, self.texts))
 

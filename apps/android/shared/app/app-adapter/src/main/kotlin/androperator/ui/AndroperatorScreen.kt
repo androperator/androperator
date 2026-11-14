@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -147,6 +148,7 @@ private fun DoctorContent(
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 TextButton(
                     onClick = { uriHandler.openUri("https://androperator.com") },
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
                     colors = ButtonDefaults.textButtonColors(
                         containerColor = DisabledBackground,
                         contentColor = OperatorGreen,
@@ -154,6 +156,7 @@ private fun DoctorContent(
                 ) { Text("androperator.com") }
                 TextButton(
                     onClick = { uriHandler.openUri("https://github.com/androperator/androperator/") },
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
                     colors = ButtonDefaults.textButtonColors(
                         containerColor = DisabledBackground,
                         contentColor = OperatorGreen,

@@ -49,9 +49,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.koin.core)
     implementation(libs.koin.android)
-    implementation(libs.ktor.client.core)
-    implementation(libs.okhttp3.logging.interceptor)
-    implementation(libs.okhttp3.okhttp)
     
     testImplementation(libs.androidx.test.core)
     testImplementation("junit:junit:4.13.2")

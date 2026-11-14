@@ -193,11 +193,9 @@ import androperator.workflow.WorkflowFactory
 import androperator.workflow.WorkflowFactoryDefault
 import androperator.workflow.WorkflowManager
 import androperator.workflow.WorkflowManagerDefault
-import io.ktor.client.HttpClient
 import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
 import kotlinx.coroutines.CoroutineScope
-import okhttp3.OkHttpClient
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -228,7 +226,6 @@ val AppModule: Module = module {
     single<DeviceRefreshRateSystem> { DeviceRefreshRateSystem(get()) }
     single<DeviceState> { get<DeviceStateSystem>() }
     single<DeviceStateSystem> { DeviceStateSystem(get(), get(), get()) }
-    single<HttpClient> { Factory.httpClient(this) }
     single<KnownAppsRepository> { get<KnownAppsRepositoryDefault>() }
     single<KnownAppsRepositoryDefault> { KnownAppsRepositoryDefault() }
     single<Lazy<AppState>>(NamedScope.LazyAppState) { getLazy() }
@@ -309,7 +306,6 @@ val AppModule: Module = module {
     single<Lazy<DeviceStateSystem>>(NamedScope.LazyDeviceStateSystem) { getLazy() }
     single<LocaleRepository> { get<LocaleRepositorySystem>() }
     single<LocaleRepositorySystem> { LocaleRepositorySystem(get()) }
-    single<OkHttpClient> { FactoryAndroid.createOkHttpClient(this) }
     single<OpenAppManager> { get<OpenAppManagerAndroid>() }
     single<OpenAppManagerAndroid> { OpenAppManagerAndroid(get(), get(), get()) }
     single<OperatorDeviceIdProvider> { get<OperatorDeviceIdProviderAndroid>() }

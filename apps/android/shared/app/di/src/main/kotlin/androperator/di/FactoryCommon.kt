@@ -12,12 +12,10 @@ import action.system.window.WindowFrameManagerDefault
 import action.system.window.WindowFrameManagerNoOp
 import androperator.appstate.AppState
 import androperator.appstate.AppStateMainProcess
-import androperator.network.HttpClientFactory
 import androperator.prefs.DevicePreferenceStorage
 import androperator.prefs.DevicePreferenceStorageDefault
 import androperator.prefs.PreferenceStorage
 import androperator.prefs.PreferenceStorageDefault
-import io.ktor.client.HttpClient
 import kotlinx.coroutines.CoroutineScope
 import org.koin.core.scope.Scope
 
@@ -45,10 +43,6 @@ abstract class FactoryCommon : FactoryBase {
             scope.get(NamedScope.DeviceSettings),
             scope.get(NamedScope.CoroutineScopeMain),
         )
-    }
-
-    fun httpClient(scope: Scope): HttpClient {
-        return HttpClientFactory.createHttpClient()
     }
 
     override fun preferenceStorage(scope: Scope): PreferenceStorage {

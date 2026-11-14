@@ -138,10 +138,6 @@ dependencies {
     implementation(libs.kotlin.stdlib.jdk8)
 
     implementation(libs.koin.android)
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.okhttp3.logging.interceptor)
-    implementation(libs.okhttp3.okhttp)
     implementation(libs.timber)
 
     implementation(project(":shared:app:app-adapter"))

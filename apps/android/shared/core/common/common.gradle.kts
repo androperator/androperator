@@ -35,7 +35,6 @@ dependencies {
 
     api(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.coroutines.android)
-    api(libs.kotlinx.coroutines.play.services)
     api(libs.kotlinx.datetime)
 
     // Compose dependencies
@@ -45,7 +44,6 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
 
-    implementation(libs.okio)
 
     api(libs.androidx.annotation)
     api(libs.androidx.core)
@@ -56,7 +54,6 @@ dependencies {
     api(libs.androidx.lifecycle.service)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.browser)
-    implementation(libs.okhttp3.okhttp)
 
     // Monitoring dependencies
     implementation(libs.timber)

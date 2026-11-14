@@ -44,7 +44,6 @@ ul {list-style:none; padding:0;} li {padding:16px 0; border-bottom:1px solid #d5
 a {color:#285c32; display:inline-block; padding:8px 0;} pre {white-space:pre-wrap; font:14px/1.5 monospace;}
 section {padding-top:24px;} </style></head><body>
 <p>Androperator is built with the projects below. Their license text and notices are bundled for offline reading.</p>
-<p>Google Play Services is proprietary and is listed under Android SDK terms.</p>
 ''' + f'<p>{len(coordinates)} dependency entries.</p><ul>' + '\n'.join(rows) + '</ul>' + '''
 <h1>Artwork</h1><p>The GitHub Invertocat is a trademark of GitHub, Inc., used to link to this project on GitHub. <a href="https://github.com/logos">GitHub logo usage terms (online)</a>.</p>
 <h1>License text and notices</h1>

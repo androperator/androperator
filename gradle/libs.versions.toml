@@ -25,12 +25,9 @@ composeActivity = "1.9.3"
 espresso = "3.5.1"
 koin = "3.5.6"
 ksp = "2.1.10-1.0.31"
-ktor = "2.3.12"
 lifecycle = "2.6.2"
 lifecycleExtensions = "2.2.0"
 material3Compose = "1.3.1"
-okhttp = "4.12.0"
-okio = "3.9.1"
 orgJson = "20240303"
 processPhoenix = "2.1.2"
 robolectric="4.11.1"
@@ -84,18 +81,9 @@ kotlin_test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 kotlin_test_junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 kotlinx_coroutines_android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinCoroutines" }
 kotlinx_coroutines_core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinCoroutines" }
-kotlinx_coroutines_play_services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinCoroutines" }
 kotlinx_coroutines_test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinCoroutines" }
 kotlinx_datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinDateTime" }
 kotlinx_serialization_json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinSerializationJson" }
-ktor_client_content_negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
-ktor_client_core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
-ktor_client_logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
-ktor_client_okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
-ktor_serialization_kotlinx_json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
-okhttp3_logging_interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
-okhttp3_okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
-okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 org_json = { module = "org.json:json", version.ref = "orgJson" }
 process_phoenix = { module = "com.jakewharton:process-phoenix", version.ref = "processPhoenix" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }

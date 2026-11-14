@@ -40,7 +40,6 @@ import androperator.app.adapter.R
 private val ScreenBackground = Color(0xFFF7F9F4)
 private val TextOnBackground = Color(0xFF19251C)
 private val OperatorGreen = Color(0xFF285C32)
-private val RunningBackground = Color(0xFFE0EEDB)
 private val DisabledBackground = Color(0xFFE9ECE6)
 
 @Composable
@@ -119,7 +118,6 @@ private fun DoctorContent(
                 style = MaterialTheme.typography.titleMedium,
                 color = if (accessibilityIsRunning) OperatorGreen else TextOnBackground,
                 modifier = Modifier
-                    .background(if (accessibilityIsRunning) RunningBackground else DisabledBackground, CircleShape)
                     .heightIn(min = 48.dp)
                     .padding(horizontal = 16.dp, vertical = 10.dp),
             )
@@ -149,11 +147,17 @@ private fun DoctorContent(
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 TextButton(
                     onClick = { uriHandler.openUri("https://androperator.com") },
-                    colors = ButtonDefaults.textButtonColors(contentColor = OperatorGreen),
+                    colors = ButtonDefaults.textButtonColors(
+                        containerColor = DisabledBackground,
+                        contentColor = OperatorGreen,
+                    ),
                 ) { Text("androperator.com") }
                 TextButton(
                     onClick = { uriHandler.openUri("https://github.com/androperator/androperator/") },
-                    colors = ButtonDefaults.textButtonColors(contentColor = OperatorGreen),
+                    colors = ButtonDefaults.textButtonColors(
+                        containerColor = DisabledBackground,
+                        contentColor = OperatorGreen,
+                    ),
                 ) {
                     Image(
                         painter = painterResource(R.drawable.github_invertocat),

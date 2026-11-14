@@ -113,7 +113,6 @@ private fun DoctorContent(
                     .clip(CircleShape),
                 contentScale = ContentScale.Fit,
             )
-            Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = if (accessibilityIsRunning) "Accessibility service: Running" else "Accessibility service: Disabled",
                 style = MaterialTheme.typography.titleMedium,

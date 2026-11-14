@@ -56,7 +56,6 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.process.phoenix)
     implementation(libs.timber)
-    implementation(libs.okhttp3.okhttp)
     implementation(libs.koin.android)
     testImplementation(libs.kotlin.test)
     testImplementation(libs.kotlin.reflect)

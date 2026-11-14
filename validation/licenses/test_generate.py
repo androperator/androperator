@@ -22,12 +22,20 @@ class LicenseInventoryTest(unittest.TestCase):
         rendered = GENERATOR.render(self.metadata['modules'], self.metadata, self.texts)
         for coordinate in self.metadata['modules']:
             self.assertIn(coordinate, rendered)
-        self.assertIn('Copyright (c) 2004-2022 QOS.ch', rendered)
-        self.assertIn('Mozilla Public License', rendered)
+        self.assertIn('Copyright 2008, Google Inc.', rendered)
+        self.assertIn('Boost Software License', rendered)
         self.assertNotIn('Google Play Services', rendered)
         self.assertNotIn('ICU4C', rendered)
+        self.assertNotIn('org.slf4j:', rendered)
+        self.assertNotIn('io.ktor:', rendered)
         self.assertNotIn('<script', rendered)
         self.assertEqual(rendered, GENERATOR.render(reversed(self.metadata['modules']), self.metadata, self.texts))
+
+    def test_removed_integrations_cannot_return_to_the_reviewed_inventory(self):
+        forbidden = ('com.google.android.gms:', 'io.ktor:', 'org.slf4j:',
+                     'com.squareup.okhttp3:', 'com.squareup.okio:',
+                     'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:')
+        self.assertFalse(any(c.startswith(forbidden) for c in self.metadata['modules']))
 
     def test_every_local_license_link_has_a_bundled_destination(self):
         class Links(HTMLParser):
@@ -49,7 +57,7 @@ class LicenseInventoryTest(unittest.TestCase):
         self.assertEqual(links.anchors, links.ids)
 
     def test_new_dependency_or_version_requires_review(self):
-        for coordinate in ('example:unknown:1', 'com.squareup.okhttp3:okhttp:999'):
+        for coordinate in ('example:unknown:1', 'org.jetbrains.kotlin:kotlin-stdlib:999'):
             with self.assertRaisesRegex(ValueError, 'Review license metadata'):
                 GENERATOR.render([coordinate], self.metadata, self.texts)
 

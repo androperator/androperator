@@ -28,8 +28,6 @@ import android.content.SharedPreferences
 import android.net.ConnectivityManager
 import androperator.preferences.PreferenceDefinitions
 import kotlinx.coroutines.CoroutineScope
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.scope.Scope
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
@@ -119,18 +117,6 @@ object FactoryAndroid : FactoryCommon() {
     override fun networkState(scope: Scope) : NetworkState {
         val connectivityManager: ConnectivityManager = scope.get()
         return NetworkStateDefault(connectivityManager)
-    }
-
-    fun createOkHttpClient(scope: Scope): OkHttpClient {
-        val buildConfig: BuildConfig = scope.get()
-        return OkHttpClient.Builder()
-            .apply {
-                if (buildConfig.debug) {
-//                addInterceptor(DelayInterceptor(2000L))
-                    addInterceptor((HttpLoggingInterceptor())
-                        .apply { level = HttpLoggingInterceptor.Level.BASIC })
-                }
-            }.build()
     }
 
     override fun userSettings(scope: Scope): Settings {

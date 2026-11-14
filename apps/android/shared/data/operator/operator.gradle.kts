@@ -51,10 +51,6 @@ dependencies {
     implementation(project(":shared:data:workflow"))
     
     implementation(libs.kotlinx.serialization.json)
-    api(libs.ktor.client.core)
-    implementation(libs.ktor.client.logging)
-    implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.serialization.kotlinx.json)
     
     implementation(libs.androidx.core)
     implementation(libs.compose.material)
@@ -62,8 +58,6 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
     implementation(libs.koin.android)
-    implementation(libs.ktor.client.okhttp)
-    implementation(libs.okhttp3.okhttp)
     implementation(libs.process.phoenix)
     implementation(libs.timber)
     

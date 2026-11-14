@@ -809,40 +809,6 @@
         "Apache-2.0.txt"
       ]
     },
-    "com.squareup.okhttp3:logging-interceptor:4.12.0": {
-      "name": "okhttp-logging-interceptor",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/com/squareup/okhttp3/logging-interceptor/4.12.0/logging-interceptor-4.12.0.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "com.squareup.okhttp3:okhttp:4.12.0": {
-      "name": "okhttp",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/com/squareup/okhttp3/okhttp/4.12.0/okhttp-4.12.0.pom",
-      "texts": [
-        "Apache-2.0.txt",
-        "notice-8a9c58fbded5ea34.txt",
-        "MPL-2.0.txt"
-      ]
-    },
-    "com.squareup.okio:okio-jvm:3.9.1": {
-      "name": "okio",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/com/squareup/okio/okio-jvm/3.9.1/okio-jvm-3.9.1.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "com.squareup.okio:okio:3.9.1": {
-      "name": "okio",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/com/squareup/okio/okio/3.9.1/okio-3.9.1.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
     "io.insert-koin:koin-android:3.5.6": {
       "name": "Koin",
       "license": "Apache-2.0",
@@ -863,214 +829,6 @@
       "name": "Koin",
       "license": "Apache-2.0",
       "metadataSource": "https://repo.maven.apache.org/maven2/io/insert-koin/koin-core/3.5.6/koin-core-3.5.6.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-client-content-negotiation-jvm:2.3.12": {
-      "name": "ktor-client-content-negotiation",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-content-negotiation-jvm/2.3.12/ktor-client-content-negotiation-jvm-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-client-content-negotiation:2.3.12": {
-      "name": "ktor-client-content-negotiation",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-content-negotiation/2.3.12/ktor-client-content-negotiation-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-client-core-jvm:2.3.12": {
-      "name": "ktor-client-core",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-core-jvm/2.3.12/ktor-client-core-jvm-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-client-core:2.3.12": {
-      "name": "ktor-client-core",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-core/2.3.12/ktor-client-core-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-client-logging-jvm:2.3.12": {
-      "name": "ktor-client-logging",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-logging-jvm/2.3.12/ktor-client-logging-jvm-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-client-logging:2.3.12": {
-      "name": "ktor-client-logging",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-logging/2.3.12/ktor-client-logging-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-client-okhttp-jvm:2.3.12": {
-      "name": "ktor-client-okhttp",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-okhttp-jvm/2.3.12/ktor-client-okhttp-jvm-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-client-okhttp:2.3.12": {
-      "name": "ktor-client-okhttp",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-okhttp/2.3.12/ktor-client-okhttp-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-events-jvm:2.3.12": {
-      "name": "ktor-events",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-events-jvm/2.3.12/ktor-events-jvm-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-events:2.3.12": {
-      "name": "ktor-events",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-events/2.3.12/ktor-events-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-http-jvm:2.3.12": {
-      "name": "ktor-http",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-http-jvm/2.3.12/ktor-http-jvm-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-http:2.3.12": {
-      "name": "ktor-http",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-http/2.3.12/ktor-http-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-io-jvm:2.3.12": {
-      "name": "ktor-io",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-io-jvm/2.3.12/ktor-io-jvm-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-io:2.3.12": {
-      "name": "ktor-io",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-io/2.3.12/ktor-io-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-serialization-jvm:2.3.12": {
-      "name": "ktor-serialization",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-jvm/2.3.12/ktor-serialization-jvm-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-serialization-kotlinx-json-jvm:2.3.12": {
-      "name": "ktor-serialization-kotlinx-json",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-kotlinx-json-jvm/2.3.12/ktor-serialization-kotlinx-json-jvm-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-serialization-kotlinx-json:2.3.12": {
-      "name": "ktor-serialization-kotlinx-json",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-kotlinx-json/2.3.12/ktor-serialization-kotlinx-json-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-serialization-kotlinx-jvm:2.3.12": {
-      "name": "ktor-serialization-kotlinx",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-kotlinx-jvm/2.3.12/ktor-serialization-kotlinx-jvm-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-serialization-kotlinx:2.3.12": {
-      "name": "ktor-serialization-kotlinx",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-kotlinx/2.3.12/ktor-serialization-kotlinx-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-serialization:2.3.12": {
-      "name": "ktor-serialization",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization/2.3.12/ktor-serialization-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-utils-jvm:2.3.12": {
-      "name": "ktor-utils",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-utils-jvm/2.3.12/ktor-utils-jvm-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-utils:2.3.12": {
-      "name": "ktor-utils",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-utils/2.3.12/ktor-utils-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-websocket-serialization-jvm:2.3.12": {
-      "name": "ktor-websocket-serialization",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-websocket-serialization-jvm/2.3.12/ktor-websocket-serialization-jvm-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-websocket-serialization:2.3.12": {
-      "name": "ktor-websocket-serialization",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-websocket-serialization/2.3.12/ktor-websocket-serialization-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-websockets-jvm:2.3.12": {
-      "name": "ktor-websockets",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-websockets-jvm/2.3.12/ktor-websockets-jvm-2.3.12.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "io.ktor:ktor-websockets:2.3.12": {
-      "name": "ktor-websockets",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-websockets/2.3.12/ktor-websockets-2.3.12.pom",
       "texts": [
         "Apache-2.0.txt"
       ]
@@ -1151,22 +909,6 @@
         "Apache-2.0.txt"
       ]
     },
-    "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.2": {
-      "name": "kotlinx-coroutines-jdk8",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-jdk8/1.10.2/kotlinx-coroutines-jdk8-1.10.2.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
-    "org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:1.10.2": {
-      "name": "kotlinx-coroutines-slf4j",
-      "license": "Apache-2.0",
-      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-slf4j/1.10.2/kotlinx-coroutines-slf4j-1.10.2.pom",
-      "texts": [
-        "Apache-2.0.txt"
-      ]
-    },
     "org.jetbrains.kotlinx:kotlinx-datetime-jvm:0.6.1": {
       "name": "kotlinx-datetime",
       "license": "Apache-2.0",
@@ -1230,33 +972,12 @@
       "texts": [
         "Apache-2.0.txt"
       ]
-    },
-    "org.slf4j:slf4j-api:1.7.36": {
-      "name": "SLF4J API Module",
-      "license": "MIT",
-      "metadataSource": "https://repo.maven.apache.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.pom",
-      "texts": [
-        "slf4j.txt"
-      ],
-      "licenseSource": "https://raw.githubusercontent.com/qos-ch/slf4j/v_1.7.36/LICENSE.txt"
     }
   },
   "texts": {
     "Apache-2.0.txt": {
       "name": "Apache License 2.0",
       "source": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-    },
-    "slf4j.txt": {
-      "name": "SLF4J - MIT license",
-      "source": "https://raw.githubusercontent.com/qos-ch/slf4j/v_1.7.36/LICENSE.txt"
-    },
-    "MPL-2.0.txt": {
-      "name": "Mozilla Public License 2.0 - Public Suffix List",
-      "source": "https://www.mozilla.org/MPL/2.0/"
-    },
-    "notice-8a9c58fbded5ea34.txt": {
-      "name": "OkHttp - Public Suffix List notice",
-      "source": "com.squareup.okhttp3:okhttp:4.12.0 JAR / okhttp3/internal/publicsuffix/NOTICE"
     },
     "kotlin-protobuf-BSD-3-Clause.txt": {
       "name": "Kotlin reflection - embedded Protobuf BSD license",

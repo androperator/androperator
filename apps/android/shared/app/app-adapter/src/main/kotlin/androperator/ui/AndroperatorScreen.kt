@@ -16,12 +16,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -30,33 +32,21 @@ import androperator.app.AppViewState
 import androperator.state.operator.OperatorViewState
 import androperator.app.adapter.R
 
-/** Crab-colored orange background when system is not ready. */
-private val CrabOrange = androidx.compose.ui.graphics.Color(0xFFE07830)
-
-/** Green background when system is ready. */
-private val ReadyGreen = androidx.compose.ui.graphics.Color(0xFF2E7D32)
-
-/** Text color on orange/green background for readability. */
-private val TextOnBackground = androidx.compose.ui.graphics.Color(0xFF1C1C1C)
+private val ScreenBackground = Color(0xFFF7F9F4)
+private val TextOnBackground = Color(0xFF19251C)
+private val OperatorGreen = Color(0xFF285C32)
+private val RunningBackground = Color(0xFFE0EEDB)
+private val DisabledBackground = Color(0xFFE9ECE6)
 
 @Composable
 fun AndroperatorScreen(
     viewState: AppViewState,
     onDisableAccessibilityService: () -> Unit,
 ) {
-    val backgroundColor = when (viewState) {
-        is AppViewState.Loading -> CrabOrange
-        is AppViewState.Data -> {
-            val screenState = viewState.screenViewState
-            if (screenState is OperatorViewState.Data &&
-                screenState.accessibilityIsRunning
-            ) ReadyGreen else CrabOrange
-        }
-    }
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(ScreenBackground)
             .statusBarsPadding()
             .navigationBarsPadding(),
     ) {
@@ -119,16 +109,25 @@ private fun DoctorContent(
         Text(
             text = if (accessibilityIsRunning) "Accessibility service: Running" else "Accessibility service: Disabled",
             style = MaterialTheme.typography.titleMedium,
-            color = TextOnBackground,
+            color = if (accessibilityIsRunning) OperatorGreen else TextOnBackground,
+            modifier = Modifier
+                .background(if (accessibilityIsRunning) RunningBackground else DisabledBackground, CircleShape)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
         )
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = onDisableAccessibilityService,
             enabled = accessibilityIsRunning,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = OperatorGreen,
+                contentColor = Color.White,
+                disabledContainerColor = DisabledBackground,
+                disabledContentColor = Color(0xFF657060),
+            ),
         ) {
             Text("Disable Androperator")
         }
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = "While enabled, this accessibility service adds processing overhead and can significantly slow other apps, including animations. Disable it for representative performance measurements. Other installed accessibility services remain enabled.\n\n" +
                 "To re-enable, tell your agent to use androperator doctor --fix.",

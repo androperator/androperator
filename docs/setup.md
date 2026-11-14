@@ -489,3 +489,27 @@ and probes the helper without capturing pixels. A helper warning does not fail
 core readiness or rule out stock/resize capture. See the
 [screenshot contract](api/actions.md#action-take-screenshot) for exact fields,
 compatibility, fallback boundaries and failure recovery.
+
+## Disable the accessibility service for performance measurements
+
+The Operator app shows whether its accessibility service is Running or Disabled.
+Tap **Disable Androperator** to disconnect this app's service. Android accessibility
+processing can substantially affect frame timings in the app under test, even when
+no agent commands are running. Measure performance in a separate run with the
+service disabled and report which services were enabled.
+
+The button disables only this installed Operator variant's accessibility service.
+Other accessibility services, including other Operator variants, remain enabled.
+It does not revoke notification access or disable background notification/media
+observation. Accessibility actions and snapshots are unavailable while disabled.
+
+To reconnect from an authorized adb host, have the agent run:
+
+```bash
+androperator doctor --fix --device <device_serial> --operator-package com.androperator.operator.dev
+```
+
+Use `com.androperator.operator` for the release APK. Plain `doctor` diagnoses the
+state; `doctor --fix` executes available shell remediation and checks readiness
+again. Require exit code `0` and `criticalOk: true`, then verify the intended
+operation. Reopening the Operator app does not re-enable its accessibility service.

@@ -8,7 +8,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,10 +23,10 @@ import androidx.lifecycle.coroutineScope
 import androperator.app.AppStateManager
 import androperator.app.AppViewState
 import androperator.app.AppViewModel
+import androperator.accessibilityservice.currentAccessibilityService
 import androperator.accessibilityservice.AccessibilityServiceManager
 import androperator.operator.runtime.OperatorCommandService
 import androperator.ui.AndroperatorScreen
-import action.system.toast.ToastDisplayController
 import org.koin.android.ext.android.inject
 
 class MainActivity : FragmentActivity() {
@@ -40,7 +39,6 @@ class MainActivity : FragmentActivity() {
     private val appStateManager: AppStateManager by inject()
     private val appViewModel: AppViewModel by inject()
     private val accessibilityServiceManager: AccessibilityServiceManager by inject()
-    private val toastDisplayController: ToastDisplayController by inject()
     private val windowFrameManagerAndroid: WindowFrameManagerAndroid by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,7 +59,9 @@ class MainActivity : FragmentActivity() {
             }
             AndroperatorScreen(
                 viewState = viewState,
-                onOpenSystemSettings = { openDeveloperOrAboutSettings() },
+                onDisableAccessibilityService = {
+                    accessibilityServiceManager.currentAccessibilityService?.disableSelf()
+                },
             )
         }
 
@@ -88,33 +88,10 @@ class MainActivity : FragmentActivity() {
         windowFrameManagerAndroid.updateWindowFrame()
     }
 
-    /**
-     * Opens the most relevant settings screen for enabling developer options:
-     * - On API 34+: Developer options (or app development settings) if available.
-     * - On older APIs: About phone, where the user taps Build number to enable developer mode.
-     * Falls back to root Settings if the preferred intent is not available.
-     */
-    private fun openDeveloperOrAboutSettings() {
-        toastDisplayController.showToast(
-            "Tap Build number 7 times in About phone, then open Developer options and turn on USB debugging.",
-            isLong = true,
-        )
-        val action = when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE ->
-                Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS
-            else -> Settings.ACTION_DEVICE_INFO_SETTINGS
-        }
-        try {
-            startActivity(Intent(action))
-        } catch (e: Exception) {
-            startActivity(Intent(Settings.ACTION_SETTINGS))
-        }
-    }
-
     private fun configureWindow() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowInsetsControllerCompat(window, window.decorView).apply {
-            isAppearanceLightStatusBars = false
+            isAppearanceLightStatusBars = true
             isAppearanceLightNavigationBars = true
         }
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)

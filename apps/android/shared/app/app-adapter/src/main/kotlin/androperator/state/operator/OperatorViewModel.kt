@@ -43,6 +43,7 @@ class OperatorViewModel(
         return OperatorViewState.Data(
             appDoctorState = appDoctorState,
             accessibilityPermissionLabel = label,
+            accessibilityIsRunning = accessibilityIsRunning,
         )
     }
 

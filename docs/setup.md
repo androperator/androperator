@@ -513,3 +513,11 @@ Use `com.androperator.operator` for the release APK. Plain `doctor` diagnoses th
 state; `doctor --fix` executes available shell remediation and checks readiness
 again. Require exit code `0` and `criticalOk: true`, then verify the intended
 operation. Reopening the Operator app does not re-enable its accessibility service.
+
+## View open source licenses
+
+Tap the information button in the Operator app's top-right corner to open the
+full-screen license list. Library license text and third-party notices are bundled
+in the APK and can be read offline. Back returns to the service screen. External
+links, such as GitHub's artwork terms, open in your browser and require internet
+access.

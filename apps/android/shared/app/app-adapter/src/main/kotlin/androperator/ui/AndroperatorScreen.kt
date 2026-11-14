@@ -154,7 +154,13 @@ private fun DoctorContent(
                 TextButton(
                     onClick = { uriHandler.openUri("https://github.com/androperator/androperator/") },
                     colors = ButtonDefaults.textButtonColors(contentColor = OperatorGreen),
-                ) { Text("GitHub") }
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.github_invertocat),
+                        contentDescription = "GitHub",
+                        modifier = Modifier.size(width = 24.5.dp, height = 24.dp),
+                    )
+                }
             }
         }
     }

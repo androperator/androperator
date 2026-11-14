@@ -1,0 +1,1296 @@
+{
+  "modules": {
+    "androidx.activity:activity-compose:1.9.3": {
+      "name": "Activity Compose",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/activity/activity-compose/1.9.3/activity-compose-1.9.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.activity:activity-ktx:1.9.3": {
+      "name": "Activity Kotlin Extensions",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/activity/activity-ktx/1.9.3/activity-ktx-1.9.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.activity:activity:1.9.3": {
+      "name": "Activity",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/activity/activity/1.9.3/activity-1.9.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.annotation:annotation-experimental:1.4.1": {
+      "name": "Experimental annotation",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/annotation/annotation-experimental/1.4.1/annotation-experimental-1.4.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.annotation:annotation-jvm:1.8.1": {
+      "name": "Annotation",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/annotation/annotation-jvm/1.8.1/annotation-jvm-1.8.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.annotation:annotation:1.8.1": {
+      "name": "Annotation",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/annotation/annotation/1.8.1/annotation-1.8.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.appcompat:appcompat-resources:1.6.1": {
+      "name": "Android Resources Library",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/appcompat/appcompat-resources/1.6.1/appcompat-resources-1.6.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.appcompat:appcompat:1.6.1": {
+      "name": "Android AppCompat Library",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/appcompat/appcompat/1.6.1/appcompat-1.6.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.arch.core:core-common:2.2.0": {
+      "name": "Android Arch-Common",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/arch/core/core-common/2.2.0/core-common-2.2.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.arch.core:core-runtime:2.2.0": {
+      "name": "Android Arch-Runtime",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/arch/core/core-runtime/2.2.0/core-runtime-2.2.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.autofill:autofill:1.0.0": {
+      "name": "AndroidX Autofill",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/autofill/autofill/1.0.0/autofill-1.0.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.browser:browser:1.6.0": {
+      "name": "Browser",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/browser/browser/1.6.0/browser-1.6.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.collection:collection-jvm:1.4.4": {
+      "name": "collections",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/collection/collection-jvm/1.4.4/collection-jvm-1.4.4.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.collection:collection-ktx:1.4.4": {
+      "name": "Collections Kotlin Extensions",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/collection/collection-ktx/1.4.4/collection-ktx-1.4.4.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.collection:collection:1.4.4": {
+      "name": "collections",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/collection/collection/1.4.4/collection-1.4.4.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.animation:animation-android:1.7.5": {
+      "name": "Compose Animation",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/animation/animation-android/1.7.5/animation-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.animation:animation-core-android:1.7.5": {
+      "name": "Compose Animation Core",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/animation/animation-core-android/1.7.5/animation-core-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.animation:animation-core:1.7.5": {
+      "name": "Compose Animation Core",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/animation/animation-core/1.7.5/animation-core-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.animation:animation:1.7.5": {
+      "name": "Compose Animation",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/animation/animation/1.7.5/animation-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.foundation:foundation-android:1.7.5": {
+      "name": "Compose Foundation",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/foundation/foundation-android/1.7.5/foundation-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.foundation:foundation-layout-android:1.7.5": {
+      "name": "Compose Layouts",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/foundation/foundation-layout-android/1.7.5/foundation-layout-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.foundation:foundation-layout:1.7.5": {
+      "name": "Compose Layouts",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/foundation/foundation-layout/1.7.5/foundation-layout-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.foundation:foundation:1.7.5": {
+      "name": "Compose Foundation",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/foundation/foundation/1.7.5/foundation-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.material3:material3-android:1.3.1": {
+      "name": "Compose Material3 Components",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/material3/material3-android/1.3.1/material3-android-1.3.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.material3:material3:1.3.1": {
+      "name": "Compose Material3 Components",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/material3/material3/1.3.1/material3-1.3.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.material:material-android:1.7.5": {
+      "name": "Compose Material Components",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/material/material-android/1.7.5/material-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.material:material-icons-core-android:1.7.5": {
+      "name": "Compose Material Icons Core",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/material/material-icons-core-android/1.7.5/material-icons-core-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.material:material-icons-core:1.7.5": {
+      "name": "Compose Material Icons Core",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/material/material-icons-core/1.7.5/material-icons-core-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.material:material-icons-extended-android:1.7.5": {
+      "name": "Compose Material Icons Extended",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/material/material-icons-extended-android/1.7.5/material-icons-extended-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.material:material-icons-extended:1.7.5": {
+      "name": "Compose Material Icons Extended",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/material/material-icons-extended/1.7.5/material-icons-extended-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.material:material-ripple-android:1.7.5": {
+      "name": "Compose Material Ripple",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/material/material-ripple-android/1.7.5/material-ripple-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.material:material-ripple:1.7.5": {
+      "name": "Compose Material Ripple",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/material/material-ripple/1.7.5/material-ripple-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.material:material:1.7.5": {
+      "name": "Compose Material Components",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/material/material/1.7.5/material-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.runtime:runtime-android:1.7.5": {
+      "name": "Compose Runtime",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/runtime/runtime-android/1.7.5/runtime-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.runtime:runtime-saveable-android:1.7.5": {
+      "name": "Compose Saveable",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/runtime/runtime-saveable-android/1.7.5/runtime-saveable-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.runtime:runtime-saveable:1.7.5": {
+      "name": "Compose Saveable",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/runtime/runtime-saveable/1.7.5/runtime-saveable-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.runtime:runtime:1.7.5": {
+      "name": "Compose Runtime",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/runtime/runtime/1.7.5/runtime-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.ui:ui-android:1.7.5": {
+      "name": "Compose UI",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-android/1.7.5/ui-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.ui:ui-geometry-android:1.7.5": {
+      "name": "Compose Geometry",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-geometry-android/1.7.5/ui-geometry-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.ui:ui-geometry:1.7.5": {
+      "name": "Compose Geometry",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-geometry/1.7.5/ui-geometry-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.ui:ui-graphics-android:1.7.5": {
+      "name": "Compose Graphics",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-graphics-android/1.7.5/ui-graphics-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.ui:ui-graphics:1.7.5": {
+      "name": "Compose Graphics",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-graphics/1.7.5/ui-graphics-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.ui:ui-text-android:1.7.5": {
+      "name": "Compose UI Text",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-text-android/1.7.5/ui-text-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.ui:ui-text:1.7.5": {
+      "name": "Compose UI Text",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-text/1.7.5/ui-text-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.ui:ui-unit-android:1.7.5": {
+      "name": "Compose Unit",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-unit-android/1.7.5/ui-unit-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.ui:ui-unit:1.7.5": {
+      "name": "Compose Unit",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-unit/1.7.5/ui-unit-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.ui:ui-util-android:1.7.5": {
+      "name": "Compose Util",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-util-android/1.7.5/ui-util-android-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.ui:ui-util:1.7.5": {
+      "name": "Compose Util",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui-util/1.7.5/ui-util-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.compose.ui:ui:1.7.5": {
+      "name": "Compose UI",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/compose/ui/ui/1.7.5/ui-1.7.5.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.concurrent:concurrent-futures:1.1.0": {
+      "name": "AndroidX Futures",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/concurrent/concurrent-futures/1.1.0/concurrent-futures-1.1.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.core:core-ktx:1.13.1": {
+      "name": "Core Kotlin Extensions",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/core/core-ktx/1.13.1/core-ktx-1.13.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.core:core:1.13.1": {
+      "name": "Core",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/core/core/1.13.1/core-1.13.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.cursoradapter:cursoradapter:1.0.0": {
+      "name": "Android Support Library Cursor Adapter",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/cursoradapter/cursoradapter/1.0.0/cursoradapter-1.0.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.customview:customview-poolingcontainer:1.0.0": {
+      "name": "androidx.customview:poolingcontainer",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/customview/customview-poolingcontainer/1.0.0/customview-poolingcontainer-1.0.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.customview:customview:1.0.0": {
+      "name": "Android Support Library Custom View",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/customview/customview/1.0.0/customview-1.0.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.drawerlayout:drawerlayout:1.0.0": {
+      "name": "Android Support Library Drawer Layout",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/drawerlayout/drawerlayout/1.0.0/drawerlayout-1.0.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.emoji2:emoji2-views-helper:1.3.0": {
+      "name": "Android Emoji2 Compat view helpers",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/emoji2/emoji2-views-helper/1.3.0/emoji2-views-helper-1.3.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.emoji2:emoji2:1.3.0": {
+      "name": "Android Emoji2 Compat",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/emoji2/emoji2/1.3.0/emoji2-1.3.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.fragment:fragment-ktx:1.6.2": {
+      "name": "Fragment Kotlin Extensions",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/fragment/fragment-ktx/1.6.2/fragment-ktx-1.6.2.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.fragment:fragment:1.6.2": {
+      "name": "Android Support Library fragment",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/fragment/fragment/1.6.2/fragment-1.6.2.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.graphics:graphics-path:1.0.1": {
+      "name": "Android Graphics Path",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/graphics/graphics-path/1.0.1/graphics-path-1.0.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.interpolator:interpolator:1.0.0": {
+      "name": "Android Support Library Interpolators",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/interpolator/interpolator/1.0.0/interpolator-1.0.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-common-java8:2.8.3": {
+      "name": "Lifecycle-Common for Java 8",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-common-java8/2.8.3/lifecycle-common-java8-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-common-jvm:2.8.3": {
+      "name": "Lifecycle-Common",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-common-jvm/2.8.3/lifecycle-common-jvm-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-common:2.8.3": {
+      "name": "Lifecycle-Common",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-common/2.8.3/lifecycle-common-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-extensions:2.2.0": {
+      "name": "Android Lifecycle Extensions",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-extensions/2.2.0/lifecycle-extensions-2.2.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-livedata-core-ktx:2.8.3": {
+      "name": "LiveData Core Kotlin Extensions",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-livedata-core-ktx/2.8.3/lifecycle-livedata-core-ktx-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-livedata-core:2.8.3": {
+      "name": "Lifecycle LiveData Core",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-livedata-core/2.8.3/lifecycle-livedata-core-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-livedata:2.8.3": {
+      "name": "Lifecycle LiveData",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-livedata/2.8.3/lifecycle-livedata-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-process:2.8.3": {
+      "name": "Lifecycle Process",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-process/2.8.3/lifecycle-process-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-runtime-android:2.8.3": {
+      "name": "Lifecycle Runtime",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-runtime-android/2.8.3/lifecycle-runtime-android-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-runtime-compose-android:2.8.3": {
+      "name": "Lifecycle Runtime Compose",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-runtime-compose-android/2.8.3/lifecycle-runtime-compose-android-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-runtime-compose:2.8.3": {
+      "name": "Lifecycle Runtime Compose",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-runtime-compose/2.8.3/lifecycle-runtime-compose-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-runtime-ktx-android:2.8.3": {
+      "name": "Lifecycle Kotlin Extensions",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-runtime-ktx-android/2.8.3/lifecycle-runtime-ktx-android-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-runtime-ktx:2.8.3": {
+      "name": "Lifecycle Kotlin Extensions",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-runtime-ktx/2.8.3/lifecycle-runtime-ktx-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-runtime:2.8.3": {
+      "name": "Lifecycle Runtime",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-runtime/2.8.3/lifecycle-runtime-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-service:2.8.3": {
+      "name": "Lifecycle Service",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-service/2.8.3/lifecycle-service-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-viewmodel-android:2.8.3": {
+      "name": "Lifecycle ViewModel",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-viewmodel-android/2.8.3/lifecycle-viewmodel-android-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.3": {
+      "name": "Lifecycle ViewModel Kotlin Extensions",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-viewmodel-ktx/2.8.3/lifecycle-viewmodel-ktx-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.8.3": {
+      "name": "Lifecycle ViewModel with SavedState",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-viewmodel-savedstate/2.8.3/lifecycle-viewmodel-savedstate-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.lifecycle:lifecycle-viewmodel:2.8.3": {
+      "name": "Lifecycle ViewModel",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/lifecycle/lifecycle-viewmodel/2.8.3/lifecycle-viewmodel-2.8.3.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.loader:loader:1.0.0": {
+      "name": "Android Support Library loader",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/loader/loader/1.0.0/loader-1.0.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.profileinstaller:profileinstaller:1.3.1": {
+      "name": "androidx.profileinstaller:profileinstaller",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/profileinstaller/profileinstaller/1.3.1/profileinstaller-1.3.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.resourceinspection:resourceinspection-annotation:1.0.1": {
+      "name": "Android Resource Inspection - Annotations",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/resourceinspection/resourceinspection-annotation/1.0.1/resourceinspection-annotation-1.0.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.savedstate:savedstate-ktx:1.2.1": {
+      "name": "SavedState Kotlin Extensions",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/savedstate/savedstate-ktx/1.2.1/savedstate-ktx-1.2.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.savedstate:savedstate:1.2.1": {
+      "name": "Saved State",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/savedstate/savedstate/1.2.1/savedstate-1.2.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.startup:startup-runtime:1.1.1": {
+      "name": "Android App Startup Runtime",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/startup/startup-runtime/1.1.1/startup-runtime-1.1.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.tracing:tracing:1.0.0": {
+      "name": "Android Tracing",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/tracing/tracing/1.0.0/tracing-1.0.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.vectordrawable:vectordrawable-animated:1.1.0": {
+      "name": "Android Support AnimatedVectorDrawable",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/vectordrawable/vectordrawable-animated/1.1.0/vectordrawable-animated-1.1.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.vectordrawable:vectordrawable:1.1.0": {
+      "name": "Android Support VectorDrawable",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/vectordrawable/vectordrawable/1.1.0/vectordrawable-1.1.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.versionedparcelable:versionedparcelable:1.1.1": {
+      "name": "VersionedParcelable",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/versionedparcelable/versionedparcelable/1.1.1/versionedparcelable-1.1.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "androidx.viewpager:viewpager:1.0.0": {
+      "name": "Android Support Library View Pager",
+      "license": "Apache-2.0",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/androidx/viewpager/viewpager/1.0.0/viewpager-1.0.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "co.touchlab:stately-concurrency-jvm:2.0.6": {
+      "name": "Stately",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/co/touchlab/stately-concurrency-jvm/2.0.6/stately-concurrency-jvm-2.0.6.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "co.touchlab:stately-concurrency:2.0.6": {
+      "name": "Stately",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/co/touchlab/stately-concurrency/2.0.6/stately-concurrency-2.0.6.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "co.touchlab:stately-concurrent-collections-jvm:2.0.6": {
+      "name": "Stately",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/co/touchlab/stately-concurrent-collections-jvm/2.0.6/stately-concurrent-collections-jvm-2.0.6.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "co.touchlab:stately-concurrent-collections:2.0.6": {
+      "name": "Stately",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/co/touchlab/stately-concurrent-collections/2.0.6/stately-concurrent-collections-2.0.6.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "co.touchlab:stately-strict-jvm:2.0.6": {
+      "name": "Stately",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/co/touchlab/stately-strict-jvm/2.0.6/stately-strict-jvm-2.0.6.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "co.touchlab:stately-strict:2.0.6": {
+      "name": "Stately",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/co/touchlab/stately-strict/2.0.6/stately-strict-2.0.6.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "com.google.android.gms:play-services-basement:16.0.1": {
+      "name": "play-services-basement",
+      "license": "Android SDK terms",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-basement/16.0.1/play-services-basement-16.0.1.pom",
+      "texts": [
+        "android-sdk-terms.txt",
+        "notice-d8bcf5977ee8d95b.txt"
+      ]
+    },
+    "com.google.android.gms:play-services-tasks:16.0.1": {
+      "name": "play-services-tasks",
+      "license": "Android SDK terms",
+      "metadataSource": "https://dl.google.com/dl/android/maven2/com/google/android/gms/play-services-tasks/16.0.1/play-services-tasks-16.0.1.pom",
+      "texts": [
+        "android-sdk-terms.txt",
+        "notice-4a79af4b66aedbc7.txt"
+      ]
+    },
+    "com.google.guava:listenablefuture:1.0": {
+      "name": "Guava ListenableFuture only",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/com/google/guava/listenablefuture/1.0/listenablefuture-1.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ],
+      "licenseSource": "https://github.com/google/guava/blob/v26.0-android/COPYING"
+    },
+    "com.jakewharton.timber:timber:5.0.1": {
+      "name": "Timber",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/com/jakewharton/timber/timber/5.0.1/timber-5.0.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "com.jakewharton:process-phoenix:2.1.2": {
+      "name": "Process Phoenix",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/com/jakewharton/process-phoenix/2.1.2/process-phoenix-2.1.2.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "com.squareup.okhttp3:logging-interceptor:4.12.0": {
+      "name": "okhttp-logging-interceptor",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/com/squareup/okhttp3/logging-interceptor/4.12.0/logging-interceptor-4.12.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "com.squareup.okhttp3:okhttp:4.12.0": {
+      "name": "okhttp",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/com/squareup/okhttp3/okhttp/4.12.0/okhttp-4.12.0.pom",
+      "texts": [
+        "Apache-2.0.txt",
+        "notice-8a9c58fbded5ea34.txt",
+        "MPL-2.0.txt"
+      ]
+    },
+    "com.squareup.okio:okio-jvm:3.9.1": {
+      "name": "okio",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/com/squareup/okio/okio-jvm/3.9.1/okio-jvm-3.9.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "com.squareup.okio:okio:3.9.1": {
+      "name": "okio",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/com/squareup/okio/okio/3.9.1/okio-3.9.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.insert-koin:koin-android:3.5.6": {
+      "name": "Koin",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/insert-koin/koin-android/3.5.6/koin-android-3.5.6.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.insert-koin:koin-core-jvm:3.5.6": {
+      "name": "Koin",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/insert-koin/koin-core-jvm/3.5.6/koin-core-jvm-3.5.6.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.insert-koin:koin-core:3.5.6": {
+      "name": "Koin",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/insert-koin/koin-core/3.5.6/koin-core-3.5.6.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-client-content-negotiation-jvm:2.3.12": {
+      "name": "ktor-client-content-negotiation",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-content-negotiation-jvm/2.3.12/ktor-client-content-negotiation-jvm-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-client-content-negotiation:2.3.12": {
+      "name": "ktor-client-content-negotiation",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-content-negotiation/2.3.12/ktor-client-content-negotiation-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-client-core-jvm:2.3.12": {
+      "name": "ktor-client-core",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-core-jvm/2.3.12/ktor-client-core-jvm-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-client-core:2.3.12": {
+      "name": "ktor-client-core",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-core/2.3.12/ktor-client-core-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-client-logging-jvm:2.3.12": {
+      "name": "ktor-client-logging",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-logging-jvm/2.3.12/ktor-client-logging-jvm-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-client-logging:2.3.12": {
+      "name": "ktor-client-logging",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-logging/2.3.12/ktor-client-logging-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-client-okhttp-jvm:2.3.12": {
+      "name": "ktor-client-okhttp",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-okhttp-jvm/2.3.12/ktor-client-okhttp-jvm-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-client-okhttp:2.3.12": {
+      "name": "ktor-client-okhttp",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-client-okhttp/2.3.12/ktor-client-okhttp-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-events-jvm:2.3.12": {
+      "name": "ktor-events",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-events-jvm/2.3.12/ktor-events-jvm-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-events:2.3.12": {
+      "name": "ktor-events",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-events/2.3.12/ktor-events-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-http-jvm:2.3.12": {
+      "name": "ktor-http",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-http-jvm/2.3.12/ktor-http-jvm-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-http:2.3.12": {
+      "name": "ktor-http",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-http/2.3.12/ktor-http-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-io-jvm:2.3.12": {
+      "name": "ktor-io",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-io-jvm/2.3.12/ktor-io-jvm-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-io:2.3.12": {
+      "name": "ktor-io",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-io/2.3.12/ktor-io-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-serialization-jvm:2.3.12": {
+      "name": "ktor-serialization",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-jvm/2.3.12/ktor-serialization-jvm-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-serialization-kotlinx-json-jvm:2.3.12": {
+      "name": "ktor-serialization-kotlinx-json",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-kotlinx-json-jvm/2.3.12/ktor-serialization-kotlinx-json-jvm-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-serialization-kotlinx-json:2.3.12": {
+      "name": "ktor-serialization-kotlinx-json",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-kotlinx-json/2.3.12/ktor-serialization-kotlinx-json-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-serialization-kotlinx-jvm:2.3.12": {
+      "name": "ktor-serialization-kotlinx",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-kotlinx-jvm/2.3.12/ktor-serialization-kotlinx-jvm-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-serialization-kotlinx:2.3.12": {
+      "name": "ktor-serialization-kotlinx",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization-kotlinx/2.3.12/ktor-serialization-kotlinx-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-serialization:2.3.12": {
+      "name": "ktor-serialization",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-serialization/2.3.12/ktor-serialization-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-utils-jvm:2.3.12": {
+      "name": "ktor-utils",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-utils-jvm/2.3.12/ktor-utils-jvm-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-utils:2.3.12": {
+      "name": "ktor-utils",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-utils/2.3.12/ktor-utils-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-websocket-serialization-jvm:2.3.12": {
+      "name": "ktor-websocket-serialization",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-websocket-serialization-jvm/2.3.12/ktor-websocket-serialization-jvm-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-websocket-serialization:2.3.12": {
+      "name": "ktor-websocket-serialization",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-websocket-serialization/2.3.12/ktor-websocket-serialization-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-websockets-jvm:2.3.12": {
+      "name": "ktor-websockets",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-websockets-jvm/2.3.12/ktor-websockets-jvm-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "io.ktor:ktor-websockets:2.3.12": {
+      "name": "ktor-websockets",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/io/ktor/ktor-websockets/2.3.12/ktor-websockets-2.3.12.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlin:kotlin-reflect:2.1.10": {
+      "name": "Kotlin Reflect",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-reflect/2.1.10/kotlin-reflect-2.1.10.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlin:kotlin-stdlib-common:2.2.10": {
+      "name": "Kotlin Stdlib Common",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-common/2.2.10/kotlin-stdlib-common-2.2.10.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.1.10": {
+      "name": "Kotlin Stdlib Jdk7",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk7/2.1.10/kotlin-stdlib-jdk7-2.1.10.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.1.10": {
+      "name": "Kotlin Stdlib Jdk8",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk8/2.1.10/kotlin-stdlib-jdk8-2.1.10.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlin:kotlin-stdlib:2.2.10": {
+      "name": "Kotlin Stdlib",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.2.10/kotlin-stdlib-2.2.10.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2": {
+      "name": "kotlinx-coroutines-android",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.10.2/kotlinx-coroutines-android-1.10.2.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.10.2": {
+      "name": "kotlinx-coroutines-bom",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-bom/1.10.2/kotlinx-coroutines-bom-1.10.2.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.2": {
+      "name": "kotlinx-coroutines-core",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-core-jvm/1.10.2/kotlinx-coroutines-core-jvm-1.10.2.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2": {
+      "name": "kotlinx-coroutines-core",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-core/1.10.2/kotlinx-coroutines-core-1.10.2.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.10.2": {
+      "name": "kotlinx-coroutines-jdk8",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-jdk8/1.10.2/kotlinx-coroutines-jdk8-1.10.2.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2": {
+      "name": "kotlinx-coroutines-play-services",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-play-services/1.10.2/kotlinx-coroutines-play-services-1.10.2.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:1.10.2": {
+      "name": "kotlinx-coroutines-slf4j",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-slf4j/1.10.2/kotlinx-coroutines-slf4j-1.10.2.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlinx:kotlinx-datetime-jvm:0.6.1": {
+      "name": "kotlinx-datetime",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-datetime-jvm/0.6.1/kotlinx-datetime-jvm-0.6.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlinx:kotlinx-datetime:0.6.1": {
+      "name": "kotlinx-datetime",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-datetime/0.6.1/kotlinx-datetime-0.6.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlinx:kotlinx-serialization-bom:1.8.1": {
+      "name": "kotlinx-serialization-bom",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-serialization-bom/1.8.1/kotlinx-serialization-bom-1.8.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.8.1": {
+      "name": "kotlinx-serialization-core",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-serialization-core-jvm/1.8.1/kotlinx-serialization-core-jvm-1.8.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1": {
+      "name": "kotlinx-serialization-core",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-serialization-core/1.8.1/kotlinx-serialization-core-1.8.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.8.1": {
+      "name": "kotlinx-serialization-json",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-serialization-json-jvm/1.8.1/kotlinx-serialization-json-jvm-1.8.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1": {
+      "name": "kotlinx-serialization-json",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlinx/kotlinx-serialization-json/1.8.1/kotlinx-serialization-json-1.8.1.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.jetbrains:annotations:23.0.0": {
+      "name": "JetBrains Java Annotations",
+      "license": "Apache-2.0",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/jetbrains/annotations/23.0.0/annotations-23.0.0.pom",
+      "texts": [
+        "Apache-2.0.txt"
+      ]
+    },
+    "org.slf4j:slf4j-api:1.7.36": {
+      "name": "SLF4J API Module",
+      "license": "MIT",
+      "metadataSource": "https://repo.maven.apache.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.pom",
+      "texts": [
+        "slf4j.txt"
+      ],
+      "licenseSource": "https://raw.githubusercontent.com/qos-ch/slf4j/v_1.7.36/LICENSE.txt"
+    }
+  },
+  "texts": {
+    "Apache-2.0.txt": {
+      "name": "Apache License 2.0",
+      "source": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+    },
+    "slf4j.txt": {
+      "name": "SLF4J - MIT license",
+      "source": "https://raw.githubusercontent.com/qos-ch/slf4j/v_1.7.36/LICENSE.txt"
+    },
+    "android-sdk-terms.txt": {
+      "name": "Android SDK terms",
+      "source": "https://developer.android.com/studio/terms?hl=en"
+    },
+    "MPL-2.0.txt": {
+      "name": "Mozilla Public License 2.0 - Public Suffix List",
+      "source": "https://www.mozilla.org/MPL/2.0/"
+    },
+    "notice-4a79af4b66aedbc7.txt": {
+      "name": "Google Play Services basement - third-party notices",
+      "source": "com.google.android.gms:play-services-basement:16.0.1 AAR / third_party_licenses.txt"
+    },
+    "notice-d8bcf5977ee8d95b.txt": {
+      "name": "Google Play Services tasks - third-party notices",
+      "source": "com.google.android.gms:play-services-tasks:16.0.1 AAR / third_party_licenses.txt"
+    },
+    "notice-8a9c58fbded5ea34.txt": {
+      "name": "OkHttp - Public Suffix List notice",
+      "source": "com.squareup.okhttp3:okhttp:4.12.0 JAR / okhttp3/internal/publicsuffix/NOTICE"
+    }
+  }
+}

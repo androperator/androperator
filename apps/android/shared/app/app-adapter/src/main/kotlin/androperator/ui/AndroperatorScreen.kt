@@ -1,6 +1,8 @@
 package androperator.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,6 +46,7 @@ private val TextOnBackground = androidx.compose.ui.graphics.Color(0xFF1C1C1C)
 fun AndroperatorScreen(
     viewState: AppViewState,
     onOpenSystemSettings: () -> Unit,
+    onDisableAccessibilityService: () -> Unit,
 ) {
     val backgroundColor = when (viewState) {
         is AppViewState.Loading -> CrabOrange
@@ -69,6 +72,8 @@ fun AndroperatorScreen(
                     DoctorContent(
                         appDoctorState = screenState.appDoctorState,
                         accessibilityPermissionLabel = screenState.accessibilityPermissionLabel,
+                        accessibilityIsRunning = screenState.accessibilityIsRunning,
+                        onDisableAccessibilityService = onDisableAccessibilityService,
                         onOpenSystemSettings = onOpenSystemSettings,
                     )
                 } else {
@@ -93,11 +98,14 @@ private fun LoadingContent() {
 private fun DoctorContent(
     appDoctorState: AppDoctorState,
     accessibilityPermissionLabel: String,
+    accessibilityIsRunning: Boolean,
+    onDisableAccessibilityService: () -> Unit,
     onOpenSystemSettings: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
@@ -117,7 +125,29 @@ private fun DoctorContent(
                 .clip(CircleShape),
             contentScale = ContentScale.Fit,
         )
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = if (accessibilityIsRunning) "Accessibility service: Running" else "Accessibility service: Disabled",
+            style = MaterialTheme.typography.titleMedium,
+            color = TextOnBackground,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(
+            onClick = onDisableAccessibilityService,
+            enabled = accessibilityIsRunning,
+        ) {
+            Text("Disable Androperator")
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "While enabled, this accessibility service adds processing overhead and can significantly slow other apps, including animations. Disable it for representative performance measurements. Other installed accessibility services remain enabled.\n\n" +
+                "To re-enable, ask your agent to run:\nandroperator doctor --fix --operator-package " +
+                androidx.compose.ui.platform.LocalContext.current.packageName +
+                "\nAdd --device <device_serial> when multiple devices are connected.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextOnBackground,
+        )
+        Spacer(modifier = Modifier.height(24.dp))
         when (appDoctorState) {
             AppDoctorState.DeveloperOptionsDisabled -> DeveloperOptionsDisabledContent(onOpenSystemSettings)
             AppDoctorState.UsbDebuggingDisabled -> UsbDebuggingDisabledContent(onOpenSystemSettings)
@@ -186,7 +216,7 @@ private fun PermissionsNotGrantedContent(accessibilityPermissionLabel: String) {
     )
     Spacer(modifier = Modifier.height(12.dp))
     Text(
-        text = "Accessibility permissions are not configured. Have your agent run the androperator_grant_android_permissions.sh script.",
+        text = "Accessibility permissions are not configured. Have your agent run androperator doctor --fix with this app's --operator-package.",
         style = MaterialTheme.typography.bodyLarge,
         color = TextOnBackground,
         textAlign = TextAlign.Start,

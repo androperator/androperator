@@ -24,6 +24,7 @@ import androidx.lifecycle.coroutineScope
 import androperator.app.AppStateManager
 import androperator.app.AppViewState
 import androperator.app.AppViewModel
+import androperator.accessibilityservice.currentAccessibilityService
 import androperator.accessibilityservice.AccessibilityServiceManager
 import androperator.operator.runtime.OperatorCommandService
 import androperator.ui.AndroperatorScreen
@@ -62,6 +63,9 @@ class MainActivity : FragmentActivity() {
             AndroperatorScreen(
                 viewState = viewState,
                 onOpenSystemSettings = { openDeveloperOrAboutSettings() },
+                onDisableAccessibilityService = {
+                    accessibilityServiceManager.currentAccessibilityService?.disableSelf()
+                },
             )
         }
 

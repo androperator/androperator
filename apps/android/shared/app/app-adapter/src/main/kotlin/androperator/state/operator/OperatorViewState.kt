@@ -13,5 +13,6 @@ sealed interface OperatorViewState : AppScreenState {
         val appDoctorState: AppDoctorState,
         /** Label for the permissions-not-granted state (e.g. accessibility status text). */
         val accessibilityPermissionLabel: String,
+        val accessibilityIsRunning: Boolean,
     ) : OperatorViewState
 }

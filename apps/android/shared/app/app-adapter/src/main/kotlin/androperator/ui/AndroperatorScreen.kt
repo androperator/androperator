@@ -20,12 +20,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,6 +56,8 @@ fun AndroperatorScreen(
     viewState: AppViewState,
     onDisableAccessibilityService: () -> Unit,
 ) {
+    var showLicenses by rememberSaveable { mutableStateOf(false) }
+    BackHandler(enabled = showLicenses) { showLicenses = false }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -55,18 +65,29 @@ fun AndroperatorScreen(
             .statusBarsPadding()
             .navigationBarsPadding(),
     ) {
-        when (viewState) {
-            is AppViewState.Loading -> LoadingContent()
-            is AppViewState.Data -> {
-                val screenState = viewState.screenViewState
-                if (screenState is OperatorViewState.Data) {
-                    DoctorContent(
-                        accessibilityIsRunning = screenState.accessibilityIsRunning,
-                        onDisableAccessibilityService = onDisableAccessibilityService,
-                    )
-                } else {
-                    LoadingContent()
+        if (showLicenses) {
+            OpenSourceLicensesScreen(onBack = { showLicenses = false })
+        } else {
+            when (viewState) {
+                is AppViewState.Loading -> LoadingContent()
+                is AppViewState.Data -> {
+                    val screenState = viewState.screenViewState
+                    if (screenState is OperatorViewState.Data) {
+                        DoctorContent(
+                            accessibilityIsRunning = screenState.accessibilityIsRunning,
+                            onDisableAccessibilityService = onDisableAccessibilityService,
+                        )
+                    } else {
+                        LoadingContent()
+                    }
                 }
+            }
+            IconButton(
+                onClick = { showLicenses = true },
+                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                    .semantics { contentDescription = "Open source licenses" },
+            ) {
+                Text("ⓘ", color = OperatorGreen, style = MaterialTheme.typography.headlineSmall)
             }
         }
     }

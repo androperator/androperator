@@ -201,3 +201,47 @@ tasks.register("runDebug") {
         check(grantResult == 0) { "permission grant command failed with exit code $grantResult" }
     }
 }
+
+// Generate each APK's offline notices from its resolved runtime graph. Unknown versions
+// fail the build until scripts/licenses/metadata.json and bundled texts are reviewed.
+abstract class GenerateLicenseAssets : Exec() {
+    @get:OutputDirectory
+    abstract val outputDirectory: DirectoryProperty
+}
+
+androidComponents.onVariants { androidVariant ->
+    val variant = androidVariant.name
+    val capitalizedVariant = variant.replaceFirstChar { it.uppercase() }
+    val generatedAssets = layout.buildDirectory.dir("generated/licenses/$variant")
+    val coordinates = providers.provider {
+        configurations.getByName("${variant}RuntimeClasspath").incoming.resolutionResult
+            .allComponents.mapNotNull { component ->
+                (component.id as? org.gradle.api.artifacts.component.ModuleComponentIdentifier)?.let {
+                    "${it.group}:${it.module}:${it.version}"
+                }
+            }.distinct().sorted()
+    }
+    val generateLicenses = tasks.register<GenerateLicenseAssets>("generate${capitalizedVariant}OpenSourceLicenses") {
+        inputs.property("runtimeCoordinates", coordinates)
+        inputs.dir(rootProject.file("scripts/licenses"))
+        inputs.files(rootProject.fileTree("apps/android") {
+            include("**/src/main/**/*.kt")
+            exclude("**/build/**")
+        })
+        outputDirectory.set(generatedAssets)
+        val dependencyFile = layout.buildDirectory.file("licenses/$variant/dependencies.txt")
+        doFirst {
+            dependencyFile.get().asFile.apply {
+                parentFile.mkdirs()
+                writeText(coordinates.get().joinToString("\n", postfix = "\n"))
+            }
+        }
+        commandLine(
+            "python3", rootProject.file("scripts/licenses/generate.py"),
+            "--dependencies", dependencyFile.get().asFile,
+            "--output", generatedAssets.get().file("open_source_licenses.html").asFile,
+            "--source-root", rootProject.file("apps/android"),
+        )
+    }
+    androidVariant.sources.assets?.addGeneratedSourceDirectory(generateLicenses, GenerateLicenseAssets::outputDirectory)
+}

@@ -6,6 +6,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,12 +23,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androperator.app.AppViewState
@@ -82,57 +87,75 @@ private fun DoctorContent(
     accessibilityIsRunning: Boolean,
     onDisableAccessibilityService: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top,
-    ) {
-        Spacer(modifier = Modifier.height(32.dp))
-        Text(
-            text = "Androperator",
-            style = MaterialTheme.typography.headlineLarge,
-            color = TextOnBackground,
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Image(
-            painter = painterResource(R.drawable.androperator_logo),
-            contentDescription = "Androperator logo",
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val viewportHeight = maxHeight
+        val uriHandler = LocalUriHandler.current
+        Column(
             modifier = Modifier
-                .size(160.dp)
-                .clip(CircleShape),
-            contentScale = ContentScale.Fit,
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = if (accessibilityIsRunning) "Accessibility service: Running" else "Accessibility service: Disabled",
-            style = MaterialTheme.typography.titleMedium,
-            color = if (accessibilityIsRunning) OperatorGreen else TextOnBackground,
-            modifier = Modifier
-                .background(if (accessibilityIsRunning) RunningBackground else DisabledBackground, CircleShape)
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = onDisableAccessibilityService,
-            enabled = accessibilityIsRunning,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = OperatorGreen,
-                contentColor = Color.White,
-                disabledContainerColor = DisabledBackground,
-                disabledContentColor = Color(0xFF657060),
-            ),
+                .verticalScroll(rememberScrollState())
+                .heightIn(min = viewportHeight)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top,
         ) {
-            Text("Disable Androperator")
+            Spacer(modifier = Modifier.height(32.dp))
+            Text(
+                text = "Androperator",
+                style = MaterialTheme.typography.headlineLarge,
+                color = TextOnBackground,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Image(
+                painter = painterResource(R.drawable.androperator_logo),
+                contentDescription = "Androperator logo",
+                modifier = Modifier
+                    .size(160.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Fit,
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = if (accessibilityIsRunning) "Accessibility service: Running" else "Accessibility service: Disabled",
+                style = MaterialTheme.typography.titleMedium,
+                color = if (accessibilityIsRunning) OperatorGreen else TextOnBackground,
+                modifier = Modifier
+                    .background(if (accessibilityIsRunning) RunningBackground else DisabledBackground, CircleShape)
+                    .heightIn(min = 48.dp)
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = onDisableAccessibilityService,
+                modifier = Modifier.heightIn(min = 48.dp),
+                enabled = accessibilityIsRunning,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = OperatorGreen,
+                    contentColor = Color.White,
+                    disabledContainerColor = DisabledBackground,
+                    disabledContentColor = Color(0xFF657060),
+                ),
+            ) {
+                Text("Disable Androperator", style = MaterialTheme.typography.titleMedium)
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "While enabled, this accessibility service adds processing overhead and can significantly slow other apps, including animations. Disable it for representative performance measurements. Other installed accessibility services remain enabled.\n\n" +
+                    "To re-enable, tell your agent to use androperator doctor --fix.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextOnBackground,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                TextButton(
+                    onClick = { uriHandler.openUri("https://androperator.com") },
+                    colors = ButtonDefaults.textButtonColors(contentColor = OperatorGreen),
+                ) { Text("androperator.com") }
+                TextButton(
+                    onClick = { uriHandler.openUri("https://github.com/androperator/androperator/") },
+                    colors = ButtonDefaults.textButtonColors(contentColor = OperatorGreen),
+                ) { Text("GitHub") }
+            }
         }
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = "While enabled, this accessibility service adds processing overhead and can significantly slow other apps, including animations. Disable it for representative performance measurements. Other installed accessibility services remain enabled.\n\n" +
-                "To re-enable, tell your agent to use androperator doctor --fix.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextOnBackground,
-        )
     }
 }

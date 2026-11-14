@@ -141,7 +141,7 @@ private fun DoctorContent(
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = "Androperator uses the Accessibility service. This lets agents read the screen and control apps, but can significantly slow other apps and animations. Disable it before measuring performance. This button leaves other accessibility services unchanged.\n\n" +
-                    "To re-enable, tell your agent to use androperator doctor --fix.",
+                    "To re-enable, tell your agent to use `androperator doctor --fix`.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextOnBackground,
             )

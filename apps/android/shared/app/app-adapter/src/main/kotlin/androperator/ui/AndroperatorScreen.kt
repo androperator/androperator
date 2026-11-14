@@ -148,6 +148,7 @@ private fun DoctorContent(
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 TextButton(
                     onClick = { uriHandler.openUri("https://androperator.com") },
+                    modifier = Modifier.heightIn(min = 56.dp),
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
                     colors = ButtonDefaults.textButtonColors(
                         containerColor = DisabledBackground,
@@ -156,6 +157,7 @@ private fun DoctorContent(
                 ) { Text("androperator.com") }
                 TextButton(
                     onClick = { uriHandler.openUri("https://github.com/androperator/androperator/") },
+                    modifier = Modifier.heightIn(min = 56.dp),
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
                     colors = ButtonDefaults.textButtonColors(
                         containerColor = DisabledBackground,

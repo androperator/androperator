@@ -30,6 +30,10 @@ describe("buildBroadcastShellCommand", () => {
     assert.match(buildBroadcastShellCommand(CONFIG, "{}"), /^am broadcast -a /);
   });
 
+  it("omits the foreground flag for a pending background receiver", () => {
+    assert.doesNotMatch(buildBroadcastShellCommand(CONFIG, "{}", false), /--receiver-foreground/);
+  });
+
   it("escapes single quotes safely for device shell", () => {
     const payload = `{"commandId":"cmd-1","source":"it\\'s fine $HOME $(id) \`uname\`"}`;
     const cmd = buildBroadcastShellCommand(CONFIG, payload);

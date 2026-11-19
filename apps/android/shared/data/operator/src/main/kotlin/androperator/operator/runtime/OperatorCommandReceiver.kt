@@ -15,6 +15,7 @@ import androperator.operator.agent.EnvelopeErrorCodes
 import androperator.operator.agent.buildCanonicalFailureLine
 import androperator.operator.agent.buildRejectedCommandLine
 import androperator.task.runner.TaskResult
+import androperator.task.runner.UiAction
 import androperator.task.runner.isBackgroundServiceExecution
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
@@ -77,6 +78,9 @@ class OperatorCommandReceiver :
                     accessibilityService.closeNotificationPanel()
                 }
 
+                // Wallpaper work has no bound service to keep the process alive.
+                val needsPendingResult = background && parsedCommand.getOrThrow().actions.any { it is UiAction.SetWallpaper }
+                val pendingResult = if (needsPendingResult) goAsync() else null
                 coroutineScopes.main.launch {
                     parsedCommand
                         .onSuccess { command ->
@@ -97,7 +101,7 @@ class OperatorCommandReceiver :
                         }.onFailure { error ->
                             Log.e(error, "[Operator-Receiver] Failed to parse agent command payload")
                         }
-                }
+                }.invokeOnCompletion { pendingResult?.finish() }
             }
             else -> {
                 Log.d("[Operator-Receiver] Ignoring unsupported action=${intent?.action}")

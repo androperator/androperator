@@ -744,7 +744,8 @@ async function performExecution(
       };
     }
 
-    if (isBackgroundServiceExecution(execution.actions)) {
+    const background = isBackgroundServiceExecution(execution.actions);
+    if (background) {
       const userState = await probeUserUnlockState(config);
       if (userState?.userUnlocked === false) {
         cancelEarlyResultWaiter();
@@ -788,7 +789,9 @@ async function performExecution(
       beginDispatchCapture();
       evidence.dispatchState = "unknown";
       evidence.dispatchStartedAt = new Date().toISOString();
-      const broadcast = await broadcastAgentCommand(config, payload);
+      // Wallpaper keeps a PendingResult until publication and needs the longer background receiver budget.
+      const foregroundReceiver = !background || !execution.actions.some(action => action.type === "set_wallpaper");
+      const broadcast = await broadcastAgentCommand(config, payload, undefined, foregroundReceiver);
       if (broadcast.success) {
         evidence.dispatchState = "dispatched";
         // A terminal result may already have started asynchronous post-processing.

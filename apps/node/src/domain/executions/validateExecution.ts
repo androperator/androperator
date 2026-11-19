@@ -254,6 +254,15 @@ const executionSchema = z.object({
     });
   };
 
+  if (execution.actions.some(action => action.type === "set_wallpaper")) {
+    if (execution.actions.length !== 1) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["actions"], message: "set_wallpaper must be the only action in its execution" });
+    }
+    if (execution.timeoutMs > LIMITS.MAX_WALLPAPER_EXECUTION_TIMEOUT_MS) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["timeoutMs"], message: "set_wallpaper timeoutMs must not exceed 45000 ms" });
+    }
+  }
+
   execution.actions.forEach((action, index) => {
     // The action-level refinement already reports structural parameter errors. Do not run
     // semantic checks on malformed raw values, where legacy checks may assume strings or

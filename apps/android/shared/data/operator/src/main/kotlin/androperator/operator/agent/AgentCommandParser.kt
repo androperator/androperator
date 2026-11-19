@@ -73,6 +73,10 @@ class AgentCommandParserDefault : AgentCommandParser {
                     parseAction(index = index, actionJson = element.jsonObject)
                 }
 
+            if (actions.any { it is UiAction.SetWallpaper }) {
+                require(actions.size == 1) { "set_wallpaper must be the only action in its execution" }
+                require(timeoutMs <= 45_000L) { "set_wallpaper timeoutMs must not exceed 45000 ms" }
+            }
             AgentCommand(
                 commandId = commandId,
                 taskId = taskId,

@@ -553,6 +553,12 @@ async function performExecution(
         },
       };
     }
+    if (options.timeoutMs > LIMITS.MAX_WALLPAPER_EXECUTION_TIMEOUT_MS && execution.actions[0]?.type === "set_wallpaper") {
+      return { execution, result: { ok: false, error: {
+        code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
+        message: "set_wallpaper timeoutMs must not exceed 45000 ms",
+      } } };
+    }
     execution = { ...execution, timeoutMs: options.timeoutMs };
   }
 

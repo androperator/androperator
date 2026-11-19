@@ -6,6 +6,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import androperator.accessibilityservice.AccessibilityServiceManager
 import androperator.accessibilityservice.closeNotificationPanel
 import androperator.accessibilityservice.currentAccessibilityService
@@ -17,6 +19,7 @@ import androperator.operator.agent.buildRejectedCommandLine
 import androperator.task.runner.TaskResult
 import androperator.task.runner.UiAction
 import androperator.task.runner.isBackgroundServiceExecution
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -33,6 +36,19 @@ class OperatorCommandReceiver :
     val coroutineScopes: CoroutineScopes by inject()
     val agentCommandParser: AgentCommandParser by inject()
     val agentCommandExecutor: AgentCommandExecutor by inject()
+
+    private fun holdWallpaperBroadcast(): () -> Unit {
+        val pending = goAsync()
+        val handler = Handler(Looper.getMainLooper())
+        val finished = AtomicBoolean()
+        val finish = Runnable { if (finished.compareAndSet(false, true)) pending.finish() }
+        // Leave headroom below Android's background broadcast deadline even if a binder call stalls.
+        handler.postDelayed(finish, 50_000L)
+        return {
+            handler.removeCallbacks(finish)
+            finish.run()
+        }
+    }
 
     override fun onReceive(
         context: Context?,
@@ -80,7 +96,7 @@ class OperatorCommandReceiver :
 
                 // Wallpaper work has no bound service to keep the process alive.
                 val needsPendingResult = background && parsedCommand.getOrThrow().actions.any { it is UiAction.SetWallpaper }
-                val pendingResult = if (needsPendingResult) goAsync() else null
+                val finishPendingResult = if (needsPendingResult) holdWallpaperBroadcast() else null
                 coroutineScopes.main.launch {
                     parsedCommand
                         .onSuccess { command ->
@@ -101,7 +117,7 @@ class OperatorCommandReceiver :
                         }.onFailure { error ->
                             Log.e(error, "[Operator-Receiver] Failed to parse agent command payload")
                         }
-                }.invokeOnCompletion { pendingResult?.finish() }
+                }.invokeOnCompletion { finishPendingResult?.invoke() }
             }
             else -> {
                 Log.d("[Operator-Receiver] Ignoring unsupported action=${intent?.action}")

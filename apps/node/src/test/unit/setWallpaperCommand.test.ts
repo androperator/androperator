@@ -6,6 +6,8 @@ import { join } from "node:path";
 import { it } from "node:test";
 import { fileURLToPath } from "node:url";
 import type { ProcessRunner } from "../../adapters/android-bridge/processRunner.js";
+import { validateExecution } from "../../domain/executions/validateExecution.js";
+import { runExecution } from "../../domain/executions/runExecution.js";
 import { setWallpaper } from "../../domain/actions/setWallpaper.js";
 
 const cliPath = fileURLToPath(new URL("../../cli/index.js", import.meta.url));
@@ -102,4 +104,25 @@ it("streams the original bytes to the resolved Android user and cleans up a reje
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+it("requires a standalone wallpaper execution within the Android broadcast budget", async () => {
+  const execution = {
+    commandId: "wallpaper-test", taskId: "wallpaper-test", source: "test",
+    expectedFormat: "android-ui-automator", timeoutMs: 45000,
+    actions: [{
+      id: "wallpaper", type: "set_wallpaper",
+      params: { target: "both", uploadToken: "a".repeat(32), sha256: "b".repeat(64) },
+    }],
+  };
+  assert.equal(validateExecution(execution).timeoutMs, 45000);
+  assert.throws(() => validateExecution({
+    ...execution, actions: [...execution.actions, { id: "sleep", type: "sleep", params: { durationMs: 1 } }],
+  }), { message: "set_wallpaper must be the only action in its execution" });
+  assert.throws(() => validateExecution({ ...execution, timeoutMs: 45001 }), {
+    message: "set_wallpaper timeoutMs must not exceed 45000 ms",
+  });
+  const result = await runExecution(execution, { timeoutMs: 45001 });
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.equal(result.error.code, "EXECUTION_VALIDATION_FAILED");
 });

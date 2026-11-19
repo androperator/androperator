@@ -40,9 +40,12 @@ it("streams the original bytes to the resolved Android user and cleans up a reje
     let uploadUri: string | undefined;
     let cleaned = false;
     let api = "28";
+    let uploadAbort: AbortController | undefined;
+    let adbCalls = 0;
     const success = { code: 0, stdout: "", stderr: "" };
     const runner: ProcessRunner = {
       async run(_command, args, options) {
+        adbCalls += 1;
         assert.deepEqual(args.slice(0, 2), ["-s", "test-emulator"]);
         const adbArgs = args.slice(2);
         if (adbArgs[0] === "devices") return { ...success, stdout: "List of devices attached\ntest-emulator\tdevice\n" };
@@ -53,6 +56,11 @@ it("streams the original bytes to the resolved Android user and cleans up a reje
           assert.deepEqual(options?.input, image);
           uploadUri = adbArgs.at(-1);
           assert.match(uploadUri ?? "", /^content:\/\/test\.operator\.wallpaper-upload\/[a-f0-9]{32}$/);
+          if (uploadAbort !== undefined) {
+            assert.equal(options?.signal, uploadAbort.signal);
+            uploadAbort.abort();
+            return { ...success, code: 1 };
+          }
           // The Android content command can print an error with a zero shell status.
           return { ...success, stderr: "upload rejected" };
         }
@@ -78,6 +86,19 @@ it("streams the original bytes to the resolved Android user and cleans up a reje
     });
     assert.equal(uploadUri, undefined);
     assert.equal(cleaned, false);
+
+    adbCalls = 0;
+    const canceled = {
+      ok: false,
+      error: { code: "RESULT_TRANSPORT_CANCELLED", message: "Execution canceled before dispatch" },
+    };
+    assert.deepEqual(await setWallpaper(imagePath, "both", { ...options, signal: AbortSignal.abort() }), canceled);
+    assert.equal(adbCalls, 0);
+
+    uploadAbort = new AbortController();
+    api = "28";
+    assert.deepEqual(await setWallpaper(imagePath, "both", { ...options, signal: uploadAbort.signal }), canceled);
+    assert.equal(cleaned, true);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

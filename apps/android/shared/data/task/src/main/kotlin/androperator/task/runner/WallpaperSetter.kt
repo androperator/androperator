@@ -1,5 +1,6 @@
 package androperator.task.runner
 
+import action.coroutine.ensureExecutionActive
 import android.app.WallpaperManager
 import android.content.Context
 import android.graphics.ImageDecoder
@@ -29,6 +30,10 @@ class WallpaperSetter(private val context: Context) {
                 val height = info.size.height
                 require(info.mimeType in setOf("image/png", "image/jpeg")) { "Wallpaper image must be a PNG or JPEG" }
                 require(width.toLong() * height <= MAX_PIXELS) { "Wallpaper image exceeds 16 megapixels" }
+                // Android's cropper can round a very narrow scaled image down to zero pixels.
+                require(maxOf(width, height) <= MAX_ASPECT_RATIO * minOf(width, height).toLong()) {
+                    "Wallpaper image aspect ratio must be at most 8:1 in either orientation"
+                }
                 // Verify compressed image data without allocating a full-size bitmap.
                 decoder.setTargetSampleSize(4)
             }.recycle()
@@ -42,6 +47,7 @@ class WallpaperSetter(private val context: Context) {
                 "both" -> WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK
                 else -> error("Unsupported wallpaper target")
             }
+            coroutineContext.ensureExecutionActive()
             val appliedId = bytes.inputStream().use { manager.setStream(it, null, false, flags) }
             val homeId = manager.getWallpaperId(WallpaperManager.FLAG_SYSTEM)
             val lockId = manager.getWallpaperId(WallpaperManager.FLAG_LOCK)
@@ -62,6 +68,7 @@ class WallpaperSetter(private val context: Context) {
     }
 
     companion object {
+        private const val MAX_ASPECT_RATIO = 8
         private const val MAX_PIXELS = 16_000_000L
         private const val MAX_BYTES = 8 * 1024 * 1024
         val uploadTokenPattern = Regex("[a-f0-9]{32}")

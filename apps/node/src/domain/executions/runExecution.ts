@@ -448,7 +448,7 @@ export async function runCloseAppPreflight(
   return { ok: true, successfulCloseActionIds };
 }
 
-function executionCancellationError(signal?: AbortSignal): { code: string; message: string; [k: string]: unknown } | undefined {
+export function executionCancellationError(signal?: AbortSignal): { code: string; message: string; [k: string]: unknown } | undefined {
   if (!signal?.aborted) return undefined;
   if (isAndroperatorError(signal.reason) && signal.reason.code === ERROR_CODES.COMMAND_TIMEOUT) return { ...signal.reason };
   return { code: ERROR_CODES.RESULT_TRANSPORT_CANCELLED, message: "Execution canceled before dispatch" };

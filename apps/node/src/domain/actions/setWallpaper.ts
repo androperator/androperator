@@ -6,7 +6,7 @@ import { getDefaultRuntimeConfig } from "../../adapters/android-bridge/runtimeCo
 import { ERROR_CODES } from "../../contracts/errors.js";
 import type { Execution } from "../../contracts/execution.js";
 import { resolveDevice } from "../devices/resolveDevice.js";
-import { runExecution, type RunExecutionOptions, type RunExecutionResult } from "../executions/runExecution.js";
+import { executionCancellationError, runExecution, type RunExecutionOptions, type RunExecutionResult } from "../executions/runExecution.js";
 import { validateExecution } from "../executions/validateExecution.js";
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -41,6 +41,8 @@ export async function setWallpaper(
   target: WallpaperTarget,
   options: SetWallpaperOptions = {},
 ): Promise<RunExecutionResult> {
+  const canceled = executionCancellationError(options.signal);
+  if (canceled !== undefined) return { ok: false, error: canceled };
   const uploadToken = randomUUID().replaceAll("-", "");
   const execution: Execution = {
     commandId: `set-wallpaper-${uploadToken}`,
@@ -71,13 +73,24 @@ export async function setWallpaper(
     return { ok: false, error: { code: ERROR_CODES.EXECUTION_VALIDATION_FAILED, message: "Operator package must be an Android package name" } };
   }
   const uri = `content://${operatorPackage}.wallpaper-upload/${uploadToken}`;
+  const checkCancellation = () => {
+    const error = executionCancellationError(options.signal);
+    if (error !== undefined) throw error;
+  };
+  const runStagingCommand = async (args: string[], input?: Buffer) => {
+    checkCancellation();
+    const result = await runAdb(config, args, {
+      input, timeoutMs: execution.timeoutMs, signal: options.signal, logOutput: input === undefined,
+    });
+    checkCancellation();
+    return result;
+  };
   let uploadUser: string | undefined;
   try {
+    checkCancellation();
     const { deviceId } = await resolveDevice(config);
     config.deviceId = deviceId;
-    const sdk = await runAdb(config, ["shell", "getprop", "ro.build.version.sdk"], {
-      timeoutMs: execution.timeoutMs, signal: options.signal,
-    });
+    const sdk = await runStagingCommand(["shell", "getprop", "ro.build.version.sdk"]);
     const sdkVersion = sdk.stdout.trim();
     if (sdk.code !== 0 || !/^\d+$/.test(sdkVersion)) {
       return { ok: false, deviceId, error: { code: ERROR_CODES.WALLPAPER_UPLOAD_FAILED, message: "Unable to determine the Android API level" } };
@@ -85,22 +98,20 @@ export async function setWallpaper(
     if (Number(sdkVersion) < 28) {
       return { ok: false, deviceId, error: { code: ERROR_CODES.WALLPAPER_UPLOAD_FAILED, message: "Setting wallpaper requires Android 9 (API 28) or later" } };
     }
-    const currentUser = await runAdb(config, ["shell", "am", "get-current-user"], {
-      timeoutMs: execution.timeoutMs, signal: options.signal,
-    });
+    const currentUser = await runStagingCommand(["shell", "am", "get-current-user"]);
     const userId = currentUser.stdout.trim();
     if (currentUser.code !== 0 || !/^\d+$/.test(userId)) {
       return { ok: false, deviceId, error: { code: ERROR_CODES.WALLPAPER_UPLOAD_FAILED, message: "Unable to determine the current Android user" } };
     }
     uploadUser = userId;
-    const upload = await runAdb(config, ["shell", "-T", "content", "write", "--user", userId, "--uri", uri], {
-      input: image, timeoutMs: execution.timeoutMs, signal: options.signal, logOutput: false,
-    });
+    const upload = await runStagingCommand(["shell", "-T", "content", "write", "--user", userId, "--uri", uri], image);
     if (upload.code !== 0 || upload.stderr.trim() !== "" || upload.stdout.trim() !== "") {
       return { ok: false, deviceId, error: { code: ERROR_CODES.WALLPAPER_UPLOAD_FAILED, message: upload.stderr.trim() || upload.stdout.trim() || "Unable to upload wallpaper to the Operator" } };
     }
     return await runExecution(execution, { ...options, deviceId, operatorPackage, adbPath: config.adbPath, runner: config.runner });
   } catch (error) {
+    const canceledDuringStaging = executionCancellationError(options.signal);
+    if (canceledDuringStaging !== undefined) return { ok: false, error: canceledDuringStaging };
     if (typeof error === "object" && error !== null && "code" in error && "message" in error) {
       return { ok: false, error: { ...error, code: String(error.code), message: String(error.message) } };
     }

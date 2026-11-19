@@ -5,7 +5,10 @@ import android.app.WallpaperManager
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
+import android.graphics.Point
+import android.hardware.display.DisplayManager
 import android.os.Build
+import android.view.Display
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -42,9 +45,7 @@ class WallpaperSetter(private val context: Context) {
             check(manager.isWallpaperSupported && manager.isSetWallpaperAllowed) {
                 "Android does not allow setting wallpaper for the Operator user"
             }
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-                checkLegacyCrop(bytes, manager.desiredMinimumHeight)
-            }
+            checkPlatformCrop(bytes, manager.desiredMinimumHeight)
             val flags = when (action.target) {
                 "home" -> WallpaperManager.FLAG_SYSTEM
                 "lock" -> WallpaperManager.FLAG_LOCK
@@ -71,22 +72,39 @@ class WallpaperSetter(private val context: Context) {
         }
     }
 
-    private fun checkLegacyCrop(bytes: ByteArray, desiredHeight: Int) {
-        // Android 9 and 10 scale to this height without a maximum output width.
-        // Their cropper uses the encoded axes, even for JPEGs with orientation metadata.
+    @Suppress("DEPRECATION")
+    private fun checkPlatformCrop(bytes: ByteArray, desiredHeight: Int) {
+        // Android's cropper uses the encoded axes, including for JPEGs with orientation metadata.
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
-        require(desiredHeight > 0 && bounds.outWidth > 0 && bounds.outHeight > 0) {
-            "Unable to determine wallpaper crop dimensions"
+        val width = bounds.outWidth
+        val height = bounds.outHeight
+        require(width > 0 && height > 0) { "Unable to determine wallpaper crop dimensions" }
+        val display = context.getSystemService(DisplayManager::class.java).getDisplay(Display.DEFAULT_DISPLAY)
+        val screen = Point()
+        display?.getRealSize(screen)
+        require(screen.x > 0 && screen.y > 0) { "Unable to determine wallpaper display dimensions" }
+        val targetHeight = if (desiredHeight > 0) desiredHeight else maxOf(screen.x, screen.y)
+        val widthAtTargetHeight = width.toLong() * targetHeight
+        // Android can shorten an image that would otherwise scale narrower than the display.
+        val cropHeight =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && widthAtTargetHeight < screen.x.toLong() * height) {
+                minOf(height.toLong(), width.toLong() * screen.y / screen.x).toInt()
+            } else {
+                height
+            }
+        require(cropHeight > 0) { "Wallpaper image is too small for the Android display crop" }
+
+        // Allow for integer rounding when Android samples the crop at a power of two.
+        val sample = Integer.highestOneBit((cropHeight / targetHeight).coerceAtLeast(1))
+        val sampledHeight = cropHeight / sample
+        val sampledWidth = width / sample
+        require(sampledWidth.toLong() * targetHeight >= sampledHeight) {
+            "Wallpaper image is too small for the Android display crop"
         }
-        val heightRatio = bounds.outHeight / desiredHeight
-        val sample = Integer.highestOneBit((heightRatio - 1).coerceAtLeast(1))
-        val sampledWidth = bounds.outWidth / sample
-        val sampledHeight = bounds.outHeight / sample
-        val scaledWidthNumerator = sampledWidth.toLong() * desiredHeight
-        val maximumWidth = MAX_PIXELS / desiredHeight
-        require(scaledWidthNumerator in sampledHeight.toLong()..(maximumWidth * sampledHeight)) {
-            "Projected wallpaper crop exceeds Android 9 or 10 size limits"
+        val shortestScaledHeight = cropHeight - (sample - 1)
+        require(widthAtTargetHeight <= (MAX_PIXELS / targetHeight) * shortestScaledHeight) {
+            "Projected wallpaper crop exceeds 16 megapixels"
         }
     }
 

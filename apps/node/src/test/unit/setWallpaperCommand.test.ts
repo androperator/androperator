@@ -44,6 +44,9 @@ it("streams the original bytes to the resolved Android user and cleans up a reje
     let api = "28";
     let uploadAbort: AbortController | undefined;
     let adbCalls = 0;
+    const operatorProvider = "test.operator/androperator.task.runner.WallpaperUploadProvider";
+    let provider = operatorProvider;
+    let installedUser = 10;
     const success = { code: 0, stdout: "", stderr: "" };
     const runner: ProcessRunner = {
       async run(_command, args, options) {
@@ -53,6 +56,15 @@ it("streams the original bytes to the resolved Android user and cleans up a reje
         if (adbArgs[0] === "devices") return { ...success, stdout: "List of devices attached\ntest-emulator\tdevice\n" };
         if (adbArgs[1] === "getprop") return { ...success, stdout: `${api}\n` };
         if (adbArgs[1] === "am") return { ...success, stdout: "10\n" };
+        if (adbArgs[1] === "dumpsys") {
+          assert.deepEqual(adbArgs, ["shell", "dumpsys", "package", "test.operator"]);
+          return { ...success, stdout: [
+            "ContentProvider Authorities:",
+            "  [test.operator.wallpaper-upload]:",
+            `    Provider{123 ${provider}}`,
+            `    User ${installedUser}: installed=true`,
+          ].join("\n") };
+        }
         if (adbArgs[3] === "write") {
           assert.deepEqual(adbArgs.slice(0, -1), ["shell", "-T", "content", "write", "--user", "10", "--uri"]);
           assert.deepEqual(options?.input, image);
@@ -101,6 +113,21 @@ it("streams the original bytes to the resolved Android user and cleans up a reje
     api = "28";
     assert.deepEqual(await setWallpaper(imagePath, "both", { ...options, signal: uploadAbort.signal }), canceled);
     assert.equal(cleaned, true);
+
+    uploadAbort = undefined;
+    for (const candidate of [
+      { provider: "wrong.package/OtherProvider", installedUser: 10 },
+      { provider: operatorProvider, installedUser: 0 },
+    ]) {
+      ({ provider, installedUser } = candidate);
+      uploadUri = undefined;
+      cleaned = false;
+      const result = await setWallpaper(imagePath, "both", options);
+      assert.equal(result.ok, false);
+      if (!result.ok) assert.match(result.error.message, /upload provider.*not found for Android user 10/);
+      assert.equal(uploadUri, undefined);
+      assert.equal(cleaned, false);
+    }
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

@@ -1473,8 +1473,8 @@ of the cancellation request, not observation that the toast has disappeared.
 <a id="action-set-wallpaper"></a>
 ### `set_wallpaper`
 
-Apply a static PNG or JPEG of up to 8 MiB to the current Android user on Android
-7.0 or later. This requires a matching Operator APK and an Android user whose
+Apply a static PNG or JPEG up to 8 MiB and 16 megapixels to the current Android
+user on Android 9 (API 28) or later. This requires a matching Operator APK and an Android user whose
 storage has been unlocked since boot. Android must allow that user to set wallpaper.
 
 ```bash
@@ -1495,7 +1495,8 @@ hex characters), `sha256` (64 lowercase hex characters), and `target`.
 
 On success the result step reports `target`, `wallpaperId`, `homeWallpaperId`,
 and `lockWallpaperId` as strings. A Lock ID of `"-1"` means Android reports no
-separate Lock wallpaper. An upload failure returns `WALLPAPER_UPLOAD_FAILED`.
+separate Lock wallpaper. When Lock still follows Home after a Home-only set, the
+new image appears on both screens. An upload failure returns `WALLPAPER_UPLOAD_FAILED`.
 An Android setter failure carries `WALLPAPER_SET_FAILED` in the failed step.
 
 <a id="action-set-on-screen-log"></a>

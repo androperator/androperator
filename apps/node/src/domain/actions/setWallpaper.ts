@@ -75,6 +75,16 @@ export async function setWallpaper(
   try {
     const { deviceId } = await resolveDevice(config);
     config.deviceId = deviceId;
+    const sdk = await runAdb(config, ["shell", "getprop", "ro.build.version.sdk"], {
+      timeoutMs: execution.timeoutMs, signal: options.signal,
+    });
+    const sdkVersion = sdk.stdout.trim();
+    if (sdk.code !== 0 || !/^\d+$/.test(sdkVersion)) {
+      return { ok: false, deviceId, error: { code: ERROR_CODES.WALLPAPER_UPLOAD_FAILED, message: "Unable to determine the Android API level" } };
+    }
+    if (Number(sdkVersion) < 28) {
+      return { ok: false, deviceId, error: { code: ERROR_CODES.WALLPAPER_UPLOAD_FAILED, message: "Setting wallpaper requires Android 9 (API 28) or later" } };
+    }
     const currentUser = await runAdb(config, ["shell", "am", "get-current-user"], {
       timeoutMs: execution.timeoutMs, signal: options.signal,
     });

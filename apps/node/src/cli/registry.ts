@@ -2486,7 +2486,7 @@ COMMANDS["set-wallpaper"] = {
   summary: "Apply a static Android wallpaper without opening a picker",
   help: `androperator set-wallpaper <local-image> --target <home|lock|both> [--device <id>] [--operator-package <pkg>]
 
-Apply a PNG or JPEG of up to 8 MiB on Android 7.0 or later.
+Apply a PNG or JPEG up to 8 MiB and 16 megapixels on Android 9 or later.
 Returns Android's wallpaper IDs. A lock ID of -1 means there is no separate Lock wallpaper.
 `,
   topLevelBlock: "  set-wallpaper <local-image> --target <home|lock|both>                 Apply a static wallpaper",

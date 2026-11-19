@@ -39,12 +39,14 @@ it("streams the original bytes to the resolved Android user and cleans up a reje
     await writeFile(imagePath, image);
     let uploadUri: string | undefined;
     let cleaned = false;
+    let api = "28";
     const success = { code: 0, stdout: "", stderr: "" };
     const runner: ProcessRunner = {
       async run(_command, args, options) {
         assert.deepEqual(args.slice(0, 2), ["-s", "test-emulator"]);
         const adbArgs = args.slice(2);
         if (adbArgs[0] === "devices") return { ...success, stdout: "List of devices attached\ntest-emulator\tdevice\n" };
+        if (adbArgs[1] === "getprop") return { ...success, stdout: `${api}\n` };
         if (adbArgs[1] === "am") return { ...success, stdout: "10\n" };
         if (adbArgs[3] === "write") {
           assert.deepEqual(adbArgs.slice(0, -1), ["shell", "-T", "content", "write", "--user", "10", "--uri"]);
@@ -61,9 +63,21 @@ it("streams the original bytes to the resolved Android user and cleans up a reje
       async runShell() { throw new Error("Unexpected shell command"); },
       spawn() { throw new Error("Unexpected dispatch"); },
     };
-    const result = await setWallpaper(imagePath, "both", { runner, deviceId: "test-emulator", operatorPackage: "test.operator" });
+    const options = { runner, deviceId: "test-emulator", operatorPackage: "test.operator" };
+    const result = await setWallpaper(imagePath, "both", options);
     assert.deepEqual(result, { ok: false, deviceId: "test-emulator", error: { code: "WALLPAPER_UPLOAD_FAILED", message: "upload rejected" } });
     assert.equal(cleaned, true);
+    api = "27";
+    uploadUri = undefined;
+    cleaned = false;
+    const unsupported = await setWallpaper(imagePath, "both", options);
+    assert.deepEqual(unsupported, {
+      ok: false,
+      deviceId: "test-emulator",
+      error: { code: "WALLPAPER_UPLOAD_FAILED", message: "Setting wallpaper requires Android 9 (API 28) or later" },
+    });
+    assert.equal(uploadUri, undefined);
+    assert.equal(cleaned, false);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

@@ -2,18 +2,19 @@ package androperator.task.runner
 
 import android.app.WallpaperManager
 import android.content.Context
-import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.os.Build
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.nio.ByteBuffer
 import java.security.MessageDigest
 
 class WallpaperSetter(private val context: Context) {
     suspend fun set(action: UiAction.SetWallpaper): Map<String, String> = withContext(Dispatchers.IO) {
         val file = uploadFile(context, action.uploadToken)
         try {
-            check(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) { "Setting wallpaper requires Android 7.0 or later" }
+            check(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) { "Setting wallpaper requires Android 9 or later" }
             val size = file.length()
             require(size in 1..MAX_BYTES.toLong()) { "Wallpaper image must contain 1 to $MAX_BYTES bytes" }
             val bytes = ByteArray(size.toInt())
@@ -23,11 +24,14 @@ class WallpaperSetter(private val context: Context) {
             }
             val sha256 = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
             require(sha256 == action.sha256) { "Wallpaper upload checksum mismatch" }
-            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
-            require(bounds.outMimeType in setOf("image/png", "image/jpeg") && bounds.outWidth > 0 && bounds.outHeight > 0) {
-                "Wallpaper image must be a PNG or JPEG"
-            }
+            ImageDecoder.decodeBitmap(ImageDecoder.createSource(ByteBuffer.wrap(bytes))) { decoder, info, _ ->
+                val width = info.size.width
+                val height = info.size.height
+                require(info.mimeType in setOf("image/png", "image/jpeg")) { "Wallpaper image must be a PNG or JPEG" }
+                require(width.toLong() * height <= MAX_PIXELS) { "Wallpaper image exceeds 16 megapixels" }
+                // Verify compressed image data without allocating a full-size bitmap.
+                decoder.setTargetSampleSize(4)
+            }.recycle()
             val manager = WallpaperManager.getInstance(context)
             check(manager.isWallpaperSupported && manager.isSetWallpaperAllowed) {
                 "Android does not allow setting wallpaper for the Operator user"
@@ -58,6 +62,7 @@ class WallpaperSetter(private val context: Context) {
     }
 
     companion object {
+        private const val MAX_PIXELS = 16_000_000L
         private const val MAX_BYTES = 8 * 1024 * 1024
         val uploadTokenPattern = Regex("[a-f0-9]{32}")
         val sha256Pattern = Regex("[a-f0-9]{64}")

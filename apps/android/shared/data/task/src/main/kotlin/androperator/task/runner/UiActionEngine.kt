@@ -30,6 +30,7 @@ class UiActionEngineDefault(
     private val onScreenLogController: OnScreenLogController = OnScreenLogControllerNoOp,
     private val notificationMediaService: NotificationMediaService? = null,
     private val apiToastController: ApiToastController? = null,
+    private val wallpaperSetter: WallpaperSetter? = null,
 ) : UiActionEngine {
     constructor(
         developerOptionsManager: DeveloperOptionsManager,
@@ -155,6 +156,16 @@ class UiActionEngineDefault(
                 is UiAction.SnapshotUi -> executeSnapshotUi(taskScope, action)
                 is UiAction.ShowToast -> executeShowToast(action)
                 is UiAction.CancelToast -> executeCancelToast(action)
+                is UiAction.SetWallpaper -> {
+                    try {
+                        val setter = checkNotNull(wallpaperSetter) { "Wallpaper setter is unavailable" }
+                        UiActionStepResult(action.id, "set_wallpaper", data = setter.set(action))
+                    } catch (error: kotlinx.coroutines.CancellationException) {
+                        throw error
+                    } catch (error: Exception) {
+                        UiActionStepResult(action.id, "set_wallpaper", success = false, data = mapOf("errorCode" to "WALLPAPER_SET_FAILED", "error" to error.toString()))
+                    }
+                }
                 is UiAction.SetOnScreenLog -> executeSetOnScreenLog(action)
                 is UiAction.ClearOnScreenLog -> executeClearOnScreenLog(action)
                 is UiAction.StartRecording -> executeStartRecording(action)
@@ -1075,6 +1086,7 @@ private fun UiAction.wireType(): String = when (this) {
     is UiAction.SnapshotUi -> "snapshot_ui"
     is UiAction.ShowToast -> "show_toast"
     is UiAction.CancelToast -> "cancel_toast"
+    is UiAction.SetWallpaper -> "set_wallpaper"
     is UiAction.SetOnScreenLog -> "set_on_screen_log"
     is UiAction.ClearOnScreenLog -> "clear_on_screen_log"
     is UiAction.StartRecording -> "start_recording"

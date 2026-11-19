@@ -1,7 +1,7 @@
 import { ERROR_CODES } from "../contracts/errors.js";
 import { LIMITS } from "../contracts/limits.js";
 import { SYSTEM_KEYS } from "../contracts/keys.js";
-import { formatError } from "./output.js";
+import { formatError, formatRunExecutionResultForCli } from "./output.js";
 import type { Logger } from "../adapters/logger.js";
 import type { NodeMatcher } from "../contracts/selectors.js";
 import {
@@ -2479,6 +2479,32 @@ Notes:
   - Await separate set, screenshot, replacement, screenshot, and clear executions for capture.
   - An uncertain dispatch is never automatically replayed.
 `;
+
+COMMANDS["set-wallpaper"] = {
+  name: "set-wallpaper",
+  group: "Device Interaction",
+  summary: "Apply a static Android wallpaper without opening a picker",
+  help: `androperator set-wallpaper <local-image> --target <home|lock|both> [--device <id>] [--operator-package <pkg>]
+
+Apply a PNG or JPEG of up to 8 MiB on Android 7.0 or later.
+Returns Android's wallpaper IDs. A lock ID of -1 means there is no separate Lock wallpaper.
+`,
+  topLevelBlock: "  set-wallpaper <local-image> --target <home|lock|both>                 Apply a static wallpaper",
+  documentedFlags: ["--target"],
+  supportedFlags: ["--target"],
+  handler: async ({ rest, format, deviceId, operatorPackage, timeoutMs, logger }) => {
+    const { setWallpaper, wallpaperTargets } = await import("../domain/actions/setWallpaper.js");
+    const target = getOpt(rest, "--target");
+    const positionals = barePositionalTokens(rest, ["--target"], []);
+    if (positionals.length !== 1 || rest.length !== 3 || rest.filter(arg => arg === "--target").length !== 1) {
+      throw new UsageError("Usage: set-wallpaper <local-image> --target <home|lock|both>");
+    }
+    const selectedTarget = wallpaperTargets.find(value => value === target);
+    if (selectedTarget === undefined) throw new UsageError("--target requires home, lock, or both");
+    const result = await setWallpaper(positionals[0], selectedTarget, { deviceId, operatorPackage, timeoutMs, logger });
+    return formatRunExecutionResultForCli(result, { format });
+  },
+};
 
 COMMANDS["on-screen-log"] = {
   name: "on-screen-log",

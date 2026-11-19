@@ -4,6 +4,9 @@
 import type { NodeMatcher } from "./selectors.js";
 
 export interface ActionParams {
+  target?: "home" | "lock" | "both";
+  uploadToken?: string;
+  sha256?: string;
   notificationKey?: string;
   actionId?: string;
   positionMs?: number;

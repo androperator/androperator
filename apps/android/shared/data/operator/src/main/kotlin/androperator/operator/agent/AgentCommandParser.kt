@@ -97,6 +97,19 @@ class AgentCommandParserDefault : AgentCommandParser {
         }
 
         return when (normalizedType) {
+            "set_wallpaper" -> {
+                require(type == normalizedType && params.keys == setOf("target", "uploadToken", "sha256")) {
+                    "set_wallpaper requires target, uploadToken and sha256"
+                }
+                val target = params.strictStringRequired("target", 4)
+                val token = params.strictStringRequired("uploadToken", 32)
+                val sha256 = params.strictStringRequired("sha256", 64)
+                require(target in setOf("home", "lock", "both")) { "Invalid wallpaper target" }
+                require(androperator.task.runner.WallpaperSetter.uploadTokenPattern.matches(token)) { "Invalid wallpaper upload token" }
+                require(androperator.task.runner.WallpaperSetter.sha256Pattern.matches(sha256)) { "Invalid wallpaper checksum" }
+                UiAction.SetWallpaper(id, target, token, sha256)
+            }
+
             "list_notifications", "list_media_sessions", "get_media_status", "observe_media", "media_pause", "media_play", "media_seek", "dismiss_notification", "invoke_notification_action" -> {
                 require(type == normalizedType) { "Service action type must be canonical" }
                 val listing = type == "list_notifications" || type == "list_media_sessions"

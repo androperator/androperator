@@ -740,7 +740,7 @@ async function performExecution(
         cancelEarlyResultWaiter();
         return { execution, result: { ok: false, deviceId, error: {
           code: ERROR_CODES.DEVICE_USER_NOT_UNLOCKED,
-          message: "Android user storage is not unlocked after boot. Unlock the selected user once before notification/media operations; no unlock was attempted.",
+          message: "Android user storage is not unlocked after boot. Unlock the selected user once before background operations; no unlock was attempted.",
           details: userState,
         } } };
       }

@@ -141,6 +141,11 @@ function paramsSchemaForAction(actionType: string) {
     duration: z.enum(["short", "long"]).optional(),
   }).strict();
   if (actionType === "cancel_toast") return z.object({}).strict().optional();
+  if (actionType === "set_wallpaper") return z.object({
+    target: z.enum(["home", "lock", "both"]),
+    uploadToken: z.string().regex(/^[a-f0-9]{32}$/),
+    sha256: z.string().regex(/^[a-f0-9]{64}$/),
+  }).strict();
   if (actionType === "swipe") return swipeParamsSchema;
   if (actionType === "drag") return dragParamsSchema;
   const serviceSchema = notificationMediaParamsSchema(actionType);
@@ -187,6 +192,7 @@ const supportedTypes = [
   "press_key",
   "wait_for_navigation",
   "read_key_value_pair",
+  "set_wallpaper",
   "set_on_screen_log",
   "clear_on_screen_log",
 ] as const;

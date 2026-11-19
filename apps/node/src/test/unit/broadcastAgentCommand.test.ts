@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { buildBroadcastShellCommand } from "../../adapters/android-bridge/broadcastAgentCommand.js";
+import { broadcastAgentCommand, buildBroadcastShellCommand } from "../../adapters/android-bridge/broadcastAgentCommand.js";
 import type { RuntimeConfig } from "../../adapters/android-bridge/runtimeConfig.js";
 
 const CONFIG: RuntimeConfig = {
@@ -32,6 +32,22 @@ describe("buildBroadcastShellCommand", () => {
 
   it("omits the foreground flag for a pending background receiver", () => {
     assert.doesNotMatch(buildBroadcastShellCommand(CONFIG, "{}", false), /--receiver-foreground/);
+  });
+
+  it("allows a held broadcast to outlast the default ADB timeout", async () => {
+    const config: RuntimeConfig = {
+      ...CONFIG,
+      runner: {
+        ...CONFIG.runner,
+        async run(_command, args, options) {
+          assert.doesNotMatch(args.at(-1) ?? "", /--receiver-foreground/);
+          assert.equal(options?.timeoutMs, 96000);
+          return { code: 0, stdout: "", stderr: "" };
+        },
+      },
+    };
+    const result = await broadcastAgentCommand(config, "{}", undefined, { foregroundReceiver: false, timeoutMs: 96000 });
+    assert.equal(result.success, true);
   });
 
   it("escapes single quotes safely for device shell", () => {

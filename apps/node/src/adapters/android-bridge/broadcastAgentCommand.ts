@@ -25,14 +25,14 @@ export async function broadcastAgentCommand(
   config: RuntimeConfig,
   payloadJson: string,
   signal?: AbortSignal,
-  foregroundReceiver = true,
+  { foregroundReceiver = true, timeoutMs }: { foregroundReceiver?: boolean; timeoutMs?: number } = {},
 ): Promise<{ success: boolean; stdout: string; stderr: string }> {
   const shellCommand = buildBroadcastShellCommand(config, payloadJson, foregroundReceiver);
   const redactedShellCommand = buildBroadcastShellCommand(config, "[REDACTED]", foregroundReceiver);
   const result = await runAdb(
     config,
     ["shell", shellCommand],
-    { redactedArgs: ["shell", redactedShellCommand], signal }
+    { redactedArgs: ["shell", redactedShellCommand], signal, timeoutMs }
   );
 
   return { success: result.code === 0, stdout: result.stdout, stderr: result.stderr };

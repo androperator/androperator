@@ -791,7 +791,11 @@ async function performExecution(
       evidence.dispatchStartedAt = new Date().toISOString();
       // Wallpaper keeps a PendingResult until publication and needs the longer background receiver budget.
       const foregroundReceiver = !background || !execution.actions.some(action => action.type === "set_wallpaper");
-      const broadcast = await broadcastAgentCommand(config, payload, undefined, foregroundReceiver);
+      const timeoutMs = foregroundReceiver ? undefined : Math.min(
+        MAX_TIMER_DELAY_MS,
+        (options.resultEnvelopeTimeoutMs ?? execution.timeoutMs + 5000) + 1000,
+      );
+      const broadcast = await broadcastAgentCommand(config, payload, undefined, { foregroundReceiver, timeoutMs });
       if (broadcast.success) {
         evidence.dispatchState = "dispatched";
         // A terminal result may already have started asynchronous post-processing.

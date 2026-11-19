@@ -33,6 +33,8 @@ import { buildResultEnvelopeTimeoutHint } from "./timeoutGuidance.js";
 
 export interface RunExecutionOptions {
   deviceId?: string;
+  /** @internal Pins staged data, preflight and dispatch to the same Android user. */
+  androidUserId?: number;
   operatorPackage?: string;
   adbPath?: string;
   runner?: RuntimeConfig["runner"];
@@ -485,8 +487,16 @@ async function performExecution(
   evidence: ExecutionFailureEvidence,
   lockAlreadyHeld = false,
 ): Promise<PerformExecutionResult> {
+  const androidUserId = options.androidUserId;
+  if (androidUserId !== undefined && (!Number.isInteger(androidUserId) || androidUserId < 0 || androidUserId > 2147483647)) {
+    return { result: { ok: false, error: {
+      code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
+      message: "androidUserId must be a nonnegative Android user ID",
+    } } };
+  }
   const config = getDefaultRuntimeConfig({
     deviceId: options.deviceId,
+    androidUserId,
     operatorPackage: options.operatorPackage ?? process.env.ANDROPERATOR_OPERATOR_PACKAGE,
     adbPath: options.adbPath ?? process.env.ADB_PATH,
     runner: options.runner,

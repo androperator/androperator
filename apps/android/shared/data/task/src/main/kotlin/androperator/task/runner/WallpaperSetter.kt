@@ -3,6 +3,7 @@ package androperator.task.runner
 import action.coroutine.ensureExecutionActive
 import android.app.WallpaperManager
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.os.Build
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +42,9 @@ class WallpaperSetter(private val context: Context) {
             check(manager.isWallpaperSupported && manager.isSetWallpaperAllowed) {
                 "Android does not allow setting wallpaper for the Operator user"
             }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                checkLegacyCrop(bytes, manager.desiredMinimumHeight)
+            }
             val flags = when (action.target) {
                 "home" -> WallpaperManager.FLAG_SYSTEM
                 "lock" -> WallpaperManager.FLAG_LOCK
@@ -64,6 +68,25 @@ class WallpaperSetter(private val context: Context) {
             )
         } finally {
             file.delete()
+        }
+    }
+
+    private fun checkLegacyCrop(bytes: ByteArray, desiredHeight: Int) {
+        // Android 9 and 10 scale to this height without a maximum output width.
+        // Their cropper uses the encoded axes, even for JPEGs with orientation metadata.
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        require(desiredHeight > 0 && bounds.outWidth > 0 && bounds.outHeight > 0) {
+            "Unable to determine wallpaper crop dimensions"
+        }
+        val heightRatio = bounds.outHeight / desiredHeight
+        val sample = Integer.highestOneBit((heightRatio - 1).coerceAtLeast(1))
+        val sampledWidth = bounds.outWidth / sample
+        val sampledHeight = bounds.outHeight / sample
+        val scaledWidthNumerator = sampledWidth.toLong() * desiredHeight
+        val maximumWidth = MAX_PIXELS / desiredHeight
+        require(scaledWidthNumerator in sampledHeight.toLong()..(maximumWidth * sampledHeight)) {
+            "Projected wallpaper crop exceeds Android 9 or 10 size limits"
         }
     }
 

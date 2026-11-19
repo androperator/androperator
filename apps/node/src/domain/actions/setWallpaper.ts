@@ -100,7 +100,7 @@ export async function setWallpaper(
     }
     const currentUser = await runStagingCommand(["shell", "am", "get-current-user"]);
     const userId = currentUser.stdout.trim();
-    if (currentUser.code !== 0 || !/^\d+$/.test(userId)) {
+    if (currentUser.code !== 0 || !/^\d+$/.test(userId) || Number(userId) > 2147483647) {
       return { ok: false, deviceId, error: { code: ERROR_CODES.WALLPAPER_UPLOAD_FAILED, message: "Unable to determine the current Android user" } };
     }
     uploadUser = userId;
@@ -108,7 +108,7 @@ export async function setWallpaper(
     if (upload.code !== 0 || upload.stderr.trim() !== "" || upload.stdout.trim() !== "") {
       return { ok: false, deviceId, error: { code: ERROR_CODES.WALLPAPER_UPLOAD_FAILED, message: upload.stderr.trim() || upload.stdout.trim() || "Unable to upload wallpaper to the Operator" } };
     }
-    return await runExecution(execution, { ...options, deviceId, operatorPackage, adbPath: config.adbPath, runner: config.runner });
+    return await runExecution(execution, { ...options, deviceId, operatorPackage, adbPath: config.adbPath, runner: config.runner, androidUserId: Number(userId) });
   } catch (error) {
     const canceledDuringStaging = executionCancellationError(options.signal);
     if (canceledDuringStaging !== undefined) return { ok: false, error: canceledDuringStaging };

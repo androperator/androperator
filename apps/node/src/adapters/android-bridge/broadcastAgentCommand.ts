@@ -12,7 +12,8 @@ export function buildBroadcastShellCommand(config: RuntimeConfig, payloadJson: s
   const payloadKey = singleQuoteForDeviceShell(config.payloadExtraKey);
   const payload = singleQuoteForDeviceShell(payloadJson.replace(/\n/g, ""));
 
-  return `am broadcast -a ${action} -p ${operatorPackage} --es ${payloadKey} ${payload} --receiver-foreground`;
+  const user = config.androidUserId === undefined ? "" : ` --user ${singleQuoteForDeviceShell(String(config.androidUserId))}`;
+  return `am broadcast${user} -a ${action} -p ${operatorPackage} --es ${payloadKey} ${payload} --receiver-foreground`;
 }
 
 /**

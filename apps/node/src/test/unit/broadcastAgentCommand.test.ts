@@ -25,6 +25,11 @@ describe("buildBroadcastShellCommand", () => {
     assert.ok(cmd.endsWith("--receiver-foreground"));
   });
 
+  it("pins the broadcast to the staged Android user when supplied", () => {
+    assert.match(buildBroadcastShellCommand({ ...CONFIG, androidUserId: 10 }, "{}"), /^am broadcast --user '10' -a /);
+    assert.match(buildBroadcastShellCommand(CONFIG, "{}"), /^am broadcast -a /);
+  });
+
   it("escapes single quotes safely for device shell", () => {
     const payload = `{"commandId":"cmd-1","source":"it\\'s fine $HOME $(id) \`uname\`"}`;
     const cmd = buildBroadcastShellCommand(CONFIG, payload);

@@ -9,6 +9,23 @@ import { ERROR_CODES } from "../../../contracts/errors.js";
 import { FakeProcessRunner } from "../fakes/FakeProcessRunner.js";
 
 describe("checkApkPresence", () => {
+    it("checks both variants in the specified Android user", async () => {
+        const runner = new FakeProcessRunner();
+        const config = getDefaultRuntimeConfig({
+            runner, deviceId: "test-device", operatorPackage: "com.androperator.operator", androidUserId: 10,
+        });
+        runner.queueResult({ code: 0, stdout: "", stderr: "" });
+        runner.queueResult({ code: 0, stdout: "package:com.androperator.operator.dev", stderr: "" });
+
+        const result = await checkApkPresence(config);
+
+        assert.strictEqual(result.code, ERROR_CODES.OPERATOR_VARIANT_MISMATCH);
+        assert.deepStrictEqual(runner.calls.map(call => call.args.slice(2)), [
+            ["shell", "pm", "list", "packages", "--user", "10", "com.androperator.operator"],
+            ["shell", "pm", "list", "packages", "--user", "10", "com.androperator.operator.dev"],
+        ]);
+    });
+
     it("uses operator download before setup when the release package is missing", async () => {
         const runner = new FakeProcessRunner();
         const config = getDefaultRuntimeConfig({

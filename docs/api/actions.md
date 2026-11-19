@@ -1475,7 +1475,8 @@ of the cancellation request, not observation that the toast has disappeared.
 
 Apply a static PNG or JPEG up to 8 MiB and 16 megapixels to the current Android
 user on Android 9 (API 28) or later. The longer edge may be at most eight times
-the shorter edge. This requires a matching Operator APK and an Android user whose
+the shorter edge. Android 9 and 10 also require the device-scaled crop to fit
+within 16 megapixels. This requires a matching Operator APK and an Android user whose
 storage has been unlocked since boot. Android must allow that user to set wallpaper.
 
 ```bash

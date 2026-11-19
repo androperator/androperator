@@ -1495,7 +1495,7 @@ Node callers use `setWallpaper(imagePath, target, options)` from
 dispatching the action. Use the CLI or this Node function to set a host-local
 image. The raw `set_wallpaper` action takes a staged `uploadToken` (32 lowercase
 hex characters), `sha256` (64 lowercase hex characters), and `target`. It runs
-alone in an execution. The maximum execution timeout is 45 seconds.
+alone in an execution. Timeouts must be whole milliseconds from 1000 to 45000.
 
 On success the result step reports `target`, `wallpaperId`, `homeWallpaperId`,
 and `lockWallpaperId` as strings. A Lock ID of `"-1"` means Android reports no

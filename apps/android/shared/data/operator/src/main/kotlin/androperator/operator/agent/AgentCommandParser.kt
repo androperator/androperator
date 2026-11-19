@@ -75,7 +75,13 @@ class AgentCommandParserDefault : AgentCommandParser {
 
             if (actions.any { it is UiAction.SetWallpaper }) {
                 require(actions.size == 1) { "set_wallpaper must be the only action in its execution" }
-                require(timeoutMs <= 45_000L) { "set_wallpaper timeoutMs must not exceed 45000 ms" }
+                val explicitTimeout = root["timeoutMs"]
+                if (explicitTimeout != null) {
+                    val wholeMilliseconds = (explicitTimeout as? JsonPrimitive)?.takeUnless { it.isString }?.longOrNull
+                    require(wholeMilliseconds != null && wholeMilliseconds in MIN_TIMEOUT_MS..45_000L) {
+                        "set_wallpaper timeoutMs must be a whole number from 1000 to 45000 ms"
+                    }
+                }
             }
             AgentCommand(
                 commandId = commandId,

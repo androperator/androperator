@@ -258,6 +258,9 @@ const executionSchema = z.object({
     if (execution.actions.length !== 1) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["actions"], message: "set_wallpaper must be the only action in its execution" });
     }
+    if (!Number.isInteger(execution.timeoutMs)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["timeoutMs"], message: "set_wallpaper timeoutMs must be a whole number of milliseconds" });
+    }
     if (execution.timeoutMs > LIMITS.MAX_WALLPAPER_EXECUTION_TIMEOUT_MS) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["timeoutMs"], message: "set_wallpaper timeoutMs must not exceed 45000 ms" });
     }

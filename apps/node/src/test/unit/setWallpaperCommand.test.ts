@@ -122,7 +122,12 @@ it("requires a standalone wallpaper execution within the Android broadcast budge
   assert.throws(() => validateExecution({ ...execution, timeoutMs: 45001 }), {
     message: "set_wallpaper timeoutMs must not exceed 45000 ms",
   });
-  const result = await runExecution(execution, { timeoutMs: 45001 });
-  assert.equal(result.ok, false);
-  if (!result.ok) assert.equal(result.error.code, "EXECUTION_VALIDATION_FAILED");
+  assert.throws(() => validateExecution({ ...execution, timeoutMs: 1000.5 }), {
+    message: "set_wallpaper timeoutMs must be a whole number of milliseconds",
+  });
+  for (const timeoutMs of [45001, 1000.5]) {
+    const result = await runExecution(execution, { timeoutMs });
+    assert.equal(result.ok, false);
+    if (!result.ok) assert.equal(result.error.code, "EXECUTION_VALIDATION_FAILED");
+  }
 });

@@ -33,6 +33,8 @@ import { buildResultEnvelopeTimeoutHint } from "./timeoutGuidance.js";
 
 export interface RunExecutionOptions {
   deviceId?: string;
+  /** @internal Pins staged data, preflight and dispatch to the same Android user. */
+  androidUserId?: number;
   operatorPackage?: string;
   adbPath?: string;
   runner?: RuntimeConfig["runner"];
@@ -448,7 +450,7 @@ export async function runCloseAppPreflight(
   return { ok: true, successfulCloseActionIds };
 }
 
-function executionCancellationError(signal?: AbortSignal): { code: string; message: string; [k: string]: unknown } | undefined {
+export function executionCancellationError(signal?: AbortSignal): { code: string; message: string; [k: string]: unknown } | undefined {
   if (!signal?.aborted) return undefined;
   if (isAndroperatorError(signal.reason) && signal.reason.code === ERROR_CODES.COMMAND_TIMEOUT) return { ...signal.reason };
   return { code: ERROR_CODES.RESULT_TRANSPORT_CANCELLED, message: "Execution canceled before dispatch" };
@@ -485,8 +487,16 @@ async function performExecution(
   evidence: ExecutionFailureEvidence,
   lockAlreadyHeld = false,
 ): Promise<PerformExecutionResult> {
+  const androidUserId = options.androidUserId;
+  if (androidUserId !== undefined && (!Number.isInteger(androidUserId) || androidUserId < 0 || androidUserId > 2147483647)) {
+    return { result: { ok: false, error: {
+      code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
+      message: "androidUserId must be a nonnegative Android user ID",
+    } } };
+  }
   const config = getDefaultRuntimeConfig({
     deviceId: options.deviceId,
+    androidUserId,
     operatorPackage: options.operatorPackage ?? process.env.ANDROPERATOR_OPERATOR_PACKAGE,
     adbPath: options.adbPath ?? process.env.ADB_PATH,
     runner: options.runner,
@@ -542,6 +552,13 @@ async function performExecution(
           },
         },
       };
+    }
+    if (execution.actions[0]?.type === "set_wallpaper" &&
+        (!Number.isInteger(options.timeoutMs) || options.timeoutMs > LIMITS.MAX_WALLPAPER_EXECUTION_TIMEOUT_MS)) {
+      return { execution, result: { ok: false, error: {
+        code: ERROR_CODES.EXECUTION_VALIDATION_FAILED,
+        message: "set_wallpaper timeoutMs must use whole milliseconds and not exceed 45000 ms",
+      } } };
     }
     execution = { ...execution, timeoutMs: options.timeoutMs };
   }
@@ -734,13 +751,14 @@ async function performExecution(
       };
     }
 
-    if (isBackgroundServiceExecution(execution.actions)) {
+    const background = isBackgroundServiceExecution(execution.actions);
+    if (background) {
       const userState = await probeUserUnlockState(config);
       if (userState?.userUnlocked === false) {
         cancelEarlyResultWaiter();
         return { execution, result: { ok: false, deviceId, error: {
           code: ERROR_CODES.DEVICE_USER_NOT_UNLOCKED,
-          message: "Android user storage is not unlocked after boot. Unlock the selected user once before notification/media operations; no unlock was attempted.",
+          message: "Android user storage is not unlocked after boot. Unlock the selected user once before background operations; no unlock was attempted.",
           details: userState,
         } } };
       }
@@ -778,7 +796,13 @@ async function performExecution(
       beginDispatchCapture();
       evidence.dispatchState = "unknown";
       evidence.dispatchStartedAt = new Date().toISOString();
-      const broadcast = await broadcastAgentCommand(config, payload);
+      // Wallpaper keeps a PendingResult until publication and needs the longer background receiver budget.
+      const foregroundReceiver = !background || !execution.actions.some(action => action.type === "set_wallpaper");
+      const timeoutMs = foregroundReceiver ? undefined : Math.min(
+        MAX_TIMER_DELAY_MS,
+        (options.resultEnvelopeTimeoutMs ?? execution.timeoutMs + 5000) + 1000,
+      );
+      const broadcast = await broadcastAgentCommand(config, payload, undefined, { foregroundReceiver, timeoutMs });
       if (broadcast.success) {
         evidence.dispatchState = "dispatched";
         // A terminal result may already have started asynchronous post-processing.

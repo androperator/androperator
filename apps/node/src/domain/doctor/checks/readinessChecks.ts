@@ -57,7 +57,9 @@ function buildMissingApkFixSteps(config: RuntimeConfig): Array<{ kind: "shell" |
 }
 
 export async function checkApkPresence(config: RuntimeConfig): Promise<DoctorCheckResult> {
-  const packageList = await runAdb(config, ["shell", "pm", "list", "packages", config.operatorPackage]);
+  const listPackages = ["shell", "pm", "list", "packages"];
+  if (config.androidUserId !== undefined) listPackages.push("--user", String(config.androidUserId));
+  const packageList = await runAdb(config, [...listPackages, config.operatorPackage]);
   if (packageList.code !== 0) {
     return {
       id: "readiness.apk.presence",
@@ -77,7 +79,7 @@ export async function checkApkPresence(config: RuntimeConfig): Promise<DoctorChe
     // Check if the other variant is installed
     const otherVariant = getAlternateOperatorVariant(config.operatorPackage);
 
-    const alternateList = await runAdb(config, ["shell", "pm", "list", "packages", otherVariant]);
+    const alternateList = await runAdb(config, [...listPackages, otherVariant]);
     if (alternateList.code !== 0) {
       return {
         id: "readiness.apk.presence",

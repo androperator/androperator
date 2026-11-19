@@ -17,6 +17,8 @@
         tools:ignore="ProtectedPermissions" />
         -->
 
+    <uses-permission android:name="android.permission.SET_WALLPAPER" />
+
     <application
         android:name="androperator.application.MainApplication"
         android:icon="@mipmap/ic_launcher"
@@ -72,6 +74,12 @@
         </intent-filter>
       </receiver>
 
+
+      <provider
+        android:name="androperator.task.runner.WallpaperUploadProvider"
+        android:authorities="${applicationId}.wallpaper-upload"
+        android:exported="true"
+        android:permission="android.permission.DUMP" />
 
     </application>
 

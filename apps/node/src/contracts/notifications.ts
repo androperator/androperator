@@ -10,7 +10,7 @@ export function isBackgroundObservation(actions: readonly ExecutionAction[]): bo
   return actions.length > 0 && actions.every(action => observationActions.has(action.type));
 }
 // Call only after validating the whole execution; notification mutations still require UI readiness.
-const backgroundServiceActions = new Set([...observationActions, "media_pause", "media_play", "media_seek"]);
+const backgroundServiceActions = new Set([...observationActions, "set_wallpaper", "media_pause", "media_play", "media_seek"]);
 export function isBackgroundServiceExecution(actions: readonly ExecutionAction[]): boolean {
   return actions.length > 0 && actions.every(action => backgroundServiceActions.has(action.type));
 }

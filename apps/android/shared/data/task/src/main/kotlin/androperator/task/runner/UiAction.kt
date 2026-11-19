@@ -169,6 +169,13 @@ sealed interface UiAction {
         override val id: String,
     ) : UiAction
 
+    data class SetWallpaper(
+        override val id: String,
+        val target: String,
+        val uploadToken: String,
+        val sha256: String,
+    ) : UiAction
+
     data class SetOnScreenLog(
         override val id: String,
         val spec: OnScreenLogSpec,
@@ -362,7 +369,7 @@ fun List<UiAction>.isBackgroundObservation(): Boolean = isNotEmpty() && all {
 
 /** Whole validated executions that need neither accessibility nor an awake/unlocked screen. */
 fun List<UiAction>.isBackgroundServiceExecution(): Boolean = isNotEmpty() && all {
-    it is UiAction.NotificationMedia && it.type in setOf(
+    it is UiAction.SetWallpaper || it is UiAction.NotificationMedia && it.type in setOf(
         "list_notifications", "list_media_sessions", "get_media_status", "observe_media", "media_pause", "media_play", "media_seek",
     )
 }

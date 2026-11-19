@@ -141,6 +141,11 @@ function paramsSchemaForAction(actionType: string) {
     duration: z.enum(["short", "long"]).optional(),
   }).strict();
   if (actionType === "cancel_toast") return z.object({}).strict().optional();
+  if (actionType === "set_wallpaper") return z.object({
+    target: z.enum(["home", "lock", "both"]),
+    uploadToken: z.string().regex(/^[a-f0-9]{32}$/),
+    sha256: z.string().regex(/^[a-f0-9]{64}$/),
+  }).strict();
   if (actionType === "swipe") return swipeParamsSchema;
   if (actionType === "drag") return dragParamsSchema;
   const serviceSchema = notificationMediaParamsSchema(actionType);
@@ -187,6 +192,7 @@ const supportedTypes = [
   "press_key",
   "wait_for_navigation",
   "read_key_value_pair",
+  "set_wallpaper",
   "set_on_screen_log",
   "clear_on_screen_log",
 ] as const;
@@ -247,6 +253,18 @@ const executionSchema = z.object({
       path: ["actions", index, ...path],
     });
   };
+
+  if (execution.actions.some(action => action.type === "set_wallpaper")) {
+    if (execution.actions.length !== 1) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["actions"], message: "set_wallpaper must be the only action in its execution" });
+    }
+    if (!Number.isInteger(execution.timeoutMs)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["timeoutMs"], message: "set_wallpaper timeoutMs must be a whole number of milliseconds" });
+    }
+    if (execution.timeoutMs > LIMITS.MAX_WALLPAPER_EXECUTION_TIMEOUT_MS) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["timeoutMs"], message: "set_wallpaper timeoutMs must not exceed 45000 ms" });
+    }
+  }
 
   execution.actions.forEach((action, index) => {
     // The action-level refinement already reports structural parameter errors. Do not run

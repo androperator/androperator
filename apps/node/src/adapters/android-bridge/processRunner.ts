@@ -10,7 +10,7 @@ export interface ProcessResult {
 }
 
 export interface ProcessRunner {
-  run(command: string, args: string[], options?: { timeoutMs?: number; cwd?: string; input?: string; signal?: AbortSignal }): Promise<ProcessResult>;
+  run(command: string, args: string[], options?: { timeoutMs?: number; cwd?: string; input?: string | Buffer; signal?: AbortSignal }): Promise<ProcessResult>;
   runShell(command: string, options?: { timeoutMs?: number; cwd?: string }): Promise<ProcessResult>;
   // For logcat/streaming
   spawn(command: string, args: string[], options?: { detached?: boolean; stdio?: any; shell?: boolean; env?: NodeJS.ProcessEnv }): any;
@@ -59,7 +59,7 @@ function trackGroup(pid: number): () => void {
 }
 
 export class NodeProcessRunner implements ProcessRunner {
-  async run(command: string, args: string[], options?: { timeoutMs?: number; cwd?: string; input?: string; signal?: AbortSignal }): Promise<ProcessResult> {
+  async run(command: string, args: string[], options?: { timeoutMs?: number; cwd?: string; input?: string | Buffer; signal?: AbortSignal }): Promise<ProcessResult> {
     if (options?.signal?.aborted) return { stdout: "", stderr: "Process cancelled", code: null };
     return new Promise((resolve) => {
       const stdin = options?.input !== undefined ? "pipe" : "ignore";

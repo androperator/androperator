@@ -139,6 +139,7 @@ sleep
 press_key
 wait_for_navigation
 read_key_value_pair
+set_wallpaper
 set_on_screen_log
 clear_on_screen_log
 show_toast
@@ -1468,6 +1469,39 @@ process; it does not survive a process restart.
 The CLI form is `androperator toast --cancel`, exclusive with text and `--duration`.
 Success step data is exactly `{"submitted":"true"}`. This acknowledges completion
 of the cancellation request, not observation that the toast has disappeared.
+
+<a id="action-set-wallpaper"></a>
+### `set_wallpaper`
+
+Apply a static PNG or JPEG up to 8 MiB and 16 megapixels to the current Android
+user on Android 9 (API 28) or later. The longer edge may be at most eight times
+the shorter edge. The projected Android display crop must have positive
+dimensions and fit within 16 megapixels. For JPEGs with orientation metadata
+that swaps width and height, rotate the pixels before applying the image. This requires a matching Operator APK and an Android user whose
+storage has been unlocked since boot. Android must allow that user to set wallpaper.
+
+```bash
+androperator set-wallpaper ./fixture.png --target both --device <device_serial>
+```
+
+Choose `home`, `lock`, or `both`. The command opens no picker and does not wake
+or unlock the screen. Reapplying an image may assign a new wallpaper ID. Use a
+screenshot to verify how Android cropped and rendered the image.
+
+Node callers use `setWallpaper(imagePath, target, options)` from
+`domain/actions/setWallpaper.js`. Pass a host-local image path and optionally
+`deviceId`, `operatorPackage`, and `timeoutMs`. The function returns a
+`RunExecutionResult` and streams the image to the selected Operator before
+dispatching the action. Use the CLI or this Node function to set a host-local
+image. The raw `set_wallpaper` action takes a staged `uploadToken` (32 lowercase
+hex characters), `sha256` (64 lowercase hex characters), and `target`. It runs
+alone in an execution. Timeouts must be whole milliseconds from 1000 to 45000.
+
+On success the result step reports `target`, `wallpaperId`, `homeWallpaperId`,
+and `lockWallpaperId` as strings. A Lock ID of `"-1"` means Android reports no
+separate Lock wallpaper. When Lock still follows Home after a Home-only set, the
+new image appears on both screens. An upload failure returns `WALLPAPER_UPLOAD_FAILED`.
+An Android setter failure carries `WALLPAPER_SET_FAILED` in the failed step.
 
 <a id="action-set-on-screen-log"></a>
 ### `set_on_screen_log`

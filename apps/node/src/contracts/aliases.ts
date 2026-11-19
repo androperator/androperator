@@ -56,6 +56,7 @@ export const CANONICAL_ACTION_TYPES = [
   "press_key",
   "wait_for_navigation",
   "read_key_value_pair",
+  "set_wallpaper",
   "set_on_screen_log",
   "clear_on_screen_log",
 ] as const;

@@ -165,6 +165,9 @@ command_details:
   toast:
     href: actions.md#action-show-toast
     label: Toast actions
+  set-wallpaper:
+    href: actions.md#action-set-wallpaper
+    label: Set wallpaper
   on-screen-log:
     href: on-screen-logs.md#cli-commands
     label: On-screen logs

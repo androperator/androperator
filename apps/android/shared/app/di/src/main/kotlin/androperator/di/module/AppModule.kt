@@ -1,5 +1,6 @@
 package androperator.di.module
 
+import androperator.task.runner.WallpaperSetter
 import action.activity.StartActivityHelper
 import action.apprestarter.AppRestarter
 import action.apprestarter.AppRestarterDefault
@@ -277,7 +278,7 @@ val AppModule: Module = module {
     single<TaskUiScopeDefault> { TaskUiScopeDefault(get(), get(), get(), get(), get(NamedScope.CoroutineScopeIo)) }
     single<UiActionEngine> { get<UiActionEngineDefault>() }
     single<ApiToastController> { ApiToastControllerAndroid(get()) }
-    single<UiActionEngineDefault> { UiActionEngineDefault(get(), get(), get(), get(), get(), action.media.NotificationMediaService(get()), get()) }
+    single<UiActionEngineDefault> { UiActionEngineDefault(get(), get(), get(), get(), get(), action.media.NotificationMediaService(get()), get(), WallpaperSetter(get())) }
     single<UiGlobalActionDispatcher> { get<UiGlobalActionDispatcherAndroid>() }
     single<UiGlobalActionDispatcherAndroid> { UiGlobalActionDispatcherAndroid(get()) }
     single<TriggerManager> { TriggerManagerDefault(get(), get(), get(), get(), get(), get(NamedScope.CoroutineScopeMain), get(NamedScope.CoroutineScopeIo)) }

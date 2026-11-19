@@ -95,6 +95,9 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Run unit tests
+        env:
+          # Robolectric downloads instrumented SDKs outside Gradle’s repository resolver.
+          JAVA_TOOL_OPTIONS: -Drobolectric.dependency.repo.url=https://repo.maven.apache.org/maven2
         run: ./validation/test_all.sh --suite android
 
       - name: Upload test results on failure

@@ -1,7 +1,7 @@
 import { SYSTEM_KEYS } from "../../contracts/keys.js";
-import { DRAG_PATH_MESSAGE, dragParamsSchema, isValidDragPath } from "../../contracts/drag.js";
+import { dragParamsSchema } from "../../contracts/drag.js";
 import { buildDragExecution } from "../../domain/actions/drag.js";
-import { SWIPE_ENDPOINTS_MESSAGE, swipeParamsSchema } from "../../contracts/swipe.js";
+import { swipeParamsSchema } from "../../contracts/swipe.js";
 import { buildSwipeExecution } from "../../domain/actions/swipe.js";
 import { z } from "zod";
 import { buildQueryExecution } from "../../domain/actions/query.js";
@@ -46,11 +46,8 @@ const swipePointJsonSchema = {
   additionalProperties: false,
 };
 
-const swipeArgsSchema = swipeParamsSchema.innerType().extend(executionToolOptionsSchema.shape).strict().refine(
-  value => value.start.x !== value.end.x || value.start.y !== value.end.y, SWIPE_ENDPOINTS_MESSAGE);
-
-const dragArgsSchema = dragParamsSchema.innerType().extend(executionToolOptionsSchema.shape).strict().refine(
-  isValidDragPath, DRAG_PATH_MESSAGE);
+const swipeArgsSchema = swipeParamsSchema.safeExtend(executionToolOptionsSchema.shape);
+const dragArgsSchema = dragParamsSchema.safeExtend(executionToolOptionsSchema.shape);
 
 const queryArgsSchema = executionToolOptionsSchema.merge(queryParamsSchema).strict();
 

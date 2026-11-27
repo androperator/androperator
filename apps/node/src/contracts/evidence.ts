@@ -41,7 +41,7 @@ export const evidenceDeviceSchema = z.object({
 export type EvidenceDevice = z.infer<typeof evidenceDeviceSchema>;
 export const evidenceManifestSchema = z.object({
   schemaVersion: z.literal(1), evidenceId: z.string(), label: nullableString,
-  context: z.record(z.unknown()), device: evidenceDeviceSchema,
+  context: z.record(z.string(), z.unknown()), device: evidenceDeviceSchema,
   startedAt: z.string().datetime(), finishedAt: z.string().datetime().nullable(),
   video: z.object({ requestedDurationSeconds: z.number().int().min(1).max(180), hostDurationMs: z.number().nonnegative(),
     mediaDurationMs: nullableNumber, requestedSize: z.string(), actualSize: nullableString, codec: nullableString, stopReason: nullableString }).strict().optional(),

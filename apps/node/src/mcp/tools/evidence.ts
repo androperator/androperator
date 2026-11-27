@@ -7,7 +7,7 @@ import { buildCommonExecutionSchema, buildValidationResult, executionToolOptions
 import type { McpToolDefinition } from "./index.js";
 import { startVideo, stopVideo, videoStatus, managedVideoSession, type VideoDependencies } from "../../domain/evidence/video.js";
 const captureSchema = executionToolOptionsSchema.extend({
-  label: z.string().max(2048).optional(), context: z.record(z.unknown()).optional(),
+  label: z.string().max(2048).optional(), context: z.record(z.string(), z.unknown()).optional(),
 }).strict();
 export function getEvidenceMcpTools(logger?: Logger, session: SessionDefaults = createSessionDefaults(), dependencies?: EvidenceCaptureDependencies): McpToolDefinition[] {
   return [{
@@ -31,7 +31,7 @@ export function getEvidenceMcpTools(logger?: Logger, session: SessionDefaults = 
 
 export function getVideoMcpTools(session: SessionDefaults = createSessionDefaults(), dependencies: VideoDependencies = {}): McpToolDefinition[] {
   const startSchema = z.object({ deviceId: z.string().trim().min(1).optional(), operatorPackage: z.string().trim().min(1).optional(),
-    durationSeconds: z.number().int().min(1).max(180), size: z.string().optional(), label: z.string().max(2048).optional(), context: z.record(z.unknown()).optional() }).strict();
+    durationSeconds: z.number().int().min(1).max(180), size: z.string().optional(), label: z.string().max(2048).optional(), context: z.record(z.string(), z.unknown()).optional() }).strict();
   const sessionSchema = z.object({ sessionId: z.string().uuid() }).strict();
   const result = (value: Awaited<ReturnType<typeof videoStatus>>) => ({ content: [{ type: "text" as const, text: JSON.stringify(value) }], structuredContent: { ...value }, ...(value.ok ? {} : { isError: true }) });
   return [{ name: "evidence_video_start", description: "Start a bounded screen recording in a managed bundle; recording is startup confirmation, not verified media. Requires separately installed scrcpy 3.0+, ffprobe, and ffmpeg 6.1+ with libx264 and passthrough/demux timing support on the server PATH. Unmet dependencies return HOST_DEPENDENCY_MISSING with dependency details and recovery instructions.",

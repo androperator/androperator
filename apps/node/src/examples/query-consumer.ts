@@ -27,7 +27,7 @@ const responseSchema = z.object({
     commandId: identifier, taskId: identifier, status: z.literal("success"),
     error: z.null().optional(), errorCode: z.null().optional(),
     stepResults: z.array(z.object({
-      id: identifier, actionType: identifier, success: z.literal(true), data: z.record(z.string()),
+      id: identifier, actionType: identifier, success: z.literal(true), data: z.record(z.string(), z.string()),
     })),
   }),
 });

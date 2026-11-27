@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims to follow Semantic Versioning.
 
+## [1.4.0] - 2026-11-28
+
+The Operator added static wallpaper controls, an in-app accessibility service toggle, and an offline license viewer. Long clicks handled nested controls more reliably, and the CLI updated dependencies to resolve reported security advisories.
+
+### 🤖 Node API & CLI
+
+- **Added:** `androperator set-wallpaper <local-image> --target home|lock|both` and the Node `setWallpaper()` function applied a local PNG or JPEG on Android 9 or later and returned the wallpaper IDs reported by Android.
+- **Fixed:** Updated Node dependencies to resolve reported security advisories and migrated request validation to Zod 4.
+
+### 📚 Documentation & Website
+
+- **Added:** Documented wallpaper setup, image limits, and how to verify the rendered crop.
+- **Added:** Documented the Operator's offline open-source license viewer.
+- **Changed:** Documented how to disable the Operator accessibility service before measuring another app and re-enable it with `androperator doctor --fix`.
+- **Fixed:** Documented how long clicks select the nearest long-clickable node and when the Operator falls back to a gesture.
+
+### 📱 Android Operator APK
+
+- **Added:** Applied static wallpaper to Home, Lock, or both without opening a picker.
+- **Added:** Added a control to disable the Operator accessibility service and showed its current status on the redesigned service screen.
+- **Added:** Added a full-screen offline viewer for bundled open-source licenses and notices.
+- **Changed:** Removed unused Google Play Services and HTTP client dependencies from the APK.
+- **Fixed:** Dispatched semantic long clicks to the nearest long-clickable node, including the selected node itself.
+
+Pull requests:
+- [fix(uitree): dispatch long clicks to nearest semantic handler](https://github.com/androperator/androperator/pull/477)
+- [feat(android): add accessibility service disable control and refresh Operator screen](https://github.com/androperator/androperator/pull/478)
+- [feat(android): add a full-screen offline license viewer](https://github.com/androperator/androperator/pull/479)
+- [chore(android): remove unused Play Services and HTTP dependencies](https://github.com/androperator/androperator/pull/480)
+- [feat(device): set static Home and Lock wallpaper](https://github.com/androperator/androperator/pull/482)
+- [fix(deps): resolve Node package security advisories](https://github.com/androperator/androperator/pull/483)
+
 ## [1.3.2] - 2026-11-08
 
 Recordings stayed upright after rotation, and MP4 clips preserved the timing of sparse frames. The release also improved selector and scroll behavior and reduced sensitive or verbose diagnostic output.

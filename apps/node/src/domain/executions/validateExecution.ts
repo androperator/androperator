@@ -99,9 +99,9 @@ const actionParamsSchema = z.object({
   validator: z.string().optional(),
   validatorPattern: z.string().optional(),
   key: z.string().optional(),
-  retry: z.record(z.unknown()).optional(),
-  scrollRetry: z.record(z.unknown()).optional(),
-  clickRetry: z.record(z.unknown()).optional(),
+  retry: z.record(z.string(), z.unknown()).optional(),
+  scrollRetry: z.record(z.string(), z.unknown()).optional(),
+  clickRetry: z.record(z.string(), z.unknown()).optional(),
   // wait_for_navigation params
   expectedPackage: z.string().max(LIMITS.MAX_MATCHER_VALUE_LENGTH).optional(),
   expectedNode: nodeMatcherSchema.optional(),
@@ -207,7 +207,7 @@ const actionSchema = z.object({
   if (parsedParams.success) {
     return;
   }
-  for (const issue of parsedParams.error.errors) {
+  for (const issue of parsedParams.error.issues) {
     ctx.addIssue({
       ...issue,
       path: ["params", ...issue.path],
@@ -562,7 +562,7 @@ export function validateExecution(input: unknown): Execution {
   const normalizedInput = normalizeExecutionInput(input);
   const parsed = executionSchema.safeParse(normalizedInput);
   if (!parsed.success) {
-    const first = parsed.error.errors[0];
+    const first = parsed.error.issues[0];
     const details: NonNullable<ValidationFailure["details"]> = {
       path: first?.path.join("."),
       reason: parsed.error.message,

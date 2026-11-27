@@ -44,7 +44,7 @@ const seek = z.object({
   "Provide exactly one of applicationId or mediaSessionId.");
 const observation = z.object({
   ...target,
-  durationMs: z.number({ required_error: observeUsage, invalid_type_error: observeUsage })
+  durationMs: z.number({ error: observeUsage })
     .int(observeUsage).min(1, observeUsage).max(30000, observeUsage),
 }).strict().refine(
   value => (value.applicationId !== undefined) !== (value.mediaSessionId !== undefined),
